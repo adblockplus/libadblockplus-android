@@ -11,14 +11,16 @@ To update those, call:
 
     ./ensure_dependencies.py
 
+## Library
+
 Building with Ant
 ------------------
 
 ### Requirements
 
-- [The Android SDK](http://developer.android.com/sdk)
-- [The Android NDK](https://developer.android.com/tools/sdk/ndk)
-- [Ant](http://ant.apache.org)
+* [The Android SDK](http://developer.android.com/sdk)
+* [The Android NDK](https://developer.android.com/tools/sdk/ndk)
+* [Ant](http://ant.apache.org)
 
 ### Building
 
@@ -39,7 +41,7 @@ Building with Maven
 
 All 'Building with Ant' requirements and additional requirements:
 
-- [Maven](https://maven.apache.org)
+* [Maven](https://maven.apache.org)
 
 ### Building
 
@@ -49,3 +51,30 @@ In the 'libadblockplus-android' directory run:
 	mvn clean install [-Dandroid.sdk.path=/some/where/sdk]
 
 This will generate *.aar library artifact in the 'target' directory. 
+
+## Library tests
+
+### Requirements
+
+Make sure _Library_ requirements are present.
+
+### Building
+
+Set ANDROID_HOME environment variable to your Android SDK directory.
+
+In the 'libadblockplus-android-tests' run:
+
+    ant instrument
+
+### Testing
+
+1. Connect an Android device or start the Android Emulator.
+2. In the 'libadblockplus-android-tests' directory run:
+
+    ant instrument install test
+
+to build instrumentation tests app and perform testing or run:
+
+    ant test
+
+to run installed instrumentation tests app
