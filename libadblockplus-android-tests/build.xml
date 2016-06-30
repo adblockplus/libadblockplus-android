@@ -89,4 +89,28 @@
     <!-- version-tag: 1 -->
     <import file="${sdk.dir}/tools/ant/build.xml" />
 
+    <!-- custom test target to perform specific test/method only -->
+    <target
+        name="testOnly"
+        depends="-test-project-check"
+        description="Runs a single test case, given with -DtestClass=package.path.to.Class">
+
+        <property name="test.runner" value="android.test.InstrumentationTestRunner" />
+        <property name="tested.project.absolute.dir" location="${tested.project.dir}" />
+
+        <!-- Application package of the tested project extracted from its manifest file -->
+        <xpath
+            input="${tested.project.absolute.dir}/AndroidManifest.xml"
+            expression="/manifest/@package"
+            output="tested.project.app.package" />
+
+        <run-tests-helper>
+            <extra-instrument-args>
+                <arg value="-e" />
+                  <arg value="class" />
+                  <arg value="${testClass}" />
+            </extra-instrument-args>
+        </run-tests-helper>
+    </target>
+
 </project>

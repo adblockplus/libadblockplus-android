@@ -77,4 +77,20 @@ to build instrumentation tests app and perform testing or run:
 
     ant test
 
-to run installed instrumentation tests app
+to run installed instrumentation tests app.
+
+To run specific **test** run:
+
+    ant testOnly -DtestClass=full.test.class.name
+
+For example:
+
+    ant testOnly -DtestClass=org.adblockplus.libadblockplus.tests.NotificationTest
+
+To run specific **test method** run:
+
+    ant testOnly -DtestClass=full.test.class.name#testMethod
+
+For example:
+
+    ant testOnly -DtestClass=org.adblockplus.libadblockplus.tests.NotificationTest#testAddNotification
