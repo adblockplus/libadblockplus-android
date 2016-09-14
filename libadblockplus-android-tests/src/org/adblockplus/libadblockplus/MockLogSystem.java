@@ -19,32 +19,32 @@ package org.adblockplus.libadblockplus;
 
 public class MockLogSystem extends LogSystem
 {
-    private LogLevel lastLogLevel;
+  private LogLevel lastLogLevel;
 
-    public LogLevel getLastLogLevel()
-    {
-        return lastLogLevel;
-    }
+  public LogLevel getLastLogLevel()
+  {
+    return lastLogLevel;
+  }
 
-    private String lastMessage;
+  private String lastMessage;
 
-    public String getLastMessage()
-    {
-        return lastMessage;
-    }
+  public String getLastMessage()
+  {
+    return lastMessage;
+  }
 
-    private String lastSource;
+  private String lastSource;
 
-    public String getLastSource()
-    {
-        return lastSource;
-    }
+  public String getLastSource()
+  {
+    return lastSource;
+  }
 
-    @Override
-    public void logCallback(LogLevel logLevel, String message, String source)
-    {
-        lastLogLevel = logLevel;
-        lastMessage = message;
-        lastSource = source;
-    }
+  @Override
+  public void logCallback(LogLevel logLevel, String message, String source)
+  {
+    lastLogLevel = logLevel;
+    lastMessage = message;
+    lastSource = source;
+  }
 }

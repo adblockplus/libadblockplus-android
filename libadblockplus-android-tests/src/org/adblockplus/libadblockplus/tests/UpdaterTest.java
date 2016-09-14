@@ -26,25 +26,25 @@ import android.test.AndroidTestCase;
 
 public class UpdaterTest extends AndroidTestCase
 {
-    protected MockWebRequest mockWebRequest;
-    protected FilterEngine filterEngine;
+  protected MockWebRequest mockWebRequest;
+  protected FilterEngine filterEngine;
 
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
+  @Override
+  protected void setUp() throws Exception
+  {
+    super.setUp();
 
-        AppInfo appInfo = AppInfo
-            .builder()
-            .setName("test")
-            .setVersion("1.0.1")
-            .build();
+    AppInfo appInfo = AppInfo
+      .builder()
+      .setName("test")
+      .setVersion("1.0.1")
+      .build();
 
-        JsEngine jsEngine = new JsEngine(appInfo);
-        mockWebRequest = new MockWebRequest();
-        jsEngine.setWebRequest(mockWebRequest);
-        jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
+    JsEngine jsEngine = new JsEngine(appInfo);
+    mockWebRequest = new MockWebRequest();
+    jsEngine.setWebRequest(mockWebRequest);
+    jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
 
-        filterEngine = new FilterEngine(jsEngine);
-    }
+    filterEngine = new FilterEngine(jsEngine);
+  }
 }

@@ -30,113 +30,113 @@ import java.util.List;
 public class MockWebRequestTest extends BaseJsTest
 {
 
-    private class LocalMockWebRequest extends WebRequest
-    {
-        @Override
-        public ServerResponse httpGET(String url, List<HeaderEntry> headers)
-        {
-            try
-            {
-                Thread.sleep(50);
-            } catch (InterruptedException e)
-            {
-                throw new RuntimeException(e);
-            }
-
-            ServerResponse result = new ServerResponse();
-            result.setStatus(ServerResponse.NsStatus.OK);
-            result.setResponseStatus(123);
-            result.setReponseHeaders(Arrays.asList(new HeaderEntry("Foo", "Bar")));
-
-            result.setResponse(
-                url + "\n" +
-                headers.get(0).getKey() + "\n" +
-                headers.get(0).getValue());
-            return result;
-        }
-    }
-
+  private class LocalMockWebRequest extends WebRequest
+  {
     @Override
-    protected void setUp() throws Exception
+    public ServerResponse httpGET(String url, List<HeaderEntry> headers)
     {
-        super.setUp();
+      try
+      {
+        Thread.sleep(50);
+      } catch (InterruptedException e)
+      {
+        throw new RuntimeException(e);
+      }
 
-        jsEngine.setWebRequest(new LocalMockWebRequest());
+      ServerResponse result = new ServerResponse();
+      result.setStatus(ServerResponse.NsStatus.OK);
+      result.setResponseStatus(123);
+      result.setReponseHeaders(Arrays.asList(new HeaderEntry("Foo", "Bar")));
+
+      result.setResponse(
+        url + "\n" +
+        headers.get(0).getKey() + "\n" +
+        headers.get(0).getValue());
+      return result;
+    }
+  }
+
+  @Override
+  protected void setUp() throws Exception
+  {
+    super.setUp();
+
+    jsEngine.setWebRequest(new LocalMockWebRequest());
+  }
+
+  @Test
+  public void testBadCall()
+  {
+    try
+    {
+      jsEngine.evaluate("_webRequest.GET()");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
     }
 
-    @Test
-    public void testBadCall()
+    try
     {
-        try
-        {
-            jsEngine.evaluate("_webRequest.GET()");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
-
-        try
-        {
-            jsEngine.evaluate("_webRequest.GET('', {}, function(){})");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
-
-        try
-        {
-            jsEngine.evaluate("_webRequest.GET({toString: false}, {}, function(){})");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
-
-        try
-        {
-            jsEngine.evaluate("_webRequest.GET('http://example.com/', null, function(){})");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
-
-        try
-        {
-            jsEngine.evaluate("_webRequest.GET('http://example.com/', {}, null)");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
-
-        try
-        {
-            jsEngine.evaluate("_webRequest.GET('http://example.com/', {}, function(){}, 0)");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
+      jsEngine.evaluate("_webRequest.GET('', {}, function(){})");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
     }
 
-    @Test
-    public void testSuccessfulRequest() throws InterruptedException
+    try
     {
-        jsEngine.evaluate(
-            "_webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
-        assertTrue(jsEngine.evaluate("this.foo").isUndefined());
-
-        Thread.sleep(200);
-
-        assertEquals(
-            ServerResponse.NsStatus.OK.getStatusCode(),
-            jsEngine.evaluate("foo.status").asLong());
-        assertEquals("http://example.com/\nX\nY", jsEngine.evaluate("foo.responseText").asString());
-        assertEquals("{\"Foo\":\"Bar\"}",
-            jsEngine.evaluate("JSON.stringify(foo.responseHeaders)").asString());
+      jsEngine.evaluate("_webRequest.GET({toString: false}, {}, function(){})");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
     }
+
+    try
+    {
+      jsEngine.evaluate("_webRequest.GET('http://example.com/', null, function(){})");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
+    }
+
+    try
+    {
+      jsEngine.evaluate("_webRequest.GET('http://example.com/', {}, null)");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
+    }
+
+    try
+    {
+      jsEngine.evaluate("_webRequest.GET('http://example.com/', {}, function(){}, 0)");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
+    }
+  }
+
+  @Test
+  public void testSuccessfulRequest() throws InterruptedException
+  {
+    jsEngine.evaluate(
+      "_webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
+    assertTrue(jsEngine.evaluate("this.foo").isUndefined());
+
+    Thread.sleep(200);
+
+    assertEquals(
+      ServerResponse.NsStatus.OK.getStatusCode(),
+      jsEngine.evaluate("foo.status").asLong());
+    assertEquals("http://example.com/\nX\nY", jsEngine.evaluate("foo.responseText").asString());
+    assertEquals("{\"Foo\":\"Bar\"}",
+      jsEngine.evaluate("JSON.stringify(foo.responseHeaders)").asString());
+  }
 
 }

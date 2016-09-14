@@ -26,16 +26,16 @@ import android.test.AndroidTestCase;
 
 public abstract class BaseJsTest extends AndroidTestCase
 {
-    protected JsEngine jsEngine;
+  protected JsEngine jsEngine;
 
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
+  @Override
+  protected void setUp() throws Exception
+  {
+    super.setUp();
 
-        jsEngine = new JsEngine(AppInfo.builder().build());
-        jsEngine.setDefaultLogSystem();
-        jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
-        jsEngine.setWebRequest(new ThrowingWebRequest());
-    }
+    jsEngine = new JsEngine(AppInfo.builder().build());
+    jsEngine.setDefaultLogSystem();
+    jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
+    jsEngine.setWebRequest(new ThrowingWebRequest());
+  }
 }

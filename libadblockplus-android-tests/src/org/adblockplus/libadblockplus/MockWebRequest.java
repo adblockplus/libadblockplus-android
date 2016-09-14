@@ -21,10 +21,10 @@ import java.util.List;
 
 public class MockWebRequest extends WebRequest
 {
-    public ServerResponse response = new ServerResponse();
+  public ServerResponse response = new ServerResponse();
 
-    public ServerResponse httpGET(String url, List<HeaderEntry> headers)
-    {
-        return response;
-    }
+  public ServerResponse httpGET(String url, List<HeaderEntry> headers)
+  {
+    return response;
+  }
 }

@@ -22,16 +22,16 @@ import org.adblockplus.libadblockplus.LazyWebRequest;
 
 public abstract class FilterEngineGenericTest extends BaseJsTest
 {
-    protected FilterEngine filterEngine;
+  protected FilterEngine filterEngine;
 
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
+  @Override
+  protected void setUp() throws Exception
+  {
+    super.setUp();
 
-        jsEngine.setWebRequest(new LazyWebRequest());
-        jsEngine.setDefaultLogSystem();
+    jsEngine.setWebRequest(new LazyWebRequest());
+    jsEngine.setDefaultLogSystem();
 
-        filterEngine = new FilterEngine(jsEngine);
-    }
+    filterEngine = new FilterEngine(jsEngine);
+  }
 }

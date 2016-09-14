@@ -27,105 +27,105 @@ import java.util.List;
 
 public class JsEngineTest extends BaseJsTest
 {
-    @Test
-    public void testEvaluate()
+  @Test
+  public void testEvaluate()
+  {
+    jsEngine.evaluate("function hello() { return 'Hello'; }");
+    JsValue result = jsEngine.evaluate("hello()");
+    assertTrue(result.isString());
+    assertEquals("Hello", result.asString());
+  }
+
+  @Test
+  public void testRuntimeExceptionIsThrown()
+  {
+    try
     {
-        jsEngine.evaluate("function hello() { return 'Hello'; }");
-        JsValue result = jsEngine.evaluate("hello()");
-        assertTrue(result.isString());
-        assertEquals("Hello", result.asString());
+      jsEngine.evaluate("doesnotexist()");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
     }
+  }
 
-    @Test
-    public void testRuntimeExceptionIsThrown()
+  @Test
+  public void testCompileTimeExceptionIsThrown()
+  {
+    try
     {
-        try
-        {
-            jsEngine.evaluate("doesnotexist()");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
+      jsEngine.evaluate("'foo'bar'");
+      fail();
+    } catch (AdblockPlusException e)
+    {
+      // ignored
     }
+  }
 
-    @Test
-    public void testCompileTimeExceptionIsThrown()
+  @Test
+  public void testValueCreation()
+  {
+    JsValue value;
+
+    final String STRING_VALUE = "foo";
+    value = jsEngine.newValue(STRING_VALUE);
+    assertTrue(value.isString());
+    assertEquals(STRING_VALUE, value.asString());
+
+    final long LONG_VALUE = 12345678901234l;
+    value = jsEngine.newValue(LONG_VALUE);
+    assertTrue(value.isNumber());
+    assertEquals(LONG_VALUE, value.asLong());
+
+    final boolean BOOLEAN_VALUE = true;
+    value = jsEngine.newValue(BOOLEAN_VALUE);
+    assertTrue(value.isBoolean());
+    assertEquals(BOOLEAN_VALUE, value.asBoolean());
+  }
+
+  private boolean callbackCalled;
+  private List<JsValue> callbackParams;
+  private EventCallback callback = new EventCallback()
+  {
+    @Override
+    public void eventCallback(List<JsValue> params)
     {
-        try
-        {
-            jsEngine.evaluate("'foo'bar'");
-            fail();
-        } catch (AdblockPlusException e)
-        {
-            // ignored
-        }
+      callbackCalled = true;
+      callbackParams = params;
     }
+  };
 
-    @Test
-    public void testValueCreation()
-    {
-        JsValue value;
+  @Test
+  public void testEventCallbacks()
+  {
+    callbackCalled = false;
 
-        final String STRING_VALUE = "foo";
-        value = jsEngine.newValue(STRING_VALUE);
-        assertTrue(value.isString());
-        assertEquals(STRING_VALUE, value.asString());
+    // Trigger event without a callback
+    callbackCalled = false;
+    jsEngine.evaluate("_triggerEvent('foobar')");
+    assertFalse(callbackCalled);
 
-        final long LONG_VALUE = 12345678901234l;
-        value = jsEngine.newValue(LONG_VALUE);
-        assertTrue(value.isNumber());
-        assertEquals(LONG_VALUE, value.asLong());
+    // Set callback
+    final String EVENT_NAME = "foobar";
+    jsEngine.setEventCallback(EVENT_NAME, callback);
+    callbackCalled = false;
+    jsEngine.evaluate("_triggerEvent('foobar', 1, 'x', true)");
+    assertTrue(callbackCalled);
+    assertNotNull(callbackParams);
+    assertEquals(3, callbackParams.size());
+    assertEquals(1, callbackParams.get(0).asLong());
+    assertEquals("x", callbackParams.get(1).asString());
+    assertTrue(callbackParams.get(2).asBoolean());
 
-        final boolean BOOLEAN_VALUE = true;
-        value = jsEngine.newValue(BOOLEAN_VALUE);
-        assertTrue(value.isBoolean());
-        assertEquals(BOOLEAN_VALUE, value.asBoolean());
-    }
+    // Trigger a different event
+    callbackCalled = false;
+    jsEngine.evaluate("_triggerEvent('barfoo')");
+    assertFalse(callbackCalled);
 
-    private boolean callbackCalled;
-    private List<JsValue> callbackParams;
-    private EventCallback callback = new EventCallback()
-    {
-        @Override
-        public void eventCallback(List<JsValue> params)
-        {
-            callbackCalled = true;
-            callbackParams = params;
-        }
-    };
-
-    @Test
-    public void testEventCallbacks()
-    {
-        callbackCalled = false;
-
-        // Trigger event without a callback
-        callbackCalled = false;
-        jsEngine.evaluate("_triggerEvent('foobar')");
-        assertFalse(callbackCalled);
-
-        // Set callback
-        final String EVENT_NAME = "foobar";
-        jsEngine.setEventCallback(EVENT_NAME, callback);
-        callbackCalled = false;
-        jsEngine.evaluate("_triggerEvent('foobar', 1, 'x', true)");
-        assertTrue(callbackCalled);
-        assertNotNull(callbackParams);
-        assertEquals(3, callbackParams.size());
-        assertEquals(1, callbackParams.get(0).asLong());
-        assertEquals("x", callbackParams.get(1).asString());
-        assertTrue(callbackParams.get(2).asBoolean());
-
-        // Trigger a different event
-        callbackCalled = false;
-        jsEngine.evaluate("_triggerEvent('barfoo')");
-        assertFalse(callbackCalled);
-
-        // Remove callback
-        jsEngine.removeEventCallback(EVENT_NAME);
-        callbackCalled = false;
-        jsEngine.evaluate("_triggerEvent('foobar')");
-        assertFalse(callbackCalled);
-    }
+    // Remove callback
+    jsEngine.removeEventCallback(EVENT_NAME);
+    callbackCalled = false;
+    jsEngine.evaluate("_triggerEvent('foobar')");
+    assertFalse(callbackCalled);
+  }
 }

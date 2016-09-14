@@ -34,234 +34,234 @@ import java.util.List;
 
 public class UpdateCheckTest extends BaseJsTest
 {
-    protected String previousRequestUrl;
+  protected String previousRequestUrl;
 
-    public class TestWebRequest extends LazyWebRequest
-    {
-        public ServerResponse response = new ServerResponse();
-
-        @Override
-        public ServerResponse httpGET(String url, List<HeaderEntry> headers)
-        {
-            if (url.indexOf("easylist") >= 0)
-            {
-              return super.httpGET(url, headers);
-            }
-
-            previousRequestUrl = url;
-            return response;
-        }
-    }
-
-    protected AppInfo appInfo;
-    protected TestWebRequest webRequest;
-    protected JsEngine jsEngine;
-    protected FilterEngine filterEngine;
-
-    protected boolean eventCallbackCalled;
-    protected List<JsValue> eventCallbackParams;
-    protected boolean updateCallbackCalled;
-    protected String updateError;
-
-    private EventCallback eventCallback = new EventCallback()
-    {
-        @Override
-        public void eventCallback(List<JsValue> params)
-        {
-            eventCallbackCalled = true;
-            eventCallbackParams = params;
-        }
-    };
-
-    private UpdateCheckDoneCallback updateCallback = new UpdateCheckDoneCallback()
-    {
-        @Override
-        public void updateCheckDoneCallback(String error)
-        {
-            updateCallbackCalled = true;
-            updateError = error;
-        }
-    };
-
-    public void reset()
-    {
-        jsEngine = new JsEngine(appInfo);
-        jsEngine.setLogSystem(new LazyLogSystem());
-        jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
-        jsEngine.setWebRequest(webRequest);
-        jsEngine.setEventCallback("updateAvailable", eventCallback);
-
-        filterEngine = new FilterEngine(jsEngine);
-    }
+  public class TestWebRequest extends LazyWebRequest
+  {
+    public ServerResponse response = new ServerResponse();
 
     @Override
-    protected void setUp() throws Exception
+    public ServerResponse httpGET(String url, List<HeaderEntry> headers)
     {
-        super.setUp();
+      if (url.indexOf("easylist") >= 0)
+      {
+        return super.httpGET(url, headers);
+      }
 
-        appInfo = AppInfo.builder().build();
-        webRequest = new TestWebRequest();
-        eventCallbackCalled = false;
-        updateCallbackCalled = false;
-        reset();
+      previousRequestUrl = url;
+      return response;
     }
+  }
 
-    public void forceUpdateCheck()
+  protected AppInfo appInfo;
+  protected TestWebRequest webRequest;
+  protected JsEngine jsEngine;
+  protected FilterEngine filterEngine;
+
+  protected boolean eventCallbackCalled;
+  protected List<JsValue> eventCallbackParams;
+  protected boolean updateCallbackCalled;
+  protected String updateError;
+
+  private EventCallback eventCallback = new EventCallback()
+  {
+    @Override
+    public void eventCallback(List<JsValue> params)
     {
-        filterEngine.forceUpdateCheck(updateCallback);
+      eventCallbackCalled = true;
+      eventCallbackParams = params;
     }
+  };
 
-    @Test
-    public void testRequestFailure() throws InterruptedException
+  private UpdateCheckDoneCallback updateCallback = new UpdateCheckDoneCallback()
+  {
+    @Override
+    public void updateCheckDoneCallback(String error)
     {
-        webRequest.response.setStatus(ServerResponse.NsStatus.ERROR_FAILURE);
-
-        appInfo = AppInfo
-            .builder()
-            .setName("1")
-            .setVersion("3")
-            .setApplication("4")
-            .setApplicationVersion("2")
-            .setDevelopmentBuild(false)
-            .build();
-
-        reset();
-        forceUpdateCheck();
-
-        Thread.sleep(100);
-
-        assertFalse(eventCallbackCalled);
-        assertTrue(updateCallbackCalled);
-        assertNotNull(updateError);
-
-        String expectedUrl = filterEngine.getPref("update_url_release").asString();
-        String platform = "libadblockplus";
-        String platformVersion = "1.0";
-
-        expectedUrl = expectedUrl
-            .replaceAll("%NAME%", appInfo.name)
-            .replaceAll("%TYPE%", "1"); // manual update
-
-        expectedUrl +=
-            "&addonName=" + appInfo.name +
-            "&addonVersion=" + appInfo.version +
-            "&application=" + appInfo.application +
-            "&applicationVersion=" + appInfo.applicationVersion +
-            "&platform=" + platform +
-            "&platformVersion=" + platformVersion +
-            "&lastVersion=0&downloadCount=0";
-
-        assertEquals(expectedUrl, previousRequestUrl);
+      updateCallbackCalled = true;
+      updateError = error;
     }
+  };
 
-    @Test
-    public void testApplicationUpdateAvailable() throws InterruptedException
-    {
-        webRequest.response.setStatus(ServerResponse.NsStatus.OK);
-        webRequest.response.setResponseStatus(200);
-        webRequest.response.setResponse(
-            "{\"1/4\": {\"version\":\"3.1\",\"url\":\"https://foo.bar/\"}}");
+  public void reset()
+  {
+    jsEngine = new JsEngine(appInfo);
+    jsEngine.setLogSystem(new LazyLogSystem());
+    jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
+    jsEngine.setWebRequest(webRequest);
+    jsEngine.setEventCallback("updateAvailable", eventCallback);
 
-        appInfo = AppInfo
-            .builder()
-            .setName("1")
-            .setVersion("3")
-            .setApplication("4")
-            .setApplicationVersion("2")
-            .setDevelopmentBuild(true)
-            .build();
+    filterEngine = new FilterEngine(jsEngine);
+  }
 
-        reset();
-        forceUpdateCheck();
+  @Override
+  protected void setUp() throws Exception
+  {
+    super.setUp();
 
-        Thread.sleep(1000);
+    appInfo = AppInfo.builder().build();
+    webRequest = new TestWebRequest();
+    eventCallbackCalled = false;
+    updateCallbackCalled = false;
+    reset();
+  }
 
-        assertTrue(eventCallbackCalled);
-        assertNotNull(eventCallbackParams);
-        assertEquals(1l, eventCallbackParams.size());
-        assertEquals("https://foo.bar/", eventCallbackParams.get(0).asString());
-        assertTrue(updateCallbackCalled);
-        assertEquals("", updateError);
-    }
+  public void forceUpdateCheck()
+  {
+    filterEngine.forceUpdateCheck(updateCallback);
+  }
 
-    @Test
-    public void testWrongApplication() throws InterruptedException
-    {
-        webRequest.response.setStatus(ServerResponse.NsStatus.OK);
-        webRequest.response.setResponseStatus(200);
-        webRequest.response.setResponse(
-            "{\"1/3\": {\"version\":\"3.1\",\"url\":\"https://foo.bar/\"}}");
+  @Test
+  public void testRequestFailure() throws InterruptedException
+  {
+    webRequest.response.setStatus(ServerResponse.NsStatus.ERROR_FAILURE);
 
-        appInfo = AppInfo
-            .builder()
-            .setName("1")
-            .setVersion("3")
-            .setApplication("4")
-            .setApplicationVersion("2")
-            .setDevelopmentBuild(true)
-            .build();
+    appInfo = AppInfo
+      .builder()
+      .setName("1")
+      .setVersion("3")
+      .setApplication("4")
+      .setApplicationVersion("2")
+      .setDevelopmentBuild(false)
+      .build();
 
-        reset();
-        forceUpdateCheck();
+    reset();
+    forceUpdateCheck();
 
-        Thread.sleep(1000);
+    Thread.sleep(100);
 
-        assertFalse(eventCallbackCalled);
-        assertTrue(updateCallbackCalled);
-        assertEquals("", updateError);
-    }
+    assertFalse(eventCallbackCalled);
+    assertTrue(updateCallbackCalled);
+    assertNotNull(updateError);
 
-    @Test
-    public void testWrongVersion() throws InterruptedException
-    {
-        webRequest.response.setStatus(ServerResponse.NsStatus.OK);
-        webRequest.response.setResponseStatus(200);
-        webRequest.response.setResponse(
-            "{\"1\": {\"version\":\"3\",\"url\":\"https://foo.bar/\"}}");
+    String expectedUrl = filterEngine.getPref("update_url_release").asString();
+    String platform = "libadblockplus";
+    String platformVersion = "1.0";
 
-        appInfo = AppInfo
-            .builder()
-            .setName("1")
-            .setVersion("3")
-            .setApplication("4")
-            .setApplicationVersion("2")
-            .setDevelopmentBuild(true)
-            .build();
+    expectedUrl = expectedUrl
+      .replaceAll("%NAME%", appInfo.name)
+      .replaceAll("%TYPE%", "1"); // manual update
 
-        reset();
-        forceUpdateCheck();
+    expectedUrl +=
+      "&addonName=" + appInfo.name +
+      "&addonVersion=" + appInfo.version +
+      "&application=" + appInfo.application +
+      "&applicationVersion=" + appInfo.applicationVersion +
+      "&platform=" + platform +
+      "&platformVersion=" + platformVersion +
+      "&lastVersion=0&downloadCount=0";
 
-        Thread.sleep(1000);
+    assertEquals(expectedUrl, previousRequestUrl);
+  }
 
-        assertFalse(eventCallbackCalled);
-        assertTrue(updateCallbackCalled);
-        assertEquals("", updateError);
-    }
+  @Test
+  public void testApplicationUpdateAvailable() throws InterruptedException
+  {
+    webRequest.response.setStatus(ServerResponse.NsStatus.OK);
+    webRequest.response.setResponseStatus(200);
+    webRequest.response.setResponse(
+      "{\"1/4\": {\"version\":\"3.1\",\"url\":\"https://foo.bar/\"}}");
 
-    @Test
-    public void testWrongURL() throws InterruptedException
-    {
-        webRequest.response.setStatus(ServerResponse.NsStatus.OK);
-        webRequest.response.setResponseStatus(200);
-        webRequest.response.setResponse(
-            "{\"1\": {\"version\":\"3.1\",\"url\":\"http://insecure/\"}}");
+    appInfo = AppInfo
+      .builder()
+      .setName("1")
+      .setVersion("3")
+      .setApplication("4")
+      .setApplicationVersion("2")
+      .setDevelopmentBuild(true)
+      .build();
 
-        appInfo = AppInfo
-            .builder()
-            .setName("1")
-            .setVersion("3")
-            .setApplication("4")
-            .setApplicationVersion("2")
-            .setDevelopmentBuild(true)
-            .build();
+    reset();
+    forceUpdateCheck();
 
-        reset();
-        forceUpdateCheck();
+    Thread.sleep(1000);
 
-        Thread.sleep(1000);
+    assertTrue(eventCallbackCalled);
+    assertNotNull(eventCallbackParams);
+    assertEquals(1l, eventCallbackParams.size());
+    assertEquals("https://foo.bar/", eventCallbackParams.get(0).asString());
+    assertTrue(updateCallbackCalled);
+    assertEquals("", updateError);
+  }
 
-        assertFalse(eventCallbackCalled);
-        assertTrue(updateCallbackCalled);
-        assertTrue(updateError.length() > 0);
-    }
+  @Test
+  public void testWrongApplication() throws InterruptedException
+  {
+    webRequest.response.setStatus(ServerResponse.NsStatus.OK);
+    webRequest.response.setResponseStatus(200);
+    webRequest.response.setResponse(
+      "{\"1/3\": {\"version\":\"3.1\",\"url\":\"https://foo.bar/\"}}");
+
+    appInfo = AppInfo
+      .builder()
+      .setName("1")
+      .setVersion("3")
+      .setApplication("4")
+      .setApplicationVersion("2")
+      .setDevelopmentBuild(true)
+      .build();
+
+    reset();
+    forceUpdateCheck();
+
+    Thread.sleep(1000);
+
+    assertFalse(eventCallbackCalled);
+    assertTrue(updateCallbackCalled);
+    assertEquals("", updateError);
+  }
+
+  @Test
+  public void testWrongVersion() throws InterruptedException
+  {
+    webRequest.response.setStatus(ServerResponse.NsStatus.OK);
+    webRequest.response.setResponseStatus(200);
+    webRequest.response.setResponse(
+      "{\"1\": {\"version\":\"3\",\"url\":\"https://foo.bar/\"}}");
+
+    appInfo = AppInfo
+      .builder()
+      .setName("1")
+      .setVersion("3")
+      .setApplication("4")
+      .setApplicationVersion("2")
+      .setDevelopmentBuild(true)
+      .build();
+
+    reset();
+    forceUpdateCheck();
+
+    Thread.sleep(1000);
+
+    assertFalse(eventCallbackCalled);
+    assertTrue(updateCallbackCalled);
+    assertEquals("", updateError);
+  }
+
+  @Test
+  public void testWrongURL() throws InterruptedException
+  {
+    webRequest.response.setStatus(ServerResponse.NsStatus.OK);
+    webRequest.response.setResponseStatus(200);
+    webRequest.response.setResponse(
+      "{\"1\": {\"version\":\"3.1\",\"url\":\"http://insecure/\"}}");
+
+    appInfo = AppInfo
+      .builder()
+      .setName("1")
+      .setVersion("3")
+      .setApplication("4")
+      .setApplicationVersion("2")
+      .setDevelopmentBuild(true)
+      .build();
+
+    reset();
+    forceUpdateCheck();
+
+    Thread.sleep(1000);
+
+    assertFalse(eventCallbackCalled);
+    assertTrue(updateCallbackCalled);
+    assertTrue(updateError.length() > 0);
+  }
 }

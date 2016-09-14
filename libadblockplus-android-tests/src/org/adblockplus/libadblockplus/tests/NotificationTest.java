@@ -31,138 +31,140 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class NotificationTest extends BaseJsTest {
+public class NotificationTest extends BaseJsTest
+{
 
-    protected FilterEngine filterEngine;
+  protected FilterEngine filterEngine;
+
+  @Override
+  protected void setUp() throws Exception
+  {
+    super.setUp();
+
+    jsEngine.setWebRequest(new LazyWebRequest());
+    filterEngine = new FilterEngine(jsEngine);
+  }
+
+  protected void addNotification(String notification)
+  {
+    jsEngine.evaluate(
+      "(function()\n" +
+      "{\n" +
+      "require('notification').Notification.addNotification(" + notification + ");\n" +
+      "})();");
+  }
+
+  private static final String TAG = "notification";
+
+  private class LocalShowNotificationCallback extends ShowNotificationCallback
+  {
+    private Notification retValue;
+
+    public Notification getRetValue()
+    {
+      return retValue;
+    }
 
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        jsEngine.setWebRequest(new LazyWebRequest());
-        filterEngine = new FilterEngine(jsEngine);
-    }
-
-    protected void addNotification(String notification)
+    public void showNotificationCallback(Notification notification)
     {
-        jsEngine.evaluate(
-            "(function()\n" +
-            "{\n" +
-            "require('notification').Notification.addNotification(" + notification + ");\n" +
-            "})();");
+      Log.d(TAG, this + " received [" + notification + "]");
+      retValue = notification;
     }
+  }
 
-    private static final String TAG = "notification";
+  protected Notification peekNotification(String url) throws InterruptedException
+  {
+    Log.d(TAG, "Start peek");
 
-    private class LocalShowNotificationCallback extends ShowNotificationCallback
+    LocalShowNotificationCallback callback = new LocalShowNotificationCallback();
+    Log.d(TAG, "set callback " + callback);
+    filterEngine.setShowNotificationCallback(callback);
+    filterEngine.showNextNotification(url);
+    filterEngine.removeShowNotificationCallback();
+    Log.d(TAG, "removed callback");
+    return callback.getRetValue();
+  }
+
+  private class MockWebRequest extends WebRequest
+  {
+    private String responseText;
+
+    public MockWebRequest(String responseText)
     {
-        private Notification retValue;
-
-        public Notification getRetValue()
-        {
-            return retValue;
-        }
-
-        @Override
-        public void showNotificationCallback(Notification notification)
-        {
-            Log.d(TAG, this + " received [" + notification + "]");
-            retValue = notification;
-        }
+      this.responseText = responseText;
     }
 
-    protected Notification peekNotification(String url) throws InterruptedException
+    @Override
+    public ServerResponse httpGET(String url, List<HeaderEntry> headers)
     {
-        Log.d(TAG, "Start peek");
+      if (url.indexOf("/notification.json") < 0)
+      {
+        return new ServerResponse();
+      }
 
-        LocalShowNotificationCallback callback = new LocalShowNotificationCallback();
-        Log.d(TAG, "set callback " + callback);
-        filterEngine.setShowNotificationCallback(callback);
-        filterEngine.showNextNotification(url);
-        filterEngine.removeShowNotificationCallback();
-        Log.d(TAG, "removed callback");
-        return callback.getRetValue();
+      ServerResponse response = new ServerResponse();
+      response.setStatus(ServerResponse.NsStatus.OK);
+      response.setResponseStatus(200);
+      response.setResponse(responseText);
+      return response;
     }
+  }
 
-    private class MockWebRequest extends WebRequest
-    {
-        private String responseText;
+  @Test
+  public void testNoNotifications() throws InterruptedException
+  {
+    assertNull(peekNotification(""));
+  }
 
-        public MockWebRequest(String responseText)
-        {
-            this.responseText = responseText;
-        }
+  @Test
+  public void testAddNotification() throws InterruptedException
+  {
+    addNotification(
+      "{\n" +
+      "   type: 'critical',\n" +
+      "   title: 'testTitle',\n" +
+      "   message: 'testMessage',\n" +
+      "}");
+    Notification notification = peekNotification("");
+    assertNotNull(notification);
+    assertEquals(Notification.Type.CRITICAL, notification.getType());
+    assertEquals("testTitle", notification.getTitle());
+    assertEquals("testMessage", notification.getMessageString());
+  }
 
-        @Override
-        public ServerResponse httpGET(String url, List<HeaderEntry> headers)
-        {
-            if (url.indexOf("/notification.json") < 0)
-            {
-              return new ServerResponse();
-            }
+  @Test
+  public void testFilterByUrl() throws InterruptedException
+  {
+    addNotification("{ id:'no-filter', type:'critical' }");
+    addNotification("{ id:'www.com', type:'information', urlFilters:['||www.com$document'] }");
+    addNotification("{ id:'www.de', type:'question', urlFilters:['||www.de$document'] }");
 
-            ServerResponse response = new ServerResponse();
-            response.setStatus(ServerResponse.NsStatus.OK);
-            response.setResponseStatus(200);
-            response.setResponse(responseText);
-            return response;
-        }
-    }
+    Notification notification = peekNotification("");
+    assertNotNull(notification);
+    assertEquals(Notification.Type.CRITICAL, notification.getType());
 
-    @Test
-    public void testNoNotifications() throws InterruptedException
-    {
-        assertNull(peekNotification(""));
-    }
+    notification = peekNotification("http://www.de");
+    assertNotNull(notification);
+    assertEquals(Notification.Type.QUESTION, notification.getType());
 
-    @Test
-    public void testAddNotification() throws InterruptedException
-    {
-        addNotification(
-            "{\n" +
-            "   type: 'critical',\n" +
-            "   title: 'testTitle',\n" +
-            "   message: 'testMessage',\n" +
-            "}");
-        Notification notification = peekNotification("");
-        assertNotNull(notification);
-        assertEquals(Notification.Type.CRITICAL, notification.getType());
-        assertEquals("testTitle", notification.getTitle());
-        assertEquals("testMessage", notification.getMessageString());
-    }
+    notification = peekNotification("http://www.com");
+    assertNotNull(notification);
+    assertEquals(Notification.Type.INFORMATION, notification.getType());
+  }
 
-    @Test
-    public void testFilterByUrl() throws InterruptedException
-    {
-        addNotification("{ id:'no-filter', type:'critical' }");
-        addNotification("{ id:'www.com', type:'information', urlFilters:['||www.com$document'] }");
-        addNotification("{ id:'www.de', type:'question', urlFilters:['||www.de$document'] }");
+  @Test
+  public void testMarkAsShown() throws InterruptedException
+  {
+    addNotification("{ type: 'question' }");
+    assertNotNull(peekNotification(""));
 
-        Notification notification = peekNotification("");
-        assertNotNull(notification);
-        assertEquals(Notification.Type.CRITICAL, notification.getType());
+    Notification notification = peekNotification("");
+    assertNotNull(notification);
 
-        notification = peekNotification("http://www.de");
-        assertNotNull(notification);
-        assertEquals(Notification.Type.QUESTION, notification.getType());
+    Thread.sleep(1000);
+    notification.markAsShown();
 
-        notification = peekNotification("http://www.com");
-        assertNotNull(notification);
-        assertEquals(Notification.Type.INFORMATION, notification.getType());
-    }
-
-    @Test
-    public void testMarkAsShown() throws InterruptedException
-    {
-        addNotification("{ type: 'question' }");
-        assertNotNull(peekNotification(""));
-
-        Notification notification = peekNotification("");
-        assertNotNull(notification);
-
-        Thread.sleep(1000);
-        notification.markAsShown();
-
-        assertNull(peekNotification(""));
-    }
+    assertNull(peekNotification(""));
+  }
 }

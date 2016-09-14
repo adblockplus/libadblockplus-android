@@ -25,29 +25,29 @@ import org.junit.Test;
 
 public class FilterEngineUpdaterTest extends UpdaterTest
 {
-    @Test
-    public void testSetRemoveUpdateAvailableCallback() throws InterruptedException
-    {
-        mockWebRequest.response.setStatus(ServerResponse.NsStatus.OK);
-        mockWebRequest.response.setResponseStatus(200);
-        mockWebRequest.response.setResponse(
-            "{\n" +
-            "   \"test\": {\n" +
-            "       \"version\": \"1.0.2\",\n" +
-            "       \"url\": \"https://downloads.adblockplus.org/test-1.0.2.tar.gz?update\"\n" +
-            "   }\n" +
-            "}");
+  @Test
+  public void testSetRemoveUpdateAvailableCallback() throws InterruptedException
+  {
+    mockWebRequest.response.setStatus(ServerResponse.NsStatus.OK);
+    mockWebRequest.response.setResponseStatus(200);
+    mockWebRequest.response.setResponse(
+      "{\n" +
+      "   \"test\": {\n" +
+      "       \"version\": \"1.0.2\",\n" +
+      "       \"url\": \"https://downloads.adblockplus.org/test-1.0.2.tar.gz?update\"\n" +
+      "   }\n" +
+      "}");
 
-        MockUpdateAvailableCallback mockUpdateAvailableCallback =
-            new MockUpdateAvailableCallback(0);
-        filterEngine.setUpdateAvailableCallback(mockUpdateAvailableCallback);
-        filterEngine.forceUpdateCheck(new NoOpUpdaterCallback());
-        Thread.sleep(1000);
-        assertEquals(1, mockUpdateAvailableCallback.getTimesCalled());
+    MockUpdateAvailableCallback mockUpdateAvailableCallback =
+      new MockUpdateAvailableCallback(0);
+    filterEngine.setUpdateAvailableCallback(mockUpdateAvailableCallback);
+    filterEngine.forceUpdateCheck(new NoOpUpdaterCallback());
+    Thread.sleep(1000);
+    assertEquals(1, mockUpdateAvailableCallback.getTimesCalled());
 
-        filterEngine.removeUpdateAvailableCallback();
-        filterEngine.forceUpdateCheck(new NoOpUpdaterCallback());
-        Thread.sleep(1000);
-        assertEquals(1, mockUpdateAvailableCallback.getTimesCalled());
-    }
+    filterEngine.removeUpdateAvailableCallback();
+    filterEngine.forceUpdateCheck(new NoOpUpdaterCallback());
+    Thread.sleep(1000);
+    assertEquals(1, mockUpdateAvailableCallback.getTimesCalled());
+  }
 }

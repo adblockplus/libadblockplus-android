@@ -19,8 +19,8 @@ package org.adblockplus.libadblockplus;
 
 public class LazyLogSystem extends LogSystem
 {
-    @Override
-    public void logCallback(LogLevel level, String message, String source)
-    {
-    }
+  @Override
+  public void logCallback(LogLevel level, String message, String source)
+  {
+  }
 }

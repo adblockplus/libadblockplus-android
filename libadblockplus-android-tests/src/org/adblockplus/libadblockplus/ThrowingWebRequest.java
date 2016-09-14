@@ -21,9 +21,9 @@ import java.util.List;
 
 public class ThrowingWebRequest extends WebRequest
 {
-    @Override
-    public ServerResponse httpGET(String url, List<HeaderEntry> headers)
-    {
-        throw new RuntimeException("Unexpected GET: " + url);
-    }
+  @Override
+  public ServerResponse httpGET(String url, List<HeaderEntry> headers)
+  {
+    throw new RuntimeException("Unexpected GET: " + url);
+  }
 }

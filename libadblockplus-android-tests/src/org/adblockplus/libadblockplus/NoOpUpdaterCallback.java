@@ -19,8 +19,8 @@ package org.adblockplus.libadblockplus;
 
 public class NoOpUpdaterCallback extends UpdateCheckDoneCallback
 {
-    @Override
-    public void updateCheckDoneCallback(String error)
-    {
-    }
+  @Override
+  public void updateCheckDoneCallback(String error)
+  {
+  }
 }
