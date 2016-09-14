@@ -46,7 +46,9 @@ public class FilterEngineTest extends FilterEngineGenericTest
     public void testAddRemoveFilters()
     {
         while (filterEngine.getListedFilters().size() > 0)
-            filterEngine.getListedFilters().get(0).removeFromList();
+        {
+          filterEngine.getListedFilters().get(0).removeFromList();
+        }
 
         assertEquals(0, filterEngine.getListedFilters().size());
         Filter filter = filterEngine.getFilter("foo");
@@ -76,7 +78,9 @@ public class FilterEngineTest extends FilterEngineGenericTest
     public void testAddRemoveSubscriptions()
     {
         while (filterEngine.getListedSubscriptions().size() > 0)
-            filterEngine.getListedSubscriptions().get(0).removeFromList();
+        {
+          filterEngine.getListedSubscriptions().get(0).removeFromList();
+        }
 
         assertEquals(0, filterEngine.getListedSubscriptions().size());
         Subscription subscription = filterEngine.getSubscription("foo");

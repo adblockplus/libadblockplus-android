@@ -97,7 +97,9 @@ public class NotificationTest extends BaseJsTest {
         public ServerResponse httpGET(String url, List<HeaderEntry> headers)
         {
             if (url.indexOf("/notification.json") < 0)
-                return new ServerResponse();
+            {
+              return new ServerResponse();
+            }
 
             ServerResponse response = new ServerResponse();
             response.setStatus(ServerResponse.NsStatus.OK);

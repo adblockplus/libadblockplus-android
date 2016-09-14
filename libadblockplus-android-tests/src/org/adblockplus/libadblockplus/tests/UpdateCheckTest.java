@@ -44,7 +44,9 @@ public class UpdateCheckTest extends BaseJsTest
         public ServerResponse httpGET(String url, List<HeaderEntry> headers)
         {
             if (url.indexOf("easylist") >= 0)
-                return super.httpGET(url, headers);
+            {
+              return super.httpGET(url, headers);
+            }
 
             previousRequestUrl = url;
             return response;
