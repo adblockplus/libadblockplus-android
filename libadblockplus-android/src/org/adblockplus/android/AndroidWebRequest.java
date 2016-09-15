@@ -138,7 +138,7 @@ public class AndroidWebRequest extends WebRequest
             {
               if (eachEntry.getKey() != null && eachValue != null)
               {
-                responseHeaders.add(new HeaderEntry(eachEntry.getKey(), eachValue));
+                responseHeaders.add(new HeaderEntry(eachEntry.getKey().toLowerCase(), eachValue));
               }
             }
           }
