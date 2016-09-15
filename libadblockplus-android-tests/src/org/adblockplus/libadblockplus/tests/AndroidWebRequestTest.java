@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.tests;
 
 import org.adblockplus.android.AndroidWebRequest;
+import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.ServerResponse;
 
@@ -40,7 +41,7 @@ public class AndroidWebRequestTest extends BaseJsTest
     // should get the actual filter list back.
     jsEngine.evaluate(
       "_webRequest.GET('https://easylist-downloads.adblockplus.org/easylist.txt', {}, " +
-        "function(result) {foo = result;} )");
+      "function(result) {foo = result;} )");
     do
     {
       try
@@ -68,13 +69,17 @@ public class AndroidWebRequestTest extends BaseJsTest
     assertTrue(jsHeaders.isObject());
     assertEquals(
       "text/plain",
-      jsEngine.evaluate("foo.responseHeaders['Content-Type'].substr(0,10)").asString());
+      jsEngine.evaluate("foo.responseHeaders['content-type'].substr(0,10)").asString());
     assertTrue(jsEngine.evaluate("foo.responseHeaders['location']").isUndefined());
   }
 
   @Test
   public void testXMLHttpRequest()
   {
+    // creating not used anywhere FilterEngine object is not as useless as it seems:
+    // it loads compat.js JsEngine to add XMLHttpRequest class support
+    new FilterEngine(jsEngine);
+
     jsEngine.evaluate(
       "var result;\n" +
       "var request = new XMLHttpRequest();\n" +
