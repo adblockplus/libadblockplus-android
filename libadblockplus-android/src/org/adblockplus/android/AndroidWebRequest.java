@@ -22,7 +22,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.FilterEngine;
@@ -124,10 +126,26 @@ public class AndroidWebRequest extends WebRequest
           }
         }
 
-        connection.disconnect();
-
         response.setStatus(NsStatus.OK);
         response.setResponse(sb.toString());
+
+        if (connection.getHeaderFields().size() > 0)
+        {
+          List<HeaderEntry> responseHeaders = new LinkedList<HeaderEntry>();
+          for (Map.Entry<String, List<String>> eachEntry : connection.getHeaderFields().entrySet())
+          {
+            for (String eachValue : eachEntry.getValue())
+            {
+              if (eachEntry.getKey() != null && eachValue != null)
+              {
+                responseHeaders.add(new HeaderEntry(eachEntry.getKey(), eachValue));
+              }
+            }
+          }
+          response.setReponseHeaders(responseHeaders);
+        }
+
+        connection.disconnect();
       }
       else
       {
