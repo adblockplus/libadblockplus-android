@@ -17,23 +17,15 @@
 
 package org.adblockplus.libadblockplus.tests;
 
-import android.util.Log;
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.HeaderEntry;
-import org.adblockplus.libadblockplus.LazyLogSystem;
 import org.adblockplus.libadblockplus.LazyWebRequest;
 import org.adblockplus.libadblockplus.Notification;
-import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.ShowNotificationCallback;
-import org.adblockplus.libadblockplus.WebRequest;
 
 import org.junit.Test;
 
-import java.util.List;
-
 public class NotificationTest extends BaseJsTest
 {
-
   protected FilterEngine filterEngine;
 
   @Override
@@ -54,8 +46,6 @@ public class NotificationTest extends BaseJsTest
       "})();");
   }
 
-  private static final String TAG = "notification";
-
   private class LocalShowNotificationCallback extends ShowNotificationCallback
   {
     private Notification retValue;
@@ -68,47 +58,17 @@ public class NotificationTest extends BaseJsTest
     @Override
     public void showNotificationCallback(Notification notification)
     {
-      Log.d(TAG, this + " received [" + notification + "]");
       retValue = notification;
     }
   }
 
   protected Notification peekNotification(String url) throws InterruptedException
   {
-    Log.d(TAG, "Start peek");
-
     LocalShowNotificationCallback callback = new LocalShowNotificationCallback();
-    Log.d(TAG, "set callback " + callback);
     filterEngine.setShowNotificationCallback(callback);
     filterEngine.showNextNotification(url);
     filterEngine.removeShowNotificationCallback();
-    Log.d(TAG, "removed callback");
     return callback.getRetValue();
-  }
-
-  private class MockWebRequest extends WebRequest
-  {
-    private String responseText;
-
-    public MockWebRequest(String responseText)
-    {
-      this.responseText = responseText;
-    }
-
-    @Override
-    public ServerResponse httpGET(String url, List<HeaderEntry> headers)
-    {
-      if (url.indexOf("/notification.json") < 0)
-      {
-        return new ServerResponse();
-      }
-
-      ServerResponse response = new ServerResponse();
-      response.setStatus(ServerResponse.NsStatus.OK);
-      response.setResponseStatus(200);
-      response.setResponse(responseText);
-      return response;
-    }
   }
 
   @Test
@@ -156,7 +116,7 @@ public class NotificationTest extends BaseJsTest
   @Test
   public void testMarkAsShown() throws InterruptedException
   {
-    addNotification("{ type: 'question' }");
+    addNotification("{ id: 'id', type: 'information' }");
     assertNotNull(peekNotification(""));
 
     Notification notification = peekNotification("");
