@@ -16,6 +16,7 @@
  */
 
 #include "JniJsValue.h"
+#include "Utils.h"
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
