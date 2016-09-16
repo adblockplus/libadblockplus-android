@@ -16,6 +16,7 @@
  */
 
 #include "JniCallbacks.h"
+#include "Utils.h"
 
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
 {
@@ -77,7 +78,26 @@ AdblockPlus::ServerResponse JniWebRequest::GET(const std::string& url,
           serverResponseClass->Get(), *response, "responseStatus");
       sResponse.responseText = JniGetStringField(*env,
           serverResponseClass->Get(), *response, "response");
-      // TODO: transform Headers
+
+      // map headers
+      jobjectArray responseHeadersArray = JniGetStringArrayField(*env,
+        serverResponseClass->Get(), *response, "headers");
+
+      if (responseHeadersArray)
+      {
+        int itemsCount = env->GetArrayLength(responseHeadersArray) / 2;
+        for (int i = 0; i < itemsCount; i++)
+        {
+          jstring jKey = (jstring)env->GetObjectArrayElement(responseHeadersArray, i * 2);
+          std::string stdKey = JniJavaToStdString(*env, jKey);
+          
+          jstring jValue = (jstring)env->GetObjectArrayElement(responseHeadersArray, i * 2 + 1);
+          std::string stdValue = JniJavaToStdString(*env, jValue);
+          
+          std::pair<std::string,std::string>  keyValue(stdKey, stdValue);
+          sResponse.responseHeaders.push_back(keyValue);
+        }
+      }
     }
   }
 

@@ -171,6 +171,11 @@ inline int64_t JniGetLongField(JNIEnv* env, jclass clazz, jobject jObj, const ch
   return (int64_t)env->GetLongField(jObj, env->GetFieldID(clazz, name, "J"));
 }
 
+inline jobjectArray JniGetStringArrayField(JNIEnv* env, jclass clazz, jobject jObj, const char* name)
+{
+  return (jobjectArray)env->GetObjectField(jObj, env->GetFieldID(clazz, name, "[Ljava/lang/String;"));
+}
+
 jobject NewJniArrayList(JNIEnv* env);
 
 jobject NewJniFilter(JNIEnv* env, const AdblockPlus::FilterPtr& filter);
