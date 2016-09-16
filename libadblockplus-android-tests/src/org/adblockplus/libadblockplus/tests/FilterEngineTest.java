@@ -80,7 +80,7 @@ public class FilterEngineTest extends FilterEngineGenericTest
     while (filterEngine.getListedSubscriptions().size() > 0)
     {
       filterEngine.getListedSubscriptions().get(0).removeFromList();
-    }  
+    }
 
     assertEquals(0, filterEngine.getListedSubscriptions().size());
     Subscription subscription = filterEngine.getSubscription("foo");

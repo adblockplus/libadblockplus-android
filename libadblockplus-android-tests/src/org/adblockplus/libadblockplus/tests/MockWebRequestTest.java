@@ -38,7 +38,8 @@ public class MockWebRequestTest extends BaseJsTest
       try
       {
         Thread.sleep(50);
-      } catch (InterruptedException e)
+      }
+      catch (InterruptedException e)
       {
         throw new RuntimeException(e);
       }
@@ -49,7 +50,7 @@ public class MockWebRequestTest extends BaseJsTest
       result.setReponseHeaders(Arrays.asList(new HeaderEntry("Foo", "Bar")));
 
       result.setResponse(
-        url + "\n" +
+        url + "\n" + 
         headers.get(0).getKey() + "\n" +
         headers.get(0).getValue());
       return result;
@@ -71,7 +72,8 @@ public class MockWebRequestTest extends BaseJsTest
     {
       jsEngine.evaluate("_webRequest.GET()");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -80,7 +82,8 @@ public class MockWebRequestTest extends BaseJsTest
     {
       jsEngine.evaluate("_webRequest.GET('', {}, function(){})");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -89,7 +92,8 @@ public class MockWebRequestTest extends BaseJsTest
     {
       jsEngine.evaluate("_webRequest.GET({toString: false}, {}, function(){})");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -98,7 +102,8 @@ public class MockWebRequestTest extends BaseJsTest
     {
       jsEngine.evaluate("_webRequest.GET('http://example.com/', null, function(){})");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -107,7 +112,8 @@ public class MockWebRequestTest extends BaseJsTest
     {
       jsEngine.evaluate("_webRequest.GET('http://example.com/', {}, null)");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -116,7 +122,8 @@ public class MockWebRequestTest extends BaseJsTest
     {
       jsEngine.evaluate("_webRequest.GET('http://example.com/', {}, function(){}, 0)");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }

@@ -62,7 +62,7 @@ Make sure _Library_ requirements are present.
 
 Set ANDROID_HOME environment variable to your Android SDK directory.
 
-In the 'libadblockplus-android-tests' run:
+In the 'libadblockplus-android-tests' directory run:
 
     ant instrument
 

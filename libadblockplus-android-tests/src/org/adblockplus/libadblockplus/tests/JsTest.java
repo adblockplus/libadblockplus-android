@@ -43,7 +43,8 @@ public class JsTest extends BaseJsTest
     {
       value.asList();
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -51,7 +52,8 @@ public class JsTest extends BaseJsTest
     {
       value.getProperty("foo");
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -75,7 +77,8 @@ public class JsTest extends BaseJsTest
     {
       value.asList();
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -83,7 +86,8 @@ public class JsTest extends BaseJsTest
     {
       value.getProperty("foo");
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -108,7 +112,8 @@ public class JsTest extends BaseJsTest
     {
       value.asList();
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -116,7 +121,8 @@ public class JsTest extends BaseJsTest
     {
       value.getProperty("foo");
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -141,7 +147,8 @@ public class JsTest extends BaseJsTest
     {
       value.asList();
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -149,7 +156,8 @@ public class JsTest extends BaseJsTest
     {
       value.getProperty("foo");
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -173,7 +181,8 @@ public class JsTest extends BaseJsTest
     {
       value.asList();
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -181,7 +190,8 @@ public class JsTest extends BaseJsTest
     {
       value.getProperty("foo");
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -213,7 +223,8 @@ public class JsTest extends BaseJsTest
     {
       value.asList();
       fail(AdblockPlusException.class.getSimpleName() + " is expected to be thrown");
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -245,10 +256,10 @@ public class JsTest extends BaseJsTest
   {
     final String source =
       "function Foo() {\n" +
-        "   this.toString = function() {throw 'test1';};\n" +
-        "   this.valueOf = function() {throw 'test2';};\n" +
-        "};\n" +
-        "new Foo()";
+      "   this.toString = function() {throw 'test1';};\n" +
+      "   this.valueOf = function() {throw 'test2';};\n" +
+      "};\n" +
+      "new Foo()";
 
     JsValue value = jsEngine.evaluate(source);
     assertEquals("", value.asString());

@@ -43,7 +43,8 @@ public class JsEngineTest extends BaseJsTest
     {
       jsEngine.evaluate("doesnotexist()");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -56,7 +57,8 @@ public class JsEngineTest extends BaseJsTest
     {
       jsEngine.evaluate("'foo'bar'");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }

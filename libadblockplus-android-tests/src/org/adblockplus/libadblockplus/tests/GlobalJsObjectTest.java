@@ -48,7 +48,8 @@ public class GlobalJsObjectTest extends BaseJsTest
     {
       jsEngine.evaluate("setTimeout()");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }
@@ -57,7 +58,8 @@ public class GlobalJsObjectTest extends BaseJsTest
     {
       jsEngine.evaluate("setTimeout('', 1)");
       fail();
-    } catch (AdblockPlusException e)
+    }
+    catch (AdblockPlusException e)
     {
       // ignored
     }

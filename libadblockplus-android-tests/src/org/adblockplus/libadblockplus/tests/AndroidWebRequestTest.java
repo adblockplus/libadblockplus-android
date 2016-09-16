@@ -47,7 +47,8 @@ public class AndroidWebRequestTest extends BaseJsTest
       try
       {
         Thread.sleep(200);
-      } catch (InterruptedException e)
+      }
+      catch (InterruptedException e)
       {
         throw new RuntimeException(e);
       }
@@ -69,7 +70,7 @@ public class AndroidWebRequestTest extends BaseJsTest
     assertTrue(jsHeaders.isObject());
     assertEquals(
       "text/plain",
-      jsEngine.evaluate("foo.responseHeaders['content-type'].substr(0,10)").asString());
+      jsEngine.evaluate("foo.responseHeaders['content-type'].substr(0, 10)").asString());
     assertTrue(jsEngine.evaluate("foo.responseHeaders['location']").isUndefined());
   }
 
@@ -96,7 +97,8 @@ public class AndroidWebRequestTest extends BaseJsTest
       try
       {
         Thread.sleep(200);
-      } catch (InterruptedException e)
+      }
+      catch (InterruptedException e)
       {
         throw new RuntimeException(e);
       }
@@ -110,7 +112,7 @@ public class AndroidWebRequestTest extends BaseJsTest
     assertEquals("[Adblock Plus ", jsEngine.evaluate("result.substr(0, 14)").asString());
     assertEquals(
       "text/plain",
-      jsEngine.evaluate("request.getResponseHeader('Content-Type').substr(0,10)").asString());
+      jsEngine.evaluate("request.getResponseHeader('Content-Type').substr(0, 10)").asString());
     assertTrue(jsEngine.evaluate("request.getResponseHeader('Location')").isNull());
   }
 }
