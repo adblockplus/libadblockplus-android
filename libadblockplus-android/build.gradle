@@ -1,0 +1,72 @@
+apply plugin: 'com.android.model.library'
+
+model {
+
+  repositories {
+    libs(PrebuiltLibraries) {
+      libadblockplus {
+        headers.srcDir 'jni/libadblockplus-binaries/include/'
+        binaries.withType(SharedLibraryBinary) {
+          sharedLibraryFile = file("jni/libadblockplus-binaries/android_${targetPlatform.getName()}/libadblockplus.a")
+        }
+      }
+
+      v8_base {
+        headers.srcDir 'jni/libadblockplus-binaries/include/'
+        binaries.withType(SharedLibraryBinary) {
+          sharedLibraryFile = file("jni/libadblockplus-binaries/android_${targetPlatform.getName()}/libv8_base.a")
+        }
+      }
+
+      v8_snapshot {
+        headers.srcDir 'jni/libadblockplus-binaries/include/'
+        binaries.withType(SharedLibraryBinary) {
+          sharedLibraryFile = file("jni/libadblockplus-binaries/android_${targetPlatform.getName()}/libv8_snapshot.a")
+        }
+      }
+    }
+  }
+
+  android {
+    compileSdkVersion 16
+    buildToolsVersion "22.0.1"
+
+    ndk {
+      moduleName = "adblockplus-jni"
+      cppFlags.add("-std=c++11")
+      cppFlags.add("-fexceptions")
+      stl = "c++_static"
+
+      abiFilters.addAll(['armeabi-v7a', 'x86']) // supported abis only
+    }
+
+    defaultConfig {
+      minSdkVersion.apiLevel 9
+      targetSdkVersion.apiLevel 16
+      versionCode 359
+      versionName "1.3"
+    }
+
+    sources {
+      main {
+        manifest {
+          source {
+            srcDir '.'
+            include 'AndroidManifest.xml'
+          }
+        }
+        java { source { srcDirs = ['src'] } }
+        resources { source { srcDirs = ['src'] } }
+        res { source { srcDirs = ['res'] } }
+        jni {
+          source { srcDirs = ['jni'] }
+          dependencies {
+            library "libadblockplus"
+            library "v8_base"
+            library "v8_snapshot"
+          }
+        }
+      }
+    }
+  }
+}

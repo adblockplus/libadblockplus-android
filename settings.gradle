@@ -1,0 +1,2 @@
+include ':libadblockplus-android'
+include ':libadblockplus-android-tests'
