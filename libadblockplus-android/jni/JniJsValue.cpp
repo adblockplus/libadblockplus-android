@@ -20,24 +20,27 @@
 #include "JniJsValue.h"
 
 // precached in JNI_OnLoad and released in JNI_OnUnload
-jclass globalJsValueClass;
-jmethodID jsValueClassCtor;
+JniGlobalReference<jclass>* jsValueClass;
+jmethodID jsValueCtor;
 
 void JniJsValue_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
 {
-  // precache for performance and avoid attaching threads
-  jclass localJsValueClass = env->FindClass(PKG("JsValue"));
-  globalJsValueClass = (jclass)env->NewGlobalRef(localJsValueClass);
-  jsValueClassCtor = env->GetMethodID(globalJsValueClass, "<init>", "(J)V");
-  env->DeleteLocalRef(localJsValueClass);
+  jsValueClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("JsValue")));
+  jsValueCtor = env->GetMethodID(jsValueClass->Get(), "<init>", "(J)V");
 }
 
 void JniJsValue_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
 {
-  if (globalJsValueClass)
+  if (jsValueClass)
   {
-    env->DeleteGlobalRef(globalJsValueClass);
+    delete jsValueClass;
+    jsValueClass = NULL;
   }
+}
+
+jclass GetJsValueClass()
+{
+  return (jsValueClass != NULL ? jsValueClass->Get() : NULL);
 }
 
 static jboolean JNICALL JniIsUndefined(JNIEnv* env, jclass clazz, jlong ptr)
@@ -164,7 +167,7 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
   delete JniLongToTypePtr<AdblockPlus::JsValuePtr>(ptr);
 }
 
-jobject NewJniJsValue(JNIEnv* env, const AdblockPlus::JsValuePtr& jsValue, jclass jsValueClass)
+jobject NewJniJsValue(JNIEnv* env, const AdblockPlus::JsValuePtr& jsValue, jclass jsValueClassArg)
 {
   if (!jsValue.get())
   {
@@ -172,7 +175,7 @@ jobject NewJniJsValue(JNIEnv* env, const AdblockPlus::JsValuePtr& jsValue, jclas
   }
 
   jlong ptr = JniPtrToLong(new AdblockPlus::JsValuePtr(jsValue));
-  return env->NewObject(globalJsValueClass, jsValueClassCtor, ptr);
+  return env->NewObject(jsValueClass->Get(), jsValueCtor, ptr);
 }
 
 AdblockPlus::JsValue* JniGetJsValue(jlong ptr)

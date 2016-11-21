@@ -17,6 +17,32 @@
 
 #include "JniCallbacks.h"
 #include "Utils.h"
+#include "JniWebRequest.h"
+
+// precached in JNI_OnLoad and released in JNI_OnUnload
+JniGlobalReference<jclass>* headerEntryClass;
+JniGlobalReference<jclass>* serverResponseClass;
+
+void JniWebRequest_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  headerEntryClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("HeaderEntry")));
+  serverResponseClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("ServerResponse")));
+}
+
+void JniWebRequest_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  if (headerEntryClass)
+  {
+    delete headerEntryClass;
+    headerEntryClass = NULL;
+  }
+
+  if (serverResponseClass)
+  {
+    delete serverResponseClass;
+    serverResponseClass = NULL;
+  }
+}
 
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
 {
@@ -33,9 +59,7 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 }
 
 JniWebRequest::JniWebRequest(JNIEnv* env, jobject callbackObject)
-  : JniCallbackBase(env, callbackObject), AdblockPlus::WebRequest(),
-    tupleClass(new JniGlobalReference<jclass>(env, env->FindClass(PKG("HeaderEntry")))),
-    serverResponseClass(new JniGlobalReference<jclass>(env, env->FindClass(PKG("ServerResponse"))))
+  : JniCallbackBase(env, callbackObject), AdblockPlus::WebRequest()
 {
 }
 
@@ -56,13 +80,13 @@ AdblockPlus::ServerResponse JniWebRequest::GET(const std::string& url,
   if (method)
   {
     JniLocalReference<jobject> arrayList(*env, NewJniArrayList(*env));
+    jmethodID addMethod = JniGetAddToListMethod(*env, *arrayList);
 
     for (AdblockPlus::HeaderList::const_iterator it = requestHeaders.begin(),
         end = requestHeaders.end(); it != end; it++)
     {
-      JniLocalReference<jobject> tuple(*env,
-          NewTuple(*env, it->first, it->second));
-      JniAddObjectToList(*env, *arrayList, *tuple);
+      JniLocalReference<jobject> headerEntry(*env, NewTuple(*env, it->first, it->second));
+      JniAddObjectToList(*env, *arrayList, addMethod, *headerEntry);
     }
 
     JniLocalReference<jobject> response(*env,
@@ -75,13 +99,19 @@ AdblockPlus::ServerResponse JniWebRequest::GET(const std::string& url,
       sResponse.status = JniGetLongField(*env, serverResponseClass->Get(),
           *response, "status");
       sResponse.responseStatus = JniGetIntField(*env,
-          serverResponseClass->Get(), *response, "responseStatus");
+                                                serverResponseClass->Get(),
+                                                *response,
+                                                "responseStatus");
       sResponse.responseText = JniGetStringField(*env,
-          serverResponseClass->Get(), *response, "response");
+                                                 serverResponseClass->Get(),
+                                                 *response,
+                                                 "response");
 
       // map headers
       jobjectArray responseHeadersArray = JniGetStringArrayField(*env,
-        serverResponseClass->Get(), *response, "headers");
+                                                                 serverResponseClass->Get(),
+                                                                 *response,
+                                                                 "headers");
 
       if (responseHeadersArray)
       {
@@ -109,13 +139,13 @@ AdblockPlus::ServerResponse JniWebRequest::GET(const std::string& url,
 jobject JniWebRequest::NewTuple(JNIEnv* env, const std::string& a,
     const std::string& b) const
 {
-  jmethodID factory = env->GetMethodID(tupleClass->Get(), "<init>",
+  jmethodID factory = env->GetMethodID(headerEntryClass->Get(), "<init>",
       "(Ljava/lang/String;Ljava/lang/String;)V");
 
   JniLocalReference<jstring> strA(env, env->NewStringUTF(a.c_str()));
   JniLocalReference<jstring> strB(env, env->NewStringUTF(b.c_str()));
 
-  return env->NewObject(tupleClass->Get(), factory, *strA, *strB);
+  return env->NewObject(headerEntryClass->Get(), factory, *strA, *strB);
 }
 
 static JNINativeMethod methods[] =

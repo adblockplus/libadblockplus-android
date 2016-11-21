@@ -33,8 +33,7 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 
 JniFilterChangeCallback::JniFilterChangeCallback(JNIEnv* env,
     jobject callbackObject)
-    : JniCallbackBase(env, callbackObject), jsValueClass(
-        new JniGlobalReference<jclass>(env, env->FindClass(PKG("JsValue"))))
+    : JniCallbackBase(env, callbackObject)
 {
 }
 
@@ -51,8 +50,7 @@ void JniFilterChangeCallback::Callback(const std::string& arg,
   if (method)
   {
     JniLocalReference<jstring> jArg(*env, env->NewStringUTF(arg.c_str()));
-    JniLocalReference<jobject> jJsValue(*env,
-        NewJniJsValue(*env, jsValue, jsValueClass->Get()));
+    JniLocalReference<jobject> jJsValue(*env, NewJniJsValue(*env, jsValue, GetJsValueClass()));
     env->CallVoidMethod(GetCallbackObject(), method, *jArg, *jJsValue);
   }
 

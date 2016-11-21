@@ -16,6 +16,24 @@
  */
 
 #include "JniCallbacks.h"
+#include "JniLogSystem.h"
+
+// precached in JNI_OnLoad and released in JNI_OnUnload
+JniGlobalReference<jclass>* logLevelClass;
+
+void JniLogSystem_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  logLevelClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("LogSystem$LogLevel")));
+}
+
+void JniLogSystem_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  if (logLevelClass)
+  {
+    delete logLevelClass;
+    logLevelClass = NULL;
+  }
+}
 
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
 {
@@ -32,7 +50,7 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 }
 
 JniLogSystemCallback::JniLogSystemCallback(JNIEnv* env, jobject callbackObject)
-  : JniCallbackBase(env, callbackObject), AdblockPlus::LogSystem(), logLevelClass(new JniGlobalReference<jclass>(env, env->FindClass(PKG("LogSystem$LogLevel"))))
+  : JniCallbackBase(env, callbackObject), AdblockPlus::LogSystem()
 {
 }
 

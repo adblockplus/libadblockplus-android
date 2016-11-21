@@ -18,6 +18,24 @@
 #include <AdblockPlus.h>
 #include "Utils.h"
 #include "JniJsValue.h"
+#include "JniFilter.h"
+
+// precached in JNI_OnLoad and released in JNI_OnUnload
+JniGlobalReference<jclass>* filterEnumClass;
+
+void JniFilter_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  filterEnumClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Filter$Type")));
+}
+
+void JniFilter_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  if (filterEnumClass)
+  {
+    delete filterEnumClass;
+    filterEnumClass = NULL;
+  }
+}
 
 static AdblockPlus::Filter* GetFilterPtr(jlong ptr)
 {
@@ -66,10 +84,8 @@ static jobject JNICALL JniGetType(JNIEnv* env, jclass clazz, jlong ptr)
     break;
   }
 
-  JniLocalReference<jclass> enumClass(env, env->FindClass(PKG("Filter$Type")));
-  jfieldID enumField = env->GetStaticFieldID(*enumClass, enumName,
-      TYP("Filter$Type"));
-  return env->GetStaticObjectField(*enumClass, enumField);
+  jfieldID enumField = env->GetStaticFieldID(filterEnumClass->Get(), enumName, TYP("Filter$Type"));
+  return env->GetStaticObjectField(filterEnumClass->Get(), enumField);
 }
 
 static jboolean JNICALL JniIsListed(JNIEnv* env, jclass clazz, jlong ptr)

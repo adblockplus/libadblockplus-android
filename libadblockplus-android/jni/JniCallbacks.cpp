@@ -17,9 +17,25 @@
 
 #include "JniCallbacks.h"
 
+// precached in JNI_OnLoad and released in JNI_OnUnload
+JniGlobalReference<jclass>* exceptionHandlerClass;
+
+void JniCallbacks_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  exceptionHandlerClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("JniExceptionHandler")));
+}
+
+void JniCallbacks_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  if (exceptionHandlerClass)
+  {
+    delete exceptionHandlerClass;
+    exceptionHandlerClass = NULL;
+  }
+}
+
 JniCallbackBase::JniCallbackBase(JNIEnv* env, jobject callbackObject)
-  : callbackObject(new JniGlobalReference<jobject>(env, callbackObject)),
-    exceptionLoggerClass(new JniGlobalReference<jclass>(env, env->FindClass(PKG("JniExceptionHandler"))))
+  : callbackObject(new JniGlobalReference<jobject>(env, callbackObject))
 {
   env->GetJavaVM(&javaVM);
 }
@@ -31,10 +47,11 @@ JniCallbackBase::~JniCallbackBase()
 
 void JniCallbackBase::LogException(JNIEnv* env, jthrowable throwable) const
 {
-  jmethodID logMethod = env->GetStaticMethodID(exceptionLoggerClass->Get(), "logException", "(Ljava/lang/Throwable;)V");
+  jmethodID logMethod = env->GetStaticMethodID(
+    exceptionHandlerClass->Get(), "logException", "(Ljava/lang/Throwable;)V");
   if (logMethod)
   {
-    env->CallStaticVoidMethod(exceptionLoggerClass->Get(), logMethod, throwable);
+    env->CallStaticVoidMethod(exceptionHandlerClass->Get(), logMethod, throwable);
   }
 }
 

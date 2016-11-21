@@ -31,6 +31,10 @@
 
 #define ABP_JNI_VERSION JNI_VERSION_1_6
 
+void JniUtils_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved);
+
+void JniUtils_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved);
+
 void JniThrowException(JNIEnv* env, const std::string& message);
 
 void JniThrowException(JNIEnv* env, const std::exception& e);
@@ -148,6 +152,10 @@ inline T* JniLongToTypePtr(jlong value)
 }
 
 std::string JniJavaToStdString(JNIEnv* env, jstring str);
+
+jmethodID JniGetAddToListMethod(JNIEnv* env, jobject list);
+
+void JniAddObjectToList(JNIEnv* env, jobject list, jmethodID addMethod, jobject value);
 
 void JniAddObjectToList(JNIEnv* env, jobject list, jobject value);
 

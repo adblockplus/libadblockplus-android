@@ -22,6 +22,10 @@
 #include "Utils.h"
 #include "JniJsValue.h"
 
+void JniCallbacks_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved);
+
+void JniCallbacks_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved);
+
 class JniCallbackBase
 {
 public:
@@ -43,7 +47,6 @@ public:
 private:
   JavaVM* javaVM;
   const JniGlobalReference<jobject>::Ptr callbackObject;
-  const JniGlobalReference<jclass>::Ptr exceptionLoggerClass;
 };
 
 class JniEventCallback : public JniCallbackBase
@@ -72,9 +75,6 @@ class JniFilterChangeCallback : public JniCallbackBase
 public:
   JniFilterChangeCallback(JNIEnv* env, jobject callbackObject);
   void Callback(const std::string& arg, const AdblockPlus::JsValuePtr jsValue);
-
-private:
-  const JniGlobalReference<jclass>::Ptr jsValueClass;
 };
 
 class JniLogSystemCallback : public JniCallbackBase, public AdblockPlus::LogSystem
@@ -82,9 +82,6 @@ class JniLogSystemCallback : public JniCallbackBase, public AdblockPlus::LogSyst
 public:
   JniLogSystemCallback(JNIEnv* env, jobject callbackObject);
   void operator()(AdblockPlus::LogSystem::LogLevel logLevel, const std::string& message, const std::string& source);
-
-private:
-  const JniGlobalReference<jclass>::Ptr logLevelClass;
 };
 
 class JniShowNotificationCallback : public JniCallbackBase
@@ -92,9 +89,6 @@ class JniShowNotificationCallback : public JniCallbackBase
 public:
   JniShowNotificationCallback(JNIEnv* env, jobject callbackObject);
   void Callback(const AdblockPlus::NotificationPtr&);
-
-private:
-  const JniGlobalReference<jclass>::Ptr notificationClass;
 };
 
 class JniWebRequest : public JniCallbackBase, public AdblockPlus::WebRequest
@@ -105,9 +99,6 @@ public:
 
 private:
   jobject NewTuple(JNIEnv* env, const std::string& a, const std::string& b) const;
-
-  const JniGlobalReference<jclass>::Ptr tupleClass;
-  const JniGlobalReference<jclass>::Ptr serverResponseClass;
 };
 
 #endif /* JNICALLBACKS_H */

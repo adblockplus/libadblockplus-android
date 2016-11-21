@@ -16,6 +16,11 @@
  */
 
 #include "JniJsValue.h"
+#include "JniFilter.h"
+#include "JniLogSystem.h"
+#include "JniCallbacks.h"
+#include "JniNotification.h"
+#include "JniWebRequest.h"
 #include "Utils.h"
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
@@ -27,6 +32,12 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
   }
 
   JniJsValue_OnLoad(vm, env, reserved);
+  JniFilter_OnLoad(vm, env, reserved);
+  JniLogSystem_OnLoad(vm, env, reserved);
+  JniCallbacks_OnLoad(vm, env, reserved);
+  JniNotification_OnLoad(vm, env, reserved);
+  JniWebRequest_OnLoad(vm, env, reserved);
+  JniUtils_OnLoad(vm, env, reserved);
 
   return ABP_JNI_VERSION;
 }
@@ -40,4 +51,10 @@ void JNI_OnUnload(JavaVM* vm, void* reserved)
   }
 
   JniJsValue_OnUnload(vm, env, reserved);
+  JniFilter_OnUnload(vm, env, reserved);
+  JniLogSystem_OnUnload(vm, env, reserved);
+  JniCallbacks_OnUnload(vm, env, reserved);
+  JniNotification_OnUnload(vm, env, reserved);
+  JniWebRequest_OnUnload(vm, env, reserved);
+  JniUtils_OnUnload(vm, env, reserved);
 }

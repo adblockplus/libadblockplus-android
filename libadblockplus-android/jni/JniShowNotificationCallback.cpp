@@ -33,8 +33,7 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 
 JniShowNotificationCallback::JniShowNotificationCallback(JNIEnv* env,
     jobject callbackObject)
-    : JniCallbackBase(env, callbackObject), notificationClass(
-        new JniGlobalReference<jclass>(env, env->FindClass(PKG("Notification"))))
+    : JniCallbackBase(env, callbackObject)
 {
 }
 

@@ -15,9 +15,25 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <AdblockPlus.h>
 #include "Utils.h"
-#include "JniJsValue.h"
+#include "JniNotification.h"
+
+// precached in JNI_OnLoad and released in JNI_OnUnload
+JniGlobalReference<jclass>* notificationEnumClass;
+
+void JniNotification_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  notificationEnumClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Notification$Type")));
+}
+
+void JniNotification_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
+{
+  if (notificationEnumClass)
+  {
+    delete notificationEnumClass;
+    notificationEnumClass = NULL;
+  }
+}
 
 static AdblockPlus::Notification* GetNotificationPtr(jlong ptr)
 {
@@ -51,16 +67,12 @@ static jobject JNICALL JniGetType(JNIEnv* env, jclass clazz, jlong ptr)
     break;
   }
 
-  JniLocalReference<jclass> enumClass(
-      env,
-      env->FindClass(PKG("Notification$Type")));
-
   jfieldID enumField = env->GetStaticFieldID(
-      *enumClass,
+      notificationEnumClass->Get(),
       enumName,
       TYP("Notification$Type"));
 
-  return env->GetStaticObjectField(*enumClass, enumField);
+  return env->GetStaticObjectField(notificationEnumClass->Get(), enumField);
 }
 
 static jstring JniGetTitle(JNIEnv* env, jclass clazz, jlong ptr)
