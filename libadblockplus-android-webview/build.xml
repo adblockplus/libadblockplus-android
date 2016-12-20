@@ -66,7 +66,7 @@
     -->
 
     <!--
-        Walkaround for the issue: ant does not copy assets from libraries by default
+        Workaround for the issue: ant does not copy assets from libraries by default
         http://stackoverflow.com/questions/5889833/android-library-assets-folder-doesnt-get-copied
     -->
     <target name="-post-compile" if="${project.is.library}">
