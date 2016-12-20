@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Adblock: enabled/disabled -->
+    <SwitchPreference
+        android:key="@string/fragment_adblock_settings_enabled_key"
+        android:title="@string/fragment_adblock_settings_enabled_title" />
+
+    <!-- Filter lists -->
+    <MultiSelectListPreference
+        android:key="adblock_filter_lists"
+        android:title="@string/fragment_adblock_settings_filter_lists_title"
+        android:summary="@string/fragment_adblock_settings_filter_lists_summary" />
+
+    <!-- Acceptable Ads: enabled/disabled -->
+    <SwitchPreference
+        android:key="@string/fragment_adblock_settings_aa_enabled_key"
+        android:title="@string/fragment_adblock_settings_aa_enabled_title"
+        android:summary="@string/fragment_adblock_settings_aa_enabled_summary" />
+
+    <!-- Whitelisted domains -->
+    <Preference
+        android:key="@string/fragment_adblock_settings_wl_key"
+        android:title="@string/fragment_adblock_settings_wl_title"
+        android:summary="@string/fragment_adblock_settings_wl_summary" />
+
+</PreferenceScreen>

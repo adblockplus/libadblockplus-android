@@ -4,13 +4,18 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>	
-	
-    <groupId>org.adblockplus</groupId>
-    <artifactId>libadblockplus-android</artifactId>
-    <version>1.3</version>
-	<packaging>aar</packaging>
+
+    <parent>
+        <groupId>org.adblockplus.libadblockplus.android</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.0</version>
+    </parent>
+
+    <groupId>org.adblockplus.libadblockplus.android</groupId>
+    <artifactId>library</artifactId>
+    <version>${selfVersion}</version>
+    <packaging>aar</packaging>
     <name>libadblockplus-android</name>
-	<description>AdBlock Plus JNI Binding Library</description>
 
     <dependencies>
         <!-- android -->

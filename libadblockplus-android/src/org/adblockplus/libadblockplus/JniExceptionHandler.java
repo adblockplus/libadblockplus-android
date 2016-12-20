@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.adblockplus.android.Utils;
+import org.adblockplus.libadblockplus.android.Utils;
 
 import android.util.Log;
 

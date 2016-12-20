@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>	
+
+    <parent>
+        <groupId>org.adblockplus.libadblockplus.android</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.0</version>
+    </parent>
+
+    <groupId>org.adblockplus.libadblockplus.android</groupId>
+    <artifactId>settings</artifactId>
+    <version>${selfVersion}</version>
+    <packaging>aar</packaging>
+    <name>libadblockplus-android-settings</name>
+
+    <dependencies>
+        <!-- android -->
+        <dependency>
+            <groupId>com.google.android</groupId>
+            <artifactId>android</artifactId>
+            <version>5.0</version> <!-- 5.0 = target-21 -->
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- library -->
+        <dependency>
+            <groupId>org.adblockplus.libadblockplus.android</groupId>
+            <artifactId>library</artifactId>
+            <version>${selfVersion}</version>
+            <type>aar</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>${basedir}/src</sourceDirectory>
+        <plugins>
+
+            <!-- compile java code and package -->
+            <plugin>
+                <groupId>com.simpligility.maven.plugins</groupId>
+                <artifactId>android-maven-plugin</artifactId>
+                <version>4.4.1</version>
+                <configuration>
+                    <sdk>
+                        <platform>21</platform>
+                    </sdk>
+                    <ndk>
+                        <path>${env.ANDROID_NDK_HOME}</path>
+                    </ndk>
+
+                    <!-- specific files locations -->
+                    <androidManifestFile>AndroidManifest.xml</androidManifestFile>
+                    <resourceDirectory>res</resourceDirectory>
+                    <nativeLibrariesDirectory>libs</nativeLibrariesDirectory>
+                    <assetsDirectory>assets</assetsDirectory>
+
+                </configuration>
+                <extensions>true</extensions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

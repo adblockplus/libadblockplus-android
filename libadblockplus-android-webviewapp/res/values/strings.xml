@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AdblockWebView App</string>
+    <string name="settings_name">Settings</string>
+
+    <string name="main_ok">OK</string>
+    <string name="main_prev">&lt;</string>
+    <string name="main_next">&gt;</string>
+    <string name="main_settings">Settings</string>
+</resources>

@@ -415,6 +415,25 @@ static void JNICALL JniSetPref(JNIEnv* env, jclass clazz, jlong ptr, jstring jPr
   CATCH_AND_THROW(env)
 }
 
+static jstring JNICALL JniGetHostFromURL(JNIEnv* env, jclass clazz, jlong ptr, jstring jurl)
+{
+  if (jurl == NULL)
+  {
+    return NULL;
+  }
+
+  AdblockPlus::FilterEngine* engine = JniLongToTypePtr<AdblockPlus::FilterEngine>(ptr);
+
+  std::string url = JniJavaToStdString(env, jurl);
+  try
+  {
+    std::string host = engine->GetHostFromURL(url);
+
+    return JniStdStringToJava(env, host);
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
 static JNINativeMethod methods[] =
 {
   { (char*)"ctor", (char*)"(J)J", (void*)JniCtor },
@@ -439,6 +458,7 @@ static JNINativeMethod methods[] =
   { (char*)"isElemhideWhitelisted", (char*)"(JLjava/lang/String;[Ljava/lang/String;)Z", (void*)JniIsElemhideWhitelisted },
   { (char*)"getPref", (char*)"(JLjava/lang/String;)" TYP("JsValue"), (void*)JniGetPref },
   { (char*)"setPref", (char*)"(JLjava/lang/String;J)V", (void*)JniSetPref },
+  { (char*)"getHostFromURL", (char*)"(JLjava/lang/String;)Ljava/lang/String;", (void*)JniGetHostFromURL },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor }
 };
 

@@ -1,0 +1,48 @@
+apply plugin: 'com.android.application'
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "24.0.1"
+
+    defaultConfig {
+        applicationId "org.adblockplus.libadblockplus.android.webviewapp"
+        minSdkVersion 21
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            resources.srcDirs = ['src']
+            res.srcDirs = ['res']
+
+            jni {
+                dependencies {
+                    project ":libadblockplus-android"
+                }
+            }
+        }
+    }
+}
+
+
+dependencies {
+    compile project(':libadblockplus-android-settings')
+    compile project(':libadblockplus-android-webview')
+    compile 'com.android.support:appcompat-v7:21.0.3'
+}

@@ -17,12 +17,15 @@
 
 package org.adblockplus.libadblockplus.tests;
 
-import org.adblockplus.android.AndroidWebRequest;
+import org.adblockplus.libadblockplus.android.AndroidWebRequest;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.ServerResponse;
 
 import org.junit.Test;
+
+import java.net.MalformedURLException;
+import java.util.List;
 
 public class AndroidWebRequestTest extends BaseJsTest
 {
@@ -31,7 +34,7 @@ public class AndroidWebRequestTest extends BaseJsTest
   {
     super.setUp();
 
-    jsEngine.setWebRequest(new AndroidWebRequest());
+    jsEngine.setWebRequest(new AndroidWebRequest(true));
   }
 
   @Test
@@ -114,5 +117,25 @@ public class AndroidWebRequestTest extends BaseJsTest
       "text/plain",
       jsEngine.evaluate("request.getResponseHeader('Content-Type').substr(0, 10)").asString());
     assertTrue(jsEngine.evaluate("request.getResponseHeader('Location')").isNull());
+  }
+
+  @Test
+  public void testGetElemhideElements() throws MalformedURLException, InterruptedException
+  {
+    FilterEngine filterEngine = new FilterEngine(jsEngine);
+
+    Thread.sleep(20 * 1000); // wait for the subscription to be downloaded
+
+    final String url = "www.mobile01.com/somepage.html";
+
+    boolean isDocumentWhitelisted = filterEngine.isDocumentWhitelisted(url, null);
+    assertFalse(isDocumentWhitelisted);
+
+    boolean isElemhideWhitelisted = filterEngine.isElemhideWhitelisted(url, null);
+    assertFalse(isElemhideWhitelisted);
+
+    List<String> selectors = filterEngine.getElementHidingSelectors(url);
+    assertNotNull(selectors);
+    assertTrue(selectors.size() > 0);
   }
 }

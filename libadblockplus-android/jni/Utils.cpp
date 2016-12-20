@@ -98,6 +98,11 @@ std::string JniJavaToStdString(JNIEnv* env, jstring str)
   return ret;
 }
 
+jstring JniStdStringToJava(JNIEnv* env, std::string str)
+{
+  return env->NewStringUTF(str.c_str());
+}
+
 jobject NewJniArrayList(JNIEnv* env)
 {
   return env->NewObject(arrayListClass->Get(), arrayListCtor);

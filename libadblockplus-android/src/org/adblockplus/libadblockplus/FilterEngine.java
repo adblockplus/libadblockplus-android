@@ -157,6 +157,11 @@ public final class FilterEngine implements Disposable
     setPref(this.ptr, pref, value.ptr);
   }
 
+  public String getHostFromURL(String url)
+  {
+    return getHostFromURL(this.ptr, url);
+  }
+
   @Override
   public void dispose()
   {
@@ -224,6 +229,8 @@ public final class FilterEngine implements Disposable
   private final static native boolean isElemhideWhitelisted(long ptr, String url, String[] documentUrls);
 
   private final static native void setPref(long ptr, String pref, long valuePtr);
+
+  private final static native String getHostFromURL(long ptr, String url);
 
   private final static native void dtor(long ptr);
 }
