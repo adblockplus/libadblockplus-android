@@ -25,11 +25,6 @@ public final class Subscription extends JsValue
     registerNatives();
   }
 
-  public Subscription(final JsValue jsValue)
-  {
-    super(ctor(jsValue.ptr));
-  }
-
   private Subscription(final long ptr)
   {
     super(ptr);
@@ -78,8 +73,6 @@ public final class Subscription extends JsValue
   }
 
   private final static native void registerNatives();
-
-  private final static native long ctor(long jsValuePtr);
 
   private final static native boolean isListed(long ptr);
 

@@ -24,15 +24,6 @@ static AdblockPlus::Subscription* GetSubscriptionPtr(jlong ptr)
   return JniLongToTypePtr<AdblockPlus::SubscriptionPtr>(ptr)->get();
 }
 
-static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jlong jsValue)
-{
-  try
-  {
-    return JniPtrToLong(new AdblockPlus::SubscriptionPtr(new AdblockPlus::Subscription(JniGetJsValuePtr(jsValue))));
-  }
-  CATCH_THROW_AND_RETURN(env, 0)
-}
-
 static jboolean JNICALL JniIsListed(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
@@ -92,7 +83,6 @@ static jboolean JNICALL JniOperatorEquals(JNIEnv* env, jclass clazz, jlong ptr, 
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"ctor", (char*)"(J)J", (void*)JniCtor },
   { (char*)"isListed", (char*)"(J)Z", (void*)JniIsListed },
   { (char*)"addToList", (char*)"(J)V", (void*)JniAddToList },
   { (char*)"removeFromList", (char*)"(J)V", (void*)JniRemoveFromList },
