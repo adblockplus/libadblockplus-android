@@ -106,9 +106,6 @@ public class AdblockHelper
     SharedPreferences prefs = context.getSharedPreferences(preferenceName, Context.MODE_PRIVATE);
     storage = new SharedPrefsStorage(prefs);
 
-    // latch is required for async (see `waitForReady()`)
-    engineCreated = new CountDownLatch(1);
-
     engine = AdblockEngine.create(
       AdblockEngine.generateAppInfo(context, developmentBuild),
       context.getCacheDir().getAbsolutePath(),
@@ -129,9 +126,6 @@ public class AdblockHelper
     {
       Log.w(TAG, "No saved adblock settings");
     }
-
-    // unlock waiting client thread
-    engineCreated.countDown();
   }
 
   /**
@@ -142,7 +136,7 @@ public class AdblockHelper
   {
     if (engineCreated == null)
     {
-      throw new RuntimeException("AdblockHelper Plus usage exception: call retain(...) first");
+      throw new RuntimeException("AdblockHelper Plus usage exception: call retain(true) first");
     }
 
     try
@@ -163,10 +157,6 @@ public class AdblockHelper
 
     engine.dispose();
     engine = null;
-
-    // to unlock waiting client in WaitForReady()
-    engineCreated.countDown();
-    engineCreated = null;
 
     storage = null;
   }
@@ -196,12 +186,18 @@ public class AdblockHelper
       }
       else
       {
+        // latch is required for async (see `waitForReady()`)
+        engineCreated = new CountDownLatch(1);
+
         new Thread(new Runnable()
         {
           @Override
           public void run()
           {
             createAdblock();
+
+            // unlock waiting client thread
+            engineCreated.countDown();
           }
         }).start();
       }
@@ -215,8 +211,20 @@ public class AdblockHelper
   {
     if (referenceCounter.decrementAndGet() == 0)
     {
-      waitForReady();
-      disposeAdblock();
+      if (engineCreated != null)
+      {
+        // retained asynchronously
+        waitForReady();
+        disposeAdblock();
+
+        // to unlock waiting client in waitForReady()
+        engineCreated.countDown();
+        engineCreated = null;
+      }
+      else
+      {
+        disposeAdblock();
+      }
     }
   }
 }

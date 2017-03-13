@@ -13,7 +13,7 @@
 
     <groupId>org.adblockplus.libadblockplus.android</groupId>
     <artifactId>library</artifactId>
-    <version>${selfVersion}</version>
+    <version>1.0</version>
     <packaging>aar</packaging>
     <name>libadblockplus-android</name>
 

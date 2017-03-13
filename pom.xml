@@ -11,7 +11,6 @@
     <name>parent</name>
     
     <properties>
-        <selfVersion>1.0</selfVersion>
         <buildTools>22.0.1</buildTools>
     </properties>
 

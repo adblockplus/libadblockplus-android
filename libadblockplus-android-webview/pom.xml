@@ -13,7 +13,7 @@
 
     <groupId>org.adblockplus.libadblockplus.android</groupId>
     <artifactId>webview</artifactId>
-    <version>${selfVersion}</version>
+    <version>1.0</version>
     <packaging>aar</packaging>
     <name>libadblockplus-android-webview</name>
 
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>org.adblockplus.libadblockplus.android</groupId>
             <artifactId>library</artifactId>
-            <version>${selfVersion}</version>
+            <version>1.0</version>
             <type>aar</type>
         </dependency>
     </dependencies>
