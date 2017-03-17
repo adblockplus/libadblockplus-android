@@ -156,7 +156,7 @@ Create `AdblockEngine` instance with factory methods and `AdblockSettingsStorage
 You can use `SharedPrefsStorage` implementation to store settings in `SharedPreferences`.
 Or you can use AdblockHelper:
 
-    AdblockHelper.get().init(this, true, AdblockHelper.PREFERENCE_NAME);
+    AdblockHelper.get().init(this, getFilesDir().getAbsolutePath(), true, AdblockHelper.PREFERENCE_NAME);
 
 Implement the following interfaces in your settings activity:
 

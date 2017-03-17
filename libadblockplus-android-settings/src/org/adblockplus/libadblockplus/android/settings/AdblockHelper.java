@@ -42,6 +42,7 @@ public class AdblockHelper
   private static AdblockHelper _instance;
 
   private Context context;
+  private String basePath;
   private boolean developmentBuild;
   private String preferenceName;
   private AdblockEngine engine;
@@ -88,12 +89,19 @@ public class AdblockHelper
   /**
    * Init with context
    * @param context application context
+   * @param basePath file system root to store files
+   *
+   *                 Adblock Plus library will download subscription files and store them on
+   *                 the path passed. The path should exist and the directory content should not be
+   *                 cleared out occasionally. Using `context.getCacheDir().getAbsolutePath()` is not
+   *                 recommended because it can be cleared by the system.
    * @param developmentBuild debug or release?
    * @param preferenceName Shared Preferences name
    */
-  public void init(Context context, boolean developmentBuild, String preferenceName)
+  public void init(Context context, String basePath, boolean developmentBuild, String preferenceName)
   {
     this.context = context.getApplicationContext();
+    this.basePath = basePath;
     this.developmentBuild = developmentBuild;
     this.preferenceName = preferenceName;
   }
@@ -108,8 +116,7 @@ public class AdblockHelper
 
     engine = AdblockEngine.create(
       AdblockEngine.generateAppInfo(context, developmentBuild),
-      context.getCacheDir().getAbsolutePath(),
-      true); // `true` as we need element hiding
+      basePath, true); // `true` as we need element hiding
     Log.d(TAG, "AdblockHelper engine created");
 
     AdblockSettings settings = storage.load();

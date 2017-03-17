@@ -17,6 +17,8 @@
 
 package org.adblockplus.libadblockplus.android.webviewapp;
 
+import android.content.Context;
+
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 public class Application extends android.app.Application
@@ -27,6 +29,7 @@ public class Application extends android.app.Application
     super.onCreate();
 
     // init Adblock
-    AdblockHelper.get().init(this, true, AdblockHelper.PREFERENCE_NAME);
+    String basePath = getDir("adblock", Context.MODE_PRIVATE).getAbsolutePath();
+    AdblockHelper.get().init(this, basePath, true, AdblockHelper.PREFERENCE_NAME);
   }
 }
