@@ -34,7 +34,7 @@ public class AndroidWebRequestTest extends BaseJsTest
   {
     super.setUp();
 
-    jsEngine.setWebRequest(new AndroidWebRequest(true));
+    jsEngine.setWebRequest(new AndroidWebRequest(true, true));
   }
 
   @Test

@@ -117,7 +117,7 @@ public final class AdblockEngine
     engine.logSystem = new AndroidLogSystem();
     engine.jsEngine.setLogSystem(engine.logSystem);
 
-    engine.webRequest = new AndroidWebRequest(enableElemhide);
+    engine.webRequest = new AndroidWebRequest(enableElemhide, true);
     engine.jsEngine.setWebRequest(engine.webRequest);
 
     engine.filterEngine = new FilterEngine(engine.jsEngine);

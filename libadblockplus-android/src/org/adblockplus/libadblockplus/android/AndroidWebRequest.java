@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -25,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.FilterEngine;
@@ -37,19 +39,31 @@ import android.util.Log;
 
 public class AndroidWebRequest extends WebRequest
 {
+  protected static final String ENCODING_GZIP = "gzip";
+  protected static final String ENCODING_IDENTITY = "identity";
+
   public final static String TAG = Utils.getTag(WebRequest.class);
 
   private final HashSet<String> subscriptionURLs = new HashSet<String>();
   private final boolean elemhideEnabled;
+  private final boolean compressedStream;
 
-  public AndroidWebRequest(boolean enableElemhide)
+  /**
+   * Ctor
+   * @param enableElemhide Enable element hiding?
+   *                       Element hiding requires significantly more memory
+   *                       but allows better ad blocking
+   * @param compressedStream Request for gzip compressed stream from the server
+   */
+  public AndroidWebRequest(boolean enableElemhide, boolean compressedStream)
   {
     this.elemhideEnabled = enableElemhide;
+    this.compressedStream = compressedStream;
   }
 
   public AndroidWebRequest()
   {
-    this(false);
+    this(false, true);
   }
 
   private boolean isListedSubscriptionUrl(final URL url)
@@ -84,6 +98,8 @@ public class AndroidWebRequest extends WebRequest
 
       final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("GET");
+      connection.setRequestProperty("Accept-Encoding",
+        (compressedStream ? ENCODING_GZIP : ENCODING_IDENTITY));
       connection.connect();
 
       final ServerResponse response = new ServerResponse();
@@ -91,7 +107,11 @@ public class AndroidWebRequest extends WebRequest
 
       if (response.getResponseStatus() == 200)
       {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+        final InputStream inputStream =
+          (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding())
+            ? new GZIPInputStream(connection.getInputStream())
+            : connection.getInputStream());
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
         final StringBuilder sb = new StringBuilder();
 
         String line;
