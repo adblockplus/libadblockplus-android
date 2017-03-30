@@ -30,6 +30,7 @@ import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterChangeCallback;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.FilterEngine.ContentType;
+import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LogSystem;
@@ -103,6 +104,7 @@ public final class AdblockEngine
 
   public static AdblockEngine create(final AppInfo appInfo,
                                      final String basePath, boolean enableElemhide,
+                                     IsAllowedConnectionCallback isAllowedConnectionCallback,
                                      UpdateAvailableCallback updateAvailableCallback,
                                      UpdateCheckDoneCallback updateCheckDoneCallback,
                                      ShowNotificationCallback showNotificationCallback,
@@ -121,7 +123,7 @@ public final class AdblockEngine
     engine.webRequest = new AndroidWebRequest(enableElemhide, true);
     engine.jsEngine.setWebRequest(engine.webRequest);
 
-    engine.filterEngine = new FilterEngine(engine.jsEngine);
+    engine.filterEngine = new FilterEngine(engine.jsEngine, isAllowedConnectionCallback);
 
     engine.updateAvailableCallback = updateAvailableCallback;
     if (engine.updateAvailableCallback != null)
@@ -149,9 +151,11 @@ public final class AdblockEngine
   }
 
   public static AdblockEngine create(final AppInfo appInfo,
-                                     final String basePath, boolean elemhideEnabled)
+                                     final String basePath,
+                                     boolean elemhideEnabled,
+                                     IsAllowedConnectionCallback isAllowedConnectionCallback)
   {
-    return create(appInfo, basePath, elemhideEnabled, null, null, null, null);
+    return create(appInfo, basePath, elemhideEnabled, isAllowedConnectionCallback, null, null, null, null);
   }
 
   public void dispose()

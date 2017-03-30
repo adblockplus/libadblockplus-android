@@ -10,5 +10,9 @@
     <string name="fragment_adblock_settings_wl_summary">Add websites that you want to see ads on to this list</string>
     <string name="fragment_adblock_settings_add_domain">Add domain</string>
     <string name="fragment_adblock_settings_wl_domains">Whitelisted domains</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Configure automatic updates</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Non-metered WiFi networks</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">All WiFi networks</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Always</string>
 
 </resources>

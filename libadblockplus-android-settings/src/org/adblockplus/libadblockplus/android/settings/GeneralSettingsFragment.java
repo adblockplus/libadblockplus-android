@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.preference.ListPreference;
 import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.SwitchPreference;
@@ -44,11 +45,13 @@ public class GeneralSettingsFragment
   private String SETTINGS_FILTER_LISTS_KEY;
   private String SETTINGS_AA_ENABLED_KEY;
   private String SETTINGS_WL_DOMAINS_KEY;
+  private String SETTINGS_ALLOWED_CONNECTION_TYPE_KEY;
 
   private SwitchPreference adblockEnabled;
   private MultiSelectListPreference filterLists;
   private SwitchPreference acceptableAdsEnabled;
   private Preference whitelistedDomains;
+  private ListPreference allowedConnectionType;
 
   /**
    * Listener with additional `onWhitelistedDomainsClicked` event
@@ -103,6 +106,7 @@ public class GeneralSettingsFragment
     SETTINGS_FILTER_LISTS_KEY = getString(R.string.fragment_adblock_settings_filter_lists_key);
     SETTINGS_AA_ENABLED_KEY = getString(R.string.fragment_adblock_settings_aa_enabled_key);
     SETTINGS_WL_DOMAINS_KEY = getString(R.string.fragment_adblock_settings_wl_key);
+    SETTINGS_ALLOWED_CONNECTION_TYPE_KEY = getString(R.string.fragment_adblock_settings_allowed_connection_type_key);
   }
 
   private void bindPreferences()
@@ -111,6 +115,7 @@ public class GeneralSettingsFragment
     filterLists = (MultiSelectListPreference) findPreference(SETTINGS_FILTER_LISTS_KEY);
     acceptableAdsEnabled = (SwitchPreference) findPreference(SETTINGS_AA_ENABLED_KEY);
     whitelistedDomains = findPreference(SETTINGS_WL_DOMAINS_KEY);
+    allowedConnectionType = (ListPreference) findPreference(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY);
   }
 
   private void initPreferences()
@@ -119,6 +124,36 @@ public class GeneralSettingsFragment
     initFilterLists();
     initAcceptableAdsEnabled();
     initWhitelistedDomains();
+    initUpdatesConnection();
+  }
+
+  private void initUpdatesConnection()
+  {
+    CharSequence[] values =
+    {
+      ConnectionType.WIFI_NON_METERED.getValue(),
+      ConnectionType.WIFI.getValue(),
+      ConnectionType.ANY.getValue()
+    };
+
+    CharSequence[] titles =
+    {
+      getString(R.string.fragment_adblock_settings_allowed_connection_type_wifi_non_metered),
+      getString(R.string.fragment_adblock_settings_allowed_connection_type_wifi),
+      getString(R.string.fragment_adblock_settings_allowed_connection_type_all),
+    };
+
+    allowedConnectionType.setEntryValues(values);
+    allowedConnectionType.setEntries(titles);
+
+    // selected value
+    ConnectionType connectionType = settings.getAllowedConnectionType();
+    if (connectionType == null)
+    {
+      connectionType = ConnectionType.ANY;
+    }
+    allowedConnectionType.setValue(connectionType.getValue());
+    allowedConnectionType.setOnPreferenceChangeListener(this);
   }
 
   private void initWhitelistedDomains()
@@ -181,6 +216,10 @@ public class GeneralSettingsFragment
     {
       handleAcceptableAdsEnabledChanged((Boolean) newValue);
     }
+    else if (preference.getKey().equals(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY))
+    {
+      handleAllowedConnectionTypeChanged((String) newValue);
+    }
     else
     {
       // handle other values if changed
@@ -190,6 +229,21 @@ public class GeneralSettingsFragment
 
     // `true` for update preference view state
     return true;
+  }
+
+  private void handleAllowedConnectionTypeChanged(String value)
+  {
+    // update and save settings
+    settings.setAllowedConnectionType(ConnectionType.findByValue(value));
+    provider.getAdblockSettingsStorage().save(settings);
+
+    // apply settings
+    allowedConnectionType.setValue(value);
+    provider.getAdblockEngine().getFilterEngine().setAllowedConnectionType(value);
+
+    // signal event
+    listener.onAdblockSettingsChanged(this);
+
   }
 
   private void handleAcceptableAdsEnabledChanged(Boolean newValue)
@@ -254,6 +308,7 @@ public class GeneralSettingsFragment
     filterLists.setEnabled(enabledValue);
     acceptableAdsEnabled.setEnabled(enabledValue);
     whitelistedDomains.setEnabled(enabledValue);
+    allowedConnectionType.setEnabled(enabledValue);
   }
 
   @Override

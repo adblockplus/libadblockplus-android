@@ -24,4 +24,10 @@
         android:title="@string/fragment_adblock_settings_wl_title"
         android:summary="@string/fragment_adblock_settings_wl_summary" />
 
+    <!-- Allowed connection type for updates -->
+    <ListPreference
+        android:key="@string/fragment_adblock_settings_allowed_connection_type_key"
+        android:title="@string/fragment_adblock_settings_allowed_connection_type"
+        android:summary="%s"/>
+
 </PreferenceScreen>

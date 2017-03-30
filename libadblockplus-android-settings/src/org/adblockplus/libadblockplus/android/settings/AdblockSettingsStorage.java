@@ -57,6 +57,8 @@ public abstract class AdblockSettingsStorage
     // read actual values from adblock engine
     settings.setAdblockEnabled(adblockEngine.isEnabled());
     settings.setAcceptableAdsEnabled(adblockEngine.isAcceptableAdsEnabled());
+    String allowedConnectionTypeValue = adblockEngine.getFilterEngine().getAllowedConnectionType();
+    settings.setAllowedConnectionType(ConnectionType.findByValue(allowedConnectionTypeValue));
 
     // we need to filter out exceptions subscription to show languages subscriptions only
     Subscription[] listedSubscriptions = adblockEngine.getListedSubscriptions();

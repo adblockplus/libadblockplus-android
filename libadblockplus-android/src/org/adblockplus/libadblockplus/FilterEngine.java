@@ -36,10 +36,19 @@ public final class FilterEngine implements Disposable
     OBJECT_SUBREQUEST, FONT, MEDIA
   }
 
+  public FilterEngine(final JsEngine jsEngine, final IsAllowedConnectionCallback isAllowedConnectionCallback)
+  {
+    long jisAllowedConnectionCallbackPtr =
+      (isAllowedConnectionCallback != null
+        ? isAllowedConnectionCallback.ptr
+        : 0l);
+    this.ptr = ctor(jsEngine.ptr, jisAllowedConnectionCallbackPtr);
+    this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
+  }
+
   public FilterEngine(final JsEngine jsEngine)
   {
-    this.ptr = ctor(jsEngine.ptr);
-    this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
+    this(jsEngine, null);
   }
 
   public boolean isFirstRun()
@@ -162,6 +171,16 @@ public final class FilterEngine implements Disposable
     return getHostFromURL(this.ptr, url);
   }
 
+  public void setAllowedConnectionType(String value)
+  {
+    setAllowedConnectionType(this.ptr, value);
+  }
+
+  public String getAllowedConnectionType()
+  {
+    return getAllowedConnectionType(this.ptr);
+  }
+
   @Override
   public void dispose()
   {
@@ -186,7 +205,7 @@ public final class FilterEngine implements Disposable
 
   private final static native void registerNatives();
 
-  private final static native long ctor(long jsEnginePtr);
+  private final static native long ctor(long jsEnginePtr, long isAllowedConnectionCallbackPtr);
 
   private final static native boolean isFirstRun(long ptr);
 
@@ -231,6 +250,10 @@ public final class FilterEngine implements Disposable
   private final static native void setPref(long ptr, String pref, long valuePtr);
 
   private final static native String getHostFromURL(long ptr, String url);
+
+  private final static native void setAllowedConnectionType(long ptr, String value);
+
+  private final static native String getAllowedConnectionType(long ptr);
 
   private final static native void dtor(long ptr);
 }

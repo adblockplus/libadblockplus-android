@@ -21,6 +21,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
+import org.adblockplus.libadblockplus.UpdateCheckDoneCallback;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.Utils;
 
@@ -48,6 +50,8 @@ public class AdblockHelper
   private AdblockEngine engine;
   private AdblockSettingsStorage storage;
   private CountDownLatch engineCreated;
+
+  private IsAllowedConnectionCallback isAllowedConnectionCallback;
 
   /*
     Simple ARC management for AdblockEngine
@@ -108,6 +112,8 @@ public class AdblockHelper
 
   private void createAdblock()
   {
+    this.isAllowedConnectionCallback = new IsAllowedConnectionCallbackImpl(context);
+
     Log.d(TAG, "Creating adblock engine ...");
 
     // read and apply current settings
@@ -116,7 +122,9 @@ public class AdblockHelper
 
     engine = AdblockEngine.create(
       AdblockEngine.generateAppInfo(context, developmentBuild),
-      basePath, true); // `true` as we need element hiding
+      basePath,
+      true, // `true` as we need element hiding
+      isAllowedConnectionCallback);
     Log.d(TAG, "AdblockHelper engine created");
 
     AdblockSettings settings = storage.load();
@@ -125,9 +133,17 @@ public class AdblockHelper
       Log.d(TAG, "Applying saved adblock settings to adblock engine");
       // apply last saved settings to adblock engine
 
-      // all the settings except `enabled` and whitelisted domains are saved by adblock engine itself
+      // all the settings except `enabled` and whitelisted domains list
+      // are saved by adblock engine itself
       engine.setEnabled(settings.isAdblockEnabled());
       engine.setWhitelistedDomains(settings.getWhitelistedDomains());
+
+      // allowed connection type is saved by filter engine but we need to override it
+      // as filter engine can be not created when changing
+      String connectionType = (settings.getAllowedConnectionType() != null
+       ? settings.getAllowedConnectionType().getValue()
+       : null);
+      engine.getFilterEngine().setAllowedConnectionType(connectionType);
     }
     else
     {
@@ -166,6 +182,10 @@ public class AdblockHelper
     engine = null;
 
     storage = null;
+
+    // callbacks
+    this.isAllowedConnectionCallback.dispose();
+    this.isAllowedConnectionCallback = null;
   }
 
   /**

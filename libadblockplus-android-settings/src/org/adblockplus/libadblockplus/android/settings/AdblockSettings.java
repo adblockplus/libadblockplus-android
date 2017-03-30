@@ -31,6 +31,7 @@ public class AdblockSettings implements Serializable
   private transient Boolean acceptableAdsEnabled;
   private List<Subscription> subscriptions;
   private List<String> whitelistedDomains;
+  private ConnectionType allowedConnectionType;
 
   public boolean isAdblockEnabled()
   {
@@ -72,6 +73,16 @@ public class AdblockSettings implements Serializable
     this.whitelistedDomains = whitelistedDomains;
   }
 
+  public ConnectionType getAllowedConnectionType()
+  {
+    return allowedConnectionType;
+  }
+
+  public void setAllowedConnectionType(ConnectionType allowedConnectionType)
+  {
+    this.allowedConnectionType = allowedConnectionType;
+  }
+
   @Override
   public String toString()
   {
@@ -80,6 +91,7 @@ public class AdblockSettings implements Serializable
       ", acceptableAdsEnabled=" + acceptableAdsEnabled +
       ", subscriptions:" + (subscriptions != null ? subscriptions.size() : 0) +
       ", whitelistedDomains:" + (whitelistedDomains != null ? whitelistedDomains.size() : 0) +
+      ", allowedConnectionType=" + (allowedConnectionType != null ? allowedConnectionType.getValue() : "null") +
       '}';
   }
 }

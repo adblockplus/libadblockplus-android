@@ -31,6 +31,7 @@ LOCAL_SRC_FILES += JniLogSystem.cpp JniWebRequest.cpp
 LOCAL_SRC_FILES += JniUpdateAvailableCallback.cpp JniUpdateCheckDoneCallback.cpp
 LOCAL_SRC_FILES += JniFilterChangeCallback.cpp JniCallbacks.cpp Utils.cpp
 LOCAL_SRC_FILES += JniNotification.cpp JniShowNotificationCallback.cpp
+LOCAL_SRC_FILES += JniIsAllowedConnectionTypeCallback.cpp
 
 LOCAL_CPP_FEATURES := exceptions 
 LOCAL_CPPFLAGS += -std=c++11

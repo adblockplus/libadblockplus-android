@@ -101,4 +101,11 @@ private:
   jobject NewTuple(JNIEnv* env, const std::string& a, const std::string& b) const;
 };
 
+class JniIsAllowedConnectionTypeCallback : public JniCallbackBase
+{
+public:
+  JniIsAllowedConnectionTypeCallback(JNIEnv* env, jobject callbackObject);
+  bool Callback(const std::string* allowedConnectionType);
+};
+
 #endif /* JNICALLBACKS_H */

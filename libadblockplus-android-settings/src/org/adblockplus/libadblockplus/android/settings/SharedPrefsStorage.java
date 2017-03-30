@@ -37,6 +37,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
   private static final String SETTINGS_SUBSCRIPTION_TITLE_KEY = "title";
   private static final String SETTINGS_WL_DOMAINS_KEY = "whitelisted_domains";
   private static final String SETTINGS_WL_DOMAIN_KEY = "domain";
+  private static final String SETTINGS_ALLOWED_CONNECTION_TYPE_KEY = "allowed_connection_type";
 
   private SharedPreferences prefs;
   private boolean commit = true;
@@ -73,6 +74,8 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     AdblockSettings settings = new AdblockSettings();
     settings.setAdblockEnabled(prefs.getBoolean(SETTINGS_ENABLED_KEY, true));
     settings.setAcceptableAdsEnabled(prefs.getBoolean(SETTINGS_AA_ENABLED_KEY, true));
+    String connectionType = prefs.getString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY, null);
+    settings.setAllowedConnectionType(ConnectionType.findByValue(connectionType));
 
     loadSubscriptions(settings);
     loadWhitelistedDomains(settings);
@@ -148,6 +151,11 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       .clear()
       .putBoolean(SETTINGS_ENABLED_KEY, settings.isAdblockEnabled())
       .putBoolean(SETTINGS_AA_ENABLED_KEY, settings.isAcceptableAdsEnabled());
+
+    if (settings.getAllowedConnectionType() != null)
+    {
+      editor.putString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY, settings.getAllowedConnectionType().getValue());
+    }
 
     saveSubscriptions(settings, editor);
     saveWhitelistedDomains(settings, editor);

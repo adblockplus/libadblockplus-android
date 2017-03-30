@@ -957,7 +957,9 @@ public class AdblockWebView extends WebView
     adblockEngine = AdblockEngine.create(
       AdblockEngine.generateAppInfo(this.getContext(), debugMode),
       this.getContext().getCacheDir().getAbsolutePath(),
-      true);
+      true,
+      null // `null` IsAllowedConnectionCallback reference allows all connection types
+    );
   }
 
   private class ElemHideThread extends Thread
