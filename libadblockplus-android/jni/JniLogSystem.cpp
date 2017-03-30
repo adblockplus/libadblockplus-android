@@ -39,14 +39,14 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
 {
   try
   {
-    return JniPtrToLong(new JniLogSystemCallback(env, callbackObject));
+    return JniPtrToLong(new AdblockPlus::LogSystemPtr(new JniLogSystemCallback(env, callbackObject)));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
 static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  delete JniLongToTypePtr<JniLogSystemCallback>(ptr);
+  delete JniLongToTypePtr<AdblockPlus::LogSystemPtr>(ptr);
 }
 
 JniLogSystemCallback::JniLogSystemCallback(JNIEnv* env, jobject callbackObject)
