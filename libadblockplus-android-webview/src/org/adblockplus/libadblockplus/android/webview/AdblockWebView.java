@@ -990,12 +990,22 @@ public class AdblockWebView extends WebView
             };
 
           List<Subscription> subscriptions = adblockEngine.getFilterEngine().getListedSubscriptions();
-          d("Listed subscriptions: " + subscriptions.size());
-          if (debugMode)
+          try
+          {
+            d("Listed subscriptions: " + subscriptions.size());
+            if (debugMode)
+            {
+              for (Subscription eachSubscription : subscriptions)
+              {
+                d("Subscribed to " + eachSubscription);
+              }
+            }
+          }
+          finally
           {
             for (Subscription eachSubscription : subscriptions)
             {
-              d("Subscribed to " + eachSubscription);
+              eachSubscription.dispose();
             }
           }
 

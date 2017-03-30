@@ -31,6 +31,7 @@ import java.util.zip.GZIPInputStream;
 import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HeaderEntry;
+import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.ServerResponse.NsStatus;
 import org.adblockplus.libadblockplus.WebRequest;
@@ -83,9 +84,32 @@ public class AndroidWebRequest extends WebRequest
   {
     for (final org.adblockplus.libadblockplus.Subscription s : engine.fetchAvailableSubscriptions())
     {
-      this.subscriptionURLs.add(s.getProperty("url").toString());
+      try
+      {
+        JsValue jsUrl = s.getProperty("url");
+        try
+        {
+          this.subscriptionURLs.add(jsUrl.toString());
+        }
+        finally
+        {
+          jsUrl.dispose();
+        }
+      }
+      finally
+      {
+        s.dispose();
+      }
     }
-    this.subscriptionURLs.add(engine.getPref("subscriptions_exceptionsurl").toString());
+    JsValue jsPref = engine.getPref("subscriptions_exceptionsurl");
+    try
+    {
+      this.subscriptionURLs.add(jsPref.toString());
+    }
+    finally
+    {
+      jsPref.dispose();
+    }
   }
 
   @Override

@@ -31,6 +31,7 @@ import org.adblockplus.libadblockplus.FilterChangeCallback;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.FilterEngine.ContentType;
 import org.adblockplus.libadblockplus.JsEngine;
+import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.ShowNotificationCallback;
 import org.adblockplus.libadblockplus.Subscription;
@@ -232,8 +233,25 @@ public final class AdblockEngine
     final org.adblockplus.libadblockplus.android.Subscription subscription =
       new org.adblockplus.libadblockplus.android.Subscription();
 
-    subscription.title = jsSubscription.getProperty("title").toString();
-    subscription.url = jsSubscription.getProperty("url").toString();
+    JsValue jsTitle = jsSubscription.getProperty("title");
+    try
+    {
+      subscription.title = jsTitle.toString();
+    }
+    finally
+    {
+      jsTitle.dispose();
+    }
+
+    JsValue jsUrl = jsSubscription.getProperty("url");
+    try
+    {
+      subscription.url = jsUrl.toString();
+    }
+    finally
+    {
+      jsUrl.dispose();
+    }
 
     return subscription;
   }
@@ -254,19 +272,48 @@ public final class AdblockEngine
 
   public org.adblockplus.libadblockplus.android.Subscription[] getRecommendedSubscriptions()
   {
-    return convertJsSubscriptions(this.filterEngine.fetchAvailableSubscriptions());
+    List<Subscription> subscriptions = this.filterEngine.fetchAvailableSubscriptions();
+    try
+    {
+      return convertJsSubscriptions(subscriptions);
+    }
+    finally
+    {
+      for (Subscription eachSubscription : subscriptions)
+      {
+        eachSubscription.dispose();
+      }
+    }
   }
 
   public org.adblockplus.libadblockplus.android.Subscription[] getListedSubscriptions()
   {
-    return convertJsSubscriptions(this.filterEngine.getListedSubscriptions());
+    List<Subscription> subscriptions = this.filterEngine.getListedSubscriptions();
+    try
+    {
+      return convertJsSubscriptions(subscriptions);
+    }
+    finally
+    {
+      for (Subscription eachSubscription : subscriptions)
+      {
+        eachSubscription.dispose();
+      }
+    }
   }
 
   public void clearSubscriptions()
   {
     for (final Subscription s : this.filterEngine.getListedSubscriptions())
     {
-      s.removeFromList();
+      try
+      {
+        s.removeFromList();
+      }
+      finally
+      {
+        s.dispose();
+      }
     }
   }
 
@@ -277,7 +324,14 @@ public final class AdblockEngine
     final Subscription sub = this.filterEngine.getSubscription(url);
     if (sub != null)
     {
-      sub.addToList();
+      try
+      {
+        sub.addToList();
+      }
+      finally
+      {
+        sub.dispose();
+      }
     }
   }
 
@@ -290,7 +344,14 @@ public final class AdblockEngine
       final Subscription sub = this.filterEngine.getSubscription(eachUrl);
       if (sub != null)
       {
-        sub.addToList();
+        try
+        {
+          sub.addToList();
+        }
+        finally
+        {
+          sub.dispose();
+        }
       }
     }
   }
@@ -299,7 +360,14 @@ public final class AdblockEngine
   {
     for (final Subscription s : this.filterEngine.getListedSubscriptions())
     {
-      s.updateFilters();
+      try
+      {
+        s.updateFilters();
+      }
+      finally
+      {
+        s.dispose();
+      }
     }
   }
 
@@ -307,14 +375,35 @@ public final class AdblockEngine
   {
     final String url = getAcceptableAdsSubscriptionURL();
     List<Subscription> subscriptions = this.filterEngine.getListedSubscriptions();
-    for (Subscription eachSubscription : subscriptions)
+    try
     {
-      if (eachSubscription.getProperty("url").toString().equals(url))
+      for (Subscription eachSubscription : subscriptions)
       {
-        return true;
+        JsValue jsUrl = eachSubscription.getProperty("url");
+        try
+        {
+          if (jsUrl.toString().equals(url))
+          {
+            return true;
+          }
+        }
+        finally
+        {
+          jsUrl.dispose();
+        }
+      }
+      return false;
+    }
+    finally
+    {
+      if (subscriptions != null)
+      {
+        for (Subscription eachSubscription : subscriptions)
+        {
+          eachSubscription.dispose();
+        }
       }
     }
-    return false;
   }
 
   public void setEnabled(final boolean enabled)
@@ -329,7 +418,15 @@ public final class AdblockEngine
 
   public String getAcceptableAdsSubscriptionURL()
   {
-    return this.filterEngine.getPref("subscriptions_exceptionsurl").toString();
+    JsValue jsPref = this.filterEngine.getPref("subscriptions_exceptionsurl");
+    try
+    {
+      return jsPref.toString();
+    }
+    finally
+    {
+      jsPref.dispose();
+    }
   }
 
   public void setAcceptableAdsEnabled(final boolean enabled)
@@ -338,20 +435,35 @@ public final class AdblockEngine
     final Subscription sub = this.filterEngine.getSubscription(url);
     if (sub != null)
     {
-      if (enabled)
+      try
       {
-        sub.addToList();
+        if (enabled)
+        {
+          sub.addToList();
+        }
+        else
+        {
+          sub.removeFromList();
+        }
       }
-      else
+      finally
       {
-        sub.removeFromList();
+        sub.dispose();
       }
     }
   }
 
   public String getDocumentationLink()
   {
-    return this.filterEngine.getPref("documentation_link").toString();
+    JsValue jsPref = this.filterEngine.getPref("documentation_link");
+    try
+    {
+      return jsPref.toString();
+    }
+    finally
+    {
+      jsPref.dispose();
+    }
   }
 
   public boolean matches(final String fullUrl, final ContentType contentType, final String[] referrerChainArray)
@@ -368,19 +480,36 @@ public final class AdblockEngine
       return false;
     }
 
-    // hack: if there is no referrer, block only if filter is domain-specific
-    // (to re-enable in-app ads blocking, proposed on 12.11.2012 Monday meeting)
-    // (documentUrls contains the referrers on Android)
     try
     {
-      if (referrerChainArray.length == 0 && (filter.getProperty("text").toString()).contains("||"))
+      // hack: if there is no referrer, block only if filter is domain-specific
+      // (to re-enable in-app ads blocking, proposed on 12.11.2012 Monday meeting)
+      // (documentUrls contains the referrers on Android)
+      try
       {
-        return false;
+        JsValue jsText = filter.getProperty("text");
+        try
+        {
+          if (referrerChainArray.length == 0 && (jsText.toString()).contains("||"))
+          {
+            return false;
+          }
+        }
+        finally
+        {
+          jsText.dispose();
+        }
       }
-    } catch (NullPointerException e) {
-    }
+      catch (NullPointerException e)
+      {
+      }
 
-    return filter.getType() != Filter.Type.EXCEPTION;
+      return filter.getType() != Filter.Type.EXCEPTION;
+    }
+    finally
+    {
+      filter.dispose();
+    }
   }
 
   public boolean isDocumentWhitelisted(final String url, final String[] referrerChainArray)
