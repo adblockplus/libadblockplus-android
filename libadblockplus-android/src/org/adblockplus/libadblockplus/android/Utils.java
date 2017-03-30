@@ -99,26 +99,38 @@ public final class Utils
   public static String readAssetAsString(Context context, String filename) throws IOException
   {
     BufferedReader in = null;
-    try {
+    try
+    {
       StringBuilder buf = new StringBuilder();
       InputStream is = context.getAssets().open(filename);
       in = new BufferedReader(new InputStreamReader(is));
 
       String str;
       boolean isFirst = true;
-      while ( (str = in.readLine()) != null ) {
+      while ((str = in.readLine()) != null)
+      {
         if (isFirst)
+        {
           isFirst = false;
+        }
         else
+        {
           buf.append('\n');
+        }
         buf.append(str);
       }
       return buf.toString();
-    } finally {
-      if (in != null) {
-        try {
+    }
+    finally
+    {
+      if (in != null)
+      {
+        try
+        {
           in.close();
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
           // ignored
         }
       }
