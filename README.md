@@ -166,6 +166,9 @@ Or you can use AdblockHelper:
 
     AdblockHelper.get().init(this, getFilesDir().getAbsolutePath(), true, AdblockHelper.PREFERENCE_NAME);
 
+    // optional - provide preloaded subscription files in app resoruces
+    AdblockHelper.get().preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
+
 Implement the following interfaces in your settings activity:
 
 * `BaseSettingsFragment.Provider`

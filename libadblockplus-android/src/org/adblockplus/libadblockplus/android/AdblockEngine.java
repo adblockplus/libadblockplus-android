@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.adblockplus.libadblockplus.AppInfo;
@@ -38,15 +39,21 @@ import org.adblockplus.libadblockplus.ShowNotificationCallback;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.UpdateAvailableCallback;
 import org.adblockplus.libadblockplus.UpdateCheckDoneCallback;
+import org.adblockplus.libadblockplus.WebRequest;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build.VERSION;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 public final class AdblockEngine
 {
+  // default base path to store subscription files in android app
+  public static final String BASE_PATH_DIRECTORY = "adblock";
+
   private static final String TAG = Utils.getTag(AdblockEngine.class);
 
   /*
@@ -63,19 +70,14 @@ public final class AdblockEngine
   private volatile JsEngine jsEngine;
   private volatile FilterEngine filterEngine;
   private volatile LogSystem logSystem;
-  private volatile AndroidWebRequest webRequest;
+  private volatile WebRequest webRequest;
   private volatile UpdateAvailableCallback updateAvailableCallback;
   private volatile UpdateCheckDoneCallback updateCheckDoneCallback;
   private volatile FilterChangeCallback filterChangeCallback;
   private volatile ShowNotificationCallback showNotificationCallback;
-  private final boolean elemhideEnabled;
+  private volatile boolean elemhideEnabled;
   private volatile boolean enabled = true;
-  private List<String> whitelistedDomains;
-
-  private AdblockEngine(final boolean enableElemhide)
-  {
-    this.elemhideEnabled = enableElemhide;
-  }
+  private volatile List<String> whitelistedDomains;
 
   public static AppInfo generateAppInfo(final Context context, boolean developmentBuild)
   {
@@ -102,61 +104,188 @@ public final class AdblockEngine
         .build();
   }
 
-  public static AdblockEngine create(final AppInfo appInfo,
-                                     final String basePath, boolean enableElemhide,
-                                     IsAllowedConnectionCallback isAllowedConnectionCallback,
-                                     UpdateAvailableCallback updateAvailableCallback,
-                                     UpdateCheckDoneCallback updateCheckDoneCallback,
-                                     ShowNotificationCallback showNotificationCallback,
-                                     FilterChangeCallback filterChangeCallback)
+  /**
+   * Builds Adblock engine
+   */
+  public static class Builder
   {
-    Log.w(TAG, "Create");
+    private Context context;
+    private Map<String, Integer> urlToResourceIdMap;
+    private AndroidWebRequestResourceWrapper.Storage resourceStorage;
+    private AndroidWebRequest androidWebRequest;
+    private AppInfo appInfo;
+    private String basePath;
+    private IsAllowedConnectionCallback isAllowedConnectionCallback;
 
-    final AdblockEngine engine = new AdblockEngine(enableElemhide);
+    private AdblockEngine engine;
 
-    engine.jsEngine = new JsEngine(appInfo);
-    engine.jsEngine.setDefaultFileSystem(basePath);
-
-    engine.logSystem = new AndroidLogSystem();
-    engine.jsEngine.setLogSystem(engine.logSystem);
-
-    engine.webRequest = new AndroidWebRequest(enableElemhide, true);
-    engine.jsEngine.setWebRequest(engine.webRequest);
-
-    engine.filterEngine = new FilterEngine(engine.jsEngine, isAllowedConnectionCallback);
-
-    engine.updateAvailableCallback = updateAvailableCallback;
-    if (engine.updateAvailableCallback != null)
+    protected Builder(final AppInfo appInfo, final String basePath)
     {
-      engine.filterEngine.setUpdateAvailableCallback(updateAvailableCallback);
+      engine = new AdblockEngine();
+      engine.elemhideEnabled = true;
+
+      // we can't create JsEngine and FilterEngine right now as it starts to download subscriptions
+      // and requests (AndroidWebRequest and probbaly wrappers) are not specified yet
+      this.appInfo = appInfo;
+      this.basePath = basePath;
     }
 
-    engine.updateCheckDoneCallback = updateCheckDoneCallback;
-
-    engine.showNotificationCallback = showNotificationCallback;
-    if (engine.showNotificationCallback != null)
+    public Builder enableElementHiding(boolean enable)
     {
-      engine.filterEngine.setShowNotificationCallback(showNotificationCallback);
+      engine.elemhideEnabled = enable;
+      return this;
     }
 
-    engine.filterChangeCallback = filterChangeCallback;
-    if (engine.filterChangeCallback != null)
+    public Builder preloadSubscriptions(Context context,
+                                        Map<String, Integer> urlToResourceIdMap,
+                                        AndroidWebRequestResourceWrapper.Storage storage)
     {
-      engine.filterEngine.setFilterChangeCallback(filterChangeCallback);
+      this.context = context;
+      this.urlToResourceIdMap = urlToResourceIdMap;
+      this.resourceStorage = storage;
+      return this;
     }
 
-    engine.webRequest.updateSubscriptionURLs(engine.filterEngine);
+    public Builder setIsAllowedConnectionCallback(IsAllowedConnectionCallback callback)
+    {
+      this.isAllowedConnectionCallback = callback;
+      return this;
+    }
 
-    return engine;
+    public Builder setUpdateAvailableCallback(UpdateAvailableCallback callback)
+    {
+      engine.updateAvailableCallback = callback;
+      return this;
+    }
+
+    public Builder setUpdateCheckDoneCallback(UpdateCheckDoneCallback callback)
+    {
+      engine.updateCheckDoneCallback = callback;
+      return this;
+    }
+
+    public Builder setShowNotificationCallback(ShowNotificationCallback callback)
+    {
+      engine.showNotificationCallback = callback;
+      return this;
+    }
+
+    public Builder setFilterChangeCallback(FilterChangeCallback callback)
+    {
+      engine.filterChangeCallback = callback;
+      return this;
+    }
+
+    private void initRequests()
+    {
+      androidWebRequest = new AndroidWebRequest(engine.elemhideEnabled, true);
+      engine.webRequest = androidWebRequest;
+
+      if (urlToResourceIdMap != null)
+      {
+        AndroidWebRequestResourceWrapper wrapper = new AndroidWebRequestResourceWrapper(
+          context, engine.webRequest, urlToResourceIdMap, resourceStorage);
+        wrapper.setListener(engine.resourceWrapperListener);
+
+        engine.webRequest = wrapper;
+      }
+    }
+
+    private void initCallbacks()
+    {
+      if (engine.updateAvailableCallback != null)
+      {
+        engine.filterEngine.setUpdateAvailableCallback(engine.updateAvailableCallback);
+      }
+
+      if (engine.showNotificationCallback != null)
+      {
+        engine.filterEngine.setShowNotificationCallback(engine.showNotificationCallback);
+      }
+
+      if (engine.filterChangeCallback != null)
+      {
+        engine.filterEngine.setFilterChangeCallback(engine.filterChangeCallback);
+      }
+    }
+
+    public AdblockEngine build()
+    {
+      initRequests();
+
+      // webRequest should be ready to be used passed right after JsEngine is created
+      createEngines();
+
+      initCallbacks();
+
+      androidWebRequest.updateSubscriptionURLs(engine.filterEngine);
+
+      return engine;
+    }
+
+    private void createEngines()
+    {
+      engine.jsEngine = new JsEngine(appInfo);
+      engine.jsEngine.setDefaultFileSystem(basePath);
+
+      engine.jsEngine.setWebRequest(engine.webRequest);
+
+      engine.logSystem = new AndroidLogSystem();
+      engine.jsEngine.setLogSystem(engine.logSystem);
+
+      engine.filterEngine = new FilterEngine(engine.jsEngine, isAllowedConnectionCallback);
+    }
   }
 
-  public static AdblockEngine create(final AppInfo appInfo,
-                                     final String basePath,
-                                     boolean elemhideEnabled,
-                                     IsAllowedConnectionCallback isAllowedConnectionCallback)
+  public static Builder builder(AppInfo appInfo, String basePath)
   {
-    return create(appInfo, basePath, elemhideEnabled, isAllowedConnectionCallback, null, null, null, null);
+    return new Builder(appInfo, basePath);
   }
+
+  private final AndroidWebRequestResourceWrapper.Listener resourceWrapperListener =
+    new AndroidWebRequestResourceWrapper.Listener()
+  {
+    private static final int UPDATE_DELAY_MS = 1 * 1000;
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private final Runnable forceUpdateRunnable = new Runnable()
+    {
+      public void run() {
+        // Filter Engine can be already disposed
+        if (filterEngine != null)
+        {
+          Log.d(TAG, "Force update subscriptions");
+          List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
+          for (Subscription eachSubscription : subscriptions)
+          {
+            try
+            {
+              eachSubscription.updateFilters();
+            }
+            finally
+            {
+              eachSubscription.dispose();
+            }
+          }
+        }
+      }
+    };
+
+    @Override
+    public void onIntercepted(String url, int resourceId)
+    {
+      // we need to force update subscriptions ASAP after preloaded one is returned
+      // but we should note that multiple interceptions (for main easylist and AA) and force update once only
+
+      // adding into main thread queue to avoid concurrency issues (start update while updating)
+      // as usually onIntercepted() is invoked in background thread
+      handler.removeCallbacks(forceUpdateRunnable);
+      handler.postDelayed(forceUpdateRunnable, UPDATE_DELAY_MS);
+
+      Log.d(TAG, "Scheduled force update in " + UPDATE_DELAY_MS);
+    }
+  };
 
   public void dispose()
   {

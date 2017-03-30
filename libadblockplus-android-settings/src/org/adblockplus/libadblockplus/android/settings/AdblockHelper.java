@@ -24,8 +24,11 @@ import android.util.Log;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.UpdateCheckDoneCallback;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AndroidWebRequestResourceWrapper;
 import org.adblockplus.libadblockplus.android.Utils;
 
+import java.io.File;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,15 +41,22 @@ public class AdblockHelper
   private static final String TAG = Utils.getTag(AdblockHelper.class);
 
   /**
-   * Suggested preference name
+   * Suggested preference name to store settings
    */
   public static final String PREFERENCE_NAME = "ADBLOCK";
+
+  /**
+   * Suggested preference name to store intercepted subscription requests
+   */
+  public static final String PRELOAD_PREFERENCE_NAME = "ADBLOCK_PRELOAD";
   private static AdblockHelper _instance;
 
   private Context context;
   private String basePath;
   private boolean developmentBuild;
-  private String preferenceName;
+  private String settingsPreferenceName;
+  private String preloadedPreferenceName;
+  private Map<String, Integer> urlToResourceIdMap;
   private AdblockEngine engine;
   private AdblockSettingsStorage storage;
   private CountDownLatch engineCreated;
@@ -100,14 +110,26 @@ public class AdblockHelper
    *                 cleared out occasionally. Using `context.getCacheDir().getAbsolutePath()` is not
    *                 recommended because it can be cleared by the system.
    * @param developmentBuild debug or release?
-   * @param preferenceName Shared Preferences name
+   * @param preferenceName Shared Preferences name to store adblock settings
    */
-  public void init(Context context, String basePath, boolean developmentBuild, String preferenceName)
+  public AdblockHelper init(Context context, String basePath, boolean developmentBuild, String preferenceName)
   {
     this.context = context.getApplicationContext();
     this.basePath = basePath;
     this.developmentBuild = developmentBuild;
-    this.preferenceName = preferenceName;
+    this.settingsPreferenceName = preferenceName;
+    return this;
+  }
+
+  /**
+   * Use preloaded subscriptions
+   * @param preferenceName Shared Preferences name to store intercepted requests stats
+   * @param urlToResourceIdMap
+   */
+  public void preloadSubscriptions(String preferenceName, Map<String, Integer> urlToResourceIdMap)
+  {
+    this.preloadedPreferenceName = preferenceName;
+    this.urlToResourceIdMap = urlToResourceIdMap;
   }
 
   private void createAdblock()
@@ -117,14 +139,32 @@ public class AdblockHelper
     Log.d(TAG, "Creating adblock engine ...");
 
     // read and apply current settings
-    SharedPreferences prefs = context.getSharedPreferences(preferenceName, Context.MODE_PRIVATE);
-    storage = new SharedPrefsStorage(prefs);
+    SharedPreferences settingsPrefs = context.getSharedPreferences(
+      settingsPreferenceName,
+      Context.MODE_PRIVATE);
+    storage = new SharedPrefsStorage(settingsPrefs);
 
-    engine = AdblockEngine.create(
-      AdblockEngine.generateAppInfo(context, developmentBuild),
-      basePath,
-      true, // `true` as we need element hiding
-      isAllowedConnectionCallback);
+    AdblockEngine.Builder builder = AdblockEngine
+      .builder(
+        AdblockEngine.generateAppInfo(context, developmentBuild),
+        basePath)
+      .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
+      .enableElementHiding(true);
+
+    // if preloaded subscriptions provided
+    if (preloadedPreferenceName != null)
+    {
+      SharedPreferences preloadedSubscriptionsPrefs = context.getSharedPreferences(
+        preloadedPreferenceName,
+        Context.MODE_PRIVATE);
+      builder.preloadSubscriptions(
+        context,
+        urlToResourceIdMap,
+        new AndroidWebRequestResourceWrapper.SharedPrefsStorage(preloadedSubscriptionsPrefs));
+    }
+
+    engine = builder.build();
+
     Log.d(TAG, "AdblockHelper engine created");
 
     AdblockSettings settings = storage.load();

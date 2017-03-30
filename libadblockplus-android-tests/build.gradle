@@ -18,7 +18,7 @@ android {
 
   defaultConfig {
     applicationId "org.adblockplus.libadblockplus.tests"
-    minSdkVersion 9
+    minSdkVersion 11
     targetSdkVersion 16
     versionCode 1
     versionName "1.0"

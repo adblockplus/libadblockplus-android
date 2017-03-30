@@ -19,7 +19,12 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.content.Context;
 
+import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AndroidWebRequestResourceWrapper;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Application extends android.app.Application
 {
@@ -29,7 +34,17 @@ public class Application extends android.app.Application
     super.onCreate();
 
     // init Adblock
-    String basePath = getDir("adblock", Context.MODE_PRIVATE).getAbsolutePath();
-    AdblockHelper.get().init(this, basePath, true, AdblockHelper.PREFERENCE_NAME);
+    String basePath = getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
+
+    // provide preloaded subscriptions
+    Map<String, Integer> map = new HashMap<String, Integer>();
+    map.put(AndroidWebRequestResourceWrapper.EASYLIST, R.raw.easylist_min);
+    map.put(AndroidWebRequestResourceWrapper.EASYLIST_CHINESE, R.raw.easylist_min);
+    map.put(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules_minimal);
+
+    AdblockHelper
+      .get()
+      .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+      .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
   }
 }
