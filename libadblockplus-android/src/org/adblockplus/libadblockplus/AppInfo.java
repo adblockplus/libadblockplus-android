@@ -26,8 +26,9 @@ public class AppInfo
   public final String locale;
   public final boolean developmentBuild;
 
-  private AppInfo(final String version, final String name, final String application, final String applicationVersion,
-      final String locale, final boolean developmentBuild)
+  private AppInfo(final String version, final String name,
+                  final String application, final String applicationVersion,
+                  final String locale, final boolean developmentBuild)
   {
     this.version = version;
     this.name = name;
@@ -44,8 +45,8 @@ public class AppInfo
 
   public static class Builder
   {
-    private String version = "0";
-    private String name = "adblockplusandroid";
+    private String version = "1.0";
+    private String name = "libadblockplus-android";
     private String application = "android";
     private String applicationVersion = "0";
     private String locale = "en_US";

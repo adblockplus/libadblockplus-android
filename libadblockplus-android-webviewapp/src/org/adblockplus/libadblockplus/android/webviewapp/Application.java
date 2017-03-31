@@ -44,7 +44,7 @@ public class Application extends android.app.Application
 
     AdblockHelper
       .get()
-      .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+      .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME, getPackageName(), "app.version")
       .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
   }
 }

@@ -79,29 +79,35 @@ public final class AdblockEngine
   private volatile boolean enabled = true;
   private volatile List<String> whitelistedDomains;
 
-  public static AppInfo generateAppInfo(final Context context, boolean developmentBuild)
+  public static AppInfo generateAppInfo(final Context context, boolean developmentBuild,
+                                        String application, String applicationVersion)
   {
-    String version = "0";
-    try
-    {
-      final PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-      version = info.versionName;
-      if (developmentBuild)
-        version += "." + info.versionCode;
-    }
-    catch (final NameNotFoundException e)
-    {
-      Log.e(TAG, "Failed to get the application version number", e);
-    }
     final String sdkVersion = String.valueOf(VERSION.SDK_INT);
     final String locale = Locale.getDefault().toString().replace('_', '-');
 
-    return AppInfo.builder()
-        .setVersion(version)
+    AppInfo.Builder builder =
+      AppInfo
+        .builder()
         .setApplicationVersion(sdkVersion)
         .setLocale(locale)
-        .setDevelopmentBuild(developmentBuild)
-        .build();
+        .setDevelopmentBuild(developmentBuild);
+
+    if (application != null)
+    {
+      builder.setApplication(application);
+    }
+
+    if (applicationVersion != null)
+    {
+      builder.setApplicationVersion(applicationVersion);
+    }
+
+    return builder.build();
+  }
+
+  public static AppInfo generateAppInfo(final Context context, boolean developmentBuild)
+  {
+    return generateAppInfo(context, developmentBuild, null, null);
   }
 
   /**
