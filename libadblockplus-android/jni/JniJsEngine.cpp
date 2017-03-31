@@ -168,7 +168,7 @@ static void JNICALL JniSetLogSystem(JNIEnv* env, jclass clazz, jlong ptr, jlong 
 
   try
   {
-    AdblockPlus::LogSystemPtr logSystem(JniLongToTypePtr<JniLogSystemCallback>(logSystemPtr));
+    AdblockPlus::LogSystemPtr logSystem = *JniLongToTypePtr<AdblockPlus::LogSystemPtr>(logSystemPtr);
 
     engine->SetLogSystem(logSystem);
   }
