@@ -39,45 +39,6 @@ public final class Utils
     return clazz.getSimpleName();
   }
 
-  public static String capitalizeString(final String s)
-  {
-    if (s == null || s.length() == 0)
-    {
-      return "";
-    }
-
-    final char first = s.charAt(0);
-
-    return Character.isUpperCase(first) ? s : Character.toUpperCase(first) + s.substring(1);
-  }
-
-  public static void appendRawTextFile(final Context context, final StringBuilder text, final int id)
-  {
-    try
-    {
-      final BufferedReader buf = new BufferedReader(new InputStreamReader(context.getResources().openRawResource(id)));
-
-      try
-      {
-        String line;
-        while ((line = buf.readLine()) != null)
-        {
-          text.append(line);
-          text.append('\n');
-        }
-      }
-      finally
-      {
-        buf.close();
-      }
-
-    }
-    catch (final Exception e)
-    {
-      // Ignored for now
-    }
-  }
-
   public static String stringListToJsonArray(List<String> list)
   {
     JSONArray array = new JSONArray();
