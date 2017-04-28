@@ -42,8 +42,6 @@ import org.adblockplus.libadblockplus.UpdateCheckDoneCallback;
 import org.adblockplus.libadblockplus.WebRequest;
 
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Looper;
@@ -262,18 +260,7 @@ public final class AdblockEngine
         if (filterEngine != null)
         {
           Log.d(TAG, "Force update subscriptions");
-          List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
-          for (Subscription eachSubscription : subscriptions)
-          {
-            try
-            {
-              eachSubscription.updateFilters();
-            }
-            finally
-            {
-              eachSubscription.dispose();
-            }
-          }
+          AdblockEngine.this.updateSubscriptions();
         }
       }
     };
@@ -495,7 +482,7 @@ public final class AdblockEngine
     }
   }
 
-  public void refreshSubscriptions()
+  public void updateSubscriptions()
   {
     for (final Subscription s : this.filterEngine.getListedSubscriptions())
     {
