@@ -497,41 +497,6 @@ public final class AdblockEngine
     }
   }
 
-  public boolean isAcceptableAdsEnabled()
-  {
-    final String url = getAcceptableAdsSubscriptionURL();
-    List<Subscription> subscriptions = this.filterEngine.getListedSubscriptions();
-    try
-    {
-      for (Subscription eachSubscription : subscriptions)
-      {
-        JsValue jsUrl = eachSubscription.getProperty("url");
-        try
-        {
-          if (jsUrl.toString().equals(url))
-          {
-            return true;
-          }
-        }
-        finally
-        {
-          jsUrl.dispose();
-        }
-      }
-      return false;
-    }
-    finally
-    {
-      if (subscriptions != null)
-      {
-        for (Subscription eachSubscription : subscriptions)
-        {
-          eachSubscription.dispose();
-        }
-      }
-    }
-  }
-
   public void setEnabled(final boolean enabled)
   {
     this.enabled = enabled;
@@ -544,39 +509,17 @@ public final class AdblockEngine
 
   public String getAcceptableAdsSubscriptionURL()
   {
-    JsValue jsPref = this.filterEngine.getPref("subscriptions_exceptionsurl");
-    try
-    {
-      return jsPref.toString();
-    }
-    finally
-    {
-      jsPref.dispose();
-    }
+    return filterEngine.getAcceptableAdsSubscriptionURL();
+  }
+
+  public boolean isAcceptableAdsEnabled()
+  {
+    return filterEngine.isAcceptableAdsEnabled();
   }
 
   public void setAcceptableAdsEnabled(final boolean enabled)
   {
-    final String url = getAcceptableAdsSubscriptionURL();
-    final Subscription sub = this.filterEngine.getSubscription(url);
-    if (sub != null)
-    {
-      try
-      {
-        if (enabled)
-        {
-          sub.addToList();
-        }
-        else
-        {
-          sub.removeFromList();
-        }
-      }
-      finally
-      {
-        sub.dispose();
-      }
-    }
+    filterEngine.setAcceptableAdsEnabled(enabled);
   }
 
   public String getDocumentationLink()

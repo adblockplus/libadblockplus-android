@@ -17,13 +17,14 @@
 
 package org.adblockplus.libadblockplus.tests;
 
-import android.util.Log;
 import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.MockFilterChangeCallback;
 import org.adblockplus.libadblockplus.Subscription;
 
 import org.junit.Test;
+
+import java.util.List;
 
 public class FilterEngineTest extends FilterEngineGenericTest
 {
@@ -384,5 +385,44 @@ public class FilterEngineTest extends FilterEngineGenericTest
       };
     assertTrue(filterEngine.isElemhideWhitelisted("http://example.com", documentUrls1));
     assertFalse(filterEngine.isElemhideWhitelisted("http://example.co.uk", documentUrls1));
+  }
+
+  @Test
+  public void testGetAcceptableAdsSubscriptionUrl()
+  {
+    String url = filterEngine.getAcceptableAdsSubscriptionURL();
+    assertNotNull(url);
+  }
+
+  @Test
+  public void testSetGetAcceptableAds()
+  {
+    boolean isAA = filterEngine.isAcceptableAdsEnabled();
+    isAA = !isAA;
+    filterEngine.setAcceptableAdsEnabled(isAA);
+    assertEquals(isAA, filterEngine.isAcceptableAdsEnabled());
+    isAA = !isAA;
+    filterEngine.setAcceptableAdsEnabled(isAA);
+    assertEquals(isAA, filterEngine.isAcceptableAdsEnabled());
+  }
+
+  @Test
+  public void testIsAcceptableAdsIfEnabled()
+  {
+    if (!filterEngine.isAcceptableAdsEnabled())
+    {
+      filterEngine.setAcceptableAdsEnabled(true);
+    }
+    assertTrue(filterEngine.isAcceptableAdsEnabled());
+
+    List<Subscription> listedSubscriptions = filterEngine.getListedSubscriptions();
+    for (Subscription eachSubscription : listedSubscriptions)
+    {
+      if (eachSubscription.isAcceptableAds())
+      {
+        return;
+      }
+    }
+    fail("AA subscription not found in listed subscriptions when enabled");
   }
 }

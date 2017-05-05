@@ -181,6 +181,21 @@ public final class FilterEngine implements Disposable
     return getAllowedConnectionType(this.ptr);
   }
 
+  public void setAcceptableAdsEnabled(final boolean enabled)
+  {
+    setAcceptableAdsEnabled(this.ptr, enabled);
+  }
+
+  public boolean isAcceptableAdsEnabled()
+  {
+    return isAcceptableAdsEnabled(this.ptr);
+  }
+
+  public String getAcceptableAdsSubscriptionURL()
+  {
+    return getAcceptableAdsSubscriptionURL(this.ptr);
+  }
+
   @Override
   public void dispose()
   {
@@ -254,6 +269,12 @@ public final class FilterEngine implements Disposable
   private final static native void setAllowedConnectionType(long ptr, String value);
 
   private final static native String getAllowedConnectionType(long ptr);
+
+  private final static native void setAcceptableAdsEnabled(long ptr, boolean enabled);
+
+  private final static native boolean isAcceptableAdsEnabled(long ptr);
+
+  private final static native String getAcceptableAdsSubscriptionURL(long ptr);
 
   private final static native void dtor(long ptr);
 }

@@ -81,6 +81,15 @@ static jboolean JNICALL JniOperatorEquals(JNIEnv* env, jclass clazz, jlong ptr, 
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
 
+static jboolean JNICALL JniIsAcceptableAds(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    return (GetSubscriptionPtr(ptr)->IsAA() ? JNI_TRUE : JNI_FALSE);
+  }
+  CATCH_THROW_AND_RETURN(env, JNI_FALSE)
+}
+
 static JNINativeMethod methods[] =
 {
   { (char*)"isListed", (char*)"(J)Z", (void*)JniIsListed },
@@ -88,7 +97,8 @@ static JNINativeMethod methods[] =
   { (char*)"removeFromList", (char*)"(J)V", (void*)JniRemoveFromList },
   { (char*)"updateFilters", (char*)"(J)V", (void*)JniUpdateFilters },
   { (char*)"isUpdating", (char*)"(J)Z", (void*)JniIsUpdating },
-  { (char*)"operatorEquals", (char*)"(JJ)Z", (void*)JniOperatorEquals }
+  { (char*)"operatorEquals", (char*)"(JJ)Z", (void*)JniOperatorEquals },
+  { (char*)"isAcceptableAds", (char*)"(J)Z", (void*)JniIsAcceptableAds },
 };
 
 extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_Subscription_registerNatives(JNIEnv *env, jclass clazz)

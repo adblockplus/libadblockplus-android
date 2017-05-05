@@ -55,6 +55,11 @@ public final class Subscription extends JsValue
     return isUpdating(this.ptr);
   }
 
+  public boolean isAcceptableAds()
+  {
+    return isAcceptableAds(this.ptr);
+  }
+
   @Override
   public int hashCode()
   {
@@ -85,4 +90,6 @@ public final class Subscription extends JsValue
   private final static native boolean isUpdating(long ptr);
 
   private final static native boolean operatorEquals(long ptr, long other);
+
+  private final static native boolean isAcceptableAds(long ptr);
 }

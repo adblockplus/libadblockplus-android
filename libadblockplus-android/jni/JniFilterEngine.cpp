@@ -488,6 +488,38 @@ static jstring JNICALL JniGetAllowedConnectionType(JNIEnv* env, jclass clazz, jl
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
+static void JNICALL JniSetAcceptableAdsEnabled(JNIEnv* env, jclass clazz, jlong ptr, jboolean jvalue)
+{
+  AdblockPlus::FilterEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::FilterEnginePtr>(ptr);
+
+  try
+  {
+    engine->SetAAEnabled((bool)(jvalue == JNI_TRUE));
+  }
+  CATCH_AND_THROW(env)
+}
+
+static jboolean JNICALL JniIsAcceptableAdsEnabled(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    AdblockPlus::FilterEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::FilterEnginePtr>(ptr);
+    return engine->IsAAEnabled() ? JNI_TRUE : JNI_FALSE;
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
+static jstring JNICALL JniGetAcceptableAdsSubscriptionURL(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    AdblockPlus::FilterEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::FilterEnginePtr>(ptr);
+    std::string url = engine->GetAAUrl();
+    return JniStdStringToJava(env, url);
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
 static JNINativeMethod methods[] =
 {
   { (char*)"ctor", (char*)"(JJ)J", (void*)JniCtor },
@@ -515,6 +547,9 @@ static JNINativeMethod methods[] =
   { (char*)"getHostFromURL", (char*)"(JLjava/lang/String;)Ljava/lang/String;", (void*)JniGetHostFromURL },
   { (char*)"setAllowedConnectionType", (char*)"(JLjava/lang/String;)V", (void*)JniSetAllowedConnectionType },
   { (char*)"getAllowedConnectionType", (char*)"(J)Ljava/lang/String;", (void*)JniGetAllowedConnectionType },
+  { (char*)"setAcceptableAdsEnabled", (char*)"(JZ)V", (void*)JniSetAcceptableAdsEnabled },
+  { (char*)"isAcceptableAdsEnabled", (char*)"(J)Z", (void*)JniIsAcceptableAdsEnabled },
+  { (char*)"getAcceptableAdsSubscriptionURL", (char*)"(J)Ljava/lang/String;", (void*)JniGetAcceptableAdsSubscriptionURL },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor }
 };
 
