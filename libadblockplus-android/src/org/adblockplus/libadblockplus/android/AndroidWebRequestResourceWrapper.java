@@ -112,7 +112,7 @@ public class AndroidWebRequestResourceWrapper extends WebRequest
   public ServerResponse httpGET(String url, List<HeaderEntry> headers)
   {
     // since parameters may vary we need to ignore them
-    String urlWithoutParams = url.substring(0, url.indexOf("?"));
+    String urlWithoutParams = Utils.getUrlWithoutParams(url);
     Integer resourceId = urlToResourceIdMap.get(urlWithoutParams);
 
     if (resourceId != null)

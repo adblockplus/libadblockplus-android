@@ -97,4 +97,14 @@ public final class Utils
       }
     }
   }
+
+  public static String getUrlWithoutParams(String urlWithParams)
+  {
+    if (urlWithParams == null) {
+      throw new IllegalArgumentException("URL can't be null");
+    }
+
+    int pos = urlWithParams.indexOf("?");
+    return (pos >= 0 ? urlWithParams.substring(0, pos) : urlWithParams);
+  }
 }
