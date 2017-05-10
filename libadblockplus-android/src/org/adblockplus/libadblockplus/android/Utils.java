@@ -100,7 +100,8 @@ public final class Utils
 
   public static String getUrlWithoutParams(String urlWithParams)
   {
-    if (urlWithParams == null) {
+    if (urlWithParams == null)
+    {
       throw new IllegalArgumentException("URL can't be null");
     }
 
