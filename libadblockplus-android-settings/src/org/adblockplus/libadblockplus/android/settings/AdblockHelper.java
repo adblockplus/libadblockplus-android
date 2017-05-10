@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.util.Log;
 
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
@@ -141,7 +142,9 @@ public class AdblockHelper
 
   private void createAdblock()
   {
-    this.isAllowedConnectionCallback = new IsAllowedConnectionCallbackImpl(context);
+    ConnectivityManager connectivityManager =
+      (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    this.isAllowedConnectionCallback = new IsAllowedConnectionCallbackImpl(connectivityManager);
 
     Log.d(TAG, "Creating adblock engine ...");
 

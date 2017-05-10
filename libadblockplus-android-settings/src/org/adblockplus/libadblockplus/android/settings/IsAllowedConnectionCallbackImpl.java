@@ -31,10 +31,10 @@ public class IsAllowedConnectionCallbackImpl extends IsAllowedConnectionCallback
 
   private ConnectivityManager manager;
 
-  public IsAllowedConnectionCallbackImpl(Context context)
+  public IsAllowedConnectionCallbackImpl(ConnectivityManager manager)
   {
     super();
-    this.manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    this.manager = manager;
   }
 
   @Override
