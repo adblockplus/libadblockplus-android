@@ -39,7 +39,7 @@ void JniFilter_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
 
 static AdblockPlus::Filter* GetFilterPtr(jlong ptr)
 {
-  return JniLongToTypePtr<AdblockPlus::FilterPtr>(ptr)->get();
+  return JniLongToTypePtr<AdblockPlus::Filter>(ptr);
 }
 
 static jobject JNICALL JniGetType(JNIEnv* env, jclass clazz, jlong ptr)

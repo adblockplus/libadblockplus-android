@@ -37,8 +37,7 @@ JniFilterChangeCallback::JniFilterChangeCallback(JNIEnv* env,
 {
 }
 
-void JniFilterChangeCallback::Callback(const std::string& arg,
-    const AdblockPlus::JsValuePtr jsValue)
+void JniFilterChangeCallback::Callback(const std::string& arg, AdblockPlus::JsValue&& jsValue)
 {
   JNIEnvAcquire env(GetJavaVM());
 
@@ -50,7 +49,7 @@ void JniFilterChangeCallback::Callback(const std::string& arg,
   if (method)
   {
     JniLocalReference<jstring> jArg(*env, env->NewStringUTF(arg.c_str()));
-    JniLocalReference<jobject> jJsValue(*env, NewJniJsValue(*env, jsValue, GetJsValueClass()));
+    JniLocalReference<jobject> jJsValue(*env, NewJniJsValue(*env, std::move(jsValue), GetJsValueClass()));
     env->CallVoidMethod(GetCallbackObject(), method, *jArg, *jJsValue);
   }
 

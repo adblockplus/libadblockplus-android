@@ -21,7 +21,7 @@
 
 static AdblockPlus::Subscription* GetSubscriptionPtr(jlong ptr)
 {
-  return JniLongToTypePtr<AdblockPlus::SubscriptionPtr>(ptr)->get();
+  return JniLongToTypePtr<AdblockPlus::Subscription>(ptr);
 }
 
 static jboolean JNICALL JniIsListed(JNIEnv* env, jclass clazz, jlong ptr)

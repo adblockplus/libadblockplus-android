@@ -53,7 +53,7 @@ class JniEventCallback : public JniCallbackBase
 {
 public:
   JniEventCallback(JNIEnv* env, jobject callbackObject);
-  void Callback(AdblockPlus::JsValueList& params);
+  void Callback(AdblockPlus::JsValueList&& params);
 };
 
 class JniUpdateAvailableCallback : public JniCallbackBase
@@ -74,7 +74,7 @@ class JniFilterChangeCallback : public JniCallbackBase
 {
 public:
   JniFilterChangeCallback(JNIEnv* env, jobject callbackObject);
-  void Callback(const std::string& arg, const AdblockPlus::JsValuePtr jsValue);
+  void Callback(const std::string& arg, AdblockPlus::JsValue&& jsValue);
 };
 
 class JniLogSystemCallback : public JniCallbackBase, public AdblockPlus::LogSystem
@@ -88,7 +88,7 @@ class JniShowNotificationCallback : public JniCallbackBase
 {
 public:
   JniShowNotificationCallback(JNIEnv* env, jobject callbackObject);
-  void Callback(const AdblockPlus::NotificationPtr&);
+  void Callback(AdblockPlus::Notification&&);
 };
 
 class JniWebRequest : public JniCallbackBase, public AdblockPlus::WebRequest

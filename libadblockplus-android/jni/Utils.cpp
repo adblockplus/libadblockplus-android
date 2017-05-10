@@ -164,37 +164,25 @@ JNIEnvAcquire::~JNIEnvAcquire()
 }
 
 template<typename T>
-static jobject NewJniObject(JNIEnv* env, const T& value, jclass clazz, jmethodID ctor)
+static jobject NewJniObject(JNIEnv* env, T&& value, jclass clazz, jmethodID ctor)
 {
-  if (!value.get())
-  {
-    return 0;
-  }
-
-  return env->NewObject(clazz, ctor, JniPtrToLong(new T(value)));
+  return env->NewObject(clazz, ctor, JniPtrToLong(new T(std::forward<T>(value))));
 }
 
-template<typename T>
-static jobject NewJniObject(JNIEnv* env, const T& value, const char* javaClass)
+jobject NewJniFilter(JNIEnv* env, AdblockPlus::Filter&& filter)
 {
-  JniLocalReference<jclass> clazz( env, env->FindClass(javaClass));
-  jmethodID ctor = env->GetMethodID(*clazz, "<init>", "(J)V");
-  return NewJniObject(env, value, *clazz, ctor);
+  return NewJniObject<AdblockPlus::Filter>(
+    env, std::move(filter), filterClass->Get(), filterCtor);
 }
 
-jobject NewJniFilter(JNIEnv* env, const AdblockPlus::FilterPtr& filter)
+jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription)
 {
-  return NewJniObject(env, filter, filterClass->Get(), filterCtor);
+  return NewJniObject<AdblockPlus::Subscription>(
+    env, std::move(subscription), subscriptionClass->Get(), subscriptionCtor);
 }
 
-jobject NewJniSubscription(JNIEnv* env,
-    const AdblockPlus::SubscriptionPtr& subscription)
+jobject NewJniNotification(JNIEnv* env, AdblockPlus::Notification&& notification)
 {
-  return NewJniObject(env, subscription, subscriptionClass->Get(), subscriptionCtor);
-}
-
-jobject NewJniNotification(JNIEnv* env,
-    const AdblockPlus::NotificationPtr& notification)
-{
-  return NewJniObject(env, notification, notificationClass->Get(), notificationCtor);
+  return NewJniObject<AdblockPlus::Notification>(
+    env, std::move(notification), notificationClass->Get(), notificationCtor);
 }

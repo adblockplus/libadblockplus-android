@@ -37,7 +37,7 @@ void JniNotification_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
 
 static AdblockPlus::Notification* GetNotificationPtr(jlong ptr)
 {
-  return JniLongToTypePtr<AdblockPlus::NotificationPtr>(ptr)->get();
+  return JniLongToTypePtr<AdblockPlus::Notification>(ptr);
 }
 
 static jobject JNICALL JniGetType(JNIEnv* env, jclass clazz, jlong ptr)

@@ -47,7 +47,7 @@ static jboolean JNICALL JniIsUndefined(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsUndefined() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsUndefined() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -56,7 +56,7 @@ static jboolean JNICALL JniIsNull(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsNull() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsNull() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -65,7 +65,7 @@ static jboolean JNICALL JniIsNumber(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsNumber() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsNumber() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -74,7 +74,7 @@ static jboolean JNICALL JniIsString(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsString() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsString() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -83,7 +83,7 @@ static jboolean JNICALL JniIsBoolean(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsBool() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsBool() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -92,7 +92,7 @@ static jboolean JNICALL JniIsObject(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsObject() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsObject() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -101,7 +101,7 @@ static jboolean JNICALL JniIsArray(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsArray() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsArray() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -110,7 +110,7 @@ static jboolean JNICALL JniIsFunction(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->IsFunction() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->IsFunction() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -119,7 +119,8 @@ static jstring JNICALL JniAsString(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return env->NewStringUTF(JniGetJsValue(ptr)->AsString().c_str());
+    AdblockPlus::JsValue* jsValue = JniGetJsValuePtr(ptr);
+    return env->NewStringUTF(jsValue->AsString().c_str());
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -128,7 +129,7 @@ static jlong JNICALL JniAsLong(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return static_cast<jlong>(JniGetJsValue(ptr)->AsInt());
+    return static_cast<jlong>(JniGetJsValuePtr(ptr)->AsInt());
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -137,7 +138,7 @@ static jboolean JNICALL JniAsBoolean(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    return JniGetJsValue(ptr)->AsBool() ? JNI_TRUE : JNI_FALSE;
+    return JniGetJsValuePtr(ptr)->AsBool() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -146,9 +147,7 @@ static jobject JNICALL JniAsList(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    AdblockPlus::JsValueList list = JniGetJsValue(ptr)->AsList();
-
-    return JniJsValueListToArrayList(env, list);
+    return JniJsValueListToArrayList(env, JniGetJsValuePtr(ptr)->AsList());
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -157,45 +156,38 @@ static jobject JNICALL JniGetProperty(JNIEnv* env, jclass clazz, jlong ptr, jstr
 {
   try
   {
-    return NewJniJsValue(env, JniGetJsValue(ptr)->GetProperty(JniJavaToStdString(env, name)));
+    return NewJniJsValue(env, JniGetJsValuePtr(ptr)->GetProperty(JniJavaToStdString(env, name)));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
 static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  delete JniLongToTypePtr<AdblockPlus::JsValuePtr>(ptr);
+  delete JniLongToTypePtr<AdblockPlus::JsValue>(ptr);
 }
 
-jobject NewJniJsValue(JNIEnv* env, const AdblockPlus::JsValuePtr& jsValue, jclass jsValueClassArg)
+jobject NewJniJsValue(JNIEnv* env, AdblockPlus::JsValue&& jsValue, jclass jsValueClassArg)
 {
-  if (!jsValue.get())
-  {
-    return 0;
-  }
-
-  jlong ptr = JniPtrToLong(new AdblockPlus::JsValuePtr(jsValue));
-  return env->NewObject(jsValueClass->Get(), jsValueCtor, ptr);
+  return env->NewObject(jsValueClass->Get(), jsValueCtor, new AdblockPlus::JsValue(std::move(jsValue)));
 }
 
-AdblockPlus::JsValue* JniGetJsValue(jlong ptr)
+AdblockPlus::JsValue* JniGetJsValuePtr(jlong ptr)
 {
-  return JniLongToTypePtr<AdblockPlus::JsValuePtr>(ptr)->get();
+  return JniLongToTypePtr<AdblockPlus::JsValue>(ptr);
 }
 
-AdblockPlus::JsValuePtr& JniGetJsValuePtr(jlong ptr)
+AdblockPlus::JsValue& JniGetJsValue(jlong ptr)
 {
-  return *JniLongToTypePtr<AdblockPlus::JsValuePtr>(ptr);
+  return *JniLongToTypePtr<AdblockPlus::JsValue>(ptr);
 }
 
-jobject JniJsValueListToArrayList(JNIEnv* env, AdblockPlus::JsValueList& list)
+jobject JniJsValueListToArrayList(JNIEnv* env, AdblockPlus::JsValueList&& list)
 {
   jobject arrayList = NewJniArrayList(env);
 
   for (AdblockPlus::JsValueList::iterator it = list.begin(), end = list.end(); it != end; ++it)
   {
-    JniAddObjectToList(env, arrayList,
-        *JniLocalReference<jobject>(env, NewJniJsValue(env, *it)));
+    JniAddObjectToList(env, arrayList, *JniLocalReference<jobject>(env, NewJniJsValue(env, std::move(*it))));
   }
 
   return arrayList;
@@ -206,11 +198,11 @@ jobject JniJsValueListToArrayList(JNIEnv* env, AdblockPlus::JsValueList& list)
 //void SetProperty(const std::string& name, const std::string& val);
 //void SetProperty(const std::string& name, int64_t val);
 //void SetProperty(const std::string& name, bool val);
-//void SetProperty(const std::string& name, JsValuePtr value);
+//void SetProperty(const std::string& name, JsValue value);
 //void SetProperty(const std::string& name, const char* val);
 //inline void SetProperty(const std::string& name, int val);
 //std::string GetClass() const;
-//JsValuePtr Call(const JsValueList& params = JsValueList(), AdblockPlus::JsValuePtr thisPtr = AdblockPlus::JsValuePtr()) const;
+//JsValue Call(const JsValueList& params = JsValueList(), AdblockPlus::JsValue thisPtr = AdblockPlus::JsValue()) const;
 
 static JNINativeMethod methods[] =
 {

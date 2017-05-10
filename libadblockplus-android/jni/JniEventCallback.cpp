@@ -36,7 +36,7 @@ JniEventCallback::JniEventCallback(JNIEnv* env, jobject callbackObject)
 {
 }
 
-void JniEventCallback::Callback(AdblockPlus::JsValueList& params)
+void JniEventCallback::Callback(AdblockPlus::JsValueList&& params)
 {
   JNIEnvAcquire env(GetJavaVM());
 
@@ -47,7 +47,7 @@ void JniEventCallback::Callback(AdblockPlus::JsValueList& params)
 
   if (method)
   {
-    jobject jsList = JniJsValueListToArrayList(*env, params);
+    jobject jsList = JniJsValueListToArrayList(*env, std::move(params));
     env->CallVoidMethod(GetCallbackObject(), method, jsList);
   }
 }

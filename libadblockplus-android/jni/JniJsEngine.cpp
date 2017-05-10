@@ -56,7 +56,11 @@ static void JNICALL JniSetEventCallback(JNIEnv* env, jclass clazz, jlong ptr, js
 
   JniEventCallback* callback = JniLongToTypePtr<JniEventCallback>(jCallbackPtr);
   std::string eventName = JniJavaToStdString(env, jEventName);
-  AdblockPlus::JsEngine::EventCallback eCallback = std::bind(&JniEventCallback::Callback, callback, std::placeholders::_1);
+
+  auto eCallback = [callback](AdblockPlus::JsValueList&& params)
+  {
+    callback->Callback(std::move(params));
+  };
 
   try
   {
@@ -87,8 +91,7 @@ static jobject JNICALL JniEvaluate(JNIEnv* env, jclass clazz, jlong ptr, jstring
 
   try
   {
-    AdblockPlus::JsValuePtr jsValue = engine->Evaluate(source, filename);
-    return NewJniJsValue(env, jsValue);
+    return NewJniJsValue(env, engine->Evaluate(source, filename));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -107,7 +110,7 @@ static void JNICALL JniTriggerEvent(JNIEnv* env, jclass clazz, jlong ptr, jstrin
 
     for (jsize i = 0; i < length; i++)
     {
-      args.push_back(JniGetJsValuePtr(ptrs[i]));
+      args.push_back(JniGetJsValue(ptrs[i]));
     }
 
     env->ReleasePrimitiveArrayCritical(jJsPtrs, ptrs, JNI_ABORT);
@@ -115,7 +118,7 @@ static void JNICALL JniTriggerEvent(JNIEnv* env, jclass clazz, jlong ptr, jstrin
 
   try
   {
-    engine->TriggerEvent(eventName, args);
+    engine->TriggerEvent(eventName, std::move(args));
   }
   CATCH_AND_THROW(env)
 }
@@ -143,7 +146,6 @@ static void JNICALL JniSetDefaultWebRequest(JNIEnv* env, jclass clazz, jlong ptr
   try
   {
     AdblockPlus::WebRequestPtr webRequest(new AdblockPlus::DefaultWebRequest());
-
     engine->SetWebRequest(webRequest);
   }
   CATCH_AND_THROW(env)
@@ -194,8 +196,7 @@ static jobject JNICALL JniNewLongValue(JNIEnv* env, jclass clazz, jlong ptr, jlo
 
   try
   {
-    AdblockPlus::JsValuePtr jsValue = engine->NewValue(static_cast<int64_t>(value));
-    return NewJniJsValue(env, jsValue);
+    return NewJniJsValue(env, engine->NewValue(static_cast<int64_t>(value)));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -206,8 +207,7 @@ static jobject JNICALL JniNewBooleanValue(JNIEnv* env, jclass clazz, jlong ptr, 
 
   try
   {
-    AdblockPlus::JsValuePtr jsValue = engine->NewValue(value == JNI_TRUE ? true : false);
-    return NewJniJsValue(env, jsValue);
+    return NewJniJsValue(env, engine->NewValue(value == JNI_TRUE ? true : false));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -219,8 +219,7 @@ static jobject JNICALL JniNewStringValue(JNIEnv* env, jclass clazz, jlong ptr, j
   try
   {
     std::string strValue = JniJavaToStdString(env, value);
-    AdblockPlus::JsValuePtr jsValue = engine->NewValue(strValue);
-    return NewJniJsValue(env, jsValue);
+    return NewJniJsValue(env, engine->NewValue(strValue));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }

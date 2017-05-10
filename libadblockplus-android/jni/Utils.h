@@ -187,13 +187,11 @@ inline jobjectArray JniGetStringArrayField(JNIEnv* env, jclass clazz, jobject jO
 
 jobject NewJniArrayList(JNIEnv* env);
 
-jobject NewJniFilter(JNIEnv* env, const AdblockPlus::FilterPtr& filter);
+jobject NewJniFilter(JNIEnv* env, AdblockPlus::Filter&& filter);
 
-jobject NewJniSubscription(JNIEnv* env,
-    const AdblockPlus::SubscriptionPtr& subscription);
+jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription);
 
-jobject NewJniNotification(JNIEnv* env,
-    const AdblockPlus::NotificationPtr& notification);
+jobject NewJniNotification(JNIEnv* env, AdblockPlus::Notification&& notification);
 
 #define CATCH_AND_THROW(jEnv) \
   catch (const std::exception& except) \

@@ -37,8 +37,7 @@ JniShowNotificationCallback::JniShowNotificationCallback(JNIEnv* env,
 {
 }
 
-void JniShowNotificationCallback::Callback(
-    const AdblockPlus::NotificationPtr& notificationPtr)
+void JniShowNotificationCallback::Callback(AdblockPlus::Notification&& notification)
 {
   JNIEnvAcquire env(GetJavaVM());
 
@@ -49,8 +48,7 @@ void JniShowNotificationCallback::Callback(
 
   if (method)
   {
-    JniLocalReference<jobject> jNotification(*env, NewJniNotification(*env,
-        notificationPtr));
+    JniLocalReference<jobject> jNotification(*env, NewJniNotification(*env, std::move(notification)));
     env->CallVoidMethod(GetCallbackObject(), method, *jNotification);
   }
 
