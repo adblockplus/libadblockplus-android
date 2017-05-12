@@ -168,7 +168,8 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 
 jobject NewJniJsValue(JNIEnv* env, AdblockPlus::JsValue&& jsValue, jclass jsValueClassArg)
 {
-  return env->NewObject(jsValueClass->Get(), jsValueCtor, new AdblockPlus::JsValue(std::move(jsValue)));
+  auto pJsValue = reinterpret_cast<uintptr_t>(new AdblockPlus::JsValue(std::move(jsValue)));
+  return env->NewObject(jsValueClass->Get(), jsValueCtor, static_cast<jlong>(pJsValue));
 }
 
 AdblockPlus::JsValue* JniGetJsValuePtr(jlong ptr)
