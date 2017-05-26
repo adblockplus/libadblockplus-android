@@ -489,7 +489,7 @@ static void JNICALL JniSetAcceptableAdsEnabled(JNIEnv* env, jclass clazz, jlong 
 
   try
   {
-    engine->SetAAEnabled((bool)(jvalue == JNI_TRUE));
+    engine->SetAAEnabled(jvalue == JNI_TRUE);
   }
   CATCH_AND_THROW(env)
 }

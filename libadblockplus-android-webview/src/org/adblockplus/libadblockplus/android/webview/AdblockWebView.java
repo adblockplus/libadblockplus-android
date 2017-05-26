@@ -999,7 +999,9 @@ public class AdblockWebView extends WebView
             {
               for (Subscription eachSubscription : subscriptions)
               {
-                d("Subscribed to " + eachSubscription);
+                d("Subscribed to "
+                  + (eachSubscription.isDisabled() ? "disabled" : "enabled")
+                  + " " + eachSubscription);
               }
             }
           }

@@ -24,6 +24,24 @@ static AdblockPlus::Subscription* GetSubscriptionPtr(jlong ptr)
   return JniLongToTypePtr<AdblockPlus::Subscription>(ptr);
 }
 
+static jboolean JNICALL JniIsDisabled(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    return GetSubscriptionPtr(ptr)->IsDisabled() ? JNI_TRUE : JNI_FALSE;
+  }
+  CATCH_THROW_AND_RETURN(env, JNI_FALSE)
+}
+
+static void JNICALL JniSetDisabled(JNIEnv* env, jclass clazz, jlong ptr, jboolean disabled)
+{
+  try
+  {
+    return GetSubscriptionPtr(ptr)->SetDisabled(disabled == JNI_TRUE);
+  }
+  CATCH_AND_THROW(env)
+}
+
 static jboolean JNICALL JniIsListed(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
@@ -92,6 +110,8 @@ static jboolean JNICALL JniIsAcceptableAds(JNIEnv* env, jclass clazz, jlong ptr)
 
 static JNINativeMethod methods[] =
 {
+  { (char*)"isDisabled", (char*)"(J)Z", (void*)JniIsDisabled },
+  { (char*)"setDisabled", (char*)"(JZ)V", (void*)JniSetDisabled },
   { (char*)"isListed", (char*)"(J)Z", (void*)JniIsListed },
   { (char*)"addToList", (char*)"(J)V", (void*)JniAddToList },
   { (char*)"removeFromList", (char*)"(J)V", (void*)JniRemoveFromList },

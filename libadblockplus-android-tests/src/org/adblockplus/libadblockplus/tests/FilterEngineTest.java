@@ -425,4 +425,63 @@ public class FilterEngineTest extends FilterEngineGenericTest
     }
     fail("AA subscription not found in listed subscriptions when enabled");
   }
+
+  @Test
+  public void testSubscriptionsAreNotDisabled()
+  {
+    if (!filterEngine.isAcceptableAdsEnabled())
+    {
+      filterEngine.setAcceptableAdsEnabled(true);
+    }
+    assertTrue(filterEngine.isAcceptableAdsEnabled());
+
+    List<Subscription> listedSubscriptions = filterEngine.getListedSubscriptions();
+    for (Subscription eachSubscription : listedSubscriptions)
+    {
+      assertFalse(eachSubscription.isDisabled());
+    }
+  }
+
+  @Test
+  public void testSubscriptionsSetDisabled()
+  {
+    List<Subscription> listedSubscriptions = filterEngine.getListedSubscriptions();
+    Subscription subscription = listedSubscriptions.get(0);
+    boolean originalDisabled = subscription.isDisabled();
+
+    subscription.setDisabled(!originalDisabled);
+    assertEquals(!originalDisabled, subscription.isDisabled());
+
+    subscription.setDisabled(originalDisabled);
+    assertEquals(originalDisabled, subscription.isDisabled());
+  }
+
+  @Test
+  public void testDisableEnableAcceptableAdsSubscription()
+  {
+    if (filterEngine.isAcceptableAdsEnabled())
+    {
+      filterEngine.setAcceptableAdsEnabled(false);
+    }
+    assertFalse(filterEngine.isAcceptableAdsEnabled());
+
+    List<Subscription> listedSubscriptions = filterEngine.getListedSubscriptions();
+    for (Subscription eachSubscription : listedSubscriptions)
+    {
+      if (eachSubscription.isAcceptableAds())
+      {
+        assertTrue(eachSubscription.isDisabled());
+      }
+    }
+
+    filterEngine.setAcceptableAdsEnabled(true);
+    listedSubscriptions = filterEngine.getListedSubscriptions();
+    for (Subscription eachSubscription : listedSubscriptions)
+    {
+      if (eachSubscription.isAcceptableAds())
+      {
+        assertFalse(eachSubscription.isDisabled());
+      }
+    }
+  }
 }

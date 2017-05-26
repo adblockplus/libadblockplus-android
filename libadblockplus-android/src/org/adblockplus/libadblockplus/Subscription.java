@@ -30,6 +30,16 @@ public final class Subscription extends JsValue
     super(ptr);
   }
 
+  public boolean isDisabled()
+  {
+    return isDisabled(this.ptr);
+  }
+
+  public void setDisabled(boolean disabled)
+  {
+    setDisabled(this.ptr, disabled);
+  }
+
   public boolean isListed()
   {
     return isListed(this.ptr);
@@ -78,6 +88,10 @@ public final class Subscription extends JsValue
   }
 
   private final static native void registerNatives();
+
+  private final static native boolean isDisabled(long ptr);
+
+  private final static native void setDisabled(long ptr, boolean disabled);
 
   private final static native boolean isListed(long ptr);
 
