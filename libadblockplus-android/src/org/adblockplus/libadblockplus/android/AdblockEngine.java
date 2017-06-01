@@ -42,6 +42,8 @@ import org.adblockplus.libadblockplus.UpdateCheckDoneCallback;
 import org.adblockplus.libadblockplus.WebRequest;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build.VERSION;
 import android.os.Handler;
 import android.os.Looper;
@@ -105,7 +107,18 @@ public final class AdblockEngine
 
   public static AppInfo generateAppInfo(final Context context, boolean developmentBuild)
   {
-    return generateAppInfo(context, developmentBuild, null, null);
+    try
+    {
+      PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+      String application = context.getPackageName();
+      String applicationVersion = packageInfo.versionName;
+
+      return generateAppInfo(context, developmentBuild, application, applicationVersion);
+    }
+    catch (PackageManager.NameNotFoundException e)
+    {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
