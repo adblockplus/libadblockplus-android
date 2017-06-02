@@ -18,6 +18,7 @@
 #include <AdblockPlus.h>
 #include "Utils.h"
 #include "JniCallbacks.h"
+#include <thread>
 
 static jobject SubscriptionsToArrayList(JNIEnv* env, std::vector<AdblockPlus::Subscription>&& subscriptions)
 {
@@ -57,9 +58,19 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jlong jsEnginePtr, jlong
       JniIsAllowedConnectionTypeCallback* callback =
         JniLongToTypePtr<JniIsAllowedConnectionTypeCallback>(isAllowedConnectionCallbackPtr);
 
-      AdblockPlus::FilterEngine::IsConnectionAllowedCallback cppCallback =
-        std::bind(&JniIsAllowedConnectionTypeCallback::Callback, callback, std::placeholders::_1);
-      creationParameters.isConnectionAllowedCallback = cppCallback;
+      creationParameters.isSubscriptionDowloadAllowedCallback =
+        [callback](const std::string* allowedConnectionTypeArg, const std::function<void(bool)>& doneCallback)
+      {
+        std::shared_ptr<std::string> allowedConnectionType;
+        if (allowedConnectionTypeArg)
+        {
+          allowedConnectionType = std::make_shared<std::string>(*allowedConnectionTypeArg);
+        }
+        std::thread([callback, allowedConnectionType, doneCallback]
+        {
+          doneCallback(callback->Callback(allowedConnectionType.get()));
+        }).detach();
+      };
 
       filterEngine = new AdblockPlus::FilterEnginePtr(
         AdblockPlus::FilterEngine::Create(jsEngine, creationParameters));

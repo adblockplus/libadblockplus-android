@@ -48,14 +48,14 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
 {
   try
   {
-    return JniPtrToLong(new AdblockPlus::WebRequestPtr(new JniWebRequest(env, callbackObject)));
+    return JniPtrToLong(new AdblockPlus::WebRequestSharedPtr(std::make_shared<JniWebRequest>(env, callbackObject)));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
 static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  delete JniLongToTypePtr<AdblockPlus::WebRequestPtr>(ptr);
+  delete JniLongToTypePtr<AdblockPlus::WebRequestSharedPtr>(ptr);
 }
 
 JniWebRequest::JniWebRequest(JNIEnv* env, jobject callbackObject)
@@ -75,7 +75,7 @@ AdblockPlus::ServerResponse JniWebRequest::GET(const std::string& url,
       "(Ljava/lang/String;Ljava/util/List;)" TYP("ServerResponse"));
 
   AdblockPlus::ServerResponse sResponse;
-  sResponse.status = AdblockPlus::WebRequest::NS_ERROR_FAILURE;
+  sResponse.status = AdblockPlus::IWebRequest::NS_ERROR_FAILURE;
 
   if (method)
   {

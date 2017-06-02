@@ -139,18 +139,6 @@ static void JNICALL JniSetDefaultFileSystem(JNIEnv* env, jclass clazz, jlong ptr
   CATCH_AND_THROW(env)
 }
 
-static void JNICALL JniSetDefaultWebRequest(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
-
-  try
-  {
-    AdblockPlus::WebRequestPtr webRequest(new AdblockPlus::DefaultWebRequest());
-    engine->SetWebRequest(webRequest);
-  }
-  CATCH_AND_THROW(env)
-}
-
 static void JNICALL JniSetDefaultLogSystem(JNIEnv* env, jclass clazz, jlong ptr)
 {
   AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
@@ -183,7 +171,7 @@ static void JNICALL JniSetWebRequest(JNIEnv* env, jclass clazz, jlong ptr, jlong
 
   try
   {
-    AdblockPlus::WebRequestPtr& webRequest = *JniLongToTypePtr<AdblockPlus::WebRequestPtr>(webRequestPtr);
+    auto& webRequest = *JniLongToTypePtr<AdblockPlus::WebRequestSharedPtr>(webRequestPtr);
 
     engine->SetWebRequest(webRequest);
   }
@@ -245,7 +233,6 @@ static JNINativeMethod methods[] =
   { (char*)"setLogSystem", (char*)"(JJ)V", (void*)JniSetLogSystem },
   { (char*)"setDefaultLogSystem", (char*)"(J)V", (void*)JniSetDefaultLogSystem },
   { (char*)"setWebRequest", (char*)"(JJ)V", (void*)JniSetWebRequest },
-  { (char*)"setDefaultWebRequest", (char*)"(J)V", (void*)JniSetDefaultWebRequest },
 
   { (char*)"newValue", (char*)"(JJ)" TYP("JsValue"), (void*)JniNewLongValue },
   { (char*)"newValue", (char*)"(JZ)" TYP("JsValue"), (void*)JniNewBooleanValue },

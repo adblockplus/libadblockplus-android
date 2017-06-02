@@ -93,11 +93,6 @@ public final class JsEngine implements Disposable
     setLogSystem(this.ptr, logSystem.ptr);
   }
 
-  public void setDefaultWebRequest()
-  {
-    setDefaultWebRequest(this.ptr);
-  }
-
   public void setWebRequest(final WebRequest webRequest)
   {
     setWebRequest(this.ptr, webRequest.ptr);
@@ -159,8 +154,6 @@ public final class JsEngine implements Disposable
   private final static native void setDefaultLogSystem(long ptr);
 
   private final static native void setWebRequest(long ptr, long webRequestPtr);
-
-  private final static native void setDefaultWebRequest(long ptr);
 
   private final static native JsValue newValue(long ptr, long value);
 
