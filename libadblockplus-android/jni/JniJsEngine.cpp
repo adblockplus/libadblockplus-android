@@ -32,6 +32,11 @@ static void TransformAppInfo(JNIEnv* env, jobject jAppInfo, AdblockPlus::AppInfo
   appInfo.developmentBuild = JniGetBooleanField(env, clazz, jAppInfo, "developmentBuild");
 }
 
+static AdblockPlus::JsEnginePtr& GetJsEnginePtrRef(jlong ptr)
+{
+  return *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+}
+
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo)
 {
   AdblockPlus::AppInfo appInfo;
@@ -52,7 +57,7 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 
 static void JNICALL JniSetEventCallback(JNIEnv* env, jclass clazz, jlong ptr, jstring jEventName, jlong jCallbackPtr)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   JniEventCallback* callback = JniLongToTypePtr<JniEventCallback>(jCallbackPtr);
   std::string eventName = JniJavaToStdString(env, jEventName);
@@ -71,7 +76,7 @@ static void JNICALL JniSetEventCallback(JNIEnv* env, jclass clazz, jlong ptr, js
 
 static void JNICALL JniRemoveEventCallback(JNIEnv* env, jclass clazz, jlong ptr, jstring jEventName)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   std::string eventName = JniJavaToStdString(env, jEventName);
 
@@ -84,7 +89,7 @@ static void JNICALL JniRemoveEventCallback(JNIEnv* env, jclass clazz, jlong ptr,
 
 static jobject JNICALL JniEvaluate(JNIEnv* env, jclass clazz, jlong ptr, jstring jSource, jstring jFilename)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   std::string source = JniJavaToStdString(env, jSource);
   std::string filename = JniJavaToStdString(env, jFilename);
@@ -98,7 +103,7 @@ static jobject JNICALL JniEvaluate(JNIEnv* env, jclass clazz, jlong ptr, jstring
 
 static void JNICALL JniTriggerEvent(JNIEnv* env, jclass clazz, jlong ptr, jstring jEventName, jarray jJsPtrs)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
   std::string eventName = JniJavaToStdString(env, jEventName);
   AdblockPlus::JsValueList args;
 
@@ -125,7 +130,7 @@ static void JNICALL JniTriggerEvent(JNIEnv* env, jclass clazz, jlong ptr, jstrin
 
 static void JNICALL JniSetDefaultFileSystem(JNIEnv* env, jclass clazz, jlong ptr, jstring jBasePath)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   try
   {
@@ -141,7 +146,7 @@ static void JNICALL JniSetDefaultFileSystem(JNIEnv* env, jclass clazz, jlong ptr
 
 static void JNICALL JniSetDefaultLogSystem(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   try
   {
@@ -154,7 +159,7 @@ static void JNICALL JniSetDefaultLogSystem(JNIEnv* env, jclass clazz, jlong ptr)
 
 static void JNICALL JniSetLogSystem(JNIEnv* env, jclass clazz, jlong ptr, jlong logSystemPtr)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   try
   {
@@ -167,7 +172,7 @@ static void JNICALL JniSetLogSystem(JNIEnv* env, jclass clazz, jlong ptr, jlong 
 
 static void JNICALL JniSetWebRequest(JNIEnv* env, jclass clazz, jlong ptr, jlong webRequestPtr)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   try
   {
@@ -180,7 +185,7 @@ static void JNICALL JniSetWebRequest(JNIEnv* env, jclass clazz, jlong ptr, jlong
 
 static jobject JNICALL JniNewLongValue(JNIEnv* env, jclass clazz, jlong ptr, jlong value)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   try
   {
@@ -191,7 +196,7 @@ static jobject JNICALL JniNewLongValue(JNIEnv* env, jclass clazz, jlong ptr, jlo
 
 static jobject JNICALL JniNewBooleanValue(JNIEnv* env, jclass clazz, jlong ptr, jboolean value)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   try
   {
@@ -202,7 +207,7 @@ static jobject JNICALL JniNewBooleanValue(JNIEnv* env, jclass clazz, jlong ptr, 
 
 static jobject JNICALL JniNewStringValue(JNIEnv* env, jclass clazz, jlong ptr, jstring value)
 {
-  AdblockPlus::JsEnginePtr& engine = *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  AdblockPlus::JsEnginePtr& engine = GetJsEnginePtrRef(ptr);
 
   try
   {
