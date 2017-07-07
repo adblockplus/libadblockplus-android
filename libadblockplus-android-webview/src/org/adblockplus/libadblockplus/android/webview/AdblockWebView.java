@@ -569,6 +569,13 @@ public class AdblockWebView extends WebView
         }
       }
 
+      // workaround for the issue: https://issues.adblockplus.org/ticket/5303
+      if (newProgress == 100 && !allowDraw)
+      {
+        w("Workaround for the issue #5303");
+        stopPreventDrawing();
+      }
+
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onProgressChanged(view, newProgress);
