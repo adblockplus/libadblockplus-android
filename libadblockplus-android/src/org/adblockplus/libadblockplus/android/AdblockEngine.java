@@ -202,7 +202,18 @@ public final class AdblockEngine
       {
         AndroidWebRequestResourceWrapper wrapper = new AndroidWebRequestResourceWrapper(
           context, engine.webRequest, urlToResourceIdMap, resourceStorage);
-        wrapper.setListener(engine.resourceWrapperListener);
+        wrapper.setListener(new AndroidWebRequestResourceWrapper.Listener()
+        {
+          @Override
+          public void onIntercepted(String url, int resourceId)
+          {
+            Log.d(TAG, "Force subscription update for intercepted URL " + url);
+            if (engine.filterEngine != null)
+            {
+              engine.filterEngine.updateFiltersAsync(url);
+            }
+          }
+        });
 
         engine.webRequest = wrapper;
       }
@@ -258,40 +269,6 @@ public final class AdblockEngine
   {
     return new Builder(appInfo, basePath);
   }
-
-  private final AndroidWebRequestResourceWrapper.Listener resourceWrapperListener =
-    new AndroidWebRequestResourceWrapper.Listener()
-  {
-    private static final int UPDATE_DELAY_MS = 1 * 1000;
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
-
-    private final Runnable forceUpdateRunnable = new Runnable()
-    {
-      public void run() {
-        // Filter Engine can be already disposed
-        if (filterEngine != null)
-        {
-          Log.d(TAG, "Force update subscriptions");
-          AdblockEngine.this.updateSubscriptions();
-        }
-      }
-    };
-
-    @Override
-    public void onIntercepted(String url, int resourceId)
-    {
-      // we need to force update subscriptions ASAP after preloaded one is returned
-      // but we should note that multiple interceptions (for main easylist and AA) and force update once only
-
-      // adding into main thread queue to avoid concurrency issues (start update while updating)
-      // as usually onIntercepted() is invoked in background thread
-      handler.removeCallbacks(forceUpdateRunnable);
-      handler.postDelayed(forceUpdateRunnable, UPDATE_DELAY_MS);
-
-      Log.d(TAG, "Scheduled force update in " + UPDATE_DELAY_MS);
-    }
-  };
 
   public void dispose()
   {
@@ -491,21 +468,6 @@ public final class AdblockEngine
         {
           sub.dispose();
         }
-      }
-    }
-  }
-
-  public void updateSubscriptions()
-  {
-    for (final Subscription s : this.filterEngine.getListedSubscriptions())
-    {
-      try
-      {
-        s.updateFilters();
-      }
-      finally
-      {
-        s.dispose();
       }
     }
   }

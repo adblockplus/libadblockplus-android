@@ -103,6 +103,11 @@ jstring JniStdStringToJava(JNIEnv* env, std::string str)
   return env->NewStringUTF(str.c_str());
 }
 
+bool stringBeginsWith(const std::string& string, const std::string& beginning)
+{
+  return string.compare(0, beginning.length(), beginning);
+}
+
 jobject NewJniArrayList(JNIEnv* env)
 {
   return env->NewObject(arrayListClass->Get(), arrayListCtor);

@@ -18,6 +18,7 @@
 #include <AdblockPlus.h>
 #include "Utils.h"
 #include "JniCallbacks.h"
+#include "JniJsEngine.h"
 
 static void TransformAppInfo(JNIEnv* env, jobject jAppInfo, AdblockPlus::AppInfo& appInfo)
 {
@@ -34,7 +35,7 @@ static void TransformAppInfo(JNIEnv* env, jobject jAppInfo, AdblockPlus::AppInfo
 
 static AdblockPlus::JsEnginePtr& GetJsEnginePtrRef(jlong ptr)
 {
-  return *JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  return JniLongToTypePtr<JniJsEngine>(ptr)->jsEngine;
 }
 
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo)
@@ -45,14 +46,18 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo)
 
   try
   {
-    return JniPtrToLong(new AdblockPlus::JsEnginePtr(AdblockPlus::JsEngine::New(appInfo)));
+    AdblockPlus::TimerPtr timer = AdblockPlus::CreateDefaultTimer();
+    JniJsEngine* jniJsEngine = new JniJsEngine();
+    jniJsEngine->timer = timer.get();
+    jniJsEngine->jsEngine = AdblockPlus::JsEngine::New(appInfo, std::move(timer));
+    return JniPtrToLong(jniJsEngine);
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
 static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  delete JniLongToTypePtr<AdblockPlus::JsEnginePtr>(ptr);
+  delete JniLongToTypePtr<JniJsEngine>(ptr);
 }
 
 static void JNICALL JniSetEventCallback(JNIEnv* env, jclass clazz, jlong ptr, jstring jEventName, jlong jCallbackPtr)

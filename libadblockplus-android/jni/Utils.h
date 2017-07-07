@@ -153,6 +153,7 @@ inline T* JniLongToTypePtr(jlong value)
 
 std::string JniJavaToStdString(JNIEnv* env, jstring str);
 jstring JniStdStringToJava(JNIEnv* env, std::string str);
+bool stringBeginsWith(const std::string& string, const std::string& beginning);
 
 jmethodID JniGetAddToListMethod(JNIEnv* env, jobject list);
 

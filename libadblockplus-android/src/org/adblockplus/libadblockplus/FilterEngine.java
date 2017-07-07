@@ -196,6 +196,16 @@ public final class FilterEngine implements Disposable
     return getAcceptableAdsSubscriptionURL(this.ptr);
   }
 
+  /**
+   * Schedules updating of a subscription corresponding to the passed URL.
+   * @param subscriptionUrl may contain query parameters, only the beginning of the string is used
+   *                       to find a corresponding subscription.
+   */
+  public void updateFiltersAsync(String subscriptionUrl)
+  {
+    updateFiltersAsync(this.ptr, subscriptionUrl);
+  }
+
   @Override
   public void dispose()
   {
@@ -275,6 +285,8 @@ public final class FilterEngine implements Disposable
   private final static native boolean isAcceptableAdsEnabled(long ptr);
 
   private final static native String getAcceptableAdsSubscriptionURL(long ptr);
+
+  private final static native void updateFiltersAsync(long ptr, String subscriptionUrl);
 
   private final static native void dtor(long ptr);
 }
