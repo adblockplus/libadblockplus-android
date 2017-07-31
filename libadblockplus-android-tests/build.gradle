@@ -13,13 +13,13 @@ repositories {
 }
 
 android {
-  compileSdkVersion 16
+  compileSdkVersion 21
   buildToolsVersion "25.0.0"
 
   defaultConfig {
     applicationId "org.adblockplus.libadblockplus.tests"
     minSdkVersion 21
-    targetSdkVersion 16
+    targetSdkVersion 21
     versionCode 1
     versionName "1.0"
   }
