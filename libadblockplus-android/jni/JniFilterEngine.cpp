@@ -75,7 +75,7 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jlong jniJsEnginePtr, jl
       JniIsAllowedConnectionTypeCallback* callback =
         JniLongToTypePtr<JniIsAllowedConnectionTypeCallback>(isAllowedConnectionCallbackPtr);
 
-      creationParameters.isSubscriptionDowloadAllowedCallback =
+      creationParameters.isSubscriptionDownloadAllowedCallback =
         [callback](const std::string* allowedConnectionTypeArg, const std::function<void(bool)>& doneCallback)
       {
         std::shared_ptr<std::string> allowedConnectionType;

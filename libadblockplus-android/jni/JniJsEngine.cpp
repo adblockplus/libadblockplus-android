@@ -16,6 +16,7 @@
  */
 
 #include <AdblockPlus.h>
+#include <AdblockPlus/DefaultFileSystem.h>
 #include "Utils.h"
 #include "JniCallbacks.h"
 #include "JniJsEngine.h"
@@ -139,10 +140,10 @@ static void JNICALL JniSetDefaultFileSystem(JNIEnv* env, jclass clazz, jlong ptr
 
   try
   {
-    AdblockPlus::FileSystemPtr fileSystem(new AdblockPlus::DefaultFileSystem());
+    auto fileSystem = std::make_shared<AdblockPlus::DefaultFileSystemSync>();
 
     std::string basePath = JniJavaToStdString(env, jBasePath);
-    reinterpret_cast<AdblockPlus::DefaultFileSystem*>(fileSystem.get())->SetBasePath(basePath);
+    fileSystem->SetBasePath(basePath);
 
     engine->SetFileSystem(fileSystem);
   }

@@ -20,7 +20,7 @@ You can find it in the 'libadblockplus-android' directory.
 #### Requirements
 
 * [The Android SDK](http://developer.android.com/sdk)
-* [The Android NDK](https://developer.android.com/tools/sdk/ndk)
+* [The Android NDK, 12b](https://developer.android.com/tools/sdk/ndk)
 * [Ant](http://ant.apache.org)
 
 #### Building
@@ -65,7 +65,7 @@ and *.apk in the 'libadblockplus-android-webviewapp/target' directory.
 
 * [The Android SDK](http://developer.android.com/sdk)
 * Android SDK Build tools 24.0.1
-* [The Android NDK](https://developer.android.com/tools/sdk/ndk)
+* [The Android NDK, 12b](https://developer.android.com/tools/sdk/ndk)
 
 Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
 
