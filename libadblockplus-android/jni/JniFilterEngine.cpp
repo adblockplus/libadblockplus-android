@@ -54,9 +54,9 @@ namespace
     AdblockPlus::FilterEnginePtr filterEngine;
   };
 
-  AdblockPlus::FilterEnginePtr& GetFilterEnginePtrRef(jlong ptr)
+  AdblockPlus::FilterEngine& GetFilterEngineRef(jlong ptr)
   {
-    return JniLongToTypePtr<JniFilterEngine>(ptr)->filterEngine;
+    return *JniLongToTypePtr<JniFilterEngine>(ptr)->filterEngine;
   }
 }
 
@@ -110,32 +110,32 @@ static jboolean JNICALL JniIsFirstRun(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
   {
-    AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+    AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
-    return engine->IsFirstRun() ? JNI_TRUE : JNI_FALSE;
+    return engine.IsFirstRun() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE);
 }
 
 static jobject JNICALL JniGetFilter(JNIEnv* env, jclass clazz, jlong ptr, jstring jText)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
   std::string text = JniJavaToStdString(env, jText);
 
   try
   {
-    return NewJniFilter(env, engine->GetFilter(text));
+    return NewJniFilter(env, engine.GetFilter(text));
   }
   CATCH_THROW_AND_RETURN(env, 0);
 }
 
 static jobject JNICALL JniGetListedFilters(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   try
   {
-    std::vector<AdblockPlus::Filter> filters = engine->GetListedFilters();
+    std::vector<AdblockPlus::Filter> filters = engine.GetListedFilters();
 
     jobject list = NewJniArrayList(env);
 
@@ -151,24 +151,24 @@ static jobject JNICALL JniGetListedFilters(JNIEnv* env, jclass clazz, jlong ptr)
 
 static jobject JNICALL JniGetSubscription(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
   std::string url = JniJavaToStdString(env, jUrl);
 
   try
   {
-    return NewJniSubscription(env, engine->GetSubscription(url));
+    return NewJniSubscription(env, engine.GetSubscription(url));
   }
   CATCH_THROW_AND_RETURN(env, 0);
 }
 
 static void JNICALL JniShowNextNotification(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
   std::string url = JniJavaToStdString(env, jUrl);
 
   try
   {
-    engine->ShowNextNotification(url);
+    engine.ShowNextNotification(url);
   }
   CATCH_AND_THROW(env);
 }
@@ -176,7 +176,7 @@ static void JNICALL JniShowNextNotification(JNIEnv* env, jclass clazz, jlong ptr
 static void JNICALL JniSetShowNotificationCallback(JNIEnv* env, jclass clazz,
                                                   jlong ptr, jlong callbackPtr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   JniShowNotificationCallback* const callback =
       JniLongToTypePtr<JniShowNotificationCallback>(callbackPtr);
@@ -188,40 +188,40 @@ static void JNICALL JniSetShowNotificationCallback(JNIEnv* env, jclass clazz,
 
   try
   {
-    engine->SetShowNotificationCallback(showNotificationCallback);
+    engine.SetShowNotificationCallback(showNotificationCallback);
   }
   CATCH_AND_THROW(env)
 }
 
 static void JNICALL JniRemoveShowNotificationCallback(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   try
   {
-    engine->RemoveShowNotificationCallback();
+    engine.RemoveShowNotificationCallback();
   }
   CATCH_AND_THROW(env);
 }
 
 static jobject JNICALL JniGetListedSubscriptions(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   try
   {
-    return SubscriptionsToArrayList(env, engine->GetListedSubscriptions());
+    return SubscriptionsToArrayList(env, engine.GetListedSubscriptions());
   }
   CATCH_THROW_AND_RETURN(env, 0);
 }
 
 static jobject JNICALL JniFetchAvailableSubscriptions(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   try
   {
-    return SubscriptionsToArrayList(env, engine->FetchAvailableSubscriptions());
+    return SubscriptionsToArrayList(env, engine.FetchAvailableSubscriptions());
   }
   CATCH_THROW_AND_RETURN(env, 0);
 }
@@ -229,10 +229,10 @@ static jobject JNICALL JniFetchAvailableSubscriptions(JNIEnv* env, jclass clazz,
 static void JNICALL JniRemoveUpdateAvailableCallback(JNIEnv* env, jclass clazz,
                                                      jlong ptr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
   try
   {
-    engine->RemoveUpdateAvailableCallback();
+    engine.RemoveUpdateAvailableCallback();
   }
   CATCH_AND_THROW(env)
 }
@@ -240,7 +240,7 @@ static void JNICALL JniRemoveUpdateAvailableCallback(JNIEnv* env, jclass clazz,
 static void JNICALL JniSetUpdateAvailableCallback(JNIEnv* env, jclass clazz,
                                                   jlong ptr, jlong callbackPtr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
   JniUpdateAvailableCallback* const callback =
       JniLongToTypePtr<JniUpdateAvailableCallback>(callbackPtr);
 
@@ -249,18 +249,18 @@ static void JNICALL JniSetUpdateAvailableCallback(JNIEnv* env, jclass clazz,
                      std::placeholders::_1);
   try
   {
-    engine->SetUpdateAvailableCallback(updateAvailableCallback);
+    engine.SetUpdateAvailableCallback(updateAvailableCallback);
   }
   CATCH_AND_THROW(env)
 }
 
 static void JNICALL JniRemoveFilterChangeCallback(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   try
   {
-    engine->RemoveFilterChangeCallback();
+    engine.RemoveFilterChangeCallback();
   }
   CATCH_AND_THROW(env)
 }
@@ -268,7 +268,7 @@ static void JNICALL JniRemoveFilterChangeCallback(JNIEnv* env, jclass clazz, jlo
 static void JNICALL JniSetFilterChangeCallback(JNIEnv* env, jclass clazz,
     jlong ptr, jlong filterPtr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
   JniFilterChangeCallback* callback = JniLongToTypePtr<JniFilterChangeCallback>(
       filterPtr);
 
@@ -279,14 +279,14 @@ static void JNICALL JniSetFilterChangeCallback(JNIEnv* env, jclass clazz,
 
   try
   {
-    engine->SetFilterChangeCallback(filterCallback);
+    engine.SetFilterChangeCallback(filterCallback);
   }
   CATCH_AND_THROW(env)
 }
 
 static void JNICALL JniForceUpdateCheck(JNIEnv* env, jclass clazz, jlong ptr, jlong updaterPtr)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
   JniUpdateCheckDoneCallback* callback =
       JniLongToTypePtr<JniUpdateCheckDoneCallback>(updaterPtr);
 
@@ -302,7 +302,7 @@ static void JNICALL JniForceUpdateCheck(JNIEnv* env, jclass clazz, jlong ptr, jl
 
   try
   {
-    engine->ForceUpdateCheck(updateCheckDoneCallback);
+    engine.ForceUpdateCheck(updateCheckDoneCallback);
   }
   CATCH_AND_THROW(env)
 }
@@ -310,13 +310,13 @@ static void JNICALL JniForceUpdateCheck(JNIEnv* env, jclass clazz, jlong ptr, jl
 static jobject JNICALL JniGetElementHidingSelectors(JNIEnv* env, jclass clazz,
     jlong ptr, jstring jDomain)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string domain = JniJavaToStdString(env, jDomain);
 
   try
   {
-    std::vector<std::string> selectors = engine->GetElementHidingSelectors(
+    std::vector<std::string> selectors = engine.GetElementHidingSelectors(
         domain);
 
     jobject list = NewJniArrayList(env);
@@ -335,7 +335,7 @@ static jobject JNICALL JniGetElementHidingSelectors(JNIEnv* env, jclass clazz,
 
 static jobject JNICALL JniMatches(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl, jobject jContentType, jstring jDocumentUrl)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jUrl);
   AdblockPlus::FilterEngine::ContentType contentType =
@@ -344,7 +344,7 @@ static jobject JNICALL JniMatches(JNIEnv* env, jclass clazz, jlong ptr, jstring 
 
   try
   {
-    AdblockPlus::FilterPtr filterPtr = engine->Matches(url, contentType, documentUrl);
+    AdblockPlus::FilterPtr filterPtr = engine.Matches(url, contentType, documentUrl);
 
     return filterPtr.get() ? NewJniFilter(env, std::move(*filterPtr)) : 0;
   }
@@ -372,7 +372,7 @@ static void JavaStringArrayToStringVector(JNIEnv* env, jobjectArray jArray,
 static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
     jstring jUrl, jobject jContentType, jobjectArray jDocumentUrls)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jUrl);
   AdblockPlus::FilterEngine::ContentType contentType =
@@ -383,7 +383,7 @@ static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
 
   try
   {
-    AdblockPlus::FilterPtr filterPtr = engine->Matches(url, contentType, documentUrls);
+    AdblockPlus::FilterPtr filterPtr = engine.Matches(url, contentType, documentUrls);
 
     return (filterPtr.get() ? NewJniFilter(env, std::move(*filterPtr)) : 0);
   }
@@ -393,14 +393,14 @@ static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
 static jboolean JNICALL JniIsDocumentWhitelisted(JNIEnv* env, jclass clazz, jlong ptr,
     jstring jUrl, jobjectArray jDocumentUrls)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jUrl);
   std::vector<std::string> documentUrls;
   JavaStringArrayToStringVector(env, jDocumentUrls, documentUrls);
   try
   {
-    return engine->IsDocumentWhitelisted(url, documentUrls) ?
+    return engine.IsDocumentWhitelisted(url, documentUrls) ?
         JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
@@ -409,14 +409,14 @@ static jboolean JNICALL JniIsDocumentWhitelisted(JNIEnv* env, jclass clazz, jlon
 static jboolean JNICALL JniIsElemhideWhitelisted(JNIEnv* env, jclass clazz, jlong ptr,
     jstring jUrl, jobjectArray jDocumentUrls)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jUrl);
   std::vector<std::string> documentUrls;
   JavaStringArrayToStringVector(env, jDocumentUrls, documentUrls);
   try
   {
-    return engine->IsElemhideWhitelisted(url, documentUrls) ?
+    return engine.IsElemhideWhitelisted(url, documentUrls) ?
         JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
@@ -424,27 +424,27 @@ static jboolean JNICALL JniIsElemhideWhitelisted(JNIEnv* env, jclass clazz, jlon
 
 static jobject JNICALL JniGetPref(JNIEnv* env, jclass clazz, jlong ptr, jstring jPref)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string pref = JniJavaToStdString(env, jPref);
 
   try
   {
-    return NewJniJsValue(env, engine->GetPref(pref));
+    return NewJniJsValue(env, engine.GetPref(pref));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
 static void JNICALL JniSetPref(JNIEnv* env, jclass clazz, jlong ptr, jstring jPref, jlong jsValue)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string pref = JniJavaToStdString(env, jPref);
   const AdblockPlus::JsValue& value = JniGetJsValue(jsValue);
 
   try
   {
-    engine->SetPref(pref, value);
+    engine.SetPref(pref, value);
   }
   CATCH_AND_THROW(env)
 }
@@ -456,12 +456,12 @@ static jstring JNICALL JniGetHostFromURL(JNIEnv* env, jclass clazz, jlong ptr, j
     return NULL;
   }
 
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jurl);
   try
   {
-    std::string host = engine->GetHostFromURL(url);
+    std::string host = engine.GetHostFromURL(url);
 
     return JniStdStringToJava(env, host);
   }
@@ -470,7 +470,7 @@ static jstring JNICALL JniGetHostFromURL(JNIEnv* env, jclass clazz, jlong ptr, j
 
 static void JNICALL JniSetAllowedConnectionType(JNIEnv* env, jclass clazz, jlong ptr, jstring jvalue)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string stdValue;
   const std::string* value = (jvalue != NULL
@@ -479,7 +479,7 @@ static void JNICALL JniSetAllowedConnectionType(JNIEnv* env, jclass clazz, jlong
 
   try
   {
-    engine->SetAllowedConnectionType(value);
+    engine.SetAllowedConnectionType(value);
   }
   CATCH_AND_THROW(env)
 }
@@ -488,8 +488,8 @@ static jstring JNICALL JniGetAllowedConnectionType(JNIEnv* env, jclass clazz, jl
 {
   try
   {
-    AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
-    std::unique_ptr<std::string> value = engine->GetAllowedConnectionType();
+    AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
+    std::unique_ptr<std::string> value = engine.GetAllowedConnectionType();
 
     if (value == NULL)
     {
@@ -503,11 +503,11 @@ static jstring JNICALL JniGetAllowedConnectionType(JNIEnv* env, jclass clazz, jl
 
 static void JNICALL JniSetAcceptableAdsEnabled(JNIEnv* env, jclass clazz, jlong ptr, jboolean jvalue)
 {
-  AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   try
   {
-    engine->SetAAEnabled(jvalue == JNI_TRUE);
+    engine.SetAAEnabled(jvalue == JNI_TRUE);
   }
   CATCH_AND_THROW(env)
 }
@@ -516,8 +516,8 @@ static jboolean JNICALL JniIsAcceptableAdsEnabled(JNIEnv* env, jclass clazz, jlo
 {
   try
   {
-    AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
-    return engine->IsAAEnabled() ? JNI_TRUE : JNI_FALSE;
+    AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
+    return engine.IsAAEnabled() ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -526,8 +526,8 @@ static jstring JNICALL JniGetAcceptableAdsSubscriptionURL(JNIEnv* env, jclass cl
 {
   try
   {
-    AdblockPlus::FilterEnginePtr& engine = GetFilterEnginePtrRef(ptr);
-    std::string url = engine->GetAAUrl();
+    AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
+    std::string url = engine.GetAAUrl();
     return JniStdStringToJava(env, url);
   }
   CATCH_THROW_AND_RETURN(env, 0)
@@ -537,15 +537,10 @@ static void JNICALL JniUpdateFiltersAsync(JNIEnv* env, jclass clazz, jlong ptr, 
 {
   std::string subscriptionUrl = JniJavaToStdString(env, jSubscriptionUrl);
   auto jniFilterEngine = JniLongToTypePtr<JniFilterEngine>(ptr);
-  std::weak_ptr<AdblockPlus::FilterEngine> weakFilterEngine = jniFilterEngine->filterEngine;
-  jniFilterEngine->timer->SetTimer(std::chrono::milliseconds(0), [weakFilterEngine, subscriptionUrl]
+  jniFilterEngine->timer->SetTimer(std::chrono::milliseconds(0), [jniFilterEngine, subscriptionUrl]
   {
-    auto filterEngine = weakFilterEngine.lock();
-    if (!filterEngine)
-    {
-      return;
-    }
-    for (auto& subscription : filterEngine->GetListedSubscriptions())
+    auto& filterEngine = *jniFilterEngine->filterEngine;
+    for (auto& subscription : filterEngine.GetListedSubscriptions())
     {
       if (stringBeginsWith(subscriptionUrl, subscription.GetProperty("url").AsString()))
       {
