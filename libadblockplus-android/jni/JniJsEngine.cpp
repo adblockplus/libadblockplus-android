@@ -40,7 +40,7 @@ static AdblockPlus::JsEngine& GetJsEngineRef(jlong ptr)
 }
 
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo,
-  jobject logSystem, jlong webRequestPtr)
+  jobject logSystem, jobject webRequest)
 {
   AdblockPlus::AppInfo appInfo;
 
@@ -56,9 +56,9 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo,
     {
       jniJsEngine->jsEngine->SetLogSystem(std::make_shared<JniLogSystemCallback>(env, logSystem));
     }
-    if (webRequestPtr)
+    if (webRequest)
     {
-      jniJsEngine->jsEngine->SetWebRequest(*JniLongToTypePtr<AdblockPlus::WebRequestSharedPtr>(webRequestPtr));
+      jniJsEngine->jsEngine->SetWebRequest(std::make_shared<JniWebRequest>(env, webRequest));
     }
 
     return JniPtrToLong(jniJsEngine);
@@ -202,7 +202,7 @@ static jobject JNICALL JniNewStringValue(JNIEnv* env, jclass clazz, jlong ptr, j
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"ctor", (char*)"(" TYP("AppInfo") TYP("LogSystem")"J)J", (void*)JniCtor },
+  { (char*)"ctor", (char*)"(" TYP("AppInfo") TYP("LogSystem") TYP("WebRequest") ")J", (void*)JniCtor },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor },
 
   { (char*)"setEventCallback", (char*)"(JLjava/lang/String;J)V", (void*)JniSetEventCallback },

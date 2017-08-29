@@ -37,7 +37,7 @@ import java.util.Set;
 /**
  * WebRequest wrapper to return request response from android resources for selected URLs
  */
-public class AndroidWebRequestResourceWrapper extends WebRequest
+public class AndroidWebRequestResourceWrapper implements WebRequest
 {
   private static final String TAG = Utils.getTag(AndroidWebRequestResourceWrapper.class);
 
@@ -194,13 +194,6 @@ public class AndroidWebRequestResourceWrapper extends WebRequest
     }
 
     return response;
-  }
-
-  @Override
-  public void dispose()
-  {
-    request.dispose();
-    super.dispose();
   }
 
   /**

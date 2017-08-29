@@ -44,22 +44,8 @@ void JniWebRequest_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
   }
 }
 
-static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
-{
-  try
-  {
-    return JniPtrToLong(new AdblockPlus::WebRequestSharedPtr(std::make_shared<JniWebRequest>(env, callbackObject)));
-  }
-  CATCH_THROW_AND_RETURN(env, 0)
-}
-
-static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  delete JniLongToTypePtr<AdblockPlus::WebRequestSharedPtr>(ptr);
-}
-
 JniWebRequest::JniWebRequest(JNIEnv* env, jobject callbackObject)
-  : JniCallbackBase(env, callbackObject), AdblockPlus::WebRequest()
+  : JniCallbackBase(env, callbackObject)
 {
 }
 
@@ -146,15 +132,4 @@ jobject JniWebRequest::NewTuple(JNIEnv* env, const std::string& a,
   JniLocalReference<jstring> strB(env, env->NewStringUTF(b.c_str()));
 
   return env->NewObject(headerEntryClass->Get(), factory, *strA, *strB);
-}
-
-static JNINativeMethod methods[] =
-{
-  { (char*)"ctor", (char*)"(Ljava/lang/Object;)J", (void*)JniCtor },
-  { (char*)"dtor", (char*)"(J)V", (void*)JniDtor }
-};
-
-extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_WebRequest_registerNatives(JNIEnv *env, jclass clazz)
-{
-  env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0]));
 }

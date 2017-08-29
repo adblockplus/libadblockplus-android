@@ -38,7 +38,7 @@ import org.adblockplus.libadblockplus.WebRequest;
 
 import android.util.Log;
 
-public class AndroidWebRequest extends WebRequest
+public class AndroidWebRequest implements WebRequest
 {
   protected static final String ENCODING_GZIP = "gzip";
   protected static final String ENCODING_IDENTITY = "identity";

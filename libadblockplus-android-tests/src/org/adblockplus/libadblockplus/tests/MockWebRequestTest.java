@@ -30,7 +30,7 @@ import java.util.List;
 public class MockWebRequestTest extends BaseJsTest
 {
 
-  private class LocalMockWebRequest extends WebRequest
+  private class LocalMockWebRequest implements WebRequest
   {
     @Override
     public ServerResponse httpGET(String url, List<HeaderEntry> headers)

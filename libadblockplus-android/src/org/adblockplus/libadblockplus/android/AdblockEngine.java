@@ -316,12 +316,6 @@ public final class AdblockEngine
       this.showNotificationCallback.dispose();
       this.showNotificationCallback = null;
     }
-
-    if (this.webRequest != null)
-    {
-      this.webRequest.dispose();
-      this.webRequest = null;
-    }
   }
 
   public boolean isFirstRun()

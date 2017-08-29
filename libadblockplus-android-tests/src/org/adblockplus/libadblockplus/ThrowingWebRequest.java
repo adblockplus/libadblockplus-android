@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus;
 
 import java.util.List;
 
-public class ThrowingWebRequest extends WebRequest
+public class ThrowingWebRequest implements WebRequest
 {
   @Override
   public ServerResponse httpGET(String url, List<HeaderEntry> headers)

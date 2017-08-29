@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus;
 
 import java.util.List;
 
-public class MockWebRequest extends WebRequest
+public class MockWebRequest implements WebRequest
 {
   public ServerResponse response = new ServerResponse();
 

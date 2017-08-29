@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus;
 
 import java.util.List;
 
-public class LazyWebRequest extends WebRequest
+public class LazyWebRequest implements WebRequest
 {
   @Override
   public ServerResponse httpGET(String url, List<HeaderEntry> headers)
