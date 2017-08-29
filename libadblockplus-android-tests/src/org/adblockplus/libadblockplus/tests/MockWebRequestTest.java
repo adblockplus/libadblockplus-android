@@ -58,11 +58,9 @@ public class MockWebRequestTest extends BaseJsTest
   }
 
   @Override
-  protected void setUp() throws Exception
+  protected WebRequest createWebRequest()
   {
-    super.setUp();
-
-    jsEngine.setWebRequest(new LocalMockWebRequest());
+    return new LocalMockWebRequest();
   }
 
   @Test

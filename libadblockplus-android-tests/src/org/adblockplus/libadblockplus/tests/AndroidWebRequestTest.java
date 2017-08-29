@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.tests;
 
+import org.adblockplus.libadblockplus.WebRequest;
 import org.adblockplus.libadblockplus.android.AndroidWebRequest;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.JsValue;
@@ -30,11 +31,9 @@ import java.util.List;
 public class AndroidWebRequestTest extends BaseJsTest
 {
   @Override
-  protected void setUp() throws Exception
+  protected WebRequest createWebRequest()
   {
-    super.setUp();
-
-    jsEngine.setWebRequest(new AndroidWebRequest(true, true));
+    return new AndroidWebRequest(true, true);
   }
 
   @Test

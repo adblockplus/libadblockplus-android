@@ -39,7 +39,8 @@ static AdblockPlus::JsEngine& GetJsEngineRef(jlong ptr)
   return *JniLongToTypePtr<JniJsEngine>(ptr)->jsEngine;
 }
 
-static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo, jobject logSystem)
+static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo,
+  jobject logSystem, jlong webRequestPtr)
 {
   AdblockPlus::AppInfo appInfo;
 
@@ -55,6 +56,11 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo, jobjec
     {
       jniJsEngine->jsEngine->SetLogSystem(std::make_shared<JniLogSystemCallback>(env, logSystem));
     }
+    if (webRequestPtr)
+    {
+      jniJsEngine->jsEngine->SetWebRequest(*JniLongToTypePtr<AdblockPlus::WebRequestSharedPtr>(webRequestPtr));
+    }
+
     return JniPtrToLong(jniJsEngine);
   }
   CATCH_THROW_AND_RETURN(env, 0)
@@ -154,19 +160,6 @@ static void JNICALL JniSetDefaultFileSystem(JNIEnv* env, jclass clazz, jlong ptr
   CATCH_AND_THROW(env)
 }
 
-static void JNICALL JniSetWebRequest(JNIEnv* env, jclass clazz, jlong ptr, jlong webRequestPtr)
-{
-  AdblockPlus::JsEngine& engine = GetJsEngineRef(ptr);
-
-  try
-  {
-    auto& webRequest = *JniLongToTypePtr<AdblockPlus::WebRequestSharedPtr>(webRequestPtr);
-
-    engine.SetWebRequest(webRequest);
-  }
-  CATCH_AND_THROW(env)
-}
-
 static jobject JNICALL JniNewLongValue(JNIEnv* env, jclass clazz, jlong ptr, jlong value)
 {
   AdblockPlus::JsEngine& engine = GetJsEngineRef(ptr);
@@ -209,7 +202,7 @@ static jobject JNICALL JniNewStringValue(JNIEnv* env, jclass clazz, jlong ptr, j
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"ctor", (char*)"(" TYP("AppInfo") TYP("LogSystem")")J", (void*)JniCtor },
+  { (char*)"ctor", (char*)"(" TYP("AppInfo") TYP("LogSystem")"J)J", (void*)JniCtor },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor },
 
   { (char*)"setEventCallback", (char*)"(JLjava/lang/String;J)V", (void*)JniSetEventCallback },
@@ -219,7 +212,6 @@ static JNINativeMethod methods[] =
   { (char*)"evaluate", (char*)"(JLjava/lang/String;Ljava/lang/String;)" TYP("JsValue"), (void*)JniEvaluate },
 
   { (char*)"setDefaultFileSystem", (char*)"(JLjava/lang/String;)V", (void*)JniSetDefaultFileSystem },
-  { (char*)"setWebRequest", (char*)"(JJ)V", (void*)JniSetWebRequest },
 
   { (char*)"newValue", (char*)"(JJ)" TYP("JsValue"), (void*)JniNewLongValue },
   { (char*)"newValue", (char*)"(JZ)" TYP("JsValue"), (void*)JniNewBooleanValue },

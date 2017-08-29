@@ -22,6 +22,7 @@ import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.LazyLogSystem;
 import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.ThrowingWebRequest;
+import org.adblockplus.libadblockplus.WebRequest;
 
 import android.content.Context;
 import android.test.InstrumentationTestCase;
@@ -35,9 +36,8 @@ public abstract class BaseJsTest extends InstrumentationTestCase
   {
     super.setUp();
 
-    jsEngine = new JsEngine(AppInfo.builder().build(), createLogSystem());
+    jsEngine = new JsEngine(AppInfo.builder().build(), createLogSystem(), createWebRequest());
     jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
-    jsEngine.setWebRequest(new ThrowingWebRequest());
   }
 
   // If the method returns null then a default implementation of the Log System
@@ -45,6 +45,11 @@ public abstract class BaseJsTest extends InstrumentationTestCase
   protected LogSystem createLogSystem()
   {
     return null;
+  }
+
+  protected WebRequest createWebRequest()
+  {
+    return new ThrowingWebRequest();
   }
 
   protected Context getContext()

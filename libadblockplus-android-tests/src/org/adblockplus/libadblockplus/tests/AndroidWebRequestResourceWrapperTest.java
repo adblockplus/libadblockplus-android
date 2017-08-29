@@ -22,6 +22,7 @@ import android.os.SystemClock;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.Subscription;
+import org.adblockplus.libadblockplus.WebRequest;
 import org.adblockplus.libadblockplus.android.AndroidWebRequest;
 import org.adblockplus.libadblockplus.android.AndroidWebRequestResourceWrapper;
 import org.adblockplus.libadblockplus.android.Utils;
@@ -105,7 +106,6 @@ public class AndroidWebRequestResourceWrapperTest extends FilterEngineGenericTes
   @Override
   protected void setUp() throws Exception
   {
-    super.setUp();
 
     request = new TestRequest();
     preloadMap = new HashMap<String, Integer>();
@@ -115,7 +115,13 @@ public class AndroidWebRequestResourceWrapperTest extends FilterEngineGenericTes
     wrapperListener = new TestWrapperListener();
     wrapper.setListener(wrapperListener);
 
-    jsEngine.setWebRequest(wrapper);
+    super.setUp();
+  }
+
+  @Override
+  protected WebRequest createWebRequest()
+  {
+    return wrapper;
   }
 
   private void updateSubscriptions()

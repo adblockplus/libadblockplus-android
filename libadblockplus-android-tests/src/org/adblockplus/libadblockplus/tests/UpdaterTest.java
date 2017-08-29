@@ -40,9 +40,8 @@ public class UpdaterTest extends AndroidTestCase
       .setVersion("1.0.1")
       .build();
 
-    JsEngine jsEngine = new JsEngine(appInfo);
     mockWebRequest = new MockWebRequest();
-    jsEngine.setWebRequest(mockWebRequest);
+    JsEngine jsEngine = new JsEngine(appInfo, mockWebRequest);
     jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
 
     filterEngine = new FilterEngine(jsEngine);

@@ -30,14 +30,19 @@ public final class JsEngine implements Disposable
     registerNatives();
   }
 
-  public JsEngine(final AppInfo appInfo, final LogSystem logSystem)
+  public JsEngine(final AppInfo appInfo, final LogSystem logSystem, final WebRequest webRequest)
   {
-    this(ctor(appInfo, logSystem));
+    this(ctor(appInfo, logSystem, webRequest != null ? webRequest.ptr : 0));
+  }
+
+  public JsEngine(final AppInfo appInfo, final WebRequest webRequest)
+  {
+    this(appInfo, null, webRequest);
   }
 
   public JsEngine(final AppInfo appInfo)
   {
-    this(appInfo, null);
+    this(appInfo, null, null);
   }
 
   protected JsEngine(final long ptr)
@@ -88,11 +93,6 @@ public final class JsEngine implements Disposable
     setDefaultFileSystem(this.ptr, basePath);
   }
 
-  public void setWebRequest(final WebRequest webRequest)
-  {
-    setWebRequest(this.ptr, webRequest.ptr);
-  }
-
   public JsValue newValue(final long value)
   {
     return newValue(this.ptr, value);
@@ -132,7 +132,7 @@ public final class JsEngine implements Disposable
 
   private final static native void registerNatives();
 
-  private final static native long ctor(AppInfo appInfo, LogSystem logSystem);
+  private final static native long ctor(AppInfo appInfo, LogSystem logSystem, long webRequestPtr);
 
   private final static native void setEventCallback(long ptr, String eventName, long callback);
 
@@ -143,8 +143,6 @@ public final class JsEngine implements Disposable
   private final static native void triggerEvent(long ptr, String eventName, long[] args);
 
   private final static native void setDefaultFileSystem(long ptr, String basePath);
-
-  private final static native void setWebRequest(long ptr, long webRequestPtr);
 
   private final static native JsValue newValue(long ptr, long value);
 

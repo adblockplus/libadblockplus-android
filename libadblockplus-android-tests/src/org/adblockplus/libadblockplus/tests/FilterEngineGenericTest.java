@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.tests;
 
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.LazyWebRequest;
+import org.adblockplus.libadblockplus.WebRequest;
 
 public abstract class FilterEngineGenericTest extends BaseJsTest
 {
@@ -28,9 +29,12 @@ public abstract class FilterEngineGenericTest extends BaseJsTest
   protected void setUp() throws Exception
   {
     super.setUp();
-
-    jsEngine.setWebRequest(new LazyWebRequest());
-
     filterEngine = new FilterEngine(jsEngine);
+  }
+
+  @Override
+  protected WebRequest createWebRequest()
+  {
+    return new LazyWebRequest();
   }
 }
