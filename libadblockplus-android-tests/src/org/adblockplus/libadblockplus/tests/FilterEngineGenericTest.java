@@ -30,7 +30,6 @@ public abstract class FilterEngineGenericTest extends BaseJsTest
     super.setUp();
 
     jsEngine.setWebRequest(new LazyWebRequest());
-    jsEngine.setDefaultLogSystem();
 
     filterEngine = new FilterEngine(jsEngine);
   }

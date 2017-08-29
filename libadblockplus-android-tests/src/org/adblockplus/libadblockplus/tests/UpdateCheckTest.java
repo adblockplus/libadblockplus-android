@@ -85,8 +85,7 @@ public class UpdateCheckTest extends BaseJsTest
 
   public void reset()
   {
-    jsEngine = new JsEngine(appInfo);
-    jsEngine.setLogSystem(new LazyLogSystem());
+    jsEngine = new JsEngine(appInfo, new LazyLogSystem());
     jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
     jsEngine.setWebRequest(webRequest);
     jsEngine.setEventCallback("updateAvailable", eventCallback);

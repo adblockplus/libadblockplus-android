@@ -27,12 +27,9 @@ public class ConsoleJsObjectTest extends BaseJsTest
   protected MockLogSystem mockLogSystem;
 
   @Override
-  protected void setUp() throws Exception
+  protected LogSystem createLogSystem()
   {
-    super.setUp();
-
-    mockLogSystem = new MockLogSystem();
-    jsEngine.setLogSystem(mockLogSystem);
+    return mockLogSystem = new MockLogSystem();
   }
 
   @Test
