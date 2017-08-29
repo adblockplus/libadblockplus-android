@@ -319,12 +319,6 @@ public final class AdblockEngine
       this.showNotificationCallback = null;
     }
 
-    if (this.logSystem != null)
-    {
-      this.logSystem.dispose();
-      this.logSystem = null;
-    }
-
     if (this.webRequest != null)
     {
       this.webRequest.dispose();

@@ -17,7 +17,7 @@
 
 package org.adblockplus.libadblockplus;
 
-public class ThrowingLogSystem extends LogSystem
+public class ThrowingLogSystem implements LogSystem
 {
   @Override
   public void logCallback(LogLevel level, String message, String source)

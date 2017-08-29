@@ -17,7 +17,7 @@
 
 package org.adblockplus.libadblockplus;
 
-public class MockLogSystem extends LogSystem
+public class MockLogSystem implements LogSystem
 {
   private LogLevel lastLogLevel;
 

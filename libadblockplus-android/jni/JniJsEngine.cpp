@@ -39,7 +39,7 @@ static AdblockPlus::JsEngine& GetJsEngineRef(jlong ptr)
   return *JniLongToTypePtr<JniJsEngine>(ptr)->jsEngine;
 }
 
-static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo, jlong logSystemPtr)
+static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo, jobject logSystem)
 {
   AdblockPlus::AppInfo appInfo;
 
@@ -51,9 +51,9 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject jAppInfo, jlong 
     JniJsEngine* jniJsEngine = new JniJsEngine();
     jniJsEngine->timer = timer.get();
     jniJsEngine->jsEngine = AdblockPlus::JsEngine::New(appInfo, std::move(timer));
-    if (logSystemPtr)
+    if (logSystem)
     {
-      jniJsEngine->jsEngine->SetLogSystem(*JniLongToTypePtr<AdblockPlus::LogSystemPtr>(logSystemPtr));
+      jniJsEngine->jsEngine->SetLogSystem(std::make_shared<JniLogSystemCallback>(env, logSystem));
     }
     return JniPtrToLong(jniJsEngine);
   }
@@ -209,7 +209,7 @@ static jobject JNICALL JniNewStringValue(JNIEnv* env, jclass clazz, jlong ptr, j
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"ctor", (char*)"(" TYP("AppInfo") "J)J", (void*)JniCtor },
+  { (char*)"ctor", (char*)"(" TYP("AppInfo") TYP("LogSystem")")J", (void*)JniCtor },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor },
 
   { (char*)"setEventCallback", (char*)"(JLjava/lang/String;J)V", (void*)JniSetEventCallback },

@@ -21,7 +21,7 @@ import org.adblockplus.libadblockplus.LogSystem;
 
 import android.util.Log;
 
-public class AndroidLogSystem extends LogSystem
+public class AndroidLogSystem implements LogSystem
 {
   private static int abpLogLevelToAndroid(final LogLevel level)
   {

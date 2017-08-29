@@ -32,7 +32,7 @@ public final class JsEngine implements Disposable
 
   public JsEngine(final AppInfo appInfo, final LogSystem logSystem)
   {
-    this(ctor(appInfo, logSystem != null ? logSystem.ptr : 0));
+    this(ctor(appInfo, logSystem));
   }
 
   public JsEngine(final AppInfo appInfo)
@@ -132,7 +132,7 @@ public final class JsEngine implements Disposable
 
   private final static native void registerNatives();
 
-  private final static native long ctor(AppInfo appInfo, long logSystemPtr);
+  private final static native long ctor(AppInfo appInfo, LogSystem logSystem);
 
   private final static native void setEventCallback(long ptr, String eventName, long callback);
 
