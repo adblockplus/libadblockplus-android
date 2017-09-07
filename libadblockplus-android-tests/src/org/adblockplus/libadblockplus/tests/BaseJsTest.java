@@ -36,8 +36,8 @@ public abstract class BaseJsTest extends InstrumentationTestCase
   {
     super.setUp();
 
-    jsEngine = new JsEngine(AppInfo.builder().build(), createLogSystem(), createWebRequest());
-    jsEngine.setDefaultFileSystem(getContext().getFilesDir().getAbsolutePath());
+    jsEngine = new JsEngine(AppInfo.builder().build(), createLogSystem(), createWebRequest(),
+        getContext().getFilesDir().getAbsolutePath());
   }
 
   // If the method returns null then a default implementation of the Log System

@@ -30,19 +30,19 @@ public final class JsEngine implements Disposable
     registerNatives();
   }
 
-  public JsEngine(final AppInfo appInfo, final LogSystem logSystem, final WebRequest webRequest)
+  public JsEngine(final AppInfo appInfo, final LogSystem logSystem, final WebRequest webRequest, final String basePath)
   {
-    this(ctor(appInfo, logSystem, webRequest));
+    this(ctor(appInfo, logSystem, webRequest, basePath));
   }
 
-  public JsEngine(final AppInfo appInfo, final WebRequest webRequest)
+  public JsEngine(final AppInfo appInfo, final WebRequest webRequest, final String basePath)
   {
-    this(appInfo, null, webRequest);
+    this(appInfo, null, webRequest, basePath);
   }
 
   public JsEngine(final AppInfo appInfo)
   {
-    this(appInfo, null, null);
+    this(appInfo, null, null, null);
   }
 
   protected JsEngine(final long ptr)
@@ -88,11 +88,6 @@ public final class JsEngine implements Disposable
     triggerEvent(this.ptr, eventName, null);
   }
 
-  public void setDefaultFileSystem(final String basePath)
-  {
-    setDefaultFileSystem(this.ptr, basePath);
-  }
-
   public JsValue newValue(final long value)
   {
     return newValue(this.ptr, value);
@@ -132,7 +127,8 @@ public final class JsEngine implements Disposable
 
   private final static native void registerNatives();
 
-  private final static native long ctor(AppInfo appInfo, LogSystem logSystem, WebRequest webRequest);
+  private final static native long ctor(AppInfo appInfo, LogSystem logSystem, WebRequest webRequest,
+                                        String basePath);
 
   private final static native void setEventCallback(long ptr, String eventName, long callback);
 
@@ -141,8 +137,6 @@ public final class JsEngine implements Disposable
   private final static native JsValue evaluate(long ptr, String source, String filename);
 
   private final static native void triggerEvent(long ptr, String eventName, long[] args);
-
-  private final static native void setDefaultFileSystem(long ptr, String basePath);
 
   private final static native JsValue newValue(long ptr, long value);
 
