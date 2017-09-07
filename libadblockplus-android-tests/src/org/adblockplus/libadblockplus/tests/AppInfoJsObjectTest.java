@@ -54,8 +54,8 @@ public class AppInfoJsObjectTest extends BaseJsTest
       .build();
 
     JsEngine jsEngine = new JsEngine(appInfo);
-    assertEquals("0", jsEngine.evaluate("_appInfo.version").asString());
-    assertEquals("adblockplusandroid", jsEngine.evaluate("_appInfo.name").asString());
+    assertEquals("1.0", jsEngine.evaluate("_appInfo.version").asString());
+    assertEquals("libadblockplus-android", jsEngine.evaluate("_appInfo.name").asString());
     assertEquals("android", jsEngine.evaluate("_appInfo.application").asString());
     assertEquals("0", jsEngine.evaluate("_appInfo.applicationVersion").asString());
     assertEquals("en_US", jsEngine.evaluate("_appInfo.locale").asString());
