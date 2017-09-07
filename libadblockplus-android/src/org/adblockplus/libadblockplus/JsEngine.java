@@ -35,11 +35,6 @@ public final class JsEngine implements Disposable
     this(ctor(appInfo, logSystem, webRequest, basePath));
   }
 
-  public JsEngine(final AppInfo appInfo, final WebRequest webRequest, final String basePath)
-  {
-    this(appInfo, null, webRequest, basePath);
-  }
-
   public JsEngine(final AppInfo appInfo)
   {
     this(appInfo, null, null, null);

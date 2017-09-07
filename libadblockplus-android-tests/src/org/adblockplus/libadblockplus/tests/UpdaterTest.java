@@ -41,7 +41,7 @@ public class UpdaterTest extends AndroidTestCase
       .build();
 
     mockWebRequest = new MockWebRequest();
-    JsEngine jsEngine = new JsEngine(appInfo, mockWebRequest,
+    JsEngine jsEngine = new JsEngine(appInfo, null, mockWebRequest,
         getContext().getFilesDir().getAbsolutePath());
 
     filterEngine = new FilterEngine(jsEngine);
