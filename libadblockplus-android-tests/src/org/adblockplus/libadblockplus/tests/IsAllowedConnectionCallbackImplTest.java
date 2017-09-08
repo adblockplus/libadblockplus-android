@@ -18,6 +18,7 @@ package org.adblockplus.libadblockplus.tests;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.test.InstrumentationTestCase;
 
 import org.adblockplus.libadblockplus.android.settings.ConnectionType;
 import org.adblockplus.libadblockplus.android.settings.IsAllowedConnectionCallbackImpl;
@@ -28,7 +29,7 @@ import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class IsAllowedConnectionCallbackImplTest extends BaseJsTest
+public class IsAllowedConnectionCallbackImplTest extends InstrumentationTestCase
 {
   private final int[] connectionTypes = new int[]
   {

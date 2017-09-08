@@ -27,7 +27,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-public class MockWebRequestTest extends BaseJsTest
+public class MockWebRequestTest extends BaseJsEngineTest
 {
 
   private class LocalMockWebRequest implements WebRequest

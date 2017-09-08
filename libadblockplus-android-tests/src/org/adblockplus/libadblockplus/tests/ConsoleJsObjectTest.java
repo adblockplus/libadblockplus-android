@@ -22,7 +22,7 @@ import org.adblockplus.libadblockplus.MockLogSystem;
 
 import org.junit.Test;
 
-public class ConsoleJsObjectTest extends BaseJsTest
+public class ConsoleJsObjectTest extends BaseJsEngineTest
 {
   protected MockLogSystem mockLogSystem;
 

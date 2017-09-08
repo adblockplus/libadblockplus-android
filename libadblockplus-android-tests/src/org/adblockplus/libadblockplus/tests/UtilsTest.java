@@ -1,5 +1,7 @@
 package org.adblockplus.libadblockplus.tests;
 
+import android.test.InstrumentationTestCase;
+
 import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
@@ -10,7 +12,7 @@ import java.util.List;
 /**
  * Test for Utils
  */
-public class UtilsTest extends BaseJsTest
+public class UtilsTest extends InstrumentationTestCase
 {
   @Test
   public void testJson_null()

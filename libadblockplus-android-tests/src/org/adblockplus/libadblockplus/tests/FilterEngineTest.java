@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class FilterEngineTest extends FilterEngineGenericTest
+public class FilterEngineTest extends BaseFilterEngineTest
 {
   @Test
   public void testFilterCreation()

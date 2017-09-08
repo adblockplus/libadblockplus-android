@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class JsEngineTest extends BaseJsTest
+public class JsEngineTest extends BaseJsEngineTest
 {
   @Test
   public void testEvaluate()

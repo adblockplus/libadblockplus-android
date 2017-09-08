@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class UpdateCheckTest extends BaseJsTest
+public class UpdateCheckTest extends BaseFilterEngineTest
 {
   protected String previousRequestUrl;
 
@@ -55,8 +55,6 @@ public class UpdateCheckTest extends BaseJsTest
 
   protected AppInfo appInfo;
   protected TestWebRequest webRequest;
-  protected JsEngine jsEngine;
-  protected FilterEngine filterEngine;
 
   protected boolean eventCallbackCalled;
   protected List<JsValue> eventCallbackParams;
@@ -83,20 +81,22 @@ public class UpdateCheckTest extends BaseJsTest
     }
   };
 
-  public void reset()
+  public void reset() throws InterruptedException
   {
+    disposeFilterEngine();
+    if (jsEngine != null)
+    {
+      jsEngine.dispose();
+    }
     jsEngine = new JsEngine(appInfo, new LazyLogSystem(), webRequest,
         getContext().getFilesDir().getAbsolutePath());
     jsEngine.setEventCallback("updateAvailable", eventCallback);
-
     filterEngine = new FilterEngine(jsEngine);
   }
 
   @Override
   protected void setUp() throws Exception
   {
-    super.setUp();
-
     appInfo = AppInfo.builder().build();
     webRequest = new TestWebRequest();
     eventCallbackCalled = false;

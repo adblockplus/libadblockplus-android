@@ -19,9 +19,11 @@ package org.adblockplus.libadblockplus.tests;
 
 import android.os.SystemClock;
 
+import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
+import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.WebRequest;
@@ -31,7 +33,7 @@ import org.junit.Test;
 import java.util.LinkedList;
 import java.util.List;
 
-public class IsAllowedConnectionCallbackTest extends BaseJsTest
+public class IsAllowedConnectionCallbackTest extends BaseFilterEngineTest
 {
   private static final int UPDATE_SUBSCRIPTIONS_WAIT_DELAY_MS = 5 * 1000; // 5s
 
@@ -90,13 +92,12 @@ public class IsAllowedConnectionCallbackTest extends BaseJsTest
 
   private TestRequest request;
   private TestCallback callback;
-  private FilterEngine filterEngine;
 
   @Override
   protected void setUp() throws Exception
   {
-    super.setUp();
-
+    jsEngine = new JsEngine(AppInfo.builder().build(), createLogSystem(), createWebRequest(),
+        getContext().getFilesDir().getAbsolutePath());
     callback = new TestCallback();
     filterEngine = new FilterEngine(jsEngine, callback);
   }

@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class AndroidWebRequestResourceWrapperTest extends FilterEngineGenericTest
+public class AndroidWebRequestResourceWrapperTest extends BaseFilterEngineTest
 {
   private static final int UPDATE_SUBSCRIPTIONS_WAIT_DELAY_MS = 5 * 1000; // 5s
 
@@ -106,7 +106,6 @@ public class AndroidWebRequestResourceWrapperTest extends FilterEngineGenericTes
   @Override
   protected void setUp() throws Exception
   {
-
     request = new TestRequest();
     preloadMap = new HashMap<String, Integer>();
     storage = new TestStorage();

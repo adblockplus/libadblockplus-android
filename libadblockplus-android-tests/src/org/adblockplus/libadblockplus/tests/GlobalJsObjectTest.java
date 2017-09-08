@@ -21,7 +21,7 @@ import org.adblockplus.libadblockplus.AdblockPlusException;
 
 import org.junit.Test;
 
-public class GlobalJsObjectTest extends BaseJsTest
+public class GlobalJsObjectTest extends BaseJsEngineTest
 {
   @Test
   public void testSetTimeout() throws InterruptedException

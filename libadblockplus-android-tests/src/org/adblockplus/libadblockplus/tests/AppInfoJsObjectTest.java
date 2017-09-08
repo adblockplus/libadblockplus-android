@@ -22,7 +22,7 @@ import org.adblockplus.libadblockplus.JsEngine;
 
 import org.junit.Test;
 
-public class AppInfoJsObjectTest extends BaseJsTest
+public class AppInfoJsObjectTest extends BaseJsEngineTest
 {
   @Test
   public void testAllProperties()

@@ -28,7 +28,11 @@ import org.junit.Test;
 import java.net.MalformedURLException;
 import java.util.List;
 
-public class AndroidWebRequestTest extends BaseJsTest
+// It inherits the fixture instantiating FilterEngine which is not explicitly
+// used in the test bodies in order to provide with JS XMLHttpRequest class
+// which is defined in compat.js, but the latter is properly loaded by
+// FilterEngine.
+public class AndroidWebRequestTest extends BaseFilterEngineTest
 {
   @Override
   protected WebRequest createWebRequest()
@@ -79,10 +83,6 @@ public class AndroidWebRequestTest extends BaseJsTest
   @Test
   public void testXMLHttpRequest()
   {
-    // creating not used anywhere FilterEngine object is not as useless as it seems:
-    // it loads compat.js JsEngine to add XMLHttpRequest class support
-    new FilterEngine(jsEngine);
-
     jsEngine.evaluate(
       "var result;\n" +
       "var request = new XMLHttpRequest();\n" +
@@ -121,8 +121,6 @@ public class AndroidWebRequestTest extends BaseJsTest
   @Test
   public void testGetElemhideElements() throws MalformedURLException, InterruptedException
   {
-    FilterEngine filterEngine = new FilterEngine(jsEngine);
-
     Thread.sleep(20 * 1000); // wait for the subscription to be downloaded
 
     final String url = "www.mobile01.com/somepage.html";
