@@ -42,7 +42,7 @@ public class AndroidWebRequestTest extends BaseJsTest
     // This URL should redirect to easylist-downloads.adblockplus.org and we
     // should get the actual filter list back.
     jsEngine.evaluate(
-      "_webRequest.GET('https://easylist-downloads.adblockplus.org/easylist.txt', {}, " +
+      "let foo; _webRequest.GET('https://easylist-downloads.adblockplus.org/easylist.txt', {}, " +
       "function(result) {foo = result;} )");
     do
     {
@@ -54,7 +54,7 @@ public class AndroidWebRequestTest extends BaseJsTest
       {
         throw new RuntimeException(e);
       }
-    } while (jsEngine.evaluate("this.foo").isUndefined());
+    } while (jsEngine.evaluate("foo").isUndefined());
 
     String response = jsEngine.evaluate("foo.responseText").asString();
     assertNotNull(response);

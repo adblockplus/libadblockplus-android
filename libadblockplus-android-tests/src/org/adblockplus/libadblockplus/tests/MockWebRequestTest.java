@@ -131,8 +131,9 @@ public class MockWebRequestTest extends BaseJsTest
   public void testSuccessfulRequest() throws InterruptedException
   {
     jsEngine.evaluate(
-      "_webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
-    assertTrue(jsEngine.evaluate("this.foo").isUndefined());
+      "let foo = true; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
+    assertTrue(jsEngine.evaluate("foo").isBoolean());
+    assertTrue(jsEngine.evaluate("foo").asBoolean());
 
     Thread.sleep(200);
 
