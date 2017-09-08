@@ -18,23 +18,6 @@
 #include "JniCallbacks.h"
 #include "Utils.h"
 
-static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
-{
-  try
-  {
-    JniIsAllowedConnectionTypeCallback* callback =
-      new JniIsAllowedConnectionTypeCallback(env, callbackObject);
-
-    return JniPtrToLong(callback);
-  }
-  CATCH_THROW_AND_RETURN(env, 0)
-}
-
-static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  delete JniLongToTypePtr<JniIsAllowedConnectionTypeCallback>(ptr);
-}
-
 JniIsAllowedConnectionTypeCallback::JniIsAllowedConnectionTypeCallback(JNIEnv* env,
     jobject callbackObject)
     : JniCallbackBase(env, callbackObject)
@@ -58,15 +41,4 @@ bool JniIsAllowedConnectionTypeCallback::Callback(const std::string* allowedConn
 
   CheckAndLogJavaException(*env);
   return result;
-}
-
-static JNINativeMethod methods[] =
-{
-  { (char*)"ctor", (char*)"(Ljava/lang/Object;)J", (void*)JniCtor },
-  { (char*)"dtor", (char*)"(J)V", (void*)JniDtor }
-};
-
-extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_IsAllowedConnectionCallback_registerNatives(JNIEnv *env, jclass clazz)
-{
-  env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0]));
 }

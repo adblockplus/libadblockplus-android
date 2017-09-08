@@ -25,7 +25,7 @@ import android.util.Log;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.android.Utils;
 
-public class IsAllowedConnectionCallbackImpl extends IsAllowedConnectionCallback
+public class IsAllowedConnectionCallbackImpl implements IsAllowedConnectionCallback
 {
   private static final String TAG = Utils.getTag(IsAllowedConnectionCallbackImpl.class);
 

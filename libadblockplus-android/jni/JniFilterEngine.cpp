@@ -60,7 +60,7 @@ namespace
   }
 }
 
-static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jlong jniJsEnginePtr, jlong isAllowedConnectionCallbackPtr)
+static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jlong jniJsEnginePtr, jobject jIsSubscriptionDownloadAllowedCallback)
 {
   try
   {
@@ -69,11 +69,10 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jlong jniJsEnginePtr, jl
     auto jniFilterEngine = new JniFilterEngine();
     jniFilterEngine->timer = jniJsEngine->timer;
 
-    if (isAllowedConnectionCallbackPtr != 0)
+    if (jIsSubscriptionDownloadAllowedCallback)
     {
       AdblockPlus::FilterEngine::CreationParameters creationParameters;
-      JniIsAllowedConnectionTypeCallback* callback =
-        JniLongToTypePtr<JniIsAllowedConnectionTypeCallback>(isAllowedConnectionCallbackPtr);
+      auto callback = std::make_shared<JniIsAllowedConnectionTypeCallback>(env, jIsSubscriptionDownloadAllowedCallback);
 
       creationParameters.isSubscriptionDownloadAllowedCallback =
         [callback](const std::string* allowedConnectionTypeArg, const std::function<void(bool)>& doneCallback)
@@ -553,7 +552,7 @@ static void JNICALL JniUpdateFiltersAsync(JNIEnv* env, jclass clazz, jlong ptr, 
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"ctor", (char*)"(JJ)J", (void*)JniCtor },
+  { (char*)"ctor", (char*)"(J" TYP("IsAllowedConnectionCallback") ")J", (void*)JniCtor },
   { (char*)"isFirstRun", (char*)"(J)Z", (void*)JniIsFirstRun },
   { (char*)"getFilter", (char*)"(JLjava/lang/String;)" TYP("Filter"), (void*)JniGetFilter },
   { (char*)"getListedFilters", (char*)"(J)Ljava/util/List;", (void*)JniGetListedFilters },

@@ -52,7 +52,7 @@ public class IsAllowedConnectionCallbackTest extends BaseJsTest
     }
   }
 
-  private static final class TestCallback extends IsAllowedConnectionCallback
+  private static final class TestCallback implements IsAllowedConnectionCallback
   {
     private boolean result;
     private boolean invoked;

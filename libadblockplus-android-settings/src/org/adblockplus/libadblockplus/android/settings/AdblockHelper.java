@@ -60,8 +60,6 @@ public class AdblockHelper
   private AdblockSettingsStorage storage;
   private CountDownLatch engineCreated;
 
-  private IsAllowedConnectionCallback isAllowedConnectionCallback;
-
   /*
     Simple ARC management for AdblockEngine
     Use `retain` and `release`
@@ -137,7 +135,7 @@ public class AdblockHelper
   {
     ConnectivityManager connectivityManager =
       (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    this.isAllowedConnectionCallback = new IsAllowedConnectionCallbackImpl(connectivityManager);
+    IsAllowedConnectionCallback isAllowedConnectionCallback = new IsAllowedConnectionCallbackImpl(connectivityManager);
 
     Log.d(TAG, "Creating adblock engine ...");
 
@@ -225,10 +223,6 @@ public class AdblockHelper
     engine = null;
 
     storage = null;
-
-    // callbacks
-    this.isAllowedConnectionCallback.dispose();
-    this.isAllowedConnectionCallback = null;
   }
 
   /**

@@ -36,13 +36,9 @@ public final class FilterEngine implements Disposable
     OBJECT_SUBREQUEST, FONT, MEDIA
   }
 
-  public FilterEngine(final JsEngine jsEngine, final IsAllowedConnectionCallback isAllowedConnectionCallback)
+  public FilterEngine(final JsEngine jsEngine, final IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback)
   {
-    long jisAllowedConnectionCallbackPtr =
-      (isAllowedConnectionCallback != null
-        ? isAllowedConnectionCallback.ptr
-        : 0l);
-    this.ptr = ctor(jsEngine.ptr, jisAllowedConnectionCallbackPtr);
+    this.ptr = ctor(jsEngine.ptr, isSubscriptionDownloadAllowedCallback);
     this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
   }
 
@@ -230,7 +226,7 @@ public final class FilterEngine implements Disposable
 
   private final static native void registerNatives();
 
-  private final static native long ctor(long jsEnginePtr, long isAllowedConnectionCallbackPtr);
+  private final static native long ctor(long jsEnginePtr, IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback);
 
   private final static native boolean isFirstRun(long ptr);
 

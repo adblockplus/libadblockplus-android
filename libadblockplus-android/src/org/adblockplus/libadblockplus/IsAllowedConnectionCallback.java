@@ -17,50 +17,7 @@
 
 package org.adblockplus.libadblockplus;
 
-public abstract class IsAllowedConnectionCallback implements Disposable
+public interface IsAllowedConnectionCallback
 {
-  private final Disposer disposer;
-  protected final long ptr;
-
-  static
-  {
-    System.loadLibrary("adblockplus-jni");
-    registerNatives();
-  }
-
-  public IsAllowedConnectionCallback()
-  {
-    this.ptr = ctor(this);
-    this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
-  }
-
-  public abstract boolean isConnectionAllowed(String connection);
-
-  @Override
-  public void dispose()
-  {
-    this.disposer.dispose();
-  }
-
-  private final static class DisposeWrapper implements Disposable
-  {
-    private final long ptr;
-
-    public DisposeWrapper(final long ptr)
-    {
-      this.ptr = ptr;
-    }
-
-    @Override
-    public void dispose()
-    {
-      dtor(this.ptr);
-    }
-  }
-
-  private final static native void registerNatives();
-
-  private final static native long ctor(Object callbackObject);
-
-  private final static native void dtor(long ptr);
+  boolean isConnectionAllowed(String connection);
 }
