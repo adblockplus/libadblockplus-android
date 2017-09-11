@@ -19,11 +19,10 @@ package org.adblockplus.libadblockplus.tests;
 
 import android.os.SystemClock;
 
-import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
-import org.adblockplus.libadblockplus.JsEngine;
+import org.adblockplus.libadblockplus.Platform;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.WebRequest;
@@ -96,10 +95,11 @@ public class IsAllowedConnectionCallbackTest extends BaseFilterEngineTest
   @Override
   protected void setUp() throws Exception
   {
-    jsEngine = new JsEngine(AppInfo.builder().build(), createLogSystem(), createWebRequest(),
+    platform = new Platform(createLogSystem(), createWebRequest(),
         getContext().getFilesDir().getAbsolutePath());
     callback = new TestCallback();
-    filterEngine = new FilterEngine(jsEngine, callback);
+    platform.setUpFilterEngine(callback);
+    filterEngine = platform.getFilterEngine();
   }
 
   @Override

@@ -25,6 +25,7 @@ import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LazyLogSystem;
 import org.adblockplus.libadblockplus.LazyWebRequest;
+import org.adblockplus.libadblockplus.Platform;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.UpdateCheckDoneCallback;
 
@@ -84,14 +85,15 @@ public class UpdateCheckTest extends BaseFilterEngineTest
   public void reset() throws InterruptedException
   {
     disposeFilterEngine();
-    if (jsEngine != null)
+    if (platform != null)
     {
-      jsEngine.dispose();
+      platform.dispose();
     }
-    jsEngine = new JsEngine(appInfo, new LazyLogSystem(), webRequest,
+    platform = new Platform(new LazyLogSystem(), webRequest,
         getContext().getFilesDir().getAbsolutePath());
-    jsEngine.setEventCallback("updateAvailable", eventCallback);
-    filterEngine = new FilterEngine(jsEngine);
+    platform.setUpJsEngine(appInfo);
+    platform.getJsEngine().setEventCallback("updateAvailable", eventCallback);
+    filterEngine = platform.getFilterEngine();
   }
 
   @Override

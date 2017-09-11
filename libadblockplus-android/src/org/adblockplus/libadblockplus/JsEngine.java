@@ -19,9 +19,8 @@ package org.adblockplus.libadblockplus;
 
 import java.util.List;
 
-public final class JsEngine implements Disposable
+public final class JsEngine
 {
-  private final Disposer disposer;
   protected final long ptr;
 
   static
@@ -30,20 +29,9 @@ public final class JsEngine implements Disposable
     registerNatives();
   }
 
-  public JsEngine(final AppInfo appInfo, final LogSystem logSystem, final WebRequest webRequest, final String basePath)
-  {
-    this(ctor(appInfo, logSystem, webRequest, basePath));
-  }
-
-  public JsEngine(final AppInfo appInfo)
-  {
-    this(appInfo, null, null, null);
-  }
-
-  protected JsEngine(final long ptr)
+  JsEngine(final long ptr)
   {
     this.ptr = ptr;
-    this.disposer = new Disposer(this, new DisposeWrapper(ptr));
   }
 
   public void setEventCallback(final String eventName, final EventCallback callback)
@@ -98,32 +86,7 @@ public final class JsEngine implements Disposable
     return newValue(this.ptr, value);
   }
 
-  @Override
-  public void dispose()
-  {
-    this.disposer.dispose();
-  }
-
-  private final static class DisposeWrapper implements Disposable
-  {
-    private final long ptr;
-
-    public DisposeWrapper(final long ptr)
-    {
-      this.ptr = ptr;
-    }
-
-    @Override
-    public void dispose()
-    {
-      dtor(this.ptr);
-    }
-  }
-
   private final static native void registerNatives();
-
-  private final static native long ctor(AppInfo appInfo, LogSystem logSystem, WebRequest webRequest,
-                                        String basePath);
 
   private final static native void setEventCallback(long ptr, String eventName, long callback);
 
@@ -138,6 +101,4 @@ public final class JsEngine implements Disposable
   private final static native JsValue newValue(long ptr, boolean value);
 
   private final static native JsValue newValue(long ptr, String value);
-
-  private final static native void dtor(long ptr);
 }

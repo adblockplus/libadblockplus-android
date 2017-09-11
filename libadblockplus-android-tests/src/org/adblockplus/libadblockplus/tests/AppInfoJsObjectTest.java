@@ -22,7 +22,7 @@ import org.adblockplus.libadblockplus.JsEngine;
 
 import org.junit.Test;
 
-public class AppInfoJsObjectTest extends BaseJsEngineTest
+public class AppInfoJsObjectTest extends BasePlatformTest
 {
   @Test
   public void testAllProperties()
@@ -37,7 +37,8 @@ public class AppInfoJsObjectTest extends BaseJsEngineTest
       .setDevelopmentBuild(true)
       .build();
 
-    JsEngine jsEngine = new JsEngine(appInfo);
+    platform.setUpJsEngine(appInfo);
+    JsEngine jsEngine = platform.getJsEngine();
     assertEquals("1", jsEngine.evaluate("_appInfo.version").asString());
     assertEquals("3", jsEngine.evaluate("_appInfo.name").asString());
     assertEquals("4", jsEngine.evaluate("_appInfo.application").asString());
@@ -52,8 +53,8 @@ public class AppInfoJsObjectTest extends BaseJsEngineTest
     AppInfo appInfo = AppInfo
       .builder()
       .build();
-
-    JsEngine jsEngine = new JsEngine(appInfo);
+    platform.setUpJsEngine(appInfo);
+    JsEngine jsEngine = platform.getJsEngine();
     assertEquals("1.0", jsEngine.evaluate("_appInfo.version").asString());
     assertEquals("libadblockplus-android", jsEngine.evaluate("_appInfo.name").asString());
     assertEquals("android", jsEngine.evaluate("_appInfo.application").asString());

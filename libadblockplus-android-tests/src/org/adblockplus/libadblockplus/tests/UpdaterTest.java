@@ -21,6 +21,7 @@ import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.MockWebRequest;
+import org.adblockplus.libadblockplus.Platform;
 import org.adblockplus.libadblockplus.WebRequest;
 
 import android.test.AndroidTestCase;
@@ -37,11 +38,10 @@ public class UpdaterTest extends BaseFilterEngineTest
       .setName("test")
       .setVersion("1.0.1")
       .build();
-
     mockWebRequest = new MockWebRequest();
-    jsEngine = new JsEngine(appInfo, null, mockWebRequest,
+    platform = new Platform(null, mockWebRequest,
         getContext().getFilesDir().getAbsolutePath());
-
-    filterEngine = new FilterEngine(jsEngine);
+    platform.setUpJsEngine(appInfo);
+    filterEngine = platform.getFilterEngine();
   }
 }

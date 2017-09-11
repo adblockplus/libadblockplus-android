@@ -69,7 +69,8 @@ public final class Filter extends JsValue
 
   public static enum Type
   {
-    BLOCKING, EXCEPTION, ELEMHIDE, ELEMHIDE_EXCEPTION, COMMENT, INVALID;
+    BLOCKING, EXCEPTION, ELEMHIDE, ELEMHIDE_EXCEPTION, ELEMHIDE_EMULATION,
+    COMMENT, INVALID;
   }
 
   private final static native void registerNatives();

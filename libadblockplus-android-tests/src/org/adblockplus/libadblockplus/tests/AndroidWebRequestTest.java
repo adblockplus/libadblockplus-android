@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.tests;
 
+import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.WebRequest;
 import org.adblockplus.libadblockplus.android.AndroidWebRequest;
 import org.adblockplus.libadblockplus.FilterEngine;
@@ -43,6 +44,7 @@ public class AndroidWebRequestTest extends BaseFilterEngineTest
   @Test
   public void testRealWebRequest()
   {
+    JsEngine jsEngine = platform.getJsEngine();
     // This URL should redirect to easylist-downloads.adblockplus.org and we
     // should get the actual filter list back.
     jsEngine.evaluate(
@@ -83,6 +85,7 @@ public class AndroidWebRequestTest extends BaseFilterEngineTest
   @Test
   public void testXMLHttpRequest()
   {
+    JsEngine jsEngine = platform.getJsEngine();
     jsEngine.evaluate(
       "var result;\n" +
       "var request = new XMLHttpRequest();\n" +

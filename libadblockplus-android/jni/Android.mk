@@ -46,6 +46,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := libadblockplus-jni
 LOCAL_SRC_FILES := JniLibrary.cpp
+LOCAL_SRC_FILES += JniPlatform.cpp
 LOCAL_SRC_FILES += JniJsEngine.cpp JniFilterEngine.cpp JniJsValue.cpp
 LOCAL_SRC_FILES += JniFilter.cpp JniSubscription.cpp JniEventCallback.cpp
 LOCAL_SRC_FILES += JniLogSystem.cpp JniWebRequest.cpp

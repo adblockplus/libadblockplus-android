@@ -91,11 +91,11 @@ public:
   void Callback(AdblockPlus::Notification&&);
 };
 
-class JniWebRequest : public JniCallbackBase, public AdblockPlus::WebRequest
+class JniWebRequest : public JniCallbackBase, public AdblockPlus::IWebRequestSync
 {
 public:
   JniWebRequest(JNIEnv* env, jobject callbackObject);
-  AdblockPlus::ServerResponse GET(const std::string& url, const AdblockPlus::HeaderList& requestHeaders) const;
+  AdblockPlus::ServerResponse GET(const std::string& url, const AdblockPlus::HeaderList& requestHeaders) const override;
 
 private:
   jobject NewTuple(JNIEnv* env, const std::string& a, const std::string& b) const;

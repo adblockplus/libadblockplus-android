@@ -26,7 +26,7 @@ import org.adblockplus.libadblockplus.WebRequest;
 import android.content.Context;
 import android.test.InstrumentationTestCase;
 
-public abstract class BaseJsEngineTest extends InstrumentationTestCase
+public abstract class BaseJsEngineTest extends BasePlatformTest
 {
   protected JsEngine jsEngine;
 
@@ -34,35 +34,6 @@ public abstract class BaseJsEngineTest extends InstrumentationTestCase
   protected void setUp() throws Exception
   {
     super.setUp();
-
-    jsEngine = new JsEngine(AppInfo.builder().build(), createLogSystem(), createWebRequest(),
-        getContext().getFilesDir().getAbsolutePath());
-  }
-
-  @Override
-  protected void tearDown() throws Exception
-  {
-    if (jsEngine != null)
-    {
-      jsEngine.dispose();
-      jsEngine = null;
-    }
-  }
-
-  // If the method returns null then a default implementation of the Log System
-  // provided by libadblockplus is used.
-  protected LogSystem createLogSystem()
-  {
-    return null;
-  }
-
-  protected WebRequest createWebRequest()
-  {
-    return new ThrowingWebRequest();
-  }
-
-  protected Context getContext()
-  {
-    return getInstrumentation().getTargetContext();
+    jsEngine = platform.getJsEngine();
   }
 }

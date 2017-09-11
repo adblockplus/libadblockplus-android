@@ -15,16 +15,15 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef JNI_JS_ENGINE_H
-#define JNI_JS_ENGINE_H
+#ifndef JNI_PLATFORM_H
+#define JNI_PLATFORM_H
 
-#include <AdblockPlus/ITimer.h>
-#include <AdblockPlus/JsEngine.h>
+#include <AdblockPlus/Platform.h>
 
-struct JniJsEngine
+struct JniPlatform
 {
-  AdblockPlus::ITimer* timer;
-  AdblockPlus::JsEnginePtr jsEngine;
+  AdblockPlus::Scheduler scheduler;
+  std::unique_ptr<AdblockPlus::Platform> platform;
 };
 
-#endif /* JNI_JS_ENGINE_H */
+#endif /* JNI_PLATFORM_H */

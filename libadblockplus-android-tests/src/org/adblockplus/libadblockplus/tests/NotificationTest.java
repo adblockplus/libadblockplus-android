@@ -34,7 +34,7 @@ public class NotificationTest extends BaseFilterEngineTest
 
   protected void addNotification(String notification)
   {
-    jsEngine.evaluate(
+    platform.getJsEngine().evaluate(
       "(function()\n" +
       "{\n" +
       "require('notification').Notification.addNotification(" + notification + ");\n" +

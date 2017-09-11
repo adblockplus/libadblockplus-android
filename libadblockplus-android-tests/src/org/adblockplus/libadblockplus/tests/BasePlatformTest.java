@@ -17,40 +17,53 @@
 
 package org.adblockplus.libadblockplus.tests;
 
-import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.LazyWebRequest;
+import org.adblockplus.libadblockplus.Platform;
+
+import org.adblockplus.libadblockplus.LogSystem;
+import org.adblockplus.libadblockplus.ThrowingWebRequest;
 import org.adblockplus.libadblockplus.WebRequest;
 
-public abstract class BaseFilterEngineTest extends BasePlatformTest
+import android.content.Context;
+import android.test.InstrumentationTestCase;
+
+public abstract class BasePlatformTest extends InstrumentationTestCase
 {
-  protected FilterEngine filterEngine;
+  protected Platform platform;
 
   @Override
   protected void setUp() throws Exception
   {
     super.setUp();
-    filterEngine = platform.getFilterEngine();
+
+    platform = new Platform(createLogSystem(), createWebRequest(),
+        getContext().getFilesDir().getAbsolutePath());
   }
 
   @Override
   protected void tearDown() throws Exception
   {
-    disposeFilterEngine();
+    if (platform != null)
+    {
+      platform.dispose();
+      platform = null;
+    }
     super.tearDown();
   }
 
-  protected void disposeFilterEngine() throws InterruptedException
+  // If the method returns null then a default implementation of the Log System
+  // provided by libadblockplus is used.
+  protected LogSystem createLogSystem()
   {
-    if (filterEngine != null)
-    {
-      Thread.sleep(200); // let FS finish its operations
-      filterEngine = null;
-    }
+    return null;
   }
 
-  @Override
   protected WebRequest createWebRequest()
   {
-    return new LazyWebRequest();
+    return new ThrowingWebRequest();
+  }
+
+  protected Context getContext()
+  {
+    return getInstrumentation().getTargetContext();
   }
 }

@@ -32,9 +32,9 @@ import org.adblockplus.libadblockplus.FilterChangeCallback;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.FilterEngine.ContentType;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
-import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LogSystem;
+import org.adblockplus.libadblockplus.Platform;
 import org.adblockplus.libadblockplus.ShowNotificationCallback;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.UpdateAvailableCallback;
@@ -67,7 +67,7 @@ public final class AdblockEngine
    * volatile, this seems to prevent the JNI from 'optimizing away' those objects (as a volatile
    * variable might be changed at any time from any thread).
    */
-  private volatile JsEngine jsEngine;
+  private volatile Platform platform;
   private volatile FilterEngine filterEngine;
   private volatile LogSystem logSystem;
   private volatile WebRequest webRequest;
@@ -254,9 +254,10 @@ public final class AdblockEngine
     private void createEngines()
     {
       engine.logSystem = new AndroidLogSystem();
-      engine.jsEngine = new JsEngine(appInfo, engine.logSystem, engine.webRequest, basePath);
-
-      engine.filterEngine = new FilterEngine(engine.jsEngine, isAllowedConnectionCallback);
+      engine.platform = new Platform(engine.logSystem, engine.webRequest, basePath);
+      engine.platform.setUpJsEngine(appInfo);
+      engine.platform.setUpFilterEngine(isAllowedConnectionCallback);
+      engine.filterEngine = engine.platform.getFilterEngine();
     }
   }
 
@@ -287,14 +288,8 @@ public final class AdblockEngine
         this.filterEngine.removeShowNotificationCallback();
       }
 
-      this.filterEngine.dispose();
-      this.filterEngine = null;
-    }
-
-    if (this.jsEngine != null)
-    {
-      this.jsEngine.dispose();
-      this.jsEngine = null;
+      this.platform.dispose();
+      this.platform = null;
     }
 
     // callbacks then

@@ -34,6 +34,7 @@ public class Notification extends JsValue
   {
     INFORMATION,
     QUESTION,
+    RELENTLESS,
     CRITICAL,
     INVALID
   }
