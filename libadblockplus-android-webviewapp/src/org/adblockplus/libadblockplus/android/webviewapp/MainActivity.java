@@ -60,6 +60,13 @@ public class MainActivity extends Activity
 
     bindControls();
     initControls();
+
+    // allow WebView debugging in "Debug" build variant
+    // https://developers.google.com/web/tools/chrome-devtools/remote-debugging/webviews
+    if (BuildConfig.DEBUG)
+    {
+      WebView.setWebContentsDebuggingEnabled(true);
+    }
   }
 
   private void bindControls()
