@@ -17,7 +17,6 @@
 
 #include <AdblockPlus.h>
 #include "Utils.h"
-#include "JniJsValue.h"
 
 static AdblockPlus::Subscription* GetSubscriptionPtr(jlong ptr)
 {

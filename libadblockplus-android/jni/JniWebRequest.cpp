@@ -16,7 +16,6 @@
  */
 
 #include "JniCallbacks.h"
-#include "Utils.h"
 #include "JniWebRequest.h"
 
 // precached in JNI_OnLoad and released in JNI_OnUnload

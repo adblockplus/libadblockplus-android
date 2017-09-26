@@ -16,7 +16,6 @@
  */
 
 #include "JniCallbacks.h"
-#include "Utils.h"
 
 JniIsAllowedConnectionTypeCallback::JniIsAllowedConnectionTypeCallback(JNIEnv* env,
     jobject callbackObject)

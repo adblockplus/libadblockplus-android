@@ -19,9 +19,7 @@ package org.adblockplus.libadblockplus.tests;
 
 import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.EventCallback;
-import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HeaderEntry;
-import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LazyLogSystem;
 import org.adblockplus.libadblockplus.LazyWebRequest;

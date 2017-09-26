@@ -20,7 +20,6 @@ package org.adblockplus.libadblockplus.tests;
 import org.adblockplus.libadblockplus.JsEngine;
 import org.adblockplus.libadblockplus.WebRequest;
 import org.adblockplus.libadblockplus.android.AndroidWebRequest;
-import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.ServerResponse;
 

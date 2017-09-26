@@ -17,14 +17,7 @@
 
 package org.adblockplus.libadblockplus.tests;
 
-import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.JsEngine;
-import org.adblockplus.libadblockplus.LogSystem;
-import org.adblockplus.libadblockplus.ThrowingWebRequest;
-import org.adblockplus.libadblockplus.WebRequest;
-
-import android.content.Context;
-import android.test.InstrumentationTestCase;
 
 public abstract class BaseJsEngineTest extends BasePlatformTest
 {

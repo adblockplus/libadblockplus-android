@@ -19,7 +19,6 @@ package org.adblockplus.libadblockplus.tests;
 
 import android.os.SystemClock;
 
-import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.Platform;
