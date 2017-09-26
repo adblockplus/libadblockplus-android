@@ -17,7 +17,6 @@
 
 #include <AdblockPlus.h>
 #include "Utils.h"
-#include "JniJsValue.h"
 #include "JniFilter.h"
 
 // precached in JNI_OnLoad and released in JNI_OnUnload

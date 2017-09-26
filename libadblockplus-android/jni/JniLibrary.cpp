@@ -21,7 +21,6 @@
 #include "JniCallbacks.h"
 #include "JniNotification.h"
 #include "JniWebRequest.h"
-#include "Utils.h"
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {

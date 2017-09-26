@@ -22,10 +22,7 @@ import org.adblockplus.libadblockplus.JsValue;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class JsTest extends BaseJsTest
+public class JsTest extends BaseJsEngineTest
 {
   @Test
   public void testUndefinedValue()

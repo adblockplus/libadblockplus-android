@@ -16,7 +16,6 @@
  */
 
 #include "JniCallbacks.h"
-#include "Utils.h"
 
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz, jobject callbackObject)
 {

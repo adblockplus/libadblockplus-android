@@ -45,8 +45,6 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build.VERSION;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 public final class AdblockEngine
