@@ -105,7 +105,7 @@ jstring JniStdStringToJava(JNIEnv* env, std::string str)
 
 bool stringBeginsWith(const std::string& string, const std::string& beginning)
 {
-  return string.compare(0, beginning.length(), beginning);
+  return string.compare(0, beginning.length(), beginning) == 0;
 }
 
 jobject NewJniArrayList(JNIEnv* env)
