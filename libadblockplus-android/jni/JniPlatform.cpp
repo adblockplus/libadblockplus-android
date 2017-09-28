@@ -20,6 +20,28 @@
 #include "JniCallbacks.h"
 #include "JniPlatform.h"
 
+/**
+ * V8IsolateHolder accepts v8:::Isolate ptr in ctor and just returns it in Get().
+ * V8IsolateHolder is not taking ownership so it's not releasing isolate ptr.
+ */
+class V8IsolateHolder : public AdblockPlus::IV8IsolateProvider
+{
+  public:
+    V8IsolateHolder(v8::Isolate* isolate_) : isolate(isolate_)
+    {
+    }
+
+    v8::Isolate* Get() override
+    {
+      return isolate;
+    }
+
+  private:
+    V8IsolateHolder(const V8IsolateHolder&);
+    V8IsolateHolder& operator=(const V8IsolateHolder&);
+
+    v8::Isolate* isolate;
+};
 
 static void TransformAppInfo(JNIEnv* env, jobject jAppInfo, AdblockPlus::AppInfo& appInfo)
 {
@@ -70,13 +92,19 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
   delete JniLongToTypePtr<JniPlatform>(ptr);
 }
 
-static void JNICALL JniSetUpJsEngine(JNIEnv* env, jclass clazz, jlong ptr, jobject jAppInfo)
+static void JNICALL JniSetUpJsEngine(JNIEnv* env, jclass clazz, jlong ptr, jobject jAppInfo, jlong v8IsolatePtr)
 {
   try
   {
     AdblockPlus::AppInfo appInfo;
     TransformAppInfo(env, jAppInfo, appInfo);
-    GetPlatformRef(ptr).SetUpJsEngine(appInfo);
+    std::unique_ptr<AdblockPlus::IV8IsolateProvider> isolateProvider;
+    if (v8IsolatePtr)
+    {
+      isolateProvider.reset(new V8IsolateHolder(JniLongToTypePtr<v8::Isolate>(v8IsolatePtr)));
+    }
+
+    GetPlatformRef(ptr).SetUpJsEngine(appInfo, std::move(isolateProvider));
   }
   CATCH_AND_THROW(env)
 }
@@ -132,7 +160,7 @@ static JNINativeMethod methods[] =
   { (char*)"ctor", (char*)"(" TYP("LogSystem") TYP("WebRequest") "Ljava/lang/String;)J", (void*)JniCtor },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor },
 
-  { (char*)"setUpJsEngine", (char*)"(J" TYP("AppInfo") ")V", (void*)JniSetUpJsEngine },
+  { (char*)"setUpJsEngine", (char*)"(J" TYP("AppInfo") "J)V", (void*)JniSetUpJsEngine },
   { (char*)"getJsEnginePtr", (char*)"(J)J", (void*)JniGetJsEnginePtr },
   { (char*)"setUpFilterEngine", (char*)"(J" TYP("IsAllowedConnectionCallback") ")V", (void*)JniSetUpFilterEngine },
   { (char*)"ensureFilterEngine", (char*)"(J)V", (void*)JniEnsureFilterEngine }

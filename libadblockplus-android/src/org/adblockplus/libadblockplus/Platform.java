@@ -45,9 +45,14 @@ public class Platform implements Disposable
     this.disposer = new Disposer(this, new DisposeWrapper(ptr));
   }
 
+  public void setUpJsEngine(final AppInfo appInfo, final long v8IsolatePtr)
+  {
+    setUpJsEngine(this.ptr, appInfo, v8IsolatePtr);
+  }
+
   public void setUpJsEngine(final AppInfo appInfo)
   {
-    setUpJsEngine(this.ptr, appInfo);
+    setUpJsEngine(appInfo, 0L);
   }
 
   public JsEngine getJsEngine()
@@ -96,7 +101,7 @@ public class Platform implements Disposable
 
   private final static native long ctor(LogSystem logSystem, WebRequest webRequest, String basePath);
 
-  private final static native void setUpJsEngine(long ptr, AppInfo appInfo);
+  private final static native void setUpJsEngine(long ptr, AppInfo appInfo, long v8IsolatePtr);
 
   private final static native long getJsEnginePtr(long ptr);
 
