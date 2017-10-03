@@ -196,6 +196,14 @@ public final class FilterEngine
     updateFiltersAsync(this.ptr, subscriptionUrl);
   }
 
+  /**
+   * Get FilterEngine pointer
+   * @return C++ FilterEngine instance pointer (AdblockPlus::FilterEngine*)
+   */
+  public long getNativePtr() {
+    return getNativePtr(this.ptr);
+  }
+
   private final static native void registerNatives();
 
   private final static native boolean isFirstRun(long ptr);
@@ -253,4 +261,6 @@ public final class FilterEngine
   private final static native String getAcceptableAdsSubscriptionURL(long ptr);
 
   private final static native void updateFiltersAsync(long ptr, String subscriptionUrl);
+
+  private final static native long getNativePtr(long ptr);
 }

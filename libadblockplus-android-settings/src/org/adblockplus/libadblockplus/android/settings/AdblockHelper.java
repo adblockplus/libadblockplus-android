@@ -250,11 +250,16 @@ public class AdblockHelper
    * @param asynchronous If `true` engines will be created in background thread without locking of
    *                     current thread. Use waitForReady() before getEngine() later.
    *                     If `false` locks current thread.
+   * @return if a new instance is allocated
    */
-  public synchronized void retain(boolean asynchronous)
+  public synchronized boolean retain(boolean asynchronous)
   {
+    boolean firstInstance = false;
+
     if (referenceCounter.getAndIncrement() == 0)
     {
+      firstInstance = true;
+
       if (!asynchronous)
       {
         createAdblock();
@@ -277,15 +282,21 @@ public class AdblockHelper
         }).start();
       }
     }
+    return firstInstance;
   }
 
   /**
    * Unregister AdblockHelper engine client
+   * @return `true` if the last instance is destroyed
    */
-  public synchronized void release()
+  public synchronized boolean release()
   {
+    boolean lastInstance = false;
+
     if (referenceCounter.decrementAndGet() == 0)
     {
+      lastInstance = true;
+
       if (engineCreated != null)
       {
         // retained asynchronously
@@ -301,5 +312,6 @@ public class AdblockHelper
         disposeAdblock();
       }
     }
+    return lastInstance;
   }
 }

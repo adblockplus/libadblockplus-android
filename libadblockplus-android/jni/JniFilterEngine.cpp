@@ -499,6 +499,16 @@ static void JNICALL JniUpdateFiltersAsync(JNIEnv* env, jclass clazz, jlong jniPl
   });
 }
 
+static jlong JNICALL JniGetFilterEngineNativePtr(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
+    return (jlong)&engine;
+  }
+  CATCH_THROW_AND_RETURN(env, 0);
+}
+
 static JNINativeMethod methods[] =
 {
   { (char*)"isFirstRun", (char*)"(J)Z", (void*)JniIsFirstRun },
@@ -528,7 +538,8 @@ static JNINativeMethod methods[] =
   { (char*)"setAcceptableAdsEnabled", (char*)"(JZ)V", (void*)JniSetAcceptableAdsEnabled },
   { (char*)"isAcceptableAdsEnabled", (char*)"(J)Z", (void*)JniIsAcceptableAdsEnabled },
   { (char*)"getAcceptableAdsSubscriptionURL", (char*)"(J)Ljava/lang/String;", (void*)JniGetAcceptableAdsSubscriptionURL },
-  { (char*)"updateFiltersAsync", (char*)"(JLjava/lang/String;)V", (void*)JniUpdateFiltersAsync }
+  { (char*)"updateFiltersAsync", (char*)"(JLjava/lang/String;)V", (void*)JniUpdateFiltersAsync },
+  { (char*)"getNativePtr", (char*)"(J)J", (void*)JniGetFilterEngineNativePtr }
 };
 
 extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_FilterEngine_registerNatives(JNIEnv *env, jclass clazz)
