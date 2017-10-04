@@ -34,6 +34,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
   private static final String SETTINGS_SUBSCRIPTIONS_KEY = "subscriptions";
   private static final String SETTINGS_SUBSCRIPTION_KEY = "subscription";
   private static final String SETTINGS_SUBSCRIPTION_URL_KEY = "url";
+  private static final String SETTINGS_SUBSCRIPTION_SPECIALIZATION_KEY = "specialization";
   private static final String SETTINGS_SUBSCRIPTION_TITLE_KEY = "title";
   private static final String SETTINGS_WL_DOMAINS_KEY = "whitelisted_domains";
   private static final String SETTINGS_WL_DOMAIN_KEY = "domain";
@@ -115,6 +116,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
         Subscription subscription = new Subscription();
         subscription.title = prefs.getString(getSubscriptionTitleKey(i), "");
         subscription.url = prefs.getString(getSubscriptionURLKey(i), "");
+        subscription.specialization = prefs.getString(getSubscriptionSpecializationKey(i), "");
         subscriptions.add(subscription);
       }
       settings.setSubscriptions(subscriptions);
@@ -141,6 +143,11 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
   private String getSubscriptionURLKey(int index)
   {
     return getArrayItemKey(index, SETTINGS_SUBSCRIPTION_KEY, SETTINGS_SUBSCRIPTION_URL_KEY);
+  }
+
+  private String getSubscriptionSpecializationKey(int index)
+  {
+    return getArrayItemKey(index, SETTINGS_SUBSCRIPTION_KEY, SETTINGS_SUBSCRIPTION_SPECIALIZATION_KEY);
   }
 
   @Override
@@ -199,9 +206,10 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       {
         Subscription eachSubscription = settings.getSubscriptions().get(i);
 
-        // warning: saving `title` and `url` fields only
+        // warning: saving `title`, `url` and `specialization` fields only
         editor.putString(getSubscriptionTitleKey(i), eachSubscription.title);
         editor.putString(getSubscriptionURLKey(i), eachSubscription.url);
+        editor.putString(getSubscriptionSpecializationKey(i), eachSubscription.specialization);
       }
     }
   }
