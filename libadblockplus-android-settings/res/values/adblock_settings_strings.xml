@@ -3,16 +3,16 @@
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_filter_lists_title">Filter lists</string>
-    <string name="fragment_adblock_settings_filter_lists_summary">Change your filter list language</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Add or remove language-specific filter lists</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Acceptable Ads</string>
-    <string name="fragment_adblock_settings_aa_enabled_summary">We\'d like to encourage websites to use straightforward, non-intrusive advertising. That\'s why we\'ve established strict guidelines to identify Acceptable Ads, which are shown under default settings. If you wish to browser ad-free, you can disable this settings at any time.</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">We\'d like to encourage websites to use straightforward, nonintrusive advertising. That\'s why we\'ve established strict guidelines to identify Acceptable Ads, which are shown under default settings. If you wish to browse ad-free, you can disable this setting at any time.</string>
     <string name="fragment_adblock_settings_wl_title">Whitelisted domains</string>
     <string name="fragment_adblock_settings_wl_summary">Add websites that you want to see ads on to this list</string>
     <string name="fragment_adblock_settings_add_domain">Add domain</string>
     <string name="fragment_adblock_settings_wl_domains">Whitelisted domains</string>
     <string name="fragment_adblock_settings_allowed_connection_type">Configure automatic updates</string>
-    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Non-metered WiFi networks</string>
-    <string name="fragment_adblock_settings_allowed_connection_type_wifi">All WiFi networks</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Non-metered Wi-Fi networks</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">All Wi-Fi networks</string>
     <string name="fragment_adblock_settings_allowed_connection_type_all">Always</string>
 
 </resources>
