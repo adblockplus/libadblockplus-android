@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -139,20 +140,34 @@ public class AndroidWebRequest implements WebRequest
         final StringBuilder sb = new StringBuilder();
 
         String line;
-        while ((line = reader.readLine()) != null)
+        try
         {
-          // We're only appending non-element-hiding filters here.
-          //
-          // See:
-          //      https://issues.adblockplus.org/ticket/303
-          //
-          // Follow-up issue for removing this hack:
-          //      https://issues.adblockplus.org/ticket/1541
-          //
-          if (this.elemhideEnabled || !isListedSubscriptionUrl(url) || line.indexOf('#') == -1)
+          while ((line = reader.readLine()) != null)
           {
-            sb.append(line);
-            sb.append('\n');
+            // We're only appending non-element-hiding filters here.
+            //
+            // See:
+            //      https://issues.adblockplus.org/ticket/303
+            //
+            // Follow-up issue for removing this hack:
+            //      https://issues.adblockplus.org/ticket/1541
+            //
+            if (this.elemhideEnabled || !isListedSubscriptionUrl(url) || line.indexOf('#') == -1)
+            {
+              sb.append(line);
+              sb.append('\n');
+            }
+          }
+        }
+        finally
+        {
+          try
+          {
+            reader.close();
+          }
+          catch (IOException e)
+          {
+            // ignored
           }
         }
 
