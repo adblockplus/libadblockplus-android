@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Daftar filter</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Tambah atau hapus daftar filter dalam bahasa tertentu</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Iklan yang Bisa Diterima</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Kami ingin mendorong agar semua situs web menggunakan metode periklanan yang bersifat sederhana dan nonintrusif. Itulah sebabnya mengapa kami menetapkan pedoman yang ketat dalam mengidentifikasi Iklan yang Bisa Diterima, yang ditunjukkan dalam pengaturan default kami. Jika Anda ingin menjelajah internet tanpa melihat iklan apa pun, Anda bisa menonaktifkan pengaturan ini kapan saja.</string>
+    <string name="fragment_adblock_settings_wl_title">Domain yang masuk dalam daftar putih</string>
+    <string name="fragment_adblock_settings_wl_summary">Tambah situs web yang ingin Anda lihat iklan di dalamnya ke daftar ini</string>
+    <string name="fragment_adblock_settings_add_domain">Tambah domain</string>
+    <string name="fragment_adblock_settings_wl_domains">Domain yang masuk dalam daftar putih</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Konfigurasi pembaruan otomatis</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Jaringan Wi-Fi tanpa kuota</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Semua jaringan Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Selalu</string>
+
+</resources>

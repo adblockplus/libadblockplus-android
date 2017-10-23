@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Danh sách lọc</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Thêm hoặc xóa danh sách bộ lọc ngôn ngữ</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Quảng cáo chấp nhận được</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Chúng tôi khuyến khích các trang web sử dụng quảng cáo đơn giản, không gây phiền toái. Đó là lý do tại sao chúng tôi tạo ra hướng dẫn chặt chẽ để xác định Quảng cáo chấp nhận được, những quảng cáo được hiển thị ở chế độ cài đặt mặc định. Nếu bạn muốn duyệt web không có quảng cáo, bạn có thể vô hiệu hóa cài đặt này bất kỳ lúc nào.</string>
+    <string name="fragment_adblock_settings_wl_title">Danh sách tên miền không gây hại</string>
+    <string name="fragment_adblock_settings_wl_summary">Thêm các trang web mà bạn muốn xem quảng cáo vào danh sách này</string>
+    <string name="fragment_adblock_settings_add_domain">Thêm tên miền</string>
+    <string name="fragment_adblock_settings_wl_domains">Danh sách tên miền không gây hại</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Cấu hình tự động cập nhật</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Các mạng Wi-Fi không đo</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Tất cả các mạng Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Luôn luôn</string>
+
+</resources>

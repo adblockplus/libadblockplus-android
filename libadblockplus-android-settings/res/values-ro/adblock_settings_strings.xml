@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Listă filtre</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Adăugați sau eliminați liste de filtre specifice limbilor</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Reclame acceptabile</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Am dori să încurajăm website-urile să folosească reclame directe, neintruzive. De aceea am definit reguli stricte pentru identificarea reclamelor acceptabile, care sunt prezentate la setările implicite standard. Dacă doriți să navigați pe Internet fără reclame, puteți dezactiva această setare în orice moment.</string>
+    <string name="fragment_adblock_settings_wl_title">Domenii din lista de aprobare</string>
+    <string name="fragment_adblock_settings_wl_summary">Adăugați website-uri pe care doriți vedeți reclame la această listă</string>
+    <string name="fragment_adblock_settings_add_domain">Adăugare domeniu</string>
+    <string name="fragment_adblock_settings_wl_domains">Domenii din lista de aprobare</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Configurare actualizări automate</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Rețele Wi-Fi necontorizate</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Toate rețelele Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Întotdeauna</string>
+
+</resources>

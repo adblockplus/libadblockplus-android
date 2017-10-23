@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Filterlisten</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Sprachspezifische Filterliste hinzufügen oder entfernen</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Acceptable Ads</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Wir möchten Websites auffordern, unkomplizierte und unaufdringliche Werbung zu verwenden. Daher haben wir haben strenge Richtlinien zum Erkennen von Acceptable Ads erstellt, welche standardmäßig angezeigt werden. Wenn du ohne Werbung browsen möchtest, kannst du diese Einstellung jederzeit deaktivieren.</string>
+    <string name="fragment_adblock_settings_wl_title">Domains auf der Whitelist</string>
+    <string name="fragment_adblock_settings_wl_summary">Füge Websites, auf denen du Werbung sehen möchtest, zu dieser Liste hinzu</string>
+    <string name="fragment_adblock_settings_add_domain">Domain hinzufügen</string>
+    <string name="fragment_adblock_settings_wl_domains">Domains auf der Whitelist</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Automatische Updates konfigurierens</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Nicht gebührenpflichtige Wi-Fi-Netzwerke</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Alle Wi-Fi-Netzwerke</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Immer</string>
+
+</resources>

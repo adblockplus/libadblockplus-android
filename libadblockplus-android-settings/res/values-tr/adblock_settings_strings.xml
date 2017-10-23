@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Filtre listeleri</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Dile özel filtre listelerini ekle veya kaldır</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Kabul edilebilir reklamlar</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Web sitelerinin doğrudan, zorla girmeyen reklamları kullanmalarını teşvik etmek istiyoruz. Bu nedenle Kabul edilebilir reklamları belirlemek için varsayılan ayarlar bölümünde gösterilen katı yönergeler oluşturduk. Reklam içeriği olmadan gezinmek istiyorsanız, bu ayarı istediğiniz zaman devre dışı bırakabilirsiniz.</string>
+    <string name="fragment_adblock_settings_wl_title">Güvenilir listesindeki etki alanları</string>
+    <string name="fragment_adblock_settings_wl_summary">Reklam görmek istediğiniz web sitelerini bu listeye ekleyin</string>
+    <string name="fragment_adblock_settings_add_domain">Etki alanı ekle</string>
+    <string name="fragment_adblock_settings_wl_domains">Güvenilir listesindeki etki alanları</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Otomatik güncellemeleri yapılandır</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Ölçümsüz (Kontrolsüz) Wi-Fi ağları</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Tüm Wi-Fi ağları</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Her zaman</string>
+
+</resources>

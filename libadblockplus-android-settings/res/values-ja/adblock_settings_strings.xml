@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">フィルターリスト</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">特定言語フィルターリストを追加または削除</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">控えめな広告</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">ウェブサイトでは、明確かつ控えめな広告を使用することを推薦しています。このため、初期設定で表示される受け入れ可能な広告を特定する厳しいガイドラインを作成しました。広告を表示しない場合は、いつでもこの設定を無効にできます。</string>
+    <string name="fragment_adblock_settings_wl_title">ホワイトリスト登録済みドメイン</string>
+    <string name="fragment_adblock_settings_wl_summary">広告を表示するウェブサイトをリストに登録します</string>
+    <string name="fragment_adblock_settings_add_domain">ドメインを追加</string>
+    <string name="fragment_adblock_settings_wl_domains">ホワイトリスト登録済みドメイン</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">自動アップデートの設定</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">定額制のWi-Fiネットワーク</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">すべてのWi-Fiネットワーク</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">いつも</string>
+
+</resources>

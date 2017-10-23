@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:src="@drawable/fragment_adblock_whitelisted_domains_add"
-            android:paddingLeft="@dimen/fragment_adblock_wl_item_padding" />
+            android:paddingStart="@dimen/fragment_adblock_wl_item_padding" />
 
     </LinearLayout>
 

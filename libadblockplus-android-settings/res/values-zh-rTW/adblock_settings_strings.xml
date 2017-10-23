@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">過濾列表</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">新增或移除特定於語言的篩選清單</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">可接受廣告</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">我們鼓勵網站使用直接的非侵入性廣告。這就是我們設立嚴格的指引來識別依預設顯示之可接受廣告的原因。若您希望無廣告瀏覽，則可以隨時停用此設定。</string>
+    <string name="fragment_adblock_settings_wl_title">列出的白名單網域</string>
+    <string name="fragment_adblock_settings_wl_summary">將您想要在其上查看廣告的網站新增至此清單</string>
+    <string name="fragment_adblock_settings_add_domain">新增網域</string>
+    <string name="fragment_adblock_settings_wl_domains">列出的白名單網域</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">設定自動更新</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">非計量 Wi-Fi 網路</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">所有 Wi-Fi 網路</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">總是</string>
+
+</resources>
