@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">फ़िल्टर सूचियां</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">भाषा विशिष्ठ फ़िल्टर सूचियों को जोड़ें या हटाएं</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">स्वीकार्य विज्ञापन</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">हम वेबसाइटों को सीधी, नॉनइंट्रूसिव विज्ञापन का उपयोग करने के लिए प्रोत्साहित करना चाहेंगे। इसलिए हम ने स्वीकार्य विज्ञापनों के लिए कठोर निर्देश तैयार किये है, जो डिफ़ॉल्ट सेटिंग के अंतर्गत दिखाए जायेंगे। यदि आप विज्ञापन-मुक्त ब्राउज़ करना चाहते हैं, तो आप इस सेटिंग को किसी भी समय अक्षम कर सकते हैं।</string>
+    <string name="fragment_adblock_settings_wl_title">श्वेतसूची वाले डोमेन</string>
+    <string name="fragment_adblock_settings_wl_summary">उन वेबसाइट्स को जोड़ें, जिन्हें आप इस सूची में विज्ञापन देखना चाहते हैं</string>
+    <string name="fragment_adblock_settings_add_domain">डोमेन जोड़ें</string>
+    <string name="fragment_adblock_settings_wl_domains">श्वेतसूची वाले डोमेन</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">स्वयंचलित अपडेट कॉन्फ़िगर करें</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">गैर-मीटर वाले Wi-Fi नेटवर्क</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">सभी Wi-Fi नेटवर्क</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">हमेशा</string>
+
+</resources>

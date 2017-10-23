@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Szűrőlisták</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Nyelvspecifikus szűrőlisták hozzáadása vagy eltávolítása</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Elfogadható hirdetések</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Szeretnénk. ha a weboldalak egyértelmű, nem zavaró hirdetéseket használnának. Ehhez szigorú irányelveket vezettünk be az Elfogadható hirdetések felismerésére, amelyek az alapértelmezett beállítások alatt találhatók. A reklámmentes böngészéshez bármikor kikapcsolhatja ezt a beállítást.</string>
+    <string name="fragment_adblock_settings_wl_title">Engedélyezett domainek</string>
+    <string name="fragment_adblock_settings_wl_summary">Weboldalak hozzáadása a listához, amelyekről hirdetéseket kíván látni</string>
+    <string name="fragment_adblock_settings_add_domain">Domain hozzáadása</string>
+    <string name="fragment_adblock_settings_wl_domains">Engedélyezett domainek</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Automatikus frissítések konfigurálása</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Nem mért Wi-Fi hálózatok</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Minden Wi-Fi hálózat</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Mindig</string>
+
+</resources>

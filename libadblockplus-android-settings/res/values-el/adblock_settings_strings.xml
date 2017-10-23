@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Λίστες φίλτρων</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Προσθήκη ή αφαίρεση λιστών φίλτρου για συγκεκριμένη γλώσσα</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Αποδεκτές Διαφημίσεις</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Θα θέλαμε να ενθαρρύνουμε τους ιστότοπους να χρησιμοποιούν απλή, διακριτική διαφήμιση. Γι\' αυτό έχουμε θεσπίσει αυστηρές οδηγίες για τον προσδιορισμό των αποδεκτών διαφημίσεων, οι οποίες εμφανίζονται με τις προεπιλεγμένες ρυθμίσεις. Αν θέλετε να περιηγηθείτε χωρίς διαφημίσεις, μπορείτε να απενεργοποιήσετε αυτήν τη ρύθμιση ανά πάσα στιγμή.</string>
+    <string name="fragment_adblock_settings_wl_title">Επιτρεπόμενοι διαδικτυακοί τομείς</string>
+    <string name="fragment_adblock_settings_wl_summary">Προσθέστε ιστότοπους στους οποίους θέλετε να βλέπετε διαφημίσεις σε αυτήν τη λίστα</string>
+    <string name="fragment_adblock_settings_add_domain">Προσθήκη τομέα</string>
+    <string name="fragment_adblock_settings_wl_domains">Επιτρεπόμενοι διαδικτυακοί τομείς</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Διαμόρφωση αυτόματων ενημερώσεων</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Δίκτυα Wi-Fi χωρίς μετρήσεις</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Όλα τα δίκτυα Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Πάντα</string>
+
+</resources>

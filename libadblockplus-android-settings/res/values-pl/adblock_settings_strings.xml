@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Listy filtrów</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Dodaj lub usuń listy filtrów dla określonego języka</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Akceptowalne reklamy</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Zachęcamy administratorów witryn internetowych do zamieszczania rzetelnych, nienatrętnych reklam. Właśnie dlatego określiliśmy precyzyjne wskazówki opisujące dopuszczalne reklamy, widoczne w ustawieniach domyślnych. Aby przeglądać Internet całkowicie bez reklam, można wyłączyć to ustawienie w dowolnej chwili.</string>
+    <string name="fragment_adblock_settings_wl_title">Domeny na liście dozwolonych</string>
+    <string name="fragment_adblock_settings_wl_summary">Do tej listy dodaj witryny internetowe, na których chcesz oglądać reklamy</string>
+    <string name="fragment_adblock_settings_add_domain">Dodaj domenę</string>
+    <string name="fragment_adblock_settings_wl_domains">Domeny na liście dozwolonych</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Skonfiguruj aktualizacje automatyczne</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Nietaryfowe sieci Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Wszystkie sieci Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Zawsze</string>
+
+</resources>

@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Listas de filtros</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Agregar o eliminar listas de filtro específicas del idioma</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Anuncios Aceptables</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Nos gustaría impulsar a los sitios web para que usen publicidad sencilla, no invasiva. Por eso es que hemos establecido directrices estrictas para identificar anuncios aceptables, los cuales se muestran por defecto. Si quieres navegar sin anuncios, puedes desactivar este ajuste en cualquier momento.</string>
+    <string name="fragment_adblock_settings_wl_title">Dominios incluidos en la lista blanca</string>
+    <string name="fragment_adblock_settings_wl_summary">Agrega a esta lista los sitios web que quieras que muestren anuncios</string>
+    <string name="fragment_adblock_settings_add_domain">Agregar dominio</string>
+    <string name="fragment_adblock_settings_wl_domains">Dominios incluidos en la lista blanca</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Configurar actualizaciones automáticas</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Redes Wi-Fi de uso no medido</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Todas las redes Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Siempre</string>
+
+</resources>

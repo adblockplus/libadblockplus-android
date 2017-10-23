@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">Списки фільтрів</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">Додавання або видалення списків фільтрів для різних мов</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">Допустима реклама</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Ми хотіли б заохотити веб-сайти використовувати просту, ненав\'язливу рекламу. Тому ми створили суворі принципи для ідентифікації допустимої реклами, яка відображається за замовчуванням. Якщо ви хочете переглядати сайти без реклами, ви можете відключити її у будь-який момент.</string>
+    <string name="fragment_adblock_settings_wl_title">Дозволені домени</string>
+    <string name="fragment_adblock_settings_wl_summary">Додайте веб-сайти у білий список, щоб дозволити відображення реклами</string>
+    <string name="fragment_adblock_settings_add_domain">Додати домен</string>
+    <string name="fragment_adblock_settings_wl_domains">Дозволені домени</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Налаштування автоматичного оновлення</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Мережі Wi-Fi з безлімітним підключенням</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">Усі мережі Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">Завжди</string>
+
+</resources>

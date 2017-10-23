@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">ตัวกรองรายการ</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">เพิ่มหรือลบตัวกรองรายการภาษาที่ระบุ</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">โฆษณาที่ยอมรับได้</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">เราต้องการส่งเสริมให้เว็บไซต์ทำการโฆษณาโดยตรง โดยไม่สร้างความรำคาญแก่ผู้ชม นั่นจึงเป็นเหตุผลว่าทำไมเราถึงได้กำหนดแนวทางที่เข้มงวดเพื่อระบุโฆษณาที่ยอมรับได้ ซึ่งแสดงอยู่ด้านล่างในค่าเริ่มต้นของการตั้งค่า หากคุณต้องการเรียกใช้งานโฆษณาฟรี คุณสามารถปิดใช้งานการตั้งค่านี้ได้ตลอดเวลา</string>
+    <string name="fragment_adblock_settings_wl_title">โดเมนที่อนุญาต</string>
+    <string name="fragment_adblock_settings_wl_summary">เพิ่มเว็บไซต์ที่คุณต้องการเห็นโฆษณาบนรายการนี้</string>
+    <string name="fragment_adblock_settings_add_domain">เพิ่มโดเมน</string>
+    <string name="fragment_adblock_settings_wl_domains">โดเมนที่อนุญาต</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">กำหนดค่าการอัปเดตอัตโนมัติ</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">เครือข่าย Wi-Fi ที่ไม่คิดค่าบริการตามปริมาณข้อมูล</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">ทุกเครือข่าย Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">ตลอดเวลา</string>
+
+</resources>

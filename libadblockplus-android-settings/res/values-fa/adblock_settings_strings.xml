@@ -1,0 +1,18 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_filter_lists_title">لیست</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">افزودن یا حذف لیست</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">تبلیغات قابل قبول</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">ما در نظر داریم وب</string>
+    <string name="fragment_adblock_settings_wl_title">دامنه</string>
+    <string name="fragment_adblock_settings_wl_summary">وب</string>
+    <string name="fragment_adblock_settings_add_domain">افزودن دامنه</string>
+    <string name="fragment_adblock_settings_wl_domains">دامنه</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">پیکربندی به</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">شبکه</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">همه شبکه</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">همیشه</string>
+
+</resources>
