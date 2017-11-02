@@ -251,7 +251,10 @@ public final class AdblockEngine
 
       initCallbacks();
 
-      androidWebRequest.updateSubscriptionURLs(engine.filterEngine);
+      if (!engine.elemhideEnabled)
+      {
+        androidWebRequest.updateSubscriptionURLs(engine.filterEngine);
+      }
 
       return engine;
     }
