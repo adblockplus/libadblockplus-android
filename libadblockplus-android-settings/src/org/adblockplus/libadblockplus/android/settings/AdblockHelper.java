@@ -59,7 +59,7 @@ public class AdblockHelper
   private AdblockEngine engine;
   private AdblockSettingsStorage storage;
   private CountDownLatch engineCreated;
-  private Long v8IsolatePtr;
+  private Long v8IsolateProviderPtr;
 
   /*
     Simple ARC management for AdblockEngine
@@ -132,9 +132,10 @@ public class AdblockHelper
     return this;
   }
 
-  public void useV8Isolate(long ptr)
+  public AdblockHelper useV8IsolateProvider(long ptr)
   {
-    this.v8IsolatePtr = ptr;
+    this.v8IsolateProviderPtr = ptr;
+    return this;
   }
 
   private void createAdblock()
@@ -158,9 +159,9 @@ public class AdblockHelper
       .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
       .enableElementHiding(true);
 
-    if (v8IsolatePtr != null)
+    if (v8IsolateProviderPtr != null)
     {
-      builder.useV8Isolate(v8IsolatePtr);
+      builder.useV8IsolateProvider(v8IsolateProviderPtr);
     }
 
     // if preloaded subscriptions provided

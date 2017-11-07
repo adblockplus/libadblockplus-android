@@ -20,29 +20,6 @@
 #include "JniCallbacks.h"
 #include "JniPlatform.h"
 
-/**
- * V8IsolateHolder accepts v8:::Isolate ptr in ctor and just returns it in Get().
- * V8IsolateHolder is not taking ownership so it's not releasing isolate ptr.
- */
-class V8IsolateHolder : public AdblockPlus::IV8IsolateProvider
-{
-  public:
-    V8IsolateHolder(v8::Isolate* isolate_) : isolate(isolate_)
-    {
-    }
-
-    v8::Isolate* Get() override
-    {
-      return isolate;
-    }
-
-  private:
-    V8IsolateHolder(const V8IsolateHolder&);
-    V8IsolateHolder& operator=(const V8IsolateHolder&);
-
-    v8::Isolate* isolate;
-};
-
 static void TransformAppInfo(JNIEnv* env, jobject jAppInfo, AdblockPlus::AppInfo& appInfo)
 {
   jclass clazz = env->GetObjectClass(jAppInfo);
@@ -92,16 +69,17 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
   delete JniLongToTypePtr<JniPlatform>(ptr);
 }
 
-static void JNICALL JniSetUpJsEngine(JNIEnv* env, jclass clazz, jlong ptr, jobject jAppInfo, jlong v8IsolatePtr)
+static void JNICALL JniSetUpJsEngine(JNIEnv* env, jclass clazz,
+                                     jlong ptr, jobject jAppInfo, jlong v8IsolateProviderPtr)
 {
   try
   {
     AdblockPlus::AppInfo appInfo;
     TransformAppInfo(env, jAppInfo, appInfo);
     std::unique_ptr<AdblockPlus::IV8IsolateProvider> isolateProvider;
-    if (v8IsolatePtr)
+    if (v8IsolateProviderPtr)
     {
-      isolateProvider.reset(new V8IsolateHolder(JniLongToTypePtr<v8::Isolate>(v8IsolatePtr)));
+      isolateProvider.reset(JniLongToTypePtr<AdblockPlus::IV8IsolateProvider>(v8IsolateProviderPtr));
     }
 
     GetPlatformRef(ptr).SetUpJsEngine(appInfo, std::move(isolateProvider));
