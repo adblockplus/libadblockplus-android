@@ -29,4 +29,21 @@ android {
       jni.srcDirs = ['jni']
     }
   }
+
+  def sharedV8LibFiles = System.getenv('SHARED_V8_LIB_FILENAMES')
+  if (sharedV8LibFiles != null) {
+    def sharedV8LibFilesSet = []
+    def sharedV8LibFilesArray = sharedV8LibFiles.split(' ')
+    sharedV8LibFilesArray.each { eachFileName ->
+      sharedV8LibFilesSet.add("**/" + eachFileName)
+      println "[Configuration] Excluding shared v8 library " + eachFileName + " from AAR"
+    }
+
+    packagingOptions {
+      excludes = sharedV8LibFilesSet
+    }
+  } else {
+    println "[Configuration] No shared v8 libraries excluded from AAR"
+  }
+
 }
