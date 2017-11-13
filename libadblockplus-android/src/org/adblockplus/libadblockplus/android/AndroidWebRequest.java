@@ -128,73 +128,78 @@ public class AndroidWebRequest implements WebRequest
       connection.connect();
 
       final ServerResponse response = new ServerResponse();
-      response.setResponseStatus(connection.getResponseCode());
-
-      if (response.getResponseStatus() == 200)
+      try
       {
-        final InputStream inputStream =
-          (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding())
-            ? new GZIPInputStream(connection.getInputStream())
-            : connection.getInputStream());
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-        final StringBuilder sb = new StringBuilder();
+        response.setResponseStatus(connection.getResponseCode());
 
-        String line;
-        try
+        if (response.getResponseStatus() == 200)
         {
-          while ((line = reader.readLine()) != null)
-          {
-            // We're only appending non-element-hiding filters here.
-            //
-            // See:
-            //      https://issues.adblockplus.org/ticket/303
-            //
-            // Follow-up issue for removing this hack:
-            //      https://issues.adblockplus.org/ticket/1541
-            //
-            if (this.elemhideEnabled || !isListedSubscriptionUrl(url) || line.indexOf('#') == -1)
-            {
-              sb.append(line);
-              sb.append('\n');
-            }
-          }
-        }
-        finally
-        {
+          final InputStream inputStream =
+            (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding())
+              ? new GZIPInputStream(connection.getInputStream())
+              : connection.getInputStream());
+          final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+          final StringBuilder sb = new StringBuilder();
+
+          String line;
           try
           {
-            reader.close();
-          }
-          catch (IOException e)
-          {
-            // ignored
-          }
-        }
-
-        response.setStatus(NsStatus.OK);
-        response.setResponse(sb.toString());
-
-        if (connection.getHeaderFields().size() > 0)
-        {
-          List<HeaderEntry> responseHeaders = new LinkedList<HeaderEntry>();
-          for (Map.Entry<String, List<String>> eachEntry : connection.getHeaderFields().entrySet())
-          {
-            for (String eachValue : eachEntry.getValue())
+            while ((line = reader.readLine()) != null)
             {
-              if (eachEntry.getKey() != null && eachValue != null)
+              // We're only appending non-element-hiding filters here.
+              //
+              // See:
+              //      https://issues.adblockplus.org/ticket/303
+              //
+              // Follow-up issue for removing this hack:
+              //      https://issues.adblockplus.org/ticket/1541
+              //
+              if (this.elemhideEnabled || !isListedSubscriptionUrl(url) || line.indexOf('#') == -1)
               {
-                responseHeaders.add(new HeaderEntry(eachEntry.getKey().toLowerCase(), eachValue));
+                sb.append(line);
+                sb.append('\n');
               }
             }
           }
-          response.setReponseHeaders(responseHeaders);
-        }
+          finally
+          {
+            try
+            {
+              reader.close();
+            }
+            catch (IOException e)
+            {
+              // ignored
+            }
+          }
 
-        connection.disconnect();
+          response.setStatus(NsStatus.OK);
+          response.setResponse(sb.toString());
+
+          if (connection.getHeaderFields().size() > 0)
+          {
+            List<HeaderEntry> responseHeaders = new LinkedList<HeaderEntry>();
+            for (Map.Entry<String, List<String>> eachEntry : connection.getHeaderFields().entrySet())
+            {
+              for (String eachValue : eachEntry.getValue())
+              {
+                if (eachEntry.getKey() != null && eachValue != null)
+                {
+                  responseHeaders.add(new HeaderEntry(eachEntry.getKey().toLowerCase(), eachValue));
+                }
+              }
+            }
+            response.setReponseHeaders(responseHeaders);
+          }
+        }
+        else
+        {
+          response.setStatus(NsStatus.ERROR_FAILURE);
+        }
       }
-      else
+      finally
       {
-        response.setStatus(NsStatus.ERROR_FAILURE);
+        connection.disconnect();
       }
       Log.d(TAG, "Downloading finished");
       return response;
