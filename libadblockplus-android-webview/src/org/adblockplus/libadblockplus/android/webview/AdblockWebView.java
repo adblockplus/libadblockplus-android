@@ -275,6 +275,20 @@ public class AdblockWebView extends WebView
     @Override
     public void onReceivedTitle(WebView view, String title)
     {
+    
+      // addDomListener is changed to 'false' in `setAddDomListener` invoked from injected JS
+      if (getAddDomListener() && loadError == null && injectJs != null)
+      {
+        d("Injecting script");
+        runScript(injectJs);
+
+        if (allowDraw && loading)
+        {
+          startPreventDrawing();
+        }
+      }
+      
+      
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onReceivedTitle(view, title);
@@ -557,17 +571,7 @@ public class AdblockWebView extends WebView
     {
       d("Loading progress=" + newProgress + "%");
 
-      // addDomListener is changed to 'false' in `setAddDomListener` invoked from injected JS
-      if (getAddDomListener() && loadError == null && injectJs != null)
-      {
-        d("Injecting script");
-        runScript(injectJs);
-
-        if (allowDraw && loading)
-        {
-          startPreventDrawing();
-        }
-      }
+      
 
       // workaround for the issue: https://issues.adblockplus.org/ticket/5303
       if (newProgress == 100 && !allowDraw)
