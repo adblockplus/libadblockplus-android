@@ -9,9 +9,39 @@ android {
     targetSdkVersion 16
     versionCode 1
     versionName "1.0"
+  }
 
-    ndk {
-      abiFilters 'armeabi-v7a', 'x86'
+  publishNonDefault true
+
+  productFlavors {
+    abi_arm {
+      ndk {
+        abiFilters "armeabi-v7a"
+      }
+
+      externalNativeBuild {
+        ndkBuild {
+          arguments "APP_ABI=armeabi-v7a"
+        }
+      }
+    }
+
+    abi_x86 {
+      ndk {
+        abiFilters "x86"
+      }
+
+      externalNativeBuild {
+        ndkBuild {
+          arguments "APP_ABI=x86"
+        }
+      }
+    }
+
+    abi_all {
+      ndk {
+        abiFilters 'armeabi-v7a', 'x86'
+      }
     }
   }
 

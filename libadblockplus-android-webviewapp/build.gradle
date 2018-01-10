@@ -40,7 +40,6 @@ android {
     }
 }
 
-
 dependencies {
     compile project(':libadblockplus-android-settings')
     compile project(':libadblockplus-android-webview')

@@ -21,7 +21,7 @@ android {
 
       jni {
         dependencies {
-          project ":libadblockplus-android"
+          project(path: ":libadblockplus-android", configuration: getAbiFlavor() + "Debug")
         }
       }
     }
@@ -29,5 +29,6 @@ android {
 }
 
 dependencies {
-    compile project(':libadblockplus-android')
+  debugCompile project("path": ':libadblockplus-android', "configuration": getAbiFlavor() + "Debug")
+  releaseCompile project("path": ':libadblockplus-android', "configuration": getAbiFlavor() + "Release")
 }
