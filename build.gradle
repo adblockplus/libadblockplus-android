@@ -9,6 +9,14 @@ buildscript {
   }
 }
 
+def gradleBuildDir = System.getenv('GRADLE_BUILD_DIR')
+if (gradleBuildDir != null) {
+  println "[Configuration] Building project in ${gradleBuildDir}"
+  allprojects {
+    buildDir = "${gradleBuildDir}/${project.name}"
+  }
+}
+
 subprojects {
   task listAllDependencies(type: DependencyReportTask) {}
 }

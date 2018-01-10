@@ -91,6 +91,20 @@ An app that uses the library have to add the following permissions to `AndroidMa
 
 (added automatically if building with Gradle or should be added manually otherwise).
 
+### Build directory configuration
+
+By default Gradle uses `build` directory to build modules, however it can be undesired
+for some use cases like CI or building as Chromium submodule.
+Set `GRADLE_BUILD_DIR` environment variable to configure build directory:
+
+    GRADLE_BUILD_DIR=/tmp ./gradlew clean assemble
+
+Note
+
+    [Configuration] Building project in /tmp
+
+output while building
+
 ## Library tests
 
 Android tests for the library.
