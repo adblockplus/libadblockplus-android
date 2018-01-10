@@ -129,7 +129,10 @@ Note
     [Configuration] Linking dynamically with shared v8 library ./libadblockplus-binaries/android_armeabi-v7a/libv8.cr.so
     ...
 
-output while building. 
+output while building.
+
+Set `SHARED_V8_LIB_DIR` environment variable as full absolute path to pass
+specific directory instead of default one (`libadblockplus-android/jni/libadblockplus-binaries`).
 
 ## Library tests
 

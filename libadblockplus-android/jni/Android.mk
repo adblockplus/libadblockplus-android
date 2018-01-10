@@ -1,5 +1,16 @@
 LOCAL_PATH := $(call my-dir)
 
+# SHARED_V8_LIB_DIR is expected to be full absolute path if set by user
+ifeq ($(SHARED_V8_LIB_DIR),)
+  # default
+  SHARED_V8_LIB_DIR := ./libadblockplus-binaries
+  SHARED_V8_INCLUDE_DIR := jni/libadblockplus-binaries/include/
+else
+  # set by user
+  $(info [Configuration] Using shared v8 libraries directory $(SHARED_V8_LIB_DIR))
+  SHARED_V8_INCLUDE_DIR := $(SHARED_V8_LIB_DIR)/include/
+endif
+
 # Report configuration
 ifeq ($(SHARED_V8_LIB_FILENAMES),)
 # static
@@ -8,7 +19,7 @@ else
 # dynamic
 
 define info_define
-    $(info [Configuration] Linking dynamically with shared v8 library ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/$1)
+    $(info [Configuration] Linking dynamically with shared v8 library $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/$1)
 endef
 $(foreach item,$(SHARED_V8_LIB_FILENAMES),$(eval $(call info_define,$(item))))
 endif
@@ -17,7 +28,7 @@ endif
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := libadblockplus
-LOCAL_SRC_FILES := ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/libadblockplus.a
+LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libadblockplus.a
 
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -25,7 +36,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := v8-libplatform
-LOCAL_SRC_FILES := ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/libv8_libplatform.a
+LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_libplatform.a
 
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -36,7 +47,7 @@ ifeq ($(SHARED_V8_LIB_FILENAMES),)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := v8-libsampler
-LOCAL_SRC_FILES := ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/libv8_libsampler.a
+LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_libsampler.a
 
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -44,7 +55,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := v8-base
-LOCAL_SRC_FILES := ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/libv8_base.a
+LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_base.a
 
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -52,7 +63,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := v8-libbase
-LOCAL_SRC_FILES := ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/libv8_libbase.a
+LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_libbase.a
 
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -60,7 +71,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := v8-snapshot
-LOCAL_SRC_FILES := ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/libv8_snapshot.a
+LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_snapshot.a
 
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -73,7 +84,7 @@ define libv8_define
     include $(CLEAR_VARS)
 
     LOCAL_MODULE := $1
-    LOCAL_SRC_FILES := ./libadblockplus-binaries/android_$(TARGET_ARCH_ABI)/$1
+    LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/$1
 
     include $(PREBUILT_SHARED_LIBRARY)
 endef
@@ -97,7 +108,7 @@ LOCAL_SRC_FILES += JniIsAllowedConnectionTypeCallback.cpp
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS += -std=c++11
 
-LOCAL_C_INCLUDES := jni/libadblockplus-binaries/include/
+LOCAL_C_INCLUDES := $(SHARED_V8_INCLUDE_DIR)
 
 LOCAL_STATIC_LIBRARIES := libadblockplus v8-libplatform
 
