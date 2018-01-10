@@ -105,6 +105,9 @@ Note
 
 output while building
 
+Set `SHARED_V8_LIB_DIR` environment variable as full absolute path to pass
+specific directory instead of default one (`libadblockplus-android/jni/libadblockplus-binaries`).
+
 ## Library tests
 
 Android tests for the library.
