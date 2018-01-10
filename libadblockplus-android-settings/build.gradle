@@ -21,16 +21,15 @@ android {
 
             jni {
                 dependencies {
-                    project ":libadblockplus-android"
+                    project(path: ":libadblockplus-android", configuration: getAbiFlavor() + "Debug")
                 }
             }
         }
     }
 }
 
-
-
 dependencies {
-    compile project(':libadblockplus-android')
+    debugCompile project("path": ':libadblockplus-android', "configuration": getAbiFlavor() + "Debug")
+    releaseCompile project("path": ':libadblockplus-android', "configuration": getAbiFlavor() + "Release")
     compile 'com.android.support:support-v4:21.0.3'
 }

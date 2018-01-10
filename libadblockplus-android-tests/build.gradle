@@ -36,7 +36,7 @@ android {
 
       jni {
         dependencies {
-          project ":libadblockplus-android"
+          project(path: ":libadblockplus-android", configuration: getAbiFlavor() + "Debug")
         }
       }
     }
@@ -44,7 +44,7 @@ android {
 }
 
 dependencies {
-  androidTestCompile project(':libadblockplus-android')
+  androidTestCompile project(path: ':libadblockplus-android', configuration: getAbiFlavor() + "Debug")
   androidTestCompile project(':libadblockplus-android-settings')
   androidTestCompile fileTree(include: ['*.jar'], dir: 'libs')
 

@@ -134,6 +134,22 @@ output while building.
 Set `SHARED_V8_LIB_DIR` environment variable as full absolute path to pass
 specific directory instead of default one (`libadblockplus-android/jni/libadblockplus-binaries`).
 
+### Building for single ARCH
+
+By default libadblockplus-android is built for both ARM and x86 and it can be filtered when
+building end-user android application. However sometimes it can be desired to build
+"libadblockplus-android.aar" for single ARCH.
+
+Pass `abi_arm` or `abi_x86` to build it for single arch or `abi_all` for all ARCHs:
+
+    `./gradlew clean assembleAbi_arm`
+    
+Note
+
+    [Configuration] Using libadblockplus-android ABI flavor: abi_arm
+    
+output while building.
+
 ## Library tests
 
 Android tests for the library.
