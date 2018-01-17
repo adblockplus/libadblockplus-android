@@ -973,11 +973,13 @@ public class AdblockWebView extends WebView
   {
     private String selectorsString;
     private CountDownLatch finishedLatch;
+    private AtomicBoolean isFinished;
     private AtomicBoolean isCancelled;
 
     public ElemHideThread(CountDownLatch finishedLatch)
     {
       this.finishedLatch = finishedLatch;
+      isFinished = new AtomicBoolean(false);
       isCancelled = new AtomicBoolean(false);
     }
 
@@ -1028,13 +1030,13 @@ public class AdblockWebView extends WebView
       }
       finally
       {
-        if (!isCancelled.get())
+        if (isCancelled.get())
         {
-          finish(selectorsString);
+          w("This thread is cancelled, exiting silently " + this);
         }
         else
         {
-          w("This thread is cancelled, exiting silently " + this);
+          finish(selectorsString);
         }
       }
     }
@@ -1053,6 +1055,7 @@ public class AdblockWebView extends WebView
 
     private void finish(String result)
     {
+      isFinished.set(true);
       d("Setting elemhide string " + result.length() + " bytes");
       elemHideSelectorsString = result;
       onFinished();
@@ -1072,9 +1075,15 @@ public class AdblockWebView extends WebView
     public void cancel()
     {
       w("Cancelling elemhide thread " + this);
-      isCancelled.set(true);
-
-      finish(EMPTY_ELEMHIDE_ARRAY_STRING);
+      if (isFinished.get())
+      {
+        w("This thread is finished, exiting silently " + this);
+      }
+      else
+      {
+        isCancelled.set(true);
+        finish(EMPTY_ELEMHIDE_ARRAY_STRING);
+      }
     }
   }
 
