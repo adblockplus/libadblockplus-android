@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.android.settings;
 
+import org.adblockplus.libadblockplus.android.ConnectionType;
 import org.adblockplus.libadblockplus.android.Subscription;
 
 import java.io.Serializable;

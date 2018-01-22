@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.content.SharedPreferences;
 
+import org.adblockplus.libadblockplus.android.ConnectionType;
 import org.adblockplus.libadblockplus.android.Subscription;
 
 import java.util.LinkedList;

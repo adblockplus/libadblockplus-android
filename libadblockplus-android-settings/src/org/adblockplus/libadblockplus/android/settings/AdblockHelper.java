@@ -19,17 +19,12 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
 import android.util.Log;
 
-import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.AndroidWebRequestResourceWrapper;
+import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
+import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
-
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * AdblockHelper shared resources
@@ -50,23 +45,47 @@ public class AdblockHelper
   public static final String PRELOAD_PREFERENCE_NAME = "ADBLOCK_PRELOAD";
   private static AdblockHelper _instance;
 
-  private Context context;
-  private String basePath;
-  private boolean developmentBuild;
-  private String settingsPreferenceName;
-  private String preloadedPreferenceName;
-  private Map<String, Integer> urlToResourceIdMap;
-  private AdblockEngine engine;
+  private SingleInstanceEngineProvider provider;
   private AdblockSettingsStorage storage;
-  private CountDownLatch engineCreated;
-  private Long v8IsolateProviderPtr;
 
-  /*
-    Simple ARC management for AdblockEngine
-    Use `retain` and `release`
-   */
+  private final Runnable engineCreatedCallback = new Runnable()
+  {
+    @Override
+    public void run()
+    {
+      AdblockSettings settings = storage.load();
+      if (settings != null)
+      {
+        Log.d(TAG, "Applying saved adblock settings to adblock engine");
+        // apply last saved settings to adblock engine.
+        // all the settings except `enabled` and whitelisted domains list
+        // are saved by adblock engine itself
+        provider.getEngine().setEnabled(settings.isAdblockEnabled());
+        provider.getEngine().setWhitelistedDomains(settings.getWhitelistedDomains());
 
-  private AtomicInteger referenceCounter = new AtomicInteger(0);
+        // allowed connection type is saved by filter engine but we need to override it
+        // as filter engine can be not created when changing
+        String connectionType = (settings.getAllowedConnectionType() != null
+          ? settings.getAllowedConnectionType().getValue()
+          : null);
+        provider.getEngine().getFilterEngine().setAllowedConnectionType(connectionType);
+      }
+      else
+      {
+        Log.w(TAG, "No saved adblock settings");
+      }
+    }
+  };
+
+  private final Runnable engineDisposedCallback = new Runnable()
+  {
+    @Override
+    public void run()
+    {
+      Log.d(TAG, "Releasing adblock settings storage");
+      storage = null;
+    }
+  };
 
   // singleton
   protected AdblockHelper()
@@ -88,13 +107,21 @@ public class AdblockHelper
     return _instance;
   }
 
-  public AdblockEngine getEngine()
+  public AdblockEngineProvider getProvider()
   {
-    return engine;
+    if (provider == null)
+    {
+      throw new IllegalStateException("Usage exception: call init(...) first");
+    }
+    return provider;
   }
 
   public AdblockSettingsStorage getStorage()
   {
+    if (storage == null)
+    {
+      throw new IllegalStateException("Usage exception: call init(...) first");
+    }
     return storage;
   }
 
@@ -110,209 +137,73 @@ public class AdblockHelper
    * @param developmentBuild debug or release?
    * @param preferenceName Shared Preferences name to store adblock settings
    */
-  public AdblockHelper init(Context context, String basePath,
-                            boolean developmentBuild, String preferenceName)
+  public SingleInstanceEngineProvider init(Context context, String basePath,
+                                           boolean developmentBuild, String preferenceName)
   {
-    this.context = context.getApplicationContext();
-    this.basePath = basePath;
-    this.developmentBuild = developmentBuild;
-    this.settingsPreferenceName = preferenceName;
-    return this;
+    initProvider(context, basePath, developmentBuild);
+    initStorage(context, preferenceName);
+    return provider;
   }
 
-  /**
-   * Use preloaded subscriptions
-   * @param preferenceName Shared Preferences name to store intercepted requests stats
-   * @param urlToResourceIdMap
-   */
-  public AdblockHelper preloadSubscriptions(String preferenceName, Map<String, Integer> urlToResourceIdMap)
+  private void initProvider(Context context, String basePath, boolean developmentBuild)
   {
-    this.preloadedPreferenceName = preferenceName;
-    this.urlToResourceIdMap = urlToResourceIdMap;
-    return this;
+    provider = new SingleInstanceEngineProvider(context, basePath, developmentBuild);
+    provider.setEngineCreatedCallback(engineCreatedCallback);
+    provider.setEngineDisposedCallback(engineDisposedCallback);
   }
 
-  public AdblockHelper useV8IsolateProvider(long ptr)
+  private void initStorage(Context context, String settingsPreferenceName)
   {
-    this.v8IsolateProviderPtr = ptr;
-    return this;
-  }
-
-  private void createAdblock()
-  {
-    ConnectivityManager connectivityManager =
-      (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    IsAllowedConnectionCallback isAllowedConnectionCallback = new IsAllowedConnectionCallbackImpl(connectivityManager);
-
-    Log.d(TAG, "Creating adblock engine ...");
-
     // read and apply current settings
     SharedPreferences settingsPrefs = context.getSharedPreferences(
       settingsPreferenceName,
       Context.MODE_PRIVATE);
+
     storage = new SharedPrefsStorage(settingsPrefs);
-
-    AdblockEngine.Builder builder = AdblockEngine
-      .builder(
-        AdblockEngine.generateAppInfo(context, developmentBuild),
-        basePath)
-      .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
-      .enableElementHiding(true);
-
-    if (v8IsolateProviderPtr != null)
-    {
-      builder.useV8IsolateProvider(v8IsolateProviderPtr);
-    }
-
-    // if preloaded subscriptions provided
-    if (preloadedPreferenceName != null)
-    {
-      SharedPreferences preloadedSubscriptionsPrefs = context.getSharedPreferences(
-        preloadedPreferenceName,
-        Context.MODE_PRIVATE);
-      builder.preloadSubscriptions(
-        context,
-        urlToResourceIdMap,
-        new AndroidWebRequestResourceWrapper.SharedPrefsStorage(preloadedSubscriptionsPrefs));
-    }
-
-    engine = builder.build();
-
-    Log.d(TAG, "AdblockHelper engine created");
-
-    AdblockSettings settings = storage.load();
-    if (settings != null)
-    {
-      Log.d(TAG, "Applying saved adblock settings to adblock engine");
-      // apply last saved settings to adblock engine
-
-      // all the settings except `enabled` and whitelisted domains list
-      // are saved by adblock engine itself
-      engine.setEnabled(settings.isAdblockEnabled());
-      engine.setWhitelistedDomains(settings.getWhitelistedDomains());
-
-      // allowed connection type is saved by filter engine but we need to override it
-      // as filter engine can be not created when changing
-      String connectionType = (settings.getAllowedConnectionType() != null
-       ? settings.getAllowedConnectionType().getValue()
-       : null);
-      engine.getFilterEngine().setAllowedConnectionType(connectionType);
-    }
-    else
-    {
-      Log.w(TAG, "No saved adblock settings");
-    }
   }
 
   /**
-   * Wait until everything is ready (used for `retain(true)`)
-   * Warning: locks current thread
+   * @deprecated The method is deprecated: use .getProvider().retain() instead
    */
+  @Deprecated
+  public boolean retain(boolean asynchronous)
+  {
+    return provider.retain(asynchronous);
+  }
+
+  /**
+   * @deprecated The method is deprecated: use .getProvider().waitForReady() instead
+   */
+  @Deprecated
   public void waitForReady()
   {
-    if (engineCreated == null)
-    {
-      throw new RuntimeException("AdblockHelper Plus usage exception: call retain(true) first");
-    }
-
-    try
-    {
-      Log.d(TAG, "Waiting for ready ...");
-      engineCreated.await();
-      Log.d(TAG, "Ready");
-    }
-    catch (InterruptedException e)
-    {
-      Log.w(TAG, "Interrupted", e);
-    }
-  }
-
-  private void disposeAdblock()
-  {
-    Log.w(TAG, "Disposing adblock engine");
-
-    engine.dispose();
-    engine = null;
-
-    storage = null;
+    provider.waitForReady();
   }
 
   /**
-   * Get registered clients count
-   * @return registered clients count
+   * @deprecated The method is deprecated: use .getProvider().getEngine() instead
    */
+  @Deprecated
+  public AdblockEngine getEngine()
+  {
+    return provider.getEngine();
+  }
+
+  /**
+   * @deprecated The method is deprecated: use .getProvider().release() instead
+   */
+  @Deprecated
+  public boolean release()
+  {
+    return provider.release();
+  }
+
+  /**
+   * @deprecated The method is deprecated: use .getProvider().getCounter() instead
+   */
+  @Deprecated
   public int getCounter()
   {
-    return referenceCounter.get();
-  }
-
-  /**
-   * Register AdblockHelper engine client
-   * @param asynchronous If `true` engines will be created in background thread without locking of
-   *                     current thread. Use waitForReady() before getEngine() later.
-   *                     If `false` locks current thread.
-   * @return if a new instance is allocated
-   */
-  public synchronized boolean retain(boolean asynchronous)
-  {
-    boolean firstInstance = false;
-
-    if (referenceCounter.getAndIncrement() == 0)
-    {
-      firstInstance = true;
-
-      if (!asynchronous)
-      {
-        createAdblock();
-      }
-      else
-      {
-        // latch is required for async (see `waitForReady()`)
-        engineCreated = new CountDownLatch(1);
-
-        new Thread(new Runnable()
-        {
-          @Override
-          public void run()
-          {
-            createAdblock();
-
-            // unlock waiting client thread
-            engineCreated.countDown();
-          }
-        }).start();
-      }
-    }
-    return firstInstance;
-  }
-
-  /**
-   * Unregister AdblockHelper engine client
-   * @return `true` if the last instance is destroyed
-   */
-  public synchronized boolean release()
-  {
-    boolean lastInstance = false;
-
-    if (referenceCounter.decrementAndGet() == 0)
-    {
-      lastInstance = true;
-
-      if (engineCreated != null)
-      {
-        // retained asynchronously
-        waitForReady();
-        disposeAdblock();
-
-        // to unlock waiting client in waitForReady()
-        engineCreated.countDown();
-        engineCreated = null;
-      }
-      else
-      {
-        disposeAdblock();
-      }
-    }
-    return lastInstance;
+    return provider.getCounter();
   }
 }

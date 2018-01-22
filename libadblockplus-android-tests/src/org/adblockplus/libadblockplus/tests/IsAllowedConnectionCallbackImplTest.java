@@ -20,8 +20,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.test.InstrumentationTestCase;
 
-import org.adblockplus.libadblockplus.android.settings.ConnectionType;
-import org.adblockplus.libadblockplus.android.settings.IsAllowedConnectionCallbackImpl;
+import org.adblockplus.libadblockplus.android.ConnectionType;
+import org.adblockplus.libadblockplus.android.IsAllowedConnectionCallbackImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
