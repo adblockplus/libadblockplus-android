@@ -48,6 +48,8 @@ import android.webkit.WebViewClient;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
+import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
 
 import java.io.IOException;
@@ -95,8 +97,7 @@ public class AdblockWebView extends WebView
   private volatile boolean addDomListener = true;
   private boolean adblockEnabled = true;
   private boolean debugMode;
-  private AdblockEngine adblockEngine;
-  private boolean disposeEngine;
+  private AdblockEngineProvider provider;
   private Integer loadError;
   private int allowDrawDelay = ALLOW_DRAW_DELAY;
   private WebChromeClient extWebChromeClient;
@@ -184,6 +185,7 @@ public class AdblockWebView extends WebView
 
   /**
    * Set to true to see debug log output int AdblockWebView and JS console
+   * Should be set before first URL loading if using internal AdblockEngineProvider
    * @param debugMode is debug mode
    */
   public void setDebugMode(boolean debugMode)
@@ -232,19 +234,9 @@ public class AdblockWebView extends WebView
     d("runScript finished");
   }
 
-  public AdblockEngine getAdblockEngine()
+  public void setProvider(final AdblockEngineProvider provider)
   {
-    return adblockEngine;
-  }
-
-  /**
-   * Set external adblockEngine. A new (internal) is created automatically if not set
-   * Don't forget to invoke {@link #dispose(Runnable)} later and dispose external adblockEngine
-   * @param adblockEngine external adblockEngine
-   */
-  public void setAdblockEngine(final AdblockEngine adblockEngine)
-  {
-    if (this.adblockEngine != null && adblockEngine != null && this.adblockEngine == adblockEngine)
+    if (this.provider != null && provider != null && this.provider == provider)
     {
       return;
     }
@@ -254,12 +246,15 @@ public class AdblockWebView extends WebView
       @Override
       public void run()
       {
-        AdblockWebView.this.adblockEngine = adblockEngine;
-        AdblockWebView.this.disposeEngine = false;
+        AdblockWebView.this.provider = provider;
+        if (AdblockWebView.this.provider != null)
+        {
+          AdblockWebView.this.provider.retain(true); // asynchronously
+        }
       }
     };
 
-    if (this.adblockEngine != null && disposeEngine)
+    if (this.provider != null)
     {
       // as adblockEngine can be busy with elemhide thread we need to use callback
       this.dispose(setRunnable);
@@ -825,7 +820,7 @@ public class AdblockWebView extends WebView
       boolean isXmlHttpRequest, String[] referrerChainArray)
     {
       // if dispose() was invoke, but the page is still loading then just let it go
-      if (adblockEngine == null)
+      if (provider.getCounter() == 0)
       {
         e("FilterEngine already disposed, allow loading");
 
@@ -843,7 +838,7 @@ public class AdblockWebView extends WebView
       }
 
       // whitelisted
-      if (adblockEngine.isDomainWhitelisted(url, referrerChainArray))
+      if (provider.getEngine().isDomainWhitelisted(url, referrerChainArray))
       {
         w(url + " domain is whitelisted, allow loading");
 
@@ -851,7 +846,7 @@ public class AdblockWebView extends WebView
         return null;
       }
 
-      if (adblockEngine.isDocumentWhitelisted(url, referrerChainArray))
+      if (provider.getEngine().isDocumentWhitelisted(url, referrerChainArray))
       {
         w(url + " document is whitelisted, allow loading");
 
@@ -894,7 +889,7 @@ public class AdblockWebView extends WebView
       }
 
       // check if we should block
-      if (adblockEngine.matches(url, contentType, referrerChainArray))
+      if (provider.getEngine().matches(url, contentType, referrerChainArray))
       {
         w("Blocked loading " + url);
 
@@ -956,19 +951,6 @@ public class AdblockWebView extends WebView
     applyAdblockEnabled();
   }
 
-  private void createAdblockEngine()
-  {
-    w("Creating AdblockEngine");
-
-    // assuming `this.debugMode` can be used as `developmentBuild` value
-    adblockEngine = AdblockEngine
-      .builder(
-        AdblockEngine.generateAppInfo(this.getContext(), debugMode),
-        this.getContext().getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath())
-      .enableElementHiding(true)
-      .build();
-  }
-
   private class ElemHideThread extends Thread
   {
     private String selectorsString;
@@ -988,7 +970,7 @@ public class AdblockWebView extends WebView
     {
       try
       {
-        if (adblockEngine == null)
+        if (provider.getCounter() == 0)
         {
           w("FilterEngine already disposed");
           selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
@@ -1000,7 +982,11 @@ public class AdblockWebView extends WebView
               url
             };
 
-          List<Subscription> subscriptions = adblockEngine.getFilterEngine().getListedSubscriptions();
+          List<Subscription> subscriptions = provider
+            .getEngine()
+            .getFilterEngine()
+            .getListedSubscriptions();
+
           try
           {
             d("Listed subscriptions: " + subscriptions.size());
@@ -1023,7 +1009,10 @@ public class AdblockWebView extends WebView
           }
 
           d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
-          List<String> selectors = adblockEngine.getElementHidingSelectors(url, domain, referrers);
+          List<String> selectors = provider
+            .getEngine()
+            .getElementHidingSelectors(url, domain, referrers);
+
           d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
           selectorsString = Utils.stringListToJsonArray(selectors);
         }
@@ -1104,11 +1093,17 @@ public class AdblockWebView extends WebView
   {
     getSettings().setJavaScriptEnabled(true);
     buildInjectJs();
+    ensureProvider();
+  }
 
-    if (adblockEngine == null)
+  private void ensureProvider()
+  {
+    // if AdblockWebView works as drop-in replacement for WebView 'provider' is not set.
+    // Thus AdblockWebView is using SingleInstanceEngineProvider instance
+    if (provider == null)
     {
-      createAdblockEngine();
-      disposeEngine = true;
+      setProvider(new SingleInstanceEngineProvider(
+        getContext(), AdblockEngine.BASE_PATH_DIRECTORY, debugMode));
     }
   }
 
@@ -1122,11 +1117,14 @@ public class AdblockWebView extends WebView
     loadError = null;
     url = newUrl;
 
-    if (url != null && adblockEngine != null)
+    if (url != null)
     {
       try
       {
-        domain = adblockEngine.getFilterEngine().getHostFromURL(url);
+        d("Waiting for adblock engine");
+        provider.waitForReady();
+
+        domain = provider.getEngine().getFilterEngine().getHostFromURL(url);
         if (domain == null)
         {
           throw new RuntimeException("Failed to extract domain from " + url);
@@ -1389,10 +1387,7 @@ public class AdblockWebView extends WebView
   private void doDispose()
   {
     w("Disposing AdblockEngine");
-    adblockEngine.dispose();
-    adblockEngine = null;
-
-    disposeEngine = false;
+    provider.release();
   }
 
   private class DisposeRunnable implements Runnable
@@ -1407,10 +1402,7 @@ public class AdblockWebView extends WebView
     @Override
     public void run()
     {
-      if (disposeEngine)
-      {
-        doDispose();
-      }
+      doDispose();
 
       if (disposeFinished != null)
       {
@@ -1429,13 +1421,13 @@ public class AdblockWebView extends WebView
   {
     d("Dispose invoked");
 
-    stopLoading();
-
-    removeJavascriptInterface(BRIDGE);
-    if (!disposeEngine)
+    if (provider == null)
     {
-      adblockEngine = null;
+      d("No internal AdblockEngineProvider created");
+      return;
     }
+
+    stopLoading();
 
     DisposeRunnable disposeRunnable = new DisposeRunnable(disposeFinished);
     synchronized (elemHideThreadLockObject)

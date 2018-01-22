@@ -25,6 +25,7 @@ import android.preference.Preference;
 import android.preference.SwitchPreference;
 import android.util.Log;
 
+import org.adblockplus.libadblockplus.android.ConnectionType;
 import org.adblockplus.libadblockplus.android.Subscription;
 
 import java.util.HashSet;

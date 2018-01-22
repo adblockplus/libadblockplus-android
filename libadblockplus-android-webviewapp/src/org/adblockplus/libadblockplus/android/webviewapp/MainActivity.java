@@ -40,9 +40,6 @@ public class MainActivity extends Activity
   // webView can create AdblockEngine instance itself if not passed with `webView.setAdblockEngine()`
   public static final boolean USE_EXTERNAL_ADBLOCKENGINE = true;
 
-  // adblock retain() may be long-running, pass `true` to do it in background thread
-  public static final boolean ADBLOCKENGINE_RETAIN_ASYNC = true;
-
   private ProgressBar progress;
   private EditText url;
   private Button ok;
@@ -201,13 +198,8 @@ public class MainActivity extends Activity
   {
     if (USE_EXTERNAL_ADBLOCKENGINE)
     {
-      // external adblockEngine
-      AdblockHelper.get().retain(ADBLOCKENGINE_RETAIN_ASYNC);
-
-      if (!ADBLOCKENGINE_RETAIN_ASYNC)
-      {
-        webView.setAdblockEngine(AdblockHelper.get().getEngine());
-      }
+      // external AdblockEngine
+      webView.setProvider(AdblockHelper.get().getProvider());
     }
     else
     {
@@ -251,30 +243,13 @@ public class MainActivity extends Activity
   private void loadUrl()
   {
     hideSoftwareKeyboard();
-
-    // if retained with `true` we need to make sure it's ready now
-    if (USE_EXTERNAL_ADBLOCKENGINE && ADBLOCKENGINE_RETAIN_ASYNC)
-    {
-      AdblockHelper.get().waitForReady();
-      webView.setAdblockEngine(AdblockHelper.get().getEngine());
-    }
     webView.loadUrl(prepareUrl(url.getText().toString()));
   }
 
   @Override
   protected void onDestroy()
   {
-    webView.dispose(new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        if (USE_EXTERNAL_ADBLOCKENGINE)
-        {
-          AdblockHelper.get().release();
-        }
-      }
-    });
+    webView.dispose(null);
 
     super.onDestroy();
   }

@@ -43,7 +43,9 @@ public class SettingsActivity
   protected void onCreate(Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
-    AdblockHelper.get().retain(MainActivity.ADBLOCKENGINE_RETAIN_ASYNC);
+
+    // retaining AdblockEngine asynchronously
+    AdblockHelper.get().getProvider().retain(true);
 
     insertGeneralFragment();
   }
@@ -75,8 +77,8 @@ public class SettingsActivity
   public AdblockEngine getAdblockEngine()
   {
     // if it's retained asynchronously we have to wait until it's ready
-    AdblockHelper.get().waitForReady();
-    return AdblockHelper.get().getEngine();
+    AdblockHelper.get().getProvider().waitForReady();
+    return AdblockHelper.get().getProvider().getEngine();
   }
 
   @Override
@@ -112,6 +114,6 @@ public class SettingsActivity
   protected void onDestroy()
   {
     super.onDestroy();
-    AdblockHelper.get().release();
+    AdblockHelper.get().getProvider().release();
   }
 }

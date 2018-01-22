@@ -15,7 +15,7 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.settings;
+package org.adblockplus.libadblockplus.android;
 
 import android.net.ConnectivityManager;
 
@@ -39,7 +39,7 @@ public enum ConnectionType {
     {
       return
         manager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI &&
-        !manager.isActiveNetworkMetered();
+        !manager.isActiveNetworkMetered(); // make minSdkVersion 16
     }
   },
 

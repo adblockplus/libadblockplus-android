@@ -15,14 +15,13 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.settings;
+package org.adblockplus.libadblockplus.android;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
-import org.adblockplus.libadblockplus.android.Utils;
 
 public class IsAllowedConnectionCallbackImpl extends IsAllowedConnectionCallback
 {
