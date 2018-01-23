@@ -219,14 +219,16 @@ You can find it in the 'libadblockplus-android-settings' directory:
 
 ### Usage
 
-Create `AdblockEngine` instance with factory methods and `AdblockSettingsStorage` instance.
+Create `AdblockEngineProvider` instance and `AdblockSettingsStorage` instance.
 You can use `SharedPrefsStorage` implementation to store settings in `SharedPreferences`.
 Or you can use AdblockHelper:
 
-    AdblockHelper.get().init(this, getFilesDir().getAbsolutePath(), true, AdblockHelper.PREFERENCE_NAME);
+    AdblockHelper
+      .get()
+      .init(this, getFilesDir().getAbsolutePath(), true, AdblockHelper.PREFERENCE_NAME);
 
-    // optional - provide preloaded subscription files in app resoruces
-    AdblockHelper.get().preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
+      // optional - provide preloaded subscription files in app resoruces
+      .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
 
 Implement the following interfaces in your settings activity:
 
@@ -236,24 +238,24 @@ Implement the following interfaces in your settings activity:
 
 and return created instance or AdblockHelper instances:
 
-    AdblockHelper.get().getEngine();  // engine
+    AdblockHelper.get().getProvider().getEngine();  // engine
     AdblockHelper.get().getStorage(); // storage
 
 Retain Adblock instance in activity `onCreate` in synchronous mode (it may take few seconds):
 
-    AdblockHelper.get().retain(false);
+    AdblockHelper.get().getProvider().retain(false);
 
 or in asynchronous mode (without current thread lock):
 
-    AdblockHelper.get().retain(true);
+    AdblockHelper.get().getProvider().retain(true);
 
 Invoke `waitforReady` every time you need AdblockEngine instance if retained in asynchronous mode:
 
-    AdblockHelper.get().waitForReady();
+    AdblockHelper.get().getProvider().waitForReady();
 
 Release Adblock instance in activity `onDestroy`:
 
-    AdblockHelper.get().release();
+    AdblockHelper.get().getProvider().release();
 
 Insert `GeneralSettingsFragment` fragment instance in runtime to start showing settings UI.
 
@@ -307,8 +309,12 @@ Use `setDebugMode(boolean debugMode)` to turn debug log output (Android log and 
 
 Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start render webpage after 'DOMContentLoaded' event is fired.
 
-Use `setAdblockEngine(AdblockEngine adblockEngine)` to use external adblock engine.
-If adblock engine is not set, it's created by AdblockWebView instance automatically.
+Use `setProvider(AdblockEngineProvider provider)` to use external adblock engine provider.
+The simplest solution is to use `AdblockHelper` from `-settings` as external adblock engine provider:
+
+    webView.setProvider(AdblockHelper.get().getProvider());
+
+If adblock engine provider is not set, it's created by AdblockWebView instance automatically.
 
 Use `dispose(Runnable disposeFinished)` to release resources (**required**).
 Note it can be invoked from background thread.

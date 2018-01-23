@@ -37,7 +37,7 @@ public class MainActivity extends Activity
 {
   public static final boolean DEVELOPMENT_BUILD = true;
 
-  // webView can create AdblockEngine instance itself if not passed with `webView.setAdblockEngine()`
+  // webView can create AdblockEngine instance itself if not passed with `webView.setProvider()`
   public static final boolean USE_EXTERNAL_ADBLOCKENGINE = true;
 
   private ProgressBar progress;
