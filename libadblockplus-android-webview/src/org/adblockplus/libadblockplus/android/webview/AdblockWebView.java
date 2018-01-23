@@ -105,7 +105,6 @@ public class AdblockWebView extends WebView
   private WebViewClient intWebViewClient;
   private Map<String, String> url2Referrer = Collections.synchronizedMap(new HashMap<String, String>());
   private String url;
-  private String domain;
   private String injectJs;
   private CountDownLatch elemHideLatch;
   private String elemHideSelectorsString;
@@ -827,6 +826,10 @@ public class AdblockWebView extends WebView
         // allow loading by returning null
         return null;
       }
+      else
+      {
+        provider.waitForReady();
+      }
 
       if (isMainFrame)
       {
@@ -977,6 +980,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
+          provider.waitForReady();
           String[] referrers = new String[]
             {
               url
@@ -1008,13 +1012,22 @@ public class AdblockWebView extends WebView
             }
           }
 
-          d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
-          List<String> selectors = provider
-            .getEngine()
-            .getElementHidingSelectors(url, domain, referrers);
+          final String domain = provider.getEngine().getFilterEngine().getHostFromURL(url);
+          if (domain == null)
+          {
+            e("Failed to extract domain from " + url);
+            selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+          }
+          else
+          {
+            d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
+            List<String> selectors = provider
+              .getEngine()
+              .getElementHidingSelectors(url, domain, referrers);
 
-          d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
-          selectorsString = Utils.stringListToJsonArray(selectors);
+            d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
+            selectorsString = Utils.stringListToJsonArray(selectors);
+          }
         }
       }
       finally
@@ -1119,24 +1132,6 @@ public class AdblockWebView extends WebView
 
     if (url != null)
     {
-      try
-      {
-        d("Waiting for adblock engine");
-        provider.waitForReady();
-
-        domain = provider.getEngine().getFilterEngine().getHostFromURL(url);
-        if (domain == null)
-        {
-          throw new RuntimeException("Failed to extract domain from " + url);
-        }
-
-        d("Extracted domain " + domain + " from " + url);
-      }
-      catch (Throwable t)
-      {
-        e("Failed to extract domain from " + url, t);
-      }
-
       elemHideLatch = new CountDownLatch(1);
       elemHideThread = new ElemHideThread(elemHideLatch);
       elemHideThread.setFinishedRunnable(elemHideThreadFinishedRunnable);
