@@ -189,7 +189,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
     try
     {
-      Log.d(TAG, "Waiting for ready ...");
+      Log.d(TAG, "Waiting for ready in " + Thread.currentThread());
       engineCreated.await();
       Log.d(TAG, "Ready");
     }
