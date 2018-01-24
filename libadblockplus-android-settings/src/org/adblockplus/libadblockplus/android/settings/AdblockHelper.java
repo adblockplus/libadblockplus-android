@@ -82,8 +82,7 @@ public class AdblockHelper
     @Override
     public void run()
     {
-      Log.d(TAG, "Releasing adblock settings storage");
-      storage = null;
+      Log.d(TAG, "Adblock engine disposed");
     }
   };
 
