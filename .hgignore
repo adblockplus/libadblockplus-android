@@ -3,14 +3,9 @@ syntax: glob
 crowdin.yaml
 **/libs/armeabi*
 **/libs/x86
-**/bin
-**/obj
-**/gen
 **/build
 **/local.properties
-**/ant.properties
 **/buildtools
-**/target
 .idea
 *.iml
 upload.py
