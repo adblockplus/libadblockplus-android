@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Filterlistor</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Lägg till och ta bort språkspecifika filterlistor</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Accepterade annonser</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Vi vill uppmuntra webbplatser att använda enkel, icke påträngande annonsering. Därför har vi upprättat strikta riktlinjer för att identifiera Accepterade annonser, som visas under standardinställningarna. Om du vill surfa annonsfritt kan du när som helst inaktivera den här inställningen.</string>
+  <string name="fragment_adblock_settings_wl_title">Godkända domäner</string>
+  <string name="fragment_adblock_settings_wl_summary">Lägg till webbplatser där du vill se annonser i den här listan</string>
+  <string name="fragment_adblock_settings_add_domain">Lägg till domän</string>
+  <string name="fragment_adblock_settings_wl_domains">Godkända domäner</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Konfigurera automatiska uppdateringar</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Ej övervakade Wi-Fi-nätverk</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Alla Wi-Fi-nätverk</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Alltid</string>
+
+</resources>

@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Filterlister</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Tilføj eller fjern sprogspecifikke filterlister</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Acceptable Ads</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Vi vil gerne opfordre hjemmesider til at bruge ukomplicerede reklamer og reklamer, der ikke er påtrængende. Det er grunden til, at vi har lavet strenge retningslinjer, der skal identificere Acceptable Ads. Disse kan ses under standardindstillinger. Hvis du ønsker at browse internettet uden reklamer, kan du til enhver tid slå denne indstilling fra.</string>
+  <string name="fragment_adblock_settings_wl_title">Domæner på positivlisten</string>
+  <string name="fragment_adblock_settings_wl_summary">Tilføj hjemmesider, du ønsker at se reklamer på, til denne liste</string>
+  <string name="fragment_adblock_settings_add_domain">Tilføj domæne</string>
+  <string name="fragment_adblock_settings_wl_domains">Domæner på positivlisten</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Konfigurer automatisk opdatering</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Wi-fi-netværk uden forbrugsbegrænsning</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Alle wi-fi-netværk</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Altid</string>
+
+</resources>

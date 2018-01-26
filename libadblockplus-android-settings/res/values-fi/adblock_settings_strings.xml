@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Suodatinluettelot</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Lisää tai poista kielikohtaiset suodatinluettelot</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Hyväksyttävät mainokset</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Haluamme kannustaa verkkosivustoja käyttämään yksinkertaista, tunkeilematonta mainontaa. Siksi olemme luoneet tiukat ohjeet hyväksyttävien mainosten tunnistamiseksi, jotka näytetään oletusasetuksissa. Jos haluat selata ilman mainoksia, voit ottaa tämän asetuksen pois käytöstä milloin tahansa.</string>
+  <string name="fragment_adblock_settings_wl_title">Sallittujen toimialueiden luettelo</string>
+  <string name="fragment_adblock_settings_wl_summary">Lisää tähän luetteloon verkkosivustot, joilla haluat nähdä mainoksia</string>
+  <string name="fragment_adblock_settings_add_domain">Lisää toimialue</string>
+  <string name="fragment_adblock_settings_wl_domains">Sallittujen toimialueiden luettelo</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Määritä automaattiset päivitykset</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Muuten kuin käytön mukaan laskutettavat Wi-Fi-verkot</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Kaikki Wi-Fi-verkot</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Aina</string>
+
+</resources>

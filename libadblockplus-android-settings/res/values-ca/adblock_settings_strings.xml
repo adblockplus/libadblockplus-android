@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Llistes de filtres</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Afegiu o suprimiu llistes de filtres específics per idioma</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Anuncis acceptables</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Instem als llocs web a que facin servir publicitat directa i no intrusiva. Per això hem establert directius estrictes per identificar els anuncis acceptables, que podeu trobar a la configuració predeterminada. Si voleu navegar sense anuncis, podeu desactivar aquesta configuració en qualsevol moment.</string>
+  <string name="fragment_adblock_settings_wl_title">Llista blanca de dominis</string>
+  <string name="fragment_adblock_settings_wl_summary">Afegiu a aquesta llista tots els llocs web en què voleu veure anuncis</string>
+  <string name="fragment_adblock_settings_add_domain">Afegeix un domini</string>
+  <string name="fragment_adblock_settings_wl_domains">Llista blanca de dominis</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Configureu les actualitzacions automàtiques</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Xarxes Wi-Fi no limitades</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Totes les xarxes Wi-Fi</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Sempre</string>
+
+</resources>

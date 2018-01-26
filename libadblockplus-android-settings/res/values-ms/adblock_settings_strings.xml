@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Senarai penapis</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Tambah atau buang senarai penapis bahasa tertentu</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Iklan yang boleh diterima</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Kami ingin menggalakkan lama web untuk menggunakan pengiklanan yang jujur dan tidak mengganggu. Itulah sebabnya kami menubuhkan garis panduan ketat untuk mengenal pasti Iklan Boleh Diterima, yang dipaparkan di bawah tetapan lalai. Jika anda ingin melayari bebas iklan, anda boleh menyahdaya tetapan ini pada bila-bila masa.</string>
+  <string name="fragment_adblock_settings_wl_title">Domain disenarai putih</string>
+  <string name="fragment_adblock_settings_wl_summary">Tambah laman web yang anda ingin lihat iklan pada senarai ini</string>
+  <string name="fragment_adblock_settings_add_domain">Tambaha domain</string>
+  <string name="fragment_adblock_settings_wl_domains">Domain disenarai putih</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Konfigurasi kemas kini automatik</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Rangkaian Wi-Fi tidak bermeter</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Semua rangkaian Wi-FI</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Sentiasa</string>
+
+</resources>

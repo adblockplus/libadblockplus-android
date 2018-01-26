@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Přehledy filtrů</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Přidávání nebo odebírání seznamů filtrů pro konkrétní jazyk</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Nerušivé reklamy</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Rádi bychom podpořili webové stránky, aby používaly přímočaré, nerušivé reklamy. Z tohoto důvodu jsme vytvořili přísné směrnice pro identifikaci „přijatelných reklam“, které se zobrazují ve výchozím nastavení. Pokud chcete surfovat bez reklam, můžete toto nastavení kdykoliv zakázat.</string>
+  <string name="fragment_adblock_settings_wl_title">Seznam povolených domén</string>
+  <string name="fragment_adblock_settings_wl_summary">Na tento seznam lze přidávat webové stránky, na kterých chcete vidět reklamy</string>
+  <string name="fragment_adblock_settings_add_domain">Přidat doménu</string>
+  <string name="fragment_adblock_settings_wl_domains">Seznam povolených domén</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Konfigurovat automatické aktualizace</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Neměřené sítě Wi-Fi</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Všechny sítě Wi-Fi</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Vždy</string>
+
+</resources>

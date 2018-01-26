@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">စစ္ထုတ္ထားသည့္စာရင္းမ်ား</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">ဘာသာရပ္ဆိုင္ရာစစ္ထုတ္စာရင္းမ်ားကိုထည့္ပါ သို႔မဟုတ္ ဖယ္ထုတ္ပါ</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">လက္ခံႏုိင္ေသာေၾကာ္ျငာမ်ား</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">ေျဖာင့္မွန္ေသာ၊ အစြန္းထြက္ျခင္းမရွိေသာ ေၾကာ္ျငာကိုအသံုးျပဳရန္ ကၽြႏု္ပ္တို႔ ဝဘ္ဆိုက္ကို တိုက္တြန္းလိုပါသည္။ ပံုေသဆက္တင္မ်ားေအာက္တြင္ ေဖာ္ျပထားသည့္ လက္ခံႏုိင္သည့္ ေၾကာ္ျငာမ်ားကို ေဖာ္ျပရန္ တင္းက်ပ္သည့္လမ္းညႊန္ခ်က္မ်ားကို ထို႔အတြက္ေၾကာင့္ ကၽြႏု္ပ္တုိ႔ ခ်မွတ္ထားသည္။ ေၾကာ္ျငာမပါျခင္းကိုရွာေဖြလိုသည့္အခါ သင္သည္ ထုိဆက္တင္ကို မည္သည့္အခ်ိန္တြင္မဆို ပိတ္ထားႏုိင္သည္။</string>
+  <string name="fragment_adblock_settings_wl_title">အတည္ျပဳထားသည့္ ဒိုမိန္းမ်ား</string>
+  <string name="fragment_adblock_settings_wl_summary">ဤစာရင္းတြင္ ေၾကာ္ျငာမ်ားကိုျမင္ခ်င္သည့္ ဝဘ္ဆိုက္မ်ားကိုထည့္သြင္းပါ</string>
+  <string name="fragment_adblock_settings_add_domain">ডဒိုမိန္းကိုထည့္ပါ</string>
+  <string name="fragment_adblock_settings_wl_domains">အတည္ျပဳထားသည့္ ဒိုမိန္းမ်ား</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">အလိုအေလ်ာက္ျပင္ဆင္ခ်က္မ်ားကိုတပ္ဆင္ပါ</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">မတိုင္းတာထားသည့္ Wi-Fi ကြန္ရက္မ်ား</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Wi-Fi ကြန္ရက္မ်ားအားလံုး</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">အျမဲတမ္း</string>
+
+</resources>
