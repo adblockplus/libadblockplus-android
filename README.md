@@ -123,6 +123,21 @@ Or you can use AdblockHelper:
       // optional - provide preloaded subscription files in app resoruces
       .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
 
+Sometimes it's desired to initialize or deinitialize FilterEngine instance
+when created:
+
+    AdblockHelper
+      .get()
+      .init(...)
+      .addEngineCreatedListener(engineCreatedListener)
+
+or disposed:
+
+    AdblockHelper
+      .get()
+      .init(...)
+      .addEngineDisposedListener(engineDisposedListener)
+
 Implement the following interfaces in your settings activity:
 
 * `BaseSettingsFragment.Provider`
