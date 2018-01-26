@@ -48,10 +48,11 @@ public class AdblockHelper
   private SingleInstanceEngineProvider provider;
   private AdblockSettingsStorage storage;
 
-  private final Runnable engineCreatedCallback = new Runnable()
+  private final SingleInstanceEngineProvider.EngineCreatedListener engineCreatedListener =
+    new SingleInstanceEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void run()
+    public void onAdblockEngineCreated(AdblockEngine engine)
     {
       AdblockSettings settings = storage.load();
       if (settings != null)
@@ -60,15 +61,15 @@ public class AdblockHelper
         // apply last saved settings to adblock engine.
         // all the settings except `enabled` and whitelisted domains list
         // are saved by adblock engine itself
-        provider.getEngine().setEnabled(settings.isAdblockEnabled());
-        provider.getEngine().setWhitelistedDomains(settings.getWhitelistedDomains());
+        engine.setEnabled(settings.isAdblockEnabled());
+        engine.setWhitelistedDomains(settings.getWhitelistedDomains());
 
         // allowed connection type is saved by filter engine but we need to override it
         // as filter engine can be not created when changing
         String connectionType = (settings.getAllowedConnectionType() != null
           ? settings.getAllowedConnectionType().getValue()
           : null);
-        provider.getEngine().getFilterEngine().setAllowedConnectionType(connectionType);
+        engine.getFilterEngine().setAllowedConnectionType(connectionType);
       }
       else
       {
@@ -77,10 +78,11 @@ public class AdblockHelper
     }
   };
 
-  private final Runnable engineDisposedCallback = new Runnable()
+  private final SingleInstanceEngineProvider.EngineDisposedListener engineDisposedListener =
+    new SingleInstanceEngineProvider.EngineDisposedListener()
   {
     @Override
-    public void run()
+    public void onAdblockEngineDisposed()
     {
       Log.d(TAG, "Adblock engine disposed");
     }
@@ -147,8 +149,8 @@ public class AdblockHelper
   private void initProvider(Context context, String basePath, boolean developmentBuild)
   {
     provider = new SingleInstanceEngineProvider(context, basePath, developmentBuild);
-    provider.setEngineCreatedCallback(engineCreatedCallback);
-    provider.setEngineDisposedCallback(engineDisposedCallback);
+    provider.addEngineCreatedListener(engineCreatedListener);
+    provider.addEngineDisposedListener(engineDisposedListener);
   }
 
   private void initStorage(Context context, String settingsPreferenceName)

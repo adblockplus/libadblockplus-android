@@ -21,6 +21,7 @@ import android.content.Context;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AndroidWebRequestResourceWrapper;
+import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.HashMap;
@@ -28,6 +29,26 @@ import java.util.Map;
 
 public class Application extends android.app.Application
 {
+  private final SingleInstanceEngineProvider.EngineCreatedListener engineCreatedListener =
+    new SingleInstanceEngineProvider.EngineCreatedListener()
+  {
+    @Override
+    public void onAdblockEngineCreated(AdblockEngine engine)
+    {
+      // put your Adblock FilterEngine init here
+    }
+  };
+
+  private final SingleInstanceEngineProvider.EngineDisposedListener engineDisposedListener =
+    new SingleInstanceEngineProvider.EngineDisposedListener()
+  {
+    @Override
+    public void onAdblockEngineDisposed()
+    {
+      // put your Adblock FilterEngine deinit here
+    }
+  };
+
   @Override
   public void onCreate()
   {
@@ -45,6 +66,8 @@ public class Application extends android.app.Application
     AdblockHelper
       .get()
       .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
-      .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
+      .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
+      .addEngineCreatedListener(engineCreatedListener)
+      .addEngineDisposedListener(engineDisposedListener);
   }
 }

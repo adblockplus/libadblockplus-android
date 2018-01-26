@@ -23,6 +23,8 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.util.Log;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,6 +36,16 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 {
   private static final String TAG = Utils.getTag(SingleInstanceEngineProvider.class);
 
+  public interface EngineCreatedListener
+  {
+    void onAdblockEngineCreated(AdblockEngine engine);
+  }
+
+  public interface EngineDisposedListener
+  {
+    void onAdblockEngineDisposed();
+  }
+
   private Context context;
   private String basePath;
   private boolean developmentBuild;
@@ -42,8 +54,10 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private AdblockEngine engine;
   private CountDownLatch engineCreated;
   private Long v8IsolateProviderPtr;
-  private Runnable engineCreatedCallback;
-  private Runnable engineDisposedCallback;
+  private List<EngineCreatedListener> engineCreatedListeners =
+    new LinkedList<EngineCreatedListener>();
+  private List<EngineDisposedListener> engineDisposedListeners =
+    new LinkedList<EngineDisposedListener>();
 
   /*
     Simple ARC management for AdblockEngine
@@ -89,16 +103,36 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     return this;
   }
 
-  public SingleInstanceEngineProvider setEngineCreatedCallback(Runnable callback)
+  public SingleInstanceEngineProvider addEngineCreatedListener(EngineCreatedListener listener)
   {
-    this.engineCreatedCallback = callback;
+    this.engineCreatedListeners.add(listener);
     return this;
   }
 
-  public SingleInstanceEngineProvider setEngineDisposedCallback(Runnable callback)
+  public void removeEngineCreatedListener(EngineCreatedListener listener)
   {
-    this.engineDisposedCallback = callback;
+    this.engineCreatedListeners.remove(listener);
+  }
+
+  public void clearEngineCreatedListeners()
+  {
+    this.engineCreatedListeners.clear();
+  }
+
+  public SingleInstanceEngineProvider addEngineDisposedListener(EngineDisposedListener listener)
+  {
+    this.engineDisposedListeners.add(listener);
     return this;
+  }
+
+  public void removeEngineDisposedListener(EngineDisposedListener listener)
+  {
+    this.engineDisposedListeners.remove(listener);
+  }
+
+  public void clearEngineDisposedListeners()
+  {
+    this.engineDisposedListeners.clear();
   }
 
   private void createAdblock()
@@ -139,9 +173,9 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     Log.d(TAG, "AdblockHelper engine created");
 
     // sometimes we need to init AdblockEngine instance, eg. set user settings
-    if (engineCreatedCallback != null)
+    for (EngineCreatedListener listener : engineCreatedListeners)
     {
-      engineCreatedCallback.run();
+      listener.onAdblockEngineCreated(engine);
     }
   }
 
@@ -241,9 +275,9 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
     // sometimes we need to deinit something after AdblockEngine instance disposed
     // eg. release user settings
-    if (engineDisposedCallback != null)
+    for (EngineDisposedListener listener : engineDisposedListeners)
     {
-      engineDisposedCallback.run();
+      listener.onAdblockEngineDisposed();
     }
   }
 
