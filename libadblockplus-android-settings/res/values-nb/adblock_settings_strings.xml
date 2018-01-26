@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Filter lister</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Legg til eller fjern språkspesifikke filterlister</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Akseptable annonser</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Vi anbefaler nettsider å benytte annonser som ikke er påtrengende og med et tydelig budskap. Derfor har vi etablert strenge retningslinjer for å identifisere akseptable annonser, som vises under standardinnstillingene. Du kan deaktivere denne innstillingen dersom du ha sidene uten annonser.</string>
+  <string name="fragment_adblock_settings_wl_title">Hvitelistede domener</string>
+  <string name="fragment_adblock_settings_wl_summary">På denne listen legger du til nettsider som du vil se annonser på</string>
+  <string name="fragment_adblock_settings_add_domain">Legg til domene</string>
+  <string name="fragment_adblock_settings_wl_domains">Hvitelistede domener</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Konfigurere automatiske oppdateringer</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Ikke målte WiFi-nettverk</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Alle WiFi-nettverk</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Alltid</string>
+
+</resources>

@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Filtriraj liste</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Dodaj ili ukloni liste filtera specifičnih za jezik</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Prihvatljive reklame</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Željeli bismo podstaknuti webstranice da koriste jasno, nenametljivo reklamiranje. Zato smo utvrdili stroge smjernice kako bismo identificirali prihvatljive reklame, koje se mogu vidjeti pod podrazumijevanim postavkama. Ako želite pretraživati bez oglasa, ovu postavku možete onemogućiti bilo kad.</string>
+  <string name="fragment_adblock_settings_wl_title">Lista dopuštenih domena</string>
+  <string name="fragment_adblock_settings_wl_summary">Na ovaj popis dodajte webstranice sa kojih želite vidjeti oglase</string>
+  <string name="fragment_adblock_settings_add_domain">ডDodaj domen</string>
+  <string name="fragment_adblock_settings_wl_domains">Lista dopuštenih domena</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Konfiguriraj automatska ažuriranja</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Wi-Fi mreže bez ograničenja prometa</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Sve Wi-Fi mreže</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Uvijek</string>
+
+</resources>

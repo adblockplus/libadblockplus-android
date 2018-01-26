@@ -1,0 +1,18 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Filterlijsten</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Taalspecifieke filterlijsten toevoegen of verwijderen</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Acceptabele advertenties</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">We willen websites aanmoedigen om eenvoudige, niet-opdringerige advertenties te gebruiken. Daarom hebben we strikte richtlijnen opgesteld om acceptabele advertenties te herkennen die bij gebruik van de standaardinstellingen worden getoond. Als u wilt browsen zonder advertenties, dan kunt u deze instelling op elk moment uitschakelen.</string>
+  <string name="fragment_adblock_settings_wl_title">Vertrouwde domeinen</string>
+  <string name="fragment_adblock_settings_wl_summary">Voeg websites toe aan deze lijst waarop u advertenties wil zien</string>
+  <string name="fragment_adblock_settings_add_domain">Voeg domein toe</string>
+  <string name="fragment_adblock_settings_wl_domains">Vertrouwde domeinen</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Configureer automatische updates</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Niet-bemeterde wifi-netwerken</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Alle wifi-netwerken</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Altijd</string>
+
+</resources>
