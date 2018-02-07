@@ -58,6 +58,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     new LinkedList<EngineCreatedListener>();
   private List<EngineDisposedListener> engineDisposedListeners =
     new LinkedList<EngineDisposedListener>();
+  private final Object engineLock = new Object();
 
   /*
     Simple ARC management for AdblockEngine
@@ -137,45 +138,48 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
   private void createAdblock()
   {
-    ConnectivityManager connectivityManager =
-      (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    IsAllowedConnectionCallback isAllowedConnectionCallback =
-      new IsAllowedConnectionCallbackImpl(connectivityManager);
-
-    Log.d(TAG, "Creating adblock engine ...");
-
-    AdblockEngine.Builder builder = AdblockEngine
-      .builder(
-        AdblockEngine.generateAppInfo(context, developmentBuild),
-        basePath)
-      .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
-      .enableElementHiding(true);
-
-    if (v8IsolateProviderPtr != null)
+    Log.w(TAG, "Waiting for lock");
+    synchronized (engineLock)
     {
-      builder.useV8IsolateProvider(v8IsolateProviderPtr);
-    }
+      Log.d(TAG, "Creating adblock engine ...");
+      ConnectivityManager connectivityManager =
+        (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+      IsAllowedConnectionCallback isAllowedConnectionCallback =
+        new IsAllowedConnectionCallbackImpl(connectivityManager);
 
-    // if preloaded subscriptions provided
-    if (preloadedPreferenceName != null)
-    {
-      SharedPreferences preloadedSubscriptionsPrefs = context.getSharedPreferences(
-        preloadedPreferenceName,
-        Context.MODE_PRIVATE);
-      builder.preloadSubscriptions(
-        context,
-        urlToResourceIdMap,
-        new AndroidWebRequestResourceWrapper.SharedPrefsStorage(preloadedSubscriptionsPrefs));
-    }
+      AdblockEngine.Builder builder = AdblockEngine
+        .builder(
+          AdblockEngine.generateAppInfo(context, developmentBuild),
+          basePath)
+        .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
+        .enableElementHiding(true);
 
-    engine = builder.build();
+      if (v8IsolateProviderPtr != null)
+      {
+        builder.useV8IsolateProvider(v8IsolateProviderPtr);
+      }
 
-    Log.d(TAG, "AdblockHelper engine created");
+      // if preloaded subscriptions provided
+      if (preloadedPreferenceName != null)
+      {
+        SharedPreferences preloadedSubscriptionsPrefs = context.getSharedPreferences(
+          preloadedPreferenceName,
+          Context.MODE_PRIVATE);
+        builder.preloadSubscriptions(
+          context,
+          urlToResourceIdMap,
+          new AndroidWebRequestResourceWrapper.SharedPrefsStorage(preloadedSubscriptionsPrefs));
+      }
 
-    // sometimes we need to init AdblockEngine instance, eg. set user settings
-    for (EngineCreatedListener listener : engineCreatedListeners)
-    {
-      listener.onAdblockEngineCreated(engine);
+      engine = builder.build();
+
+      Log.d(TAG, "AdblockHelper engine created");
+
+      // sometimes we need to init AdblockEngine instance, eg. set user settings
+      for (EngineCreatedListener listener : engineCreatedListeners)
+      {
+        listener.onAdblockEngineCreated(engine);
+      }
     }
   }
 
@@ -202,10 +206,13 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
           @Override
           public void run()
           {
-            createAdblock();
+            synchronized (engineLock)
+            {
+              createAdblock();
 
-            // unlock waiting client thread
-            engineCreated.countDown();
+              // unlock waiting client thread
+              engineCreated.countDown();
+            }
           }
         }).start();
       }
@@ -268,16 +275,20 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
   private void disposeAdblock()
   {
-    Log.w(TAG, "Disposing adblock engine");
-
-    engine.dispose();
-    engine = null;
-
-    // sometimes we need to deinit something after AdblockEngine instance disposed
-    // eg. release user settings
-    for (EngineDisposedListener listener : engineDisposedListeners)
+    Log.w(TAG, "Waiting for lock");
+    synchronized (engineLock)
     {
-      listener.onAdblockEngineDisposed();
+      Log.w(TAG, "Disposing adblock engine");
+
+      engine.dispose();
+      engine = null;
+
+      // sometimes we need to deinit something after AdblockEngine instance disposed
+      // eg. release user settings
+      for (EngineDisposedListener listener : engineDisposedListeners)
+      {
+        listener.onAdblockEngineDisposed();
+      }
     }
   }
 
@@ -285,5 +296,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   public int getCounter()
   {
     return referenceCounter.get();
+  }
+
+  @Override
+  public Object getEngineLock()
+  {
+    return engineLock;
   }
 }

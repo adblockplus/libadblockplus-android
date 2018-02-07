@@ -51,4 +51,10 @@ public interface AdblockEngineProvider
    * @return registered clients count
    */
   int getCounter();
+
+  /**
+   * Get lock object to prevent AdblockEngine reference from being changed
+   * @return lock object
+   */
+  Object getEngineLock();
 }
