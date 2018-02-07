@@ -818,92 +818,95 @@ public class AdblockWebView extends WebView
       WebView webview, String url, boolean isMainFrame,
       boolean isXmlHttpRequest, String[] referrerChainArray)
     {
-      // if dispose() was invoke, but the page is still loading then just let it go
-      if (provider.getCounter() == 0)
+      synchronized (provider.getEngineLock())
       {
-        e("FilterEngine already disposed, allow loading");
-
-        // allow loading by returning null
-        return null;
-      }
-      else
-      {
-        provider.waitForReady();
-      }
-
-      if (isMainFrame)
-      {
-        // never blocking main frame requests, just subrequests
-        w(url + " is main frame, allow loading");
-
-        // allow loading by returning null
-        return null;
-      }
-
-      // whitelisted
-      if (provider.getEngine().isDomainWhitelisted(url, referrerChainArray))
-      {
-        w(url + " domain is whitelisted, allow loading");
-
-        // allow loading by returning null
-        return null;
-      }
-
-      if (provider.getEngine().isDocumentWhitelisted(url, referrerChainArray))
-      {
-        w(url + " document is whitelisted, allow loading");
-
-        // allow loading by returning null
-        return null;
-      }
-
-      // determine the content
-      FilterEngine.ContentType contentType;
-      if (isXmlHttpRequest)
-      {
-        contentType = FilterEngine.ContentType.XMLHTTPREQUEST;
-      }
-      else
-      {
-        if (RE_JS.matcher(url).find())
+        // if dispose() was invoke, but the page is still loading then just let it go
+        if (provider.getCounter() == 0)
         {
-          contentType = FilterEngine.ContentType.SCRIPT;
-        }
-        else if (RE_CSS.matcher(url).find())
-        {
-          contentType = FilterEngine.ContentType.STYLESHEET;
-        }
-        else if (RE_IMAGE.matcher(url).find())
-        {
-          contentType = FilterEngine.ContentType.IMAGE;
-        }
-        else if (RE_FONT.matcher(url).find())
-        {
-          contentType = FilterEngine.ContentType.FONT;
-        }
-        else if (RE_HTML.matcher(url).find())
-        {
-          contentType = FilterEngine.ContentType.SUBDOCUMENT;
+          e("FilterEngine already disposed, allow loading");
+
+          // allow loading by returning null
+          return null;
         }
         else
         {
-          contentType = FilterEngine.ContentType.OTHER;
+          provider.waitForReady();
         }
+
+        if (isMainFrame)
+        {
+          // never blocking main frame requests, just subrequests
+          w(url + " is main frame, allow loading");
+
+          // allow loading by returning null
+          return null;
+        }
+
+        // whitelisted
+        if (provider.getEngine().isDomainWhitelisted(url, referrerChainArray))
+        {
+          w(url + " domain is whitelisted, allow loading");
+
+          // allow loading by returning null
+          return null;
+        }
+
+        if (provider.getEngine().isDocumentWhitelisted(url, referrerChainArray))
+        {
+          w(url + " document is whitelisted, allow loading");
+
+          // allow loading by returning null
+          return null;
+        }
+
+        // determine the content
+        FilterEngine.ContentType contentType;
+        if (isXmlHttpRequest)
+        {
+          contentType = FilterEngine.ContentType.XMLHTTPREQUEST;
+        }
+        else
+        {
+          if (RE_JS.matcher(url).find())
+          {
+            contentType = FilterEngine.ContentType.SCRIPT;
+          }
+          else if (RE_CSS.matcher(url).find())
+          {
+            contentType = FilterEngine.ContentType.STYLESHEET;
+          }
+          else if (RE_IMAGE.matcher(url).find())
+          {
+            contentType = FilterEngine.ContentType.IMAGE;
+          }
+          else if (RE_FONT.matcher(url).find())
+          {
+            contentType = FilterEngine.ContentType.FONT;
+          }
+          else if (RE_HTML.matcher(url).find())
+          {
+            contentType = FilterEngine.ContentType.SUBDOCUMENT;
+          }
+          else
+          {
+            contentType = FilterEngine.ContentType.OTHER;
+          }
+        }
+
+        // check if we should block
+        if (provider.getEngine().matches(url, contentType, referrerChainArray))
+        {
+          w("Blocked loading " + url);
+
+          // if we should block, return empty response which results in 'errorLoading' callback
+          return new WebResourceResponse("text/plain", "UTF-8", null);
+        }
+
+        d("Allowed loading " + url);
+
+        // continue by returning null
+        return null;
       }
-
-      // check if we should block
-      if (provider.getEngine().matches(url, contentType, referrerChainArray))
-      {
-        w("Blocked loading " + url);
-
-        // if we should block, return empty response which results in 'errorLoading' callback
-        return new WebResourceResponse("text/plain", "UTF-8", null);
-      }
-
-      d("Allowed loading " + url);
-
-      // continue by returning null
-      return null;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -971,74 +974,77 @@ public class AdblockWebView extends WebView
     @Override
     public void run()
     {
-      try
+      synchronized (provider.getEngineLock())
       {
-        if (provider.getCounter() == 0)
+        try
         {
-          w("FilterEngine already disposed");
-          selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
-        }
-        else
-        {
-          provider.waitForReady();
-          String[] referrers = new String[]
-            {
-              url
-            };
-
-          List<Subscription> subscriptions = provider
-            .getEngine()
-            .getFilterEngine()
-            .getListedSubscriptions();
-
-          try
+          if (provider.getCounter() == 0)
           {
-            d("Listed subscriptions: " + subscriptions.size());
-            if (debugMode)
-            {
-              for (Subscription eachSubscription : subscriptions)
-              {
-                d("Subscribed to "
-                  + (eachSubscription.isDisabled() ? "disabled" : "enabled")
-                  + " " + eachSubscription);
-              }
-            }
-          }
-          finally
-          {
-            for (Subscription eachSubscription : subscriptions)
-            {
-              eachSubscription.dispose();
-            }
-          }
-
-          final String domain = provider.getEngine().getFilterEngine().getHostFromURL(url);
-          if (domain == null)
-          {
-            e("Failed to extract domain from " + url);
+            w("FilterEngine already disposed");
             selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
           }
           else
           {
-            d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
-            List<String> selectors = provider
-              .getEngine()
-              .getElementHidingSelectors(url, domain, referrers);
+            provider.waitForReady();
+            String[] referrers = new String[]
+              {
+                url
+              };
 
-            d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
-            selectorsString = Utils.stringListToJsonArray(selectors);
+            List<Subscription> subscriptions = provider
+              .getEngine()
+              .getFilterEngine()
+              .getListedSubscriptions();
+
+            try
+            {
+              d("Listed subscriptions: " + subscriptions.size());
+              if (debugMode)
+              {
+                for (Subscription eachSubscription : subscriptions)
+                {
+                  d("Subscribed to "
+                    + (eachSubscription.isDisabled() ? "disabled" : "enabled")
+                    + " " + eachSubscription);
+                }
+              }
+            }
+            finally
+            {
+              for (Subscription eachSubscription : subscriptions)
+              {
+                eachSubscription.dispose();
+              }
+            }
+
+            final String domain = provider.getEngine().getFilterEngine().getHostFromURL(url);
+            if (domain == null)
+            {
+              e("Failed to extract domain from " + url);
+              selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+            }
+            else
+            {
+              d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
+              List<String> selectors = provider
+                .getEngine()
+                .getElementHidingSelectors(url, domain, referrers);
+
+              d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
+              selectorsString = Utils.stringListToJsonArray(selectors);
+            }
           }
         }
-      }
-      finally
-      {
-        if (isCancelled.get())
+        finally
         {
-          w("This thread is cancelled, exiting silently " + this);
-        }
-        else
-        {
-          finish(selectorsString);
+          if (isCancelled.get())
+          {
+            w("This thread is cancelled, exiting silently " + this);
+          }
+          else
+          {
+            finish(selectorsString);
+          }
         }
       }
     }
