@@ -45,6 +45,7 @@ public class AdblockHelper
   public static final String PRELOAD_PREFERENCE_NAME = "ADBLOCK_PRELOAD";
   private static AdblockHelper _instance;
 
+  private boolean isInitialized;
   private SingleInstanceEngineProvider provider;
   private AdblockSettingsStorage storage;
 
@@ -141,9 +142,23 @@ public class AdblockHelper
   public SingleInstanceEngineProvider init(Context context, String basePath,
                                            boolean developmentBuild, String preferenceName)
   {
+    if (isInitialized)
+    {
+      new IllegalStateException("Usage exception: already initialized. Check `isInit()`");
+    }
+
     initProvider(context, basePath, developmentBuild);
     initStorage(context, preferenceName);
+    isInitialized = true;
     return provider;
+  }
+
+  /**
+   * Check if it is already initialized
+   * @return
+   */
+  public boolean isInit() {
+    return isInitialized;
   }
 
   private void initProvider(Context context, String basePath, boolean developmentBuild)
