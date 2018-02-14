@@ -149,6 +149,14 @@ Or you can use AdblockHelper:
       // optional - provide preloaded subscription files in app resoruces
       .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
 
+Make sure you initialize it once during app launch, call `isInit()` to check it:
+
+    if (!AdblockHelper.get().isInit())
+    {
+      // requires initialization
+      ...
+    }
+
 Sometimes it's desired to initialize or deinitialize FilterEngine instance
 when created:
 

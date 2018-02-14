@@ -54,20 +54,24 @@ public class Application extends android.app.Application
   {
     super.onCreate();
 
-    // init Adblock
-    String basePath = getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
+    // it's not initialized here but we check it just to show API usage
+    if (!AdblockHelper.get().isInit())
+    {
+      // init Adblock
+      String basePath = getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
 
-    // provide preloaded subscriptions
-    Map<String, Integer> map = new HashMap<String, Integer>();
-    map.put(AndroidWebRequestResourceWrapper.EASYLIST, R.raw.easylist);
-    map.put(AndroidWebRequestResourceWrapper.EASYLIST_CHINESE, R.raw.easylist);
-    map.put(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
+      // provide preloaded subscriptions
+      Map<String, Integer> map = new HashMap<String, Integer>();
+      map.put(AndroidWebRequestResourceWrapper.EASYLIST, R.raw.easylist);
+      map.put(AndroidWebRequestResourceWrapper.EASYLIST_CHINESE, R.raw.easylist);
+      map.put(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 
-    AdblockHelper
-      .get()
-      .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
-      .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
-      .addEngineCreatedListener(engineCreatedListener)
-      .addEngineDisposedListener(engineDisposedListener);
+      AdblockHelper
+        .get()
+        .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+        .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
+        .addEngineCreatedListener(engineCreatedListener)
+        .addEngineDisposedListener(engineDisposedListener);
+    }
   }
 }
