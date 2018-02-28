@@ -22,6 +22,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Handler;
@@ -573,6 +574,20 @@ public class AdblockWebView extends WebView
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onProgressChanged(view, newProgress);
+      }
+    }
+
+    @Override
+    public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
+                                     FileChooserParams fileChooserParams)
+    {
+      if (extWebChromeClient != null)
+      {
+        return extWebChromeClient.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+      }
+      else
+      {
+        return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
       }
     }
   };
