@@ -1154,9 +1154,12 @@ public class AdblockWebView extends WebView
     if (url != null)
     {
       elemHideLatch = new CountDownLatch(1);
-      elemHideThread = new ElemHideThread(elemHideLatch);
-      elemHideThread.setFinishedRunnable(elemHideThreadFinishedRunnable);
-      elemHideThread.start();
+      synchronized (elemHideThreadLockObject)
+      {
+        elemHideThread = new ElemHideThread(elemHideLatch);
+        elemHideThread.setFinishedRunnable(elemHideThreadFinishedRunnable);
+        elemHideThread.start();
+      }
     }
     else
     {
