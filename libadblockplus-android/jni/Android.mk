@@ -106,9 +106,11 @@ LOCAL_SRC_FILES += JniNotification.cpp JniShowNotificationCallback.cpp
 LOCAL_SRC_FILES += JniIsAllowedConnectionTypeCallback.cpp
 
 LOCAL_CPP_FEATURES := exceptions
-LOCAL_CPPFLAGS += -std=c++11
 
 LOCAL_C_INCLUDES := $(SHARED_V8_INCLUDE_DIR)
+
+LOCAL_LDFLAGS += -Wl,--allow-multiple-definition
+LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
 
 LOCAL_STATIC_LIBRARIES := libadblockplus v8-libplatform
 

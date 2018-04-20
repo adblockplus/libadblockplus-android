@@ -20,8 +20,8 @@ You can find it in the 'libadblockplus-android' directory.
 #### Requirements
 
 * [The Android SDK](https://developer.android.com/sdk)
-* Android SDK Build tools 24.0.1
-* [The Android NDK, 12b](https://developer.android.com/ndk)
+* Android SDK Build tools 25.0.0
+* [The Android NDK, 16b](https://developer.android.com/ndk)
 
 Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
 

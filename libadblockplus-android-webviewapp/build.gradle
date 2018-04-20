@@ -20,8 +20,8 @@ android {
         applicationId "org.adblockplus.libadblockplus.android.webviewapp"
         minSdkVersion 21
         targetSdkVersion 21
-        versionCode 7
-        versionName "2.3"
+        versionCode 8
+        versionName "2.4"
     }
 
     sourceSets {
