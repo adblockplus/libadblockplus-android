@@ -2,6 +2,7 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_summary">इस ऐप में वेबसाइट्स पर विज्ञापन ब्लॉक करने की अनुमति दें</string>
     <string name="fragment_adblock_settings_filter_lists_title">फ़िल्टर सूचियां</string>
     <string name="fragment_adblock_settings_filter_lists_summary">भाषा विशिष्ठ फ़िल्टर सूचियों को जोड़ें या हटाएं</string>
     <string name="fragment_adblock_settings_aa_enabled_title">स्वीकार्य विज्ञापन</string>

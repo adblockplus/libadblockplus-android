@@ -2,6 +2,7 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_summary">Дозволити блокування реклами на веб-сайтах у цьому додатку</string>
     <string name="fragment_adblock_settings_filter_lists_title">Списки фільтрів</string>
     <string name="fragment_adblock_settings_filter_lists_summary">Додавання або видалення списків фільтрів для різних мов</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Допустима реклама</string>

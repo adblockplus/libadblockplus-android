@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Разрешете блокиране на реклами на уебсайтове в това приложение</string>
   <string name="fragment_adblock_settings_filter_lists_title">Списъци с филтри</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Добави или премахни списъци с филтри за конкретни езици</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Допустими реклами</string>

@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">אפשר חסימת התראות באתרים באפליקציה זאת</string>
   <string name="fragment_adblock_settings_filter_lists_title">רשימות סינון</string>
   <string name="fragment_adblock_settings_filter_lists_summary">הוסף או הסר רשימות סינון ספציפיות לשפה</string>
   <string name="fragment_adblock_settings_aa_enabled_title">פרסומות מקובלות</string>

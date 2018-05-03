@@ -4,7 +4,8 @@
     <!-- Adblock: enabled/disabled -->
     <SwitchPreference
         android:key="@string/fragment_adblock_settings_enabled_key"
-        android:title="@string/fragment_adblock_settings_enabled_title" />
+        android:title="@string/fragment_adblock_settings_enabled_title"
+        android:summary="@string/fragment_adblock_settings_enabled_summary" />
 
     <!-- Filter lists -->
     <MultiSelectListPreference

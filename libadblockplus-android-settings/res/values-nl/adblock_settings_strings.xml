@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">In deze app advertentieblokkering op websites toestaan</string>
   <string name="fragment_adblock_settings_filter_lists_title">Filterlijsten</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Taalspecifieke filterlijsten toevoegen of verwijderen</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Acceptabele advertenties</string>

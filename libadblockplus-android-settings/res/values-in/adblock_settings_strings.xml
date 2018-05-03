@@ -2,6 +2,7 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_summary">Izinkan pemblokiran iklan pada situs web dalam aplikasi ini</string>
     <string name="fragment_adblock_settings_filter_lists_title">Daftar filter</string>
     <string name="fragment_adblock_settings_filter_lists_summary">Tambah atau hapus daftar filter dalam bahasa tertentu</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Iklan yang Bisa Diterima</string>

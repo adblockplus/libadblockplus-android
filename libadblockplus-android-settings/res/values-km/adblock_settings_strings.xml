@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">អនុញ្ញាតការទប់ស្កាត់ការផ្សាយពាណិជ្ជកម្មនៅលើគេហទំព័រក្នុងកម្មវិធីនេះ</string>
   <string name="fragment_adblock_settings_filter_lists_title">បញ្ជីតម្រង</string>
   <string name="fragment_adblock_settings_filter_lists_summary">បន្ថែម ឬដកបញ្ជីតម្រង</string>
   <string name="fragment_adblock_settings_aa_enabled_title">ការផ្សាយពាណិជ្ជកម្ម</string>

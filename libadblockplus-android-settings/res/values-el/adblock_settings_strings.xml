@@ -2,6 +2,7 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_summary">Να επιτρέπεται το μπλοκάρισμα διαφημίσεων στους ιστότοπους σε αυτήν την εφαρμογή</string>
     <string name="fragment_adblock_settings_filter_lists_title">Λίστες φίλτρων</string>
     <string name="fragment_adblock_settings_filter_lists_summary">Προσθήκη ή αφαίρεση λιστών φίλτρου για συγκεκριμένη γλώσσα</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Αποδεκτές Διαφημίσεις</string>

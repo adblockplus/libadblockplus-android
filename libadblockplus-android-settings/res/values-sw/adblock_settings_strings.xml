@@ -1,0 +1,19 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Tillåt annonsblockering på webbplatser i denna app</string>
+  <string name="fragment_adblock_settings_filter_lists_title">Chuja Orodha</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Ongeza au ondoa uchujaji wa orodha kwa misingi ya lugha</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Ads Zinazokubalika</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Tungependa kuhimiza tovuti zitumie utangazaji wa moja kwa moja usio na uingiliaji. Hiyo ndio sababu tumeanzisha mwongozo mkali wa kutambua Ads Zinazokubalika, ambazo zinaonyeshwa kwenye mpangilio asili. Ikiwa ungependa kudurusu bila ads, unaweza kusimamisha mpangilio huu wakati wowote.</string>
+  <string name="fragment_adblock_settings_wl_title">Domeini za Orodha Nyeupe</string>
+  <string name="fragment_adblock_settings_wl_summary">Ongeza tovuti ambazo kwazo ungependa kuona ads kwenye orodha hii</string>
+  <string name="fragment_adblock_settings_add_domain">Ongeza domeini</string>
+  <string name="fragment_adblock_settings_wl_domains">Domeini za Orodha Nyeupe</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">Pangilia usasisho wa kiotomati</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Mitandao ya Wi-Fi isiyowekewa kipimo cha data</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Mitandao yote ya Wi-Fi</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Kila wakati</string>
+
+</resources>

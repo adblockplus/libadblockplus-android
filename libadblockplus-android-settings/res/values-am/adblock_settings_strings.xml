@@ -1,0 +1,19 @@
+<resources>
+
+    <string name="fragment_adblock_settings_general_title">Adblock Plus (አድ ብሎክ ፕላስ) የንግድ ማስታወቂያማገድ</string>
+    <string name="fragment_adblock_settings_enabled_title">Adblock Plus (አድ ብሎክ ፕላስ) የንግድ ማስታወቂያማገድ</string>
+    <string name="fragment_adblock_settings_enabled_summary">ብዚሁ ድር ጣቢያ የንግድ ማስታወቂያ እንዲዘጋ ወይም እንዲታገድ አድርጉ።</string>
+    <string name="fragment_adblock_settings_filter_lists_title">የሚፈለገው ዝርዝ</string>
+    <string name="fragment_adblock_settings_filter_lists_summary">የሚፈልጉትን ቋንቋ መጨመር ወይም ደግሞ ማንሳት(ማስወጣት)</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">የንግድ ማስታወቂያ መቀበል</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">እኛ የድር ጣቢያ በቀላሉ መጠቀም የሚችሉ የንግድ ማስታወቂያ እንዲጠቀሙ እና የሰው ሂወት ጣልቃ የማይገባ እንዲሆን ነው መታባባት እና መባራታት ነው የምንፈልግው። ለዚህ ነው እኛ በጣም ትብቅ የሆነ መምሪያ ተጠቅመን ተቀባይነት ያላቸው የንግድ ማስታወቂያ ብቻ ከማሳየት የምናስፈቅደው፡ ይህ ደግሞ በ default setting (ደፎልት ሰቲንግ) ይገኛል። የንግድ ማስታወቂያ የሌለው ድር ጣቢያ መከታተል ከፈለጋችሁ ደግሞ ይህ በ disable setting (ዲስኤብል ሰቲንግ) የሚለው ቦታ በሜሄድ መዝጋት ይቻላል።</string>
+    <string name="fragment_adblock_settings_wl_title">Whitelisted domains (ዋይትሊስተድ ዶመይንስ)</string>
+    <string name="fragment_adblock_settings_wl_summary">ኣርስዎ የሚፈልጉት የንግድ ማስታወቂያ የሚያሳዩት የድር ጣቢያራስዎ መጨመር ይችላሉ።</string>
+    <string name="fragment_adblock_settings_add_domain">Domain (ዱመይን) መጨመር ይችላሉ።</string>
+    <string name="fragment_adblock_settings_wl_domains">Whitelisted domains (ዋይትሊስተድ ዶመይንስ)</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">በአውቶማቲክ ራሱ እሚታደስ ማድረግ</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">ሚተር - የሌላቸው የ Wi-Fi networks (ዋይ-ፋይነትዎርክስ)</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">ሁሉንም Wi-Fi networks (ዋይ-ፋይ ነትዎርክስ)</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_all">ሁልጊዜ</string>
+
+</resources>

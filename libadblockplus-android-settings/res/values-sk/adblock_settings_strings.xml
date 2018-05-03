@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Povoliť blokovanie reklám na webových stránkach v tejto aplikácii</string>
   <string name="fragment_adblock_settings_filter_lists_title">Zoznamy filtrov</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Pridať alebo odstrániť zoznamy filtrov pre konkrétne jazyky</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Prijateľné reklamy</string>

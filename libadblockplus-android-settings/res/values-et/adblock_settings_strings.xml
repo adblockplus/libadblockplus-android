@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Luba selles rakenduses veebisaitidel reklaamide blokeerimine</string>
   <string name="fragment_adblock_settings_filter_lists_title">Filtriloendid</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Keelepõhiste filtriloendite lisamine või eemaldamine</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Lubatavad reklaamid</string>

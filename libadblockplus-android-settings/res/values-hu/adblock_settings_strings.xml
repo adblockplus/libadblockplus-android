@@ -2,6 +2,7 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_summary">Reklámok blokkolásának engedélyezése webhelyeken ebben az alkalmazásban</string>
     <string name="fragment_adblock_settings_filter_lists_title">Szűrőlisták</string>
     <string name="fragment_adblock_settings_filter_lists_summary">Nyelvspecifikus szűrőlisták hozzáadása vagy eltávolítása</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Elfogadható hirdetések</string>

@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Tillåt annonsblockering på webbplatser i denna app</string>
   <string name="fragment_adblock_settings_filter_lists_title">Filterlistor</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Lägg till och ta bort språkspecifika filterlistor</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Accepterade annonser</string>

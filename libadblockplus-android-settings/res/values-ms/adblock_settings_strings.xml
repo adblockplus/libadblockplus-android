@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Benarkan penyekat iklan pada tapak web dalam apl ini</string>
   <string name="fragment_adblock_settings_filter_lists_title">Senarai penapis</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Tambah atau buang senarai penapis bahasa tertentu</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Iklan yang boleh diterima</string>

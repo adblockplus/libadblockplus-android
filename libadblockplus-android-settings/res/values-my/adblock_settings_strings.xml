@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">ဤအက္(ပ္)တြင္ ဝဘ္ဆိုုဒ္မ်ား ၾကည့္ရႈခ်ိန္၌ ေၾကာ္ျငာမ်ားထြက္ေပၚလာျခင္းကိုု ပိတ္ဆိုု႔ရန္အတြက္ ခြင့္ျပဳသည္</string>
   <string name="fragment_adblock_settings_filter_lists_title">စစ္ထုတ္ထားသည့္စာရင္းမ်ား</string>
   <string name="fragment_adblock_settings_filter_lists_summary">ဘာသာရပ္ဆိုင္ရာစစ္ထုတ္စာရင္းမ်ားကိုထည့္ပါ သို႔မဟုတ္ ဖယ္ထုတ္ပါ</string>
   <string name="fragment_adblock_settings_aa_enabled_title">လက္ခံႏုိင္ေသာေၾကာ္ျငာမ်ား</string>

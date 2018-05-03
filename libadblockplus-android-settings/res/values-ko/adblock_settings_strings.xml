@@ -2,6 +2,7 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_summary">이 앱의 웹 사이트 광고 차단을 허용합니다</string>
     <string name="fragment_adblock_settings_filter_lists_title">필터 목록</string>
     <string name="fragment_adblock_settings_filter_lists_summary">언어별 필터 목록 추가 또는 제거</string>
     <string name="fragment_adblock_settings_aa_enabled_title">허용되는 광고</string>

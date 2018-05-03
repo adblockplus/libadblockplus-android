@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Salli mainosten esto verkkosivustoilla tässä sovelluksessa</string>
   <string name="fragment_adblock_settings_filter_lists_title">Suodatinluettelot</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Lisää tai poista kielikohtaiset suodatinluettelot</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Hyväksyttävät mainokset</string>

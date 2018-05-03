@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">ওয়েবসাইটগুলোতে বিজ্ঞাপন ব্লক করার জন্য এই অ্যাপকে অনুমতি দিন</string>
   <string name="fragment_adblock_settings_filter_lists_title">ফিল্টার তালিকা</string>
   <string name="fragment_adblock_settings_filter_lists_summary">ভাষা যুক্ত করুন বা সরান- নির্দিষ্ট ফিল্টার তালিকা</string>
   <string name="fragment_adblock_settings_aa_enabled_title">গ্রহণযোগ্য বিজ্ঞাপনগুলি</string>

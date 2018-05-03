@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Dovoli blokiranje oglasov na spletnih straneh v tej aplikaciji</string>
   <string name="fragment_adblock_settings_filter_lists_title">Seznami filtrov</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Dodaj ali odstranit sezname filtrov za jezik</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Acceptable Ads</string>

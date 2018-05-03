@@ -2,6 +2,7 @@
 
   <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
   <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Atļaut reklāmu bloķēšanu tīmekļa vietnēs šajā programmā</string>
   <string name="fragment_adblock_settings_filter_lists_title">Filtru saraksti</string>
   <string name="fragment_adblock_settings_filter_lists_summary">Pievienojiet vai noņemiet valodai raksturīgos filtru sarakstus</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Pieņemamās reklāmas</string>

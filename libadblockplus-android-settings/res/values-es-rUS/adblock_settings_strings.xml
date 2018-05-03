@@ -2,6 +2,7 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+    <string name="fragment_adblock_settings_enabled_summary">Permitir que esta aplicación bloquee los anuncios de los sitios web</string>
     <string name="fragment_adblock_settings_filter_lists_title">Listas de filtros</string>
     <string name="fragment_adblock_settings_filter_lists_summary">Agregar o eliminar listas de filtro específicas del idioma</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Anuncios Aceptables</string>

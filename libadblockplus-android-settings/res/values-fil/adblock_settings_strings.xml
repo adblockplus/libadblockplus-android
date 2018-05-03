@@ -1,0 +1,19 @@
+<resources>
+
+  <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+  <string name="fragment_adblock_settings_enabled_summary">Salli mainosten esto verkkosivustoilla tässä sovelluksessa</string>
+  <string name="fragment_adblock_settings_filter_lists_title">I-filter ang listahan</string>
+  <string name="fragment_adblock_settings_filter_lists_summary">Idagdag o alisin ang mga listahan ng filter para sa tiyak na wika</string>
+  <string name="fragment_adblock_settings_aa_enabled_title">Mga Katanggap-tanggap na Ad</string>
+  <string name="fragment_adblock_settings_aa_enabled_summary">Nais naming hikayatin ang mga website na gumamit ng tapat at di mapanghimasok na pag-aadvertize. Kaya nagtaguyod kami ng mahigpit na panuntunan upang kilalanin ang mga Katanggap-tanggap na Ad na ipinapakita sa ilalim ng default settings. Kung nais mong mag-browse nang walang ad, maaari mong i-disable ang setting na ito anumang oras.</string>
+  <string name="fragment_adblock_settings_wl_title">Mga whitelisted na domain</string>
+  <string name="fragment_adblock_settings_wl_summary">Magdagdag ng mga website na gusto mong makitaan ng mga ad sa listahang ito</string>
+  <string name="fragment_adblock_settings_add_domain">Magdagdag ng domain</string>
+  <string name="fragment_adblock_settings_wl_domains">Mga whitelisted na domain</string>
+  <string name="fragment_adblock_settings_allowed_connection_type">I-configure ang mga awtomatikong update</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Hindi nakametrong mga Wi-Fi network</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_wifi">Lahat ng Wi-Fi network</string>
+  <string name="fragment_adblock_settings_allowed_connection_type_all">Palagi</string>
+
+</resources>
