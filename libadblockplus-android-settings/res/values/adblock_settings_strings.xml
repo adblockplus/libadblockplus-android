@@ -1,19 +1,48 @@
 <resources>
 
+    <!-- Settings Activity/Fragment title for general purpose -->
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
+
+    <!-- Title of SwitchPreference to enable/disable Adblock -->
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
+
+    <!-- Summary of SwitchPreference to enable/disable Adblock -->
     <string name="fragment_adblock_settings_enabled_summary">Allow ad blocking on websites in this app</string>
+
+    <!-- Title of MultiSelectListPreference to choose filter lists -->
     <string name="fragment_adblock_settings_filter_lists_title">Filter lists</string>
+
+    <!-- Summary of MultiSelectListPreference to choose filter lists -->
     <string name="fragment_adblock_settings_filter_lists_summary">Add or remove language-specific filter lists</string>
+
+    <!-- Title of SwitchPreference to enable/disable Acceptable Ads -->
     <string name="fragment_adblock_settings_aa_enabled_title">Acceptable Ads</string>
+
+    <!-- Summary of SwitchPreference to enable/disable Acceptable Ads -->
     <string name="fragment_adblock_settings_aa_enabled_summary">We\'d like to encourage websites to use straightforward, nonintrusive advertising. That\'s why we\'ve established strict guidelines to identify Acceptable Ads, which are shown under default settings. If you wish to browse ad-free, you can disable this setting at any time.</string>
+
+    <!-- Title of Preference to configure whitelisted domains -->
     <string name="fragment_adblock_settings_wl_title">Whitelisted domains</string>
+
+    <!-- Summary of Preference to configure whitelisted domains -->
     <string name="fragment_adblock_settings_wl_summary">Add websites that you want to see ads on to this list</string>
+
+    <!-- Hint of EditText for typing domain in whitelisted domains fragment -->
     <string name="fragment_adblock_settings_add_domain">Add domain</string>
+
+    <!-- Text of TextView above the list of whitelisted domains in whitelisted domains fragment -->
     <string name="fragment_adblock_settings_wl_domains">Whitelisted domains</string>
+
+    <!-- Title of ListPreference and Dialog to configure update connection type -->
     <string name="fragment_adblock_settings_allowed_connection_type">Configure automatic updates</string>
+
+    <!-- Title of list value #1 for ListPreference for update connection type -->
     <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Non-metered Wi-Fi networks</string>
+
+    <!-- Title of list value #2 for ListPreference for update connection type -->
     <string name="fragment_adblock_settings_allowed_connection_type_wifi">All Wi-Fi networks</string>
+
+    <!-- Title of list value #3 for ListPreference for update connection type -->
     <string name="fragment_adblock_settings_allowed_connection_type_all">Always</string>
 
 </resources>
