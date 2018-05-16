@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 21
-        versionCode 4
-        versionName "2.1"
+        versionCode 5
+        versionName "2.2"
     }
 
     sourceSets {
@@ -21,7 +21,7 @@ android {
 
             jni {
                 dependencies {
-                    project(path: ":libadblockplus-android", configuration: getAbiFlavor() + "Debug")
+                    project(path: ":adblock-android", configuration: getAbiFlavor() + "Debug")
                 }
             }
         }
@@ -29,7 +29,7 @@ android {
 }
 
 dependencies {
-    debugCompile project("path": ':libadblockplus-android', "configuration": getAbiFlavor() + "Debug")
-    releaseCompile project("path": ':libadblockplus-android', "configuration": getAbiFlavor() + "Release")
+    debugCompile project("path": ':adblock-android', "configuration": getAbiFlavor() + "Debug")
+    releaseCompile project("path": ':adblock-android', "configuration": getAbiFlavor() + "Release")
     compile 'com.android.support:support-v4:21.0.3'
 }

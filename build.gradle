@@ -1,7 +1,7 @@
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-// ABI flavor of "libadblockplus-android" module
+// ABI flavor of "adblock-android" module
 def getAbiFlavor() {
   Gradle gradle = getGradle()
   String  taskReqStr = gradle.getStartParameter().getTaskRequests().toString()
@@ -46,4 +46,4 @@ subprojects {
   task listAllDependencies(type: DependencyReportTask) {}
 }
 
-println "[Configuration] Using libadblockplus-android ABI flavor: " + getAbiFlavor()
+println "[Configuration] Using adblock-android ABI flavor: " + getAbiFlavor()

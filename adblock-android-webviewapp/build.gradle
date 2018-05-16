@@ -20,8 +20,8 @@ android {
         applicationId "org.adblockplus.libadblockplus.android.webviewapp"
         minSdkVersion 21
         targetSdkVersion 21
-        versionCode 8
-        versionName "2.4"
+        versionCode 9
+        versionName "2.5"
     }
 
     sourceSets {
@@ -33,7 +33,7 @@ android {
 
             jni {
                 dependencies {
-                    project ":libadblockplus-android"
+                    project ":adblock-android"
                 }
             }
         }
@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-    compile project(':libadblockplus-android-settings')
-    compile project(':libadblockplus-android-webview')
+    compile project(':adblock-android-settings')
+    compile project(':adblock-android-webview')
     compile 'com.android.support:appcompat-v7:21.0.3'
 }

@@ -1,11 +1,11 @@
-Adblock Plus Library for Android
+Adblock Android SDK
 ================================
 
-An Android library project, tests and demo application for AdblockWebView widget.
+An Android library project, tests, settings fragments and demo application for AdblockWebView.
 
 ## Updating the dependencies
 
-Adblock Plus for Android has dependencies that aren't in this repository.
+Adblock Android SDK has dependencies that aren't in this repository.
 To update those, call:
 
     ./ensure_dependencies.py
@@ -13,7 +13,7 @@ To update those, call:
 ## Library
 
 An Android library that provides the core functionality of Adblock Plus.
-You can find it in the 'libadblockplus-android' directory.
+You can find it in the 'adblock-android' directory.
 
 ### Building
 
@@ -37,7 +37,7 @@ In the project root directory run:
 
     ./gradlew assembleDebug
 
-This will generate *.aar library artifact in the 'libadblockplus-android/build/outputs/aar/' directory.
+This will generate *.aar library artifact in the 'adblock-android/build/outputs/aar/' directory.
 
 **Android permissions note**
 
@@ -88,13 +88,13 @@ Note
 output while building.
 
 Set `SHARED_V8_LIB_DIR` environment variable as full absolute path to pass
-specific directory instead of default one (`libadblockplus-android/jni/libadblockplus-binaries`).
+specific directory instead of default one (`adblock-android/jni/libadblockplus-binaries`).
 
 ### Building for single ARCH
 
-By default libadblockplus-android is built for both ARM and x86 and it can be filtered when
+By default adblock-android is built for both ARM and x86 and it can be filtered when
 building end-user android application. However sometimes it can be desired to build
-"libadblockplus-android.aar" for single ARCH.
+"adblock-android.aar" for single ARCH.
 
 Pass `abi_arm` or `abi_x86` to build it for single arch or `abi_all` for all ARCHs:
 
@@ -102,14 +102,14 @@ Pass `abi_arm` or `abi_x86` to build it for single arch or `abi_all` for all ARC
     
 Note
 
-    [Configuration] Using libadblockplus-android ABI flavor: abi_arm
+    [Configuration] Using adblock-android ABI flavor: abi_arm
     
 output while building.
 
 ## Library tests
 
 Android tests for the library.
-You can find them in the 'libadblockplus-android-tests' directory.
+You can find them in the 'adblock-android-tests' directory.
 
 ### Requirements
 
@@ -122,7 +122,7 @@ In the project root directory run:
 
     ./gradlew assembleDebugAndroidTest
 
-This will generate *.apk in the 'libadblockplus-android-tests/build/outputs/apk/' directory.
+This will generate *.apk in the 'adblock-android-tests/build/outputs/apk/' directory.
 
 ### Testing
 
@@ -132,7 +132,7 @@ compiled, installed to emulator/device and launched automatically.
 ## Settings
 
 An Android library that provides a configuration interface for Adblock Plus.
-You can find it in the 'libadblockplus-android-settings' directory:
+You can find it in the 'adblock-android-settings' directory:
 * GeneralSettingsFragment - main fragment
 * WhitelistedDomainsSettingsFragment - whitelisted domains fragment
 
@@ -207,12 +207,12 @@ In the project root directory run:
 
     ./gradlew assemble
 
-This will generate *.aar in the 'libadblockplus-android-settings/build/outputs/aar' directory.
+This will generate *.aar in the 'adblock-android-settings/build/outputs/aar' directory.
 
 ## WebView
 
 An Android library that provides a WebView component with Adblock Plus integrated.
-You can find it in the 'libadblockplus-android-webview' directory.
+You can find it in the 'adblock-android-webview' directory.
 
 `AdblockWebView` class provides built-in ad blocking
 (both resource loading filtering and element hiding) and inherits from Android
@@ -253,12 +253,12 @@ In the project root directory run:
 
     ./gradlew assemble
 
-This will generate *.aar in the 'libadblockplus-android-webview/build/outputs/aar' directory.
+This will generate *.aar in the 'adblock-android-webview/build/outputs/aar' directory.
 
 ## WebView Application
 
 An Android application that demonstrates how to use AdblockWebView.
-You can find it in the 'libadblockplus-android-webviewapp' directory.
+You can find it in the 'adblock-android-webviewapp' directory.
 
 ### Building
 
@@ -268,4 +268,4 @@ In the project root directory run:
 
     ./gradlew assemble
 
-This will generate *.apk in the 'libadblockplus-android-webviewapp/build/outputs/apk/' directory.
+This will generate *.apk in the 'adblock-android-webviewapp/build/outputs/apk/' directory.
