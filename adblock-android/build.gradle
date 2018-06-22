@@ -7,8 +7,8 @@ android {
   defaultConfig {
     minSdkVersion 16
     targetSdkVersion 16
-    versionCode 5
-    versionName "2.3"
+    versionCode 6
+    versionName "3.0"
   }
 
   publishNonDefault true

@@ -25,6 +25,20 @@ You can find it in the 'adblock-android' directory.
 
 Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
 
+#### Building of libadblockplus
+
+First, we need to build `V8` required for `libadblockplus`.
+See `libadblockplus/README` or V8 documentation on how to build V8 or
+fetch precompiled one. For the latter, run in 'libadblockplus' directory:
+
+    make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
+    make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
+
+Then we can build `libadblockplus`:
+
+    make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
+    make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
+
 #### Building from command-line
 
 In the project root directory create the file _local.properties_ and set
@@ -65,16 +79,17 @@ output while building
 
 This can be desired to use product's V8 (let's say Chromium) instead of built-in V8.
 Put prebuilt shared V8 library file(s) in ARCH directories and set `SHARED_V8_LIB_FILENAMES`
-environment variable before building. You can pass multiple filenames, separated with space.
+environment variable and `SHARED_V8_LIB_DIR` before building.
+You can pass multiple filenames in `SHARED_V8_LIB_FILENAMES`, separated with space.
 Libadblockplus is required to be linked with that library file(s).
 
 For example:
 
-    SHARED_V8_LIB_FILENAMES=libv8.cr.so ./gradlew clean assemble
+    SHARED_V8_LIB_FILENAMES=libv8.cr.so SHARED_V8_LIB_DIR="/tmp/shared_v8" ./gradlew clean assembleAbi_arm
     
 or
 
-    SHARED_V8_LIB_FILENAMES="libv8.cr.so libfoo.so" ./gradlew clean assemble
+    SHARED_V8_LIB_FILENAMES="libv8.cr.so libv8_libbase.cr.so libv8_libplatform.cr.so" SHARED_V8_LIB_DIR="/tmp/shared_v8" ./gradlew clean assembleAbi_arm
     
 for multiple library files.
 
@@ -82,13 +97,10 @@ Note
   
     [Configuration] Excluding shared v8 library libv8.cr.so from AAR
     ...
-    [Configuration] Linking dynamically with shared v8 library ./libadblockplus-binaries/android_armeabi-v7a/libv8.cr.so
+    [Configuration] Linking dynamically with shared v8 library /tmp/shared_v8/release/libv8.cr.so
     ...
 
 output while building.
-
-Set `SHARED_V8_LIB_DIR` environment variable as full absolute path to pass
-specific directory instead of default one (`adblock-android/jni/libadblockplus-binaries`).
 
 ### Building for single ARCH
 

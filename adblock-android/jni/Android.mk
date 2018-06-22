@@ -1,96 +1,99 @@
 LOCAL_PATH := $(call my-dir)
 
-# SHARED_V8_LIB_DIR is expected to be full absolute path if set by user
-ifeq ($(SHARED_V8_LIB_DIR),)
-  # default
-  SHARED_V8_LIB_DIR := ./libadblockplus-binaries
-  SHARED_V8_INCLUDE_DIR := jni/libadblockplus-binaries/include/
-else
-  # set by user
-  $(info [Configuration] Using shared v8 libraries directory $(SHARED_V8_LIB_DIR))
-  SHARED_V8_INCLUDE_DIR := $(SHARED_V8_LIB_DIR)/include/
+# Use cases:
+# ----------
+# V8 - static/dynamic
+#      headers: V8_INCLUDE_DIR
+#      binaries:
+#               static: STATIC_V8_LIB_DIR (libv8_monolith.a)
+#               dynamic: SHARED_V8_LIB_DIR (libv8.cr.so, libv8_libbase.cr.so)
+# libadblockplus - static
+#      headers: LIBABP_INCLUDE_DIR
+#      binaries:
+#               LIBABP_LIB_DIR (libadblockplus.a)
+
+# libadblockplus
+# ---
+
+# headers
+
+# default
+ifeq ($(LIBABP_INCLUDE_DIR),)
+  LIBABP_INCLUDE_DIR := $(PWD)/../libadblockplus/include
+  $(info [Configuration] Pass LIBABP_INCLUDE_DIR to set libadblockplus headers directory, using default value.)
 endif
 
-# Report configuration
-ifeq ($(SHARED_V8_LIB_FILENAMES),)
-# static
-$(info [Configuration] Linking statically with built-in v8)
-else
-# dynamic
+$(info [Configuration] Using libadblockplus headers directory $(LIBABP_INCLUDE_DIR))
+TMP_C_INCLUDES := $(LIBABP_INCLUDE_DIR)
 
-define info_define
-    $(info [Configuration] Linking dynamically with shared v8 library $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/$1)
-endef
-$(foreach item,$(SHARED_V8_LIB_FILENAMES),$(eval $(call info_define,$(item))))
+# binaries
+
+ifeq ($(LIBABP_LIB_DIR),)
+  LIBABP_LIB_DIR := $(PWD)/../libadblockplus/build/local/$(TARGET_ARCH_ABI)
+  $(info [Configuration] Pass LIBABP_LIB_DIR to set static libadblockplus library directory, using default value.)
 endif
 
-# libadblockplus.a
+$(info [Configuration] Using static libadblockplus library $(LIBABP_LIB_DIR)/libadblockplus.a)
+
 include $(CLEAR_VARS)
-
 LOCAL_MODULE := libadblockplus
-LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libadblockplus.a
-
+LOCAL_SRC_FILES := $(LIBABP_LIB_DIR)/libadblockplus.a
 include $(PREBUILT_STATIC_LIBRARY)
+TMP_LIBRARIES += libadblockplus
+# ---
 
-# libv8-platform.a
-include $(CLEAR_VARS)
+# V8
+# ---
 
-LOCAL_MODULE := v8-libplatform
-LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_libplatform.a
+# headers
 
-include $(PREBUILT_STATIC_LIBRARY)
+# default
+ifeq ($(V8_INCLUDE_DIR),)
+  V8_INCLUDE_DIR := $(PWD)/../libadblockplus/third_party/prebuilt-v8/include
+  $(info [Configuration] Pass V8_INCLUDE_DIR to set V8 headers directory, using default value.)
+endif
 
-ifeq ($(SHARED_V8_LIB_FILENAMES),)
-# static
+$(info [Configuration] Using V8 headers directory $(V8_INCLUDE_DIR))
+TMP_C_INCLUDES += $(V8_INCLUDE_DIR)
 
-# libv8-libsampler.a
-include $(CLEAR_VARS)
+# binaries
+ifeq ($(SHARED_V8_LIB_DIR),)
 
-LOCAL_MODULE := v8-libsampler
-LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_libsampler.a
+  # default
+  ifeq ($(STATIC_V8_LIB_DIR),)
 
-include $(PREBUILT_STATIC_LIBRARY)
+    ifeq ($(APP_ABI),armeabi-v7a)
+      ABP_TARGET_ARCH := arm
+    else
+      ABP_TARGET_ARCH := ia32
+    endif
+      
+    STATIC_V8_LIB_DIR := $(PWD)/../libadblockplus/third_party/prebuilt-v8/android-$(ABP_TARGET_ARCH)-release
+    $(info [Configuration] Pass STATIC_V8_LIB_DIR to set static V8 libraries directory, using default value.)
+  endif
 
-# libv8-base.a
-include $(CLEAR_VARS)
+  $(info [Configuration] Using static v8 library $(STATIC_V8_LIB_DIR)/libv8_monolith.a)
 
-LOCAL_MODULE := v8-base
-LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_base.a
-
-include $(PREBUILT_STATIC_LIBRARY)
-
-# libv8_libbase.a
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := v8-libbase
-LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_libbase.a
-
-include $(PREBUILT_STATIC_LIBRARY)
-
-# libv8_snapshot.a
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := v8-snapshot
-LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/libv8_snapshot.a
-
-include $(PREBUILT_STATIC_LIBRARY)
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libv8_monolith
+  LOCAL_SRC_FILES := $(STATIC_V8_LIB_DIR)/libv8_monolith.a
+  include $(PREBUILT_STATIC_LIBRARY)
+  TMP_LIBRARIES += libv8_monolith
 
 else
-# dynamic
 
-# prebuilt shared libraries v8
-
-define libv8_define
-    include $(CLEAR_VARS)
-
-    LOCAL_MODULE := $1
-    LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/android_$(TARGET_ARCH_ABI)/$1
-
-    include $(PREBUILT_SHARED_LIBRARY)
-endef
-$(foreach item,$(SHARED_V8_LIB_FILENAMES),$(eval $(call libv8_define,$(item))))
+  define libv8_define
+      include $(CLEAR_VARS)
+      $(info [Configuration] Linking dynamically with shared v8 library $(SHARED_V8_LIB_DIR)/$1)
+      LOCAL_MODULE := $1
+      LOCAL_SRC_FILES := $(SHARED_V8_LIB_DIR)/$1
+      include $(PREBUILT_SHARED_LIBRARY)
+      TMP_LIBRARIES += $1
+  endef
+  $(foreach item,$(SHARED_V8_LIB_FILENAMES),$(eval $(call libv8_define,$(item))))
 
 endif
+# ----
 
 include $(CLEAR_VARS)
 
@@ -107,19 +110,12 @@ LOCAL_SRC_FILES += JniIsAllowedConnectionTypeCallback.cpp
 
 LOCAL_CPP_FEATURES := exceptions
 
-LOCAL_C_INCLUDES := $(SHARED_V8_INCLUDE_DIR)
-
 LOCAL_LDFLAGS += -Wl,--allow-multiple-definition
 LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
 
-LOCAL_STATIC_LIBRARIES := libadblockplus v8-libplatform
-
-ifeq ($(SHARED_V8_LIB_FILENAMES),)
-# static
-LOCAL_STATIC_LIBRARIES += v8-base v8-snapshot v8-libsampler v8-libbase
-else
-# dynamic
-LOCAL_STATIC_LIBRARIES += $(SHARED_V8_LIB_FILENAMES)
-endif
+# TMP_ variables are used to collect include paths for LOCAL_C_INCLUDES
+# and libs for LOCAL_STATIC_LIBRARIES because `include $(CLEAR_VARS)` clears them otherwise
+LOCAL_C_INCLUDES := $(TMP_C_INCLUDES)
+LOCAL_STATIC_LIBRARIES := $(TMP_LIBRARIES)
 
 include $(BUILD_SHARED_LIBRARY)
