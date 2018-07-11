@@ -84,7 +84,7 @@ public class AndroidWebRequestResourceWrapper implements WebRequest
    * Constructor
    * @param context android context
    * @param request wrapped request to perform the request if it's not preloaded subscription requested
-   * @param urlToResourceIdMap map URL -> android resource id for preloaded subscriptions
+   * @param urlToResourceIdMap map URL to android resource id for preloaded subscriptions
    *                           See AndroidWebRequestResourceWrapper.EASYLIST_... constants
    * @param storage Storage impl to remember served interceptions
    */

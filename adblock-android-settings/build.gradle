@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "25.0.0"
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 21
-        versionCode 6
-        versionName "3.0"
+        missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_x86'
     }
 
     sourceSets {
@@ -18,18 +18,23 @@ android {
             resources.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
-
-            jni {
-                dependencies {
-                    project(path: ":adblock-android", configuration: getAbiFlavor() + "Debug")
-                }
-            }
         }
     }
 }
 
 dependencies {
-    debugCompile project("path": ':adblock-android', "configuration": getAbiFlavor() + "Debug")
-    releaseCompile project("path": ':adblock-android', "configuration": getAbiFlavor() + "Release")
-    compile 'com.android.support:support-v4:21.0.3'
+    api project(':adblock-android')
+    implementation 'com.android.support:support-v4:21.0.3'
+}
+
+publish {
+    userOrg = rootProject.ext.bintrayUserOrg
+    groupId = rootProject.ext.bintrayGroupId
+    artifactId = 'adblock-android-settings'
+    publishVersion = '3.0'
+    licences = rootProject.ext.bintrayLicences
+    desc = 'An Android library that provides a configuration interface for Adblock Plus.'
+    website = rootProject.ext.bintrayWebsite
+    issueTracker = rootProject.ext.bintrayIssueTracker
+    repository = rootProject.ext.bintrayRepository
 }

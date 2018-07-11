@@ -1,20 +1,20 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
 
 android {
   compileSdkVersion 16
-  buildToolsVersion "25.0.0"
+  buildToolsVersion '27.0.3'
 
   defaultConfig {
     minSdkVersion 16
     targetSdkVersion 16
-    versionCode 6
-    versionName "3.0"
   }
 
-  publishNonDefault true
+  flavorDimensions "abi"
 
   productFlavors {
     abi_arm {
+      dimension = "abi"
       ndk {
         abiFilters "armeabi-v7a"
       }
@@ -27,6 +27,7 @@ android {
     }
 
     abi_x86 {
+      dimension = "abi"
       ndk {
         abiFilters "x86"
       }
@@ -39,6 +40,7 @@ android {
     }
 
     abi_all {
+      dimension = "abi"
       ndk {
         abiFilters 'armeabi-v7a', 'x86'
       }
@@ -58,6 +60,19 @@ android {
       res.srcDirs = ['res']
       jni.srcDirs = ['jni']
     }
+  }
+
+  publish {
+    userOrg = rootProject.ext.bintrayUserOrg
+    groupId = rootProject.ext.bintrayGroupId
+    artifactId = 'adblock-android'
+    publishVersion = '3.0'
+    licences = rootProject.ext.bintrayLicences
+    desc = 'An Android library that provides the core functionality of Adblock Plus.'
+    website = rootProject.ext.bintrayWebsite
+    issueTracker = rootProject.ext.bintrayIssueTracker
+    repository = rootProject.ext.bintrayRepository
+    publications = ['abi_allRelease']
   }
 
   def sharedV8LibFiles = System.getenv('SHARED_V8_LIB_FILENAMES')

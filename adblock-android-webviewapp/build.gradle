@@ -1,20 +1,8 @@
 apply plugin: 'com.android.application'
 
-allprojects {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
 android {
     compileSdkVersion 21
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "27.0.3"
 
     defaultConfig {
         applicationId "org.adblockplus.libadblockplus.android.webviewapp"
@@ -22,6 +10,7 @@ android {
         targetSdkVersion 21
         versionCode 10
         versionName "3.0"
+        missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_x86'
     }
 
     sourceSets {
@@ -30,18 +19,12 @@ android {
             java.srcDirs = ['src']
             resources.srcDirs = ['src']
             res.srcDirs = ['res']
-
-            jni {
-                dependencies {
-                    project ":adblock-android"
-                }
-            }
         }
     }
 }
 
 dependencies {
-    compile project(':adblock-android-settings')
-    compile project(':adblock-android-webview')
-    compile 'com.android.support:appcompat-v7:21.0.3'
+    implementation project(':adblock-android-settings')
+    implementation project(':adblock-android-webview')
+    implementation 'com.android.support:appcompat-v7:21.0.3'
 }

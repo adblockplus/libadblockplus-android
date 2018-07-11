@@ -15,6 +15,16 @@ To update those, call:
 An Android library that provides the core functionality of Adblock Plus.
 You can find it in the 'adblock-android' directory.
 
+### Using as a Gradle dependency
+
+Make sure you have `jcenter()` in the list of repositories and then add the following dependency:
+
+```groovy
+dependencies {
+    implementation 'org.adblockplus:adblock-android:3.0'
+}
+```
+
 ### Building
 
 #### Requirements
@@ -86,15 +96,15 @@ Libadblockplus is required to be linked with that library file(s).
 For example:
 
     SHARED_V8_LIB_FILENAMES=libv8.cr.so SHARED_V8_LIB_DIR="/tmp/shared_v8" ./gradlew clean assembleAbi_arm
-    
+
 or
 
     SHARED_V8_LIB_FILENAMES="libv8.cr.so libv8_libbase.cr.so libv8_libplatform.cr.so" SHARED_V8_LIB_DIR="/tmp/shared_v8" ./gradlew clean assembleAbi_arm
-    
+
 for multiple library files.
 
 Note
-  
+
     [Configuration] Excluding shared v8 library libv8.cr.so from AAR
     ...
     [Configuration] Linking dynamically with shared v8 library /tmp/shared_v8/release/libv8.cr.so
@@ -111,11 +121,11 @@ building end-user android application. However sometimes it can be desired to bu
 Pass `abi_arm` or `abi_x86` to build it for single arch or `abi_all` for all ARCHs:
 
     `./gradlew clean assembleAbi_arm`
-    
+
 Note
 
     [Configuration] Using adblock-android ABI flavor: abi_arm
-    
+
 output while building.
 
 ## Library tests
@@ -147,6 +157,16 @@ An Android library that provides a configuration interface for Adblock Plus.
 You can find it in the 'adblock-android-settings' directory:
 * GeneralSettingsFragment - main fragment
 * WhitelistedDomainsSettingsFragment - whitelisted domains fragment
+
+### Using as a Gradle dependency
+
+Make sure you have `jcenter()` in the list of repositories and then add the following dependency:
+
+```groovy
+dependencies {
+    implementation 'org.adblockplus:adblock-android-settings:3.0'
+}
+```
 
 ### Usage
 
@@ -229,6 +249,16 @@ You can find it in the 'adblock-android-webview' directory.
 `AdblockWebView` class provides built-in ad blocking
 (both resource loading filtering and element hiding) and inherits from Android
 ['WebView'](https://developer.android.com/reference/android/webkit/WebView.html).
+
+### Using as a Gradle dependency
+
+Make sure you have `jcenter()` in the list of repositories and then add the following dependency:
+
+```groovy
+dependencies {
+    implementation 'org.adblockplus:adblock-android-webview:3.0'
+}
+```
 
 ### Usage
 
