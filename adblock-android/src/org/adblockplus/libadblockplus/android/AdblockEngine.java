@@ -81,7 +81,11 @@ public final class AdblockEngine
                                         String application, String applicationVersion)
   {
     final String sdkVersion = String.valueOf(VERSION.SDK_INT);
-    final String locale = Locale.getDefault().toString().replace('_', '-');
+    String locale = Locale.getDefault().toString().replace('_', '-');
+    if (locale.startsWith("iw-"))
+    {
+      locale = "he" + locale.substring(2);
+    }
 
     AppInfo.Builder builder =
       AppInfo
