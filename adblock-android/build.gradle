@@ -66,7 +66,7 @@ android {
     userOrg = rootProject.ext.bintrayUserOrg
     groupId = rootProject.ext.bintrayGroupId
     artifactId = 'adblock-android'
-    publishVersion = '3.0'
+    publishVersion = '3.1'
     licences = rootProject.ext.bintrayLicences
     desc = 'An Android library that provides the core functionality of Adblock Plus.'
     website = rootProject.ext.bintrayWebsite
