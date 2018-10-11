@@ -3,7 +3,7 @@
     package="org.adblockplus.libadblockplus.android.settings">
 
     <uses-sdk
-        android:minSdkVersion="21"
+        android:minSdkVersion="16"
         android:targetSdkVersion="21" />
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>

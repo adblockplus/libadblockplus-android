@@ -6,7 +6,7 @@ android {
     buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 16
         targetSdkVersion 21
         missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_x86'
     }
@@ -31,7 +31,7 @@ publish {
     userOrg = rootProject.ext.bintrayUserOrg
     groupId = rootProject.ext.bintrayGroupId
     artifactId = 'adblock-android-settings'
-    publishVersion = '3.0'
+    publishVersion = '3.1'
     licences = rootProject.ext.bintrayLicences
     desc = 'An Android library that provides a configuration interface for Adblock Plus.'
     website = rootProject.ext.bintrayWebsite
