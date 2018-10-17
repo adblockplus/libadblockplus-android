@@ -71,16 +71,6 @@ public final class FilterEngine
     return fetchAvailableSubscriptions(this.ptr);
   }
 
-  public void removeUpdateAvailableCallback()
-  {
-    removeUpdateAvailableCallback(this.ptr);
-  }
-
-  public void setUpdateAvailableCallback(final UpdateAvailableCallback callback)
-  {
-    setUpdateAvailableCallback(this.ptr, callback.ptr);
-  }
-
   public void removeFilterChangeCallback()
   {
     removeFilterChangeCallback(this.ptr);
@@ -89,16 +79,6 @@ public final class FilterEngine
   public void setFilterChangeCallback(final FilterChangeCallback callback)
   {
     setFilterChangeCallback(this.ptr, callback.ptr);
-  }
-
-  public void forceUpdateCheck()
-  {
-    forceUpdateCheck(this.ptr, 0);
-  }
-
-  public void forceUpdateCheck(final UpdateCheckDoneCallback callback)
-  {
-    forceUpdateCheck(this.ptr, callback != null ? callback.ptr : 0);
   }
 
   public List<String> getElementHidingSelectors(final String domain)
@@ -218,15 +198,9 @@ public final class FilterEngine
 
   private final static native List<Subscription> fetchAvailableSubscriptions(long ptr);
 
-  private final static native void removeUpdateAvailableCallback(long ptr);
-
-  private final static native void setUpdateAvailableCallback(long ptr, long filterPtr);
-
   private final static native void removeFilterChangeCallback(long ptr);
 
   private final static native void setFilterChangeCallback(long ptr, long filterPtr);
-
-  private final static native void forceUpdateCheck(long ptr, long updatePtr);
 
   private final static native List<String> getElementHidingSelectors(long ptr, String domain);
 
