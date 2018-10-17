@@ -174,34 +174,6 @@ static jobject JNICALL JniFetchAvailableSubscriptions(JNIEnv* env, jclass clazz,
   CATCH_THROW_AND_RETURN(env, 0);
 }
 
-static void JNICALL JniRemoveUpdateAvailableCallback(JNIEnv* env, jclass clazz,
-                                                     jlong ptr)
-{
-  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
-  try
-  {
-    engine.RemoveUpdateAvailableCallback();
-  }
-  CATCH_AND_THROW(env)
-}
-
-static void JNICALL JniSetUpdateAvailableCallback(JNIEnv* env, jclass clazz,
-                                                  jlong ptr, jlong callbackPtr)
-{
-  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
-  JniUpdateAvailableCallback* const callback =
-      JniLongToTypePtr<JniUpdateAvailableCallback>(callbackPtr);
-
-  const AdblockPlus::FilterEngine::UpdateAvailableCallback updateAvailableCallback =
-      std::bind(&JniUpdateAvailableCallback::Callback, callback,
-                     std::placeholders::_1);
-  try
-  {
-    engine.SetUpdateAvailableCallback(updateAvailableCallback);
-  }
-  CATCH_AND_THROW(env)
-}
-
 static void JNICALL JniRemoveFilterChangeCallback(JNIEnv* env, jclass clazz, jlong ptr)
 {
   AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
@@ -228,29 +200,6 @@ static void JNICALL JniSetFilterChangeCallback(JNIEnv* env, jclass clazz,
   try
   {
     engine.SetFilterChangeCallback(filterCallback);
-  }
-  CATCH_AND_THROW(env)
-}
-
-static void JNICALL JniForceUpdateCheck(JNIEnv* env, jclass clazz, jlong ptr, jlong updaterPtr)
-{
-  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
-  JniUpdateCheckDoneCallback* callback =
-      JniLongToTypePtr<JniUpdateCheckDoneCallback>(updaterPtr);
-
-  AdblockPlus::FilterEngine::UpdateCheckDoneCallback
-      updateCheckDoneCallback = 0;
-
-  if (updaterPtr)
-  {
-    updateCheckDoneCallback =
-        std::bind(&JniUpdateCheckDoneCallback::Callback, callback,
-                       std::placeholders::_1);
-  }
-
-  try
-  {
-    engine.ForceUpdateCheck(updateCheckDoneCallback);
   }
   CATCH_AND_THROW(env)
 }
@@ -520,11 +469,8 @@ static JNINativeMethod methods[] =
   { (char*)"removeShowNotificationCallback", (char*)"(J)V", (void*)JniRemoveShowNotificationCallback },
   { (char*)"getListedSubscriptions", (char*)"(J)Ljava/util/List;", (void*)JniGetListedSubscriptions },
   { (char*)"fetchAvailableSubscriptions", (char*)"(J)Ljava/util/List;", (void*)JniFetchAvailableSubscriptions },
-  { (char*)"setUpdateAvailableCallback", (char*)"(JJ)V", (void*)JniSetUpdateAvailableCallback },
-  { (char*)"removeUpdateAvailableCallback", (char*)"(J)V", (void*)JniRemoveUpdateAvailableCallback },
   { (char*)"setFilterChangeCallback", (char*)"(JJ)V", (void*)JniSetFilterChangeCallback },
   { (char*)"removeFilterChangeCallback", (char*)"(J)V", (void*)JniRemoveFilterChangeCallback },
-  { (char*)"forceUpdateCheck", (char*)"(JJ)V", (void*)JniForceUpdateCheck },
   { (char*)"getElementHidingSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingSelectors },
   { (char*)"matches", (char*)"(JLjava/lang/String;" TYP("FilterEngine$ContentType") "Ljava/lang/String;)" TYP("Filter"), (void*)JniMatches },
   { (char*)"matches", (char*)"(JLjava/lang/String;" TYP("FilterEngine$ContentType") "[Ljava/lang/String;)" TYP("Filter"), (void*)JniMatchesMany },

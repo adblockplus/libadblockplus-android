@@ -37,8 +37,6 @@ import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.Platform;
 import org.adblockplus.libadblockplus.ShowNotificationCallback;
 import org.adblockplus.libadblockplus.Subscription;
-import org.adblockplus.libadblockplus.UpdateAvailableCallback;
-import org.adblockplus.libadblockplus.UpdateCheckDoneCallback;
 import org.adblockplus.libadblockplus.WebRequest;
 
 import android.content.Context;
@@ -69,8 +67,6 @@ public final class AdblockEngine
   private volatile FilterEngine filterEngine;
   private volatile LogSystem logSystem;
   private volatile WebRequest webRequest;
-  private volatile UpdateAvailableCallback updateAvailableCallback;
-  private volatile UpdateCheckDoneCallback updateCheckDoneCallback;
   private volatile FilterChangeCallback filterChangeCallback;
   private volatile ShowNotificationCallback showNotificationCallback;
   private volatile boolean elemhideEnabled;
@@ -178,18 +174,6 @@ public final class AdblockEngine
       return this;
     }
 
-    public Builder setUpdateAvailableCallback(UpdateAvailableCallback callback)
-    {
-      engine.updateAvailableCallback = callback;
-      return this;
-    }
-
-    public Builder setUpdateCheckDoneCallback(UpdateCheckDoneCallback callback)
-    {
-      engine.updateCheckDoneCallback = callback;
-      return this;
-    }
-
     public Builder setShowNotificationCallback(ShowNotificationCallback callback)
     {
       engine.showNotificationCallback = callback;
@@ -230,11 +214,6 @@ public final class AdblockEngine
 
     private void initCallbacks()
     {
-      if (engine.updateAvailableCallback != null)
-      {
-        engine.filterEngine.setUpdateAvailableCallback(engine.updateAvailableCallback);
-      }
-
       if (engine.showNotificationCallback != null)
       {
         engine.filterEngine.setShowNotificationCallback(engine.showNotificationCallback);
@@ -292,10 +271,6 @@ public final class AdblockEngine
     // engines first
     if (this.filterEngine != null)
     {
-      if (this.updateAvailableCallback != null)
-      {
-        this.filterEngine.removeUpdateAvailableCallback();
-      }
 
       if (this.filterChangeCallback != null)
       {
@@ -312,12 +287,6 @@ public final class AdblockEngine
     }
 
     // callbacks then
-    if (this.updateAvailableCallback != null)
-    {
-      this.updateAvailableCallback.dispose();
-      this.updateAvailableCallback = null;
-    }
-
     if (this.filterChangeCallback != null)
     {
       this.filterChangeCallback.dispose();
@@ -624,11 +593,6 @@ public final class AdblockEngine
       return new ArrayList<String>();
     }
     return this.filterEngine.getElementHidingSelectors(domain);
-  }
-
-  public void checkForUpdates()
-  {
-    this.filterEngine.forceUpdateCheck(this.updateCheckDoneCallback);
   }
 
   public FilterEngine getFilterEngine()
