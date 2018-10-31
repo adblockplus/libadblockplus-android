@@ -13,4 +13,3 @@ upload.py
 .*
 !.gitignore
 !.hgignore
-libadblockplus
