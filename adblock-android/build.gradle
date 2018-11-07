@@ -49,16 +49,7 @@ android {
 
   externalNativeBuild {
     ndkBuild {
-      path 'jni/Android.mk'
-    }
-  }
-
-  sourceSets {
-    main {
-      manifest.srcFile 'AndroidManifest.xml'
-      java.srcDirs = ['src']
-      res.srcDirs = ['res']
-      jni.srcDirs = ['jni']
+      path 'src/main/jni/Android.mk'
     }
   }
 
