@@ -2,9 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="org.adblockplus.libadblockplus.android.webviewapp">
 
-    <uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="21"/>
+    <uses-sdk android:targetSdkVersion="21"/>
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
