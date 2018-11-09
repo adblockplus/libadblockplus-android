@@ -28,8 +28,8 @@ import java.util.List;
  */
 public class AdblockSettings implements Serializable
 {
-  private transient boolean adblockEnabled;
-  private transient Boolean acceptableAdsEnabled;
+  private volatile boolean adblockEnabled;
+  private volatile boolean acceptableAdsEnabled;
   private List<Subscription> subscriptions;
   private List<String> whitelistedDomains;
   private ConnectionType allowedConnectionType;
