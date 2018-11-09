@@ -9,12 +9,15 @@ android {
         minSdkVersion 16
         targetSdkVersion 21
         missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_x86'
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 }
 
 dependencies {
     api project(':adblock-android')
     implementation 'com.android.support:support-v4:21.0.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
 }
 
 publish {
