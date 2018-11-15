@@ -2,11 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.adblockplus.libadblockplus.tests">
 
-    <uses-sdk android:targetSdkVersion="16" />
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />

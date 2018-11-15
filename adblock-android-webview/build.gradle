@@ -2,12 +2,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
 
 android {
-  compileSdkVersion 21
+  compileSdkVersion 28
   buildToolsVersion "28.0.3"
 
   defaultConfig {
     minSdkVersion 21
-    targetSdkVersion 21
+    targetSdkVersion 28
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_x86'
   }
 }
