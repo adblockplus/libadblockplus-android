@@ -2,6 +2,4 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.adblockplus.libadblockplus.android.webview">
 
-    <uses-sdk android:targetSdkVersion="21" />
-
 </manifest>

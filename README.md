@@ -68,6 +68,7 @@ This will generate *.aar library artifact in the 'adblock-android/build/outputs/
 An app that uses the library have to add the following permissions to `AndroidManifest.xml`:
  * `<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>`
  * `<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>`
+ * `<uses-permission android:name="android.permission.INTERNET"/>`
 
 (added automatically if building with Gradle or should be added manually otherwise).
 
