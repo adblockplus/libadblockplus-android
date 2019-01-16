@@ -9,5 +9,6 @@ crowdin.yaml
 upload.py
 .DS_Store
 .*
+!.gitlab-ci.yml
 !.gitignore
 !.hgignore

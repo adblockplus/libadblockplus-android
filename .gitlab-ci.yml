@@ -1,0 +1,50 @@
+stages:
+  - build
+
+build_libadblockplus-android:arm:
+  stage: build
+  before_script:
+    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
+    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
+    - mkdir -p .git/info
+    - ./ensure_dependencies.py
+    - cd ./libadblockplus
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
+    - cd ..
+  script:
+    - ./gradlew clean assembleAbi_arm
+
+build_libadblockplus-android:x86:
+  stage: build
+  before_script:
+    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
+    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
+    - mkdir -p .git/info
+    - ./ensure_dependencies.py
+    - cd ./libadblockplus
+    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
+    - cd ..
+  script:
+    - ./gradlew clean assembleAbi_x86
+
+build_libadblockplus-android:all:
+  stage: build
+  before_script:
+    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
+    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
+    - mkdir -p .git/info
+    - ./ensure_dependencies.py
+    - cd ./libadblockplus
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
+    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
+    - cd ..
+  script:
+    - ./gradlew clean assemble
+  artifacts:
+    paths:
+      - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
+      - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
