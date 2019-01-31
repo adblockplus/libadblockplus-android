@@ -179,9 +179,6 @@ public class MainActivity extends Activity
     // to get debug/warning log output
     webView.setDebugMode(DEVELOPMENT_BUILD);
 
-    // render as fast as we can
-    webView.setAllowDrawDelay(0);
-
     // to show that external WebViewClient is still working
     webView.setWebViewClient(webViewClient);
 

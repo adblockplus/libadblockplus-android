@@ -20,8 +20,6 @@ package org.adblockplus.libadblockplus.android.webview;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
@@ -58,6 +56,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -68,15 +67,6 @@ public class AdblockWebView extends WebView
 {
   private static final String TAG = Utils.getTag(AdblockWebView.class);
 
-  /**
-   * Default (in some conditions) start redraw delay after DOM modified with injected JS (millis)
-   */
-  public static final int ALLOW_DRAW_DELAY = 200;
-  /*
-     The value could be different for devices and completely unclear why we need it and
-     how to measure actual value
-  */
-
   protected static final String HEADER_REFERRER = "Referer";
   protected static final String HEADER_REQUESTED_WITH = "X-Requested-With";
   protected static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
@@ -84,17 +74,16 @@ public class AdblockWebView extends WebView
   private static final String BRIDGE_TOKEN = "{{BRIDGE}}";
   private static final String DEBUG_TOKEN = "{{DEBUG}}";
   private static final String HIDE_TOKEN = "{{HIDE}}";
+  private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
   private static final String BRIDGE = "jsBridge";
   private static final String[] EMPTY_ARRAY = {};
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
-  private volatile boolean addDomListener = true;
   private boolean adblockEnabled = true;
   private boolean debugMode;
   private AdblockEngineProvider provider;
   private Integer loadError;
-  private int allowDrawDelay = ALLOW_DRAW_DELAY;
   private WebChromeClient extWebChromeClient;
   private WebViewClient extWebViewClient;
   private WebViewClient intWebViewClient;
@@ -106,12 +95,7 @@ public class AdblockWebView extends WebView
   private Object elemHideThreadLockObject = new Object();
   private ElemHideThread elemHideThread;
   private boolean loading;
-  private volatile boolean elementsHidden = false;
-  private final Handler handler = new Handler();
-
-  // used to prevent user see flickering for elements to hide
-  // for some reason it's rendered even if element is hidden on 'dom ready' event
-  private volatile boolean allowDraw = true;
+  private String elementsHiddenFlag;
 
   public AdblockWebView(Context context)
   {
@@ -129,23 +113,6 @@ public class AdblockWebView extends WebView
   {
     super(context, attrs, defStyle);
     initAbp();
-  }
-
-  /**
-   * Warning: do not rename (used in injected JS by method name)
-   * @param value set if one need to set DOM listener
-   */
-  @JavascriptInterface
-  public void setAddDomListener(boolean value)
-  {
-    d("addDomListener=" + value);
-    this.addDomListener = value;
-  }
-
-  @JavascriptInterface
-  public boolean getAddDomListener()
-  {
-    return addDomListener;
   }
 
   public boolean isAdblockEnabled()
@@ -218,7 +185,8 @@ public class AdblockWebView extends WebView
     return Utils
       .readAssetAsString(getContext(), filename)
       .replace(BRIDGE_TOKEN, BRIDGE)
-      .replace(DEBUG_TOKEN, (debugMode ? "" : "//"));
+      .replace(DEBUG_TOKEN, (debugMode ? "" : "//"))
+      .replace(HIDDEN_TOKEN, elementsHiddenFlag);
   }
 
   private void runScript(String script)
@@ -545,25 +513,7 @@ public class AdblockWebView extends WebView
     public void onProgressChanged(WebView view, int newProgress)
     {
       d("Loading progress=" + newProgress + "%");
-
-      // addDomListener is changed to 'false' in `setAddDomListener` invoked from injected JS
-      if (getAddDomListener() && loadError == null && injectJs != null)
-      {
-        d("Injecting script");
-        runScript(injectJs);
-
-        if (allowDraw && loading)
-        {
-          startPreventDrawing();
-        }
-      }
-
-      // workaround for the issue: https://issues.adblockplus.org/ticket/5303
-      if (newProgress == 100 && !allowDraw)
-      {
-        w("Workaround for the issue #5303");
-        stopPreventDrawing();
-      }
+      tryInjectJs();
 
       if (extWebChromeClient != null)
       {
@@ -586,24 +536,13 @@ public class AdblockWebView extends WebView
     }
   };
 
-  public int getAllowDrawDelay()
+  private void tryInjectJs()
   {
-    return allowDrawDelay;
-  }
-
-  /**
-   * Set start redraw delay after DOM modified with injected JS
-   * (used to prevent flickering after 'DOM ready')
-   * @param allowDrawDelay delay (in millis)
-   */
-  public void setAllowDrawDelay(int allowDrawDelay)
-  {
-    if (allowDrawDelay < 0)
+    if (loadError == null && injectJs != null)
     {
-      throw new IllegalArgumentException("Negative value is not allowed");
+      d("Injecting script");
+      runScript(injectJs);
     }
-
-    this.allowDrawDelay = allowDrawDelay;
   }
 
   @Override
@@ -939,6 +878,12 @@ public class AdblockWebView extends WebView
   {
     addJavascriptInterface(this, BRIDGE);
     initClients();
+    initRandom();
+  }
+
+  private void initRandom()
+  {
+    elementsHiddenFlag = "abp" + Math.abs(new Random().nextLong());
   }
 
   private void initClients()
@@ -1121,8 +1066,6 @@ public class AdblockWebView extends WebView
     d("Start loading " + newUrl);
 
     loading = true;
-    addDomListener = true;
-    elementsHidden = false;
     loadError = null;
     url = newUrl;
 
@@ -1257,7 +1200,6 @@ public class AdblockWebView extends WebView
     d("Stop abp loading");
 
     loading = false;
-    stopPreventDrawing();
     clearReferrers();
 
     synchronized (elemHideThreadLockObject)
@@ -1268,86 +1210,6 @@ public class AdblockWebView extends WebView
       }
     }
   }
-
-  // warning: do not rename (used in injected JS by method name)
-  @JavascriptInterface
-  public void setElementsHidden(boolean value)
-  {
-    // invoked with 'true' by JS callback when DOM is loaded
-    elementsHidden = value;
-
-    // fired on worker thread, but needs to be invoked on main thread
-    if (value)
-    {
-//     handler.post(allowDrawRunnable);
-//     should work, but it's not working:
-//     the user can see element visible even though it was hidden on dom event
-
-      if (allowDrawDelay > 0)
-      {
-        d("Scheduled 'allow drawing' invocation in " + allowDrawDelay + " ms");
-      }
-      handler.postDelayed(allowDrawRunnable, allowDrawDelay);
-    }
-  }
-
-  // warning: do not rename (used in injected JS by method name)
-  @JavascriptInterface
-  public boolean isElementsHidden()
-  {
-    return elementsHidden;
-  }
-
-  @Override
-  public void onPause()
-  {
-    handler.removeCallbacks(allowDrawRunnable);
-    super.onPause();
-  }
-
-  @Override
-  protected void onDraw(Canvas canvas)
-  {
-    if (allowDraw)
-    {
-      super.onDraw(canvas);
-    }
-    else
-    {
-      w("Prevent drawing");
-      drawEmptyPage(canvas);
-    }
-  }
-
-  private void drawEmptyPage(Canvas canvas)
-  {
-    // assuming default color is WHITE
-    canvas.drawColor(Color.WHITE);
-  }
-
-  protected void startPreventDrawing()
-  {
-    w("Start prevent drawing");
-
-    allowDraw = false;
-  }
-
-  protected void stopPreventDrawing()
-  {
-    d("Stop prevent drawing, invalidating");
-
-    allowDraw = true;
-    invalidate();
-  }
-
-  private Runnable allowDrawRunnable = new Runnable()
-  {
-    @Override
-    public void run()
-    {
-      stopPreventDrawing();
-    }
-  };
 
   // warning: do not rename (used in injected JS by method name)
   @JavascriptInterface
