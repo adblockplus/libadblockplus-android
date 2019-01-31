@@ -1,21 +1,29 @@
+console.log("injected JS started")
 var hideElements = function()
 {
   // no need to invoke if already invoked on another event
-  if ({{BRIDGE}}.isElementsHidden())
+  if (document.{{HIDDEN_FLAG}} === true)
   {
     {{DEBUG}} console.log('already hidden, exiting');
     return;
   }
 
+  {{DEBUG}} console.log("Not yet hidden!")
+
   // hide using element visibility (to be replaced with script body)
   {{HIDE}}
 
-  {{BRIDGE}}.setElementsHidden(true); // set flag not to do it again
+  document.{{HIDDEN_FLAG}} = true; // set flag not to do it again
 };
 
-if ({{BRIDGE}}.getAddDomListener() && document.readyState != 'complete')
+if (document.readyState === "complete")
 {
-  {{BRIDGE}}.setAddDomListener(false);
+  {{DEBUG}} console.log('document is in "complete" state, apply hiding')
+  hideElements();
+}
+else
+{
+  {{DEBUG}} console.log('installing listener')
 
   // onreadystatechange event
   document.onreadystatechange = function()
@@ -40,5 +48,5 @@ if ({{BRIDGE}}.getAddDomListener() && document.readyState != 'complete')
     {{DEBUG}} console.log('DOMContentLoaded() event fired');
     hideElements();
   }, false);
-
-};
+}
+console.log("injected JS finished")
