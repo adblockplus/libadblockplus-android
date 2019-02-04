@@ -113,6 +113,14 @@ Note
 
 output while building.
 
+### Building with exposing of libadblockplus classes
+
+Set `EXPOSE_LIBABP_OBJECTS` environment variable to expose libadblockplus classes in shared library.
+ 
+For example:
+
+    EXPOSE_LIBABP_OBJECTS=y ./gradlew clean assembleAbi_arm
+
 ### Building for single ARCH
 
 By default adblock-android is built for both ARM and x86 and it can be filtered when
