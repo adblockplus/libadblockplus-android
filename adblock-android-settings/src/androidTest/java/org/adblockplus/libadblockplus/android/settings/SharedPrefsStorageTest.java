@@ -30,11 +30,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import static android.support.test.InstrumentationRegistry.getContext;
+import androidx.test.core.app.ApplicationProvider;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class SharedPrefsStorageTest
 {
@@ -112,7 +112,7 @@ public class SharedPrefsStorageTest
   @Before
   public void setUp()
   {
-    prefs = getContext().getSharedPreferences(NAME, Context.MODE_PRIVATE);
+    prefs = ApplicationProvider.getApplicationContext().getSharedPreferences(NAME, Context.MODE_PRIVATE);
     prefs.edit().clear().commit();
 
     storage = new SharedPrefsStorage(prefs);

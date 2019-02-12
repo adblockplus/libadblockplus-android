@@ -9,15 +9,24 @@ android {
         minSdkVersion 16
         targetSdkVersion 28
         missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_x86'
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-annotations.pro'
+    }
+
+    useLibrary 'android.test.runner'
+    useLibrary 'android.test.base'
 }
 
 dependencies {
     api project(':adblock-android')
     implementation 'com.android.support:support-v4:28.0.0'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'androidx.test:core:1.1.0'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
 }
 
 publish {
