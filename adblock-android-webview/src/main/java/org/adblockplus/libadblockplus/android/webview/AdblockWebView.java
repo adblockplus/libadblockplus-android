@@ -52,6 +52,7 @@ import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +77,6 @@ public class AdblockWebView extends WebView
   private static final String HIDE_TOKEN = "{{HIDE}}";
   private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
   private static final String BRIDGE = "jsBridge";
-  private static final String[] EMPTY_ARRAY = {};
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
@@ -852,25 +852,27 @@ public class AdblockWebView extends WebView
             request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
 
       String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
-      String[] referrers;
+      List<String> referrers = new ArrayList<>();
 
       if (referrer != null)
       {
         d("Header referrer for " + url + " is " + referrer);
         url2Referrer.put(url, referrer);
-
-        referrers = new String[]
-          {
-            referrer
-          };
       }
       else
       {
         w("No referrer header for " + url);
-        referrers = EMPTY_ARRAY;
       }
 
-      return shouldInterceptRequest(view, url, request.isForMainFrame(), isXmlHttpRequest, referrers);
+      // reconstruct frames hierarchy
+      String parentUrl = url;
+      while ((parentUrl = url2Referrer.get(parentUrl)) != null)
+      {
+        referrers.add(parentUrl);
+      }
+
+      return shouldInterceptRequest(view, url, request.isForMainFrame(),
+          isXmlHttpRequest, referrers.toArray(new String[referrers.size()]));
     }
   }
 
@@ -1227,8 +1229,6 @@ public class AdblockWebView extends WebView
         d("Waiting for elemhide selectors to be ready");
         elemHideLatch.await();
         d("Elemhide selectors ready, " + elemHideSelectorsString.length() + " bytes");
-
-        clearReferrers();
 
         return elemHideSelectorsString;
       }
