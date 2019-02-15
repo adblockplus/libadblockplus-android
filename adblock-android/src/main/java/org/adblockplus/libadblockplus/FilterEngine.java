@@ -17,7 +17,9 @@
 
 package org.adblockplus.libadblockplus;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class FilterEngine
 {
@@ -33,7 +35,17 @@ public final class FilterEngine
   {
     OTHER, SCRIPT, IMAGE, STYLESHEET, OBJECT, SUBDOCUMENT, DOCUMENT, WEBSOCKET,
     WEBRTC, PING, XMLHTTPREQUEST, OBJECT_SUBREQUEST, MEDIA, FONT, GENERICBLOCK,
-    ELEMHIDE, GENERICHIDE
+    ELEMHIDE, GENERICHIDE;
+
+    public static Set<ContentType> maskOf(ContentType... contentTypes)
+    {
+      final Set<ContentType> set = new HashSet<ContentType>(contentTypes.length);
+      for (ContentType contentType : contentTypes)
+      {
+        set.add(contentType);
+      }
+      return set;
+    }
   }
 
   FilterEngine(long jniPlatformPtr)
@@ -106,14 +118,24 @@ public final class FilterEngine
     removeShowNotificationCallback(this.ptr);
   }
 
+  public Filter matches(final String url, final Set<ContentType> contentTypes, final String documentUrl)
+  {
+    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrl);
+  }
+
   public Filter matches(final String url, final ContentType contentType, final String documentUrl)
   {
-    return matches(this.ptr, url, contentType, documentUrl);
+    return matches(url, ContentType.maskOf(contentType), documentUrl);
+  }
+
+  public Filter matches(final String url, final Set<ContentType> contentTypes, final String[] documentUrls)
+  {
+    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls);
   }
 
   public Filter matches(final String url, final ContentType contentType, final String[] documentUrls)
   {
-    return matches(this.ptr, url, contentType, documentUrls);
+    return matches(url, ContentType.maskOf(contentType), documentUrls);
   }
 
   public boolean isDocumentWhitelisted(String url, String[] documentUrls)
@@ -212,9 +234,9 @@ public final class FilterEngine
 
   private final static native JsValue getPref(long ptr, String pref);
 
-  private final static native Filter matches(long ptr, String url, ContentType contentType, String documentUrl);
+  private final static native Filter matches(long ptr, String url, ContentType[] contentType, String documentUrl);
 
-  private final static native Filter matches(long ptr, String url, ContentType contentType, String[] documentUrls);
+  private final static native Filter matches(long ptr, String url, ContentType[] contentType, String[] documentUrls);
 
   private final static native boolean isDocumentWhitelisted(long ptr, String url, String[] documentUrls);
 

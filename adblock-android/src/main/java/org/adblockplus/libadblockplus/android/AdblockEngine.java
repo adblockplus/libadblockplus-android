@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.adblockplus.libadblockplus.AppInfo;
+import org.adblockplus.libadblockplus.FileSystem;
 import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterChangeCallback;
 import org.adblockplus.libadblockplus.FilterEngine;
@@ -66,6 +67,7 @@ public final class AdblockEngine
   private volatile Platform platform;
   private volatile FilterEngine filterEngine;
   private volatile LogSystem logSystem;
+  private volatile FileSystem fileSystem;
   private volatile WebRequest webRequest;
   private volatile FilterChangeCallback filterChangeCallback;
   private volatile ShowNotificationCallback showNotificationCallback;
@@ -245,7 +247,8 @@ public final class AdblockEngine
     private void createEngines()
     {
       engine.logSystem = new AndroidLogSystem();
-      engine.platform = new Platform(engine.logSystem, engine.webRequest, basePath);
+      engine.fileSystem = null; // using default
+      engine.platform = new Platform(engine.logSystem, engine.fileSystem, engine.webRequest, basePath);
       if (v8IsolateProviderPtr != null)
       {
         engine.platform.setUpJsEngine(appInfo, v8IsolateProviderPtr);

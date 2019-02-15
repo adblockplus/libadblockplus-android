@@ -19,7 +19,68 @@ package org.adblockplus.libadblockplus;
 
 import java.util.List;
 
-public interface WebRequest
+public abstract class WebRequest
 {
-  ServerResponse httpGET(String url, List<HeaderEntry> headers);
+  static
+  {
+    System.loadLibrary("adblockplus-jni");
+    registerNatives();
+  }
+
+  /**
+   * Callback type invoked when the server response is ready.
+   */
+  public static class Callback implements Disposable
+  {
+    protected final long ptr;
+    private final Disposer disposer;
+
+    Callback(final long ptr)
+    {
+      this.ptr = ptr;
+      this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
+    }
+
+    private final static class DisposeWrapper implements Disposable
+    {
+      private final long ptr;
+
+      public DisposeWrapper(final long ptr)
+      {
+        this.ptr = ptr;
+      }
+
+      @Override
+      public void dispose()
+      {
+        callbackDtor(this.ptr);
+      }
+    }
+
+    @Override
+    public void dispose()
+    {
+      this.disposer.dispose();
+    }
+
+    /**
+     * @param response server response.
+     */
+    public void onFinished(final ServerResponse response)
+    {
+      callbackOnFinished(this.ptr, response);
+    }
+  }
+
+  /**
+   * Performs a GET request.
+   * @param url Request URL.
+   * @param headers Request headers.
+   * @param callback to invoke when the server response is ready.
+   */
+  public abstract void GET(final String url, final List<HeaderEntry> headers, final Callback callback);
+
+  private final static native void callbackOnFinished(long ptr, ServerResponse response);
+  private final static native void callbackDtor(long ptr);
+  private final static native void registerNatives();
 }

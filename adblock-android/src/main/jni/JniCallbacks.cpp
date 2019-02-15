@@ -55,12 +55,14 @@ void JniCallbackBase::LogException(JNIEnv* env, jthrowable throwable) const
   }
 }
 
-void JniCallbackBase::CheckAndLogJavaException(JNIEnv* env) const
+bool JniCallbackBase::CheckAndLogJavaException(JNIEnv* env) const
 {
   if (env->ExceptionCheck())
   {
     JniLocalReference<jthrowable> throwable(env, env->ExceptionOccurred());
     env->ExceptionClear();
     LogException(env, *throwable);
+    return true;
   }
+  return false;
 }

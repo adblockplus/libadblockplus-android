@@ -39,7 +39,9 @@ import org.adblockplus.libadblockplus.WebRequest;
 
 import android.util.Log;
 
-public class AndroidWebRequest implements WebRequest
+import static java.net.HttpURLConnection.HTTP_OK;
+
+public class AndroidWebRequest extends WebRequest
 {
   protected static final String ENCODING_GZIP = "gzip";
   protected static final String ENCODING_IDENTITY = "identity";
@@ -114,7 +116,7 @@ public class AndroidWebRequest implements WebRequest
   }
 
   @Override
-  public ServerResponse httpGET(final String urlStr, final List<HeaderEntry> headers)
+  public void GET(final String urlStr, final List<HeaderEntry> headers, final Callback callback)
   {
     try
     {
@@ -132,7 +134,7 @@ public class AndroidWebRequest implements WebRequest
       {
         response.setResponseStatus(connection.getResponseCode());
 
-        if (response.getResponseStatus() == 200)
+        if (response.getResponseStatus() == HTTP_OK)
         {
           final InputStream inputStream =
             (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding())
@@ -189,7 +191,7 @@ public class AndroidWebRequest implements WebRequest
                 }
               }
             }
-            response.setReponseHeaders(responseHeaders);
+            response.setResponseHeaders(responseHeaders);
           }
         }
         else
@@ -202,7 +204,7 @@ public class AndroidWebRequest implements WebRequest
         connection.disconnect();
       }
       Log.d(TAG, "Downloading finished");
-      return response;
+      callback.onFinished(response);
     }
     catch (final Throwable t)
     {

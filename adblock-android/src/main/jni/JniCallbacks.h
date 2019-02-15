@@ -32,7 +32,7 @@ public:
   JniCallbackBase(JNIEnv* env, jobject callbackObject);
   virtual ~JniCallbackBase();
   void LogException(JNIEnv* env, jthrowable throwable) const;
-  void CheckAndLogJavaException(JNIEnv* env) const;
+  bool CheckAndLogJavaException(JNIEnv* env) const;
 
   JavaVM* GetJavaVM() const
   {
@@ -84,6 +84,31 @@ public:
   void operator()(AdblockPlus::LogSystem::LogLevel logLevel, const std::string& message, const std::string& source);
 };
 
+class JniFileSystemCallback : public JniCallbackBase, public AdblockPlus::IFileSystem
+{
+private:
+    std::string basePath;
+    // Returns the absolute path to a file.
+    std::string Resolve(const std::string& path) const;
+    // Get last JNI exception message and clear it
+    std::string PeekException(JNIEnv *env) const;
+public:
+    JniFileSystemCallback(JNIEnv* env, jobject callbackObject, jstring basePath);
+    void Read(const std::string& fileName,
+              const ReadCallback& doneCallback,
+              const Callback& errorCallback) const override;
+    void Write(const std::string& fileName,
+               const IOBuffer& data,
+               const Callback& callback) override;
+    void Move(const std::string& fromFileName,
+              const std::string& toFileName,
+              const Callback& callback) override;
+    void Remove(const std::string& fileName,
+                const Callback& callback) override;
+    void Stat(const std::string& fileName,
+              const StatCallback& callback) const override;
+};
+
 class JniShowNotificationCallback : public JniCallbackBase
 {
 public:
@@ -91,11 +116,13 @@ public:
   void Callback(AdblockPlus::Notification&&);
 };
 
-class JniWebRequest : public JniCallbackBase, public AdblockPlus::IWebRequestSync
+class JniWebRequestCallback : public JniCallbackBase, public AdblockPlus::IWebRequest
 {
 public:
-  JniWebRequest(JNIEnv* env, jobject callbackObject);
-  AdblockPlus::ServerResponse GET(const std::string& url, const AdblockPlus::HeaderList& requestHeaders) const override;
+    JniWebRequestCallback(JNIEnv* env, jobject callbackObject);
+    void GET(const std::string& url,
+             const AdblockPlus::HeaderList& requestHeaders,
+             const AdblockPlus::IWebRequest::GetCallback& getCallback) override;
 
 private:
   jobject NewTuple(JNIEnv* env, const std::string& a, const std::string& b) const;

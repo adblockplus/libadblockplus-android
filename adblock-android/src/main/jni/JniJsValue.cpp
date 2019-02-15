@@ -161,6 +161,75 @@ static jobject JNICALL JniGetProperty(JNIEnv* env, jclass clazz, jlong ptr, jstr
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
+static void JNICALL JniSetProperty(JNIEnv* env, jclass clazz, jlong ptr, jstring name, jlong valuePtr)
+{
+  try
+  {
+    AdblockPlus::JsValue jsValue = JniGetJsValue(valuePtr);
+    JniGetJsValuePtr(ptr)->SetProperty(JniJavaToStdString(env, name), jsValue);
+  }
+  CATCH_AND_THROW(env)
+}
+
+static jstring JNICALL JniGetClass(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    return JniStdStringToJava(env, JniGetJsValuePtr(ptr)->GetClass());
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
+static jobject JNICALL JniGetOwnPropertyNames(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    return JniStringVectorToArrayList(env, JniGetJsValuePtr(ptr)->GetOwnPropertyNames());
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
+static AdblockPlus::JsValueList convertToJsValueList(JNIEnv* env, jlongArray jParamPtrs)
+{
+  AdblockPlus::JsValueList jsValueList;
+
+  int size = env->GetArrayLength(jParamPtrs);
+  jboolean jniCopyMode = JNI_FALSE; // no copy
+  jlong* paramPtrs = env->GetLongArrayElements(jParamPtrs, &jniCopyMode);
+
+  for (int i = 0; i < size; i++)
+  {
+    jsValueList.push_back(JniGetJsValue(paramPtrs[i]));
+  }
+
+  env->ReleaseLongArrayElements(jParamPtrs, paramPtrs, jniCopyMode);
+  return jsValueList;
+}
+
+static jobject JNICALL JniCall(JNIEnv* env, jclass clazz, jlong ptr, jlongArray jParamPtrs)
+{
+  try
+  {
+    AdblockPlus::JsValue* jsValue = JniGetJsValuePtr(ptr);
+    AdblockPlus::JsValueList jsValueList = convertToJsValueList(env, jParamPtrs);
+    return NewJniJsValue(env, std::move(jsValue->Call(jsValueList)));
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
+static jobject JNICALL JniCallThisValue(
+    JNIEnv* env, jclass clazz, jlong ptr, jlongArray jParamPtrs, jlong thisValuePtr)
+{
+  try
+  {
+    AdblockPlus::JsValue* jsValue = JniGetJsValuePtr(ptr);
+    AdblockPlus::JsValue jsThisValue = JniGetJsValue(thisValuePtr);
+    AdblockPlus::JsValueList jsValueList = convertToJsValueList(env, jParamPtrs);
+    return NewJniJsValue(env, std::move(jsValue->Call(jsValueList, jsThisValue)));
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
 static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
 {
   delete JniLongToTypePtr<AdblockPlus::JsValue>(ptr);
@@ -195,15 +264,11 @@ jobject JniJsValueListToArrayList(JNIEnv* env, AdblockPlus::JsValueList&& list)
 }
 
 // TODO: List of functions that lack JNI bindings
-//std::vector<std::string> GetOwnPropertyNames() const;
 //void SetProperty(const std::string& name, const std::string& val);
 //void SetProperty(const std::string& name, int64_t val);
 //void SetProperty(const std::string& name, bool val);
-//void SetProperty(const std::string& name, JsValue value);
 //void SetProperty(const std::string& name, const char* val);
 //inline void SetProperty(const std::string& name, int val);
-//std::string GetClass() const;
-//JsValue Call(const JsValueList& params = JsValueList(), AdblockPlus::JsValue thisPtr = AdblockPlus::JsValue()) const;
 
 static JNINativeMethod methods[] =
 {
@@ -220,6 +285,11 @@ static JNINativeMethod methods[] =
   { (char*)"asBoolean", (char*)"(J)Z", (void*)JniAsBoolean },
   { (char*)"asList", (char*)"(J)Ljava/util/List;", (void*)JniAsList },
   { (char*)"getProperty", (char*)"(JLjava/lang/String;)" TYP("JsValue"), (void*)JniGetProperty },
+  { (char*)"setProperty", (char*)"(JLjava/lang/String;J)V", (void*)JniSetProperty },
+  { (char*)"getJsClass", (char*)"(J)Ljava/lang/String;", (void*)JniGetClass },
+  { (char*)"getOwnPropertyNames", (char*)"(J)Ljava/util/List;", (void*)JniGetOwnPropertyNames },
+  { (char*)"call", (char*)"(J[J)" TYP("JsValue"), (void*)JniCall },
+  { (char*)"call", (char*)"(J[JJ)" TYP("JsValue"), (void*)JniCallThisValue },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor }
 };
 

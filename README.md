@@ -25,12 +25,14 @@ dependencies {
 }
 ```
 
+In general case it's suggested to use the most recent version.
+
 ### Building
 
 #### Requirements
 
 * [The Android SDK](https://developer.android.com/sdk)
-* Android SDK Build tools 25.0.0
+* Android SDK Build tools 28.0.3
 * [The Android NDK, 16b](https://developer.android.com/ndk)
 
 Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
@@ -137,28 +139,31 @@ Note
 
 output while building.
 
-## Library tests
+## SDK tests
 
-Android tests for the library.
-You can find them in the 'adblock-android-tests' directory.
+### Pure java tests
 
-### Requirements
+You can find pure Java tests in 'src/test' directories of the modules (if provided).
+In the project directory run:
 
-Make sure _Library_ requirements are present.
+    ./gradlew test
 
-### Building
+You can select test class/method and click 'Run ..Test'.
+No Android emulator/device running required.
 
-Make sure you've created the _local.properties_ file to build the library (see above).
-In the project root directory run:
+### Android tests
 
-    ./gradlew assembleDebugAndroidTest
+You can find Android tests in 'src/androidTest' directories of the modules (if provided).
+In the project directory run:
 
-This will generate *.apk in the 'adblock-android-tests/build/outputs/apk/' directory.
+    ./gradlew connectedAbi_x86DebugAndroidTest
 
-### Testing
+to test with x86 device/emulator or run:
 
-You can select test class/method and click 'Run ..Test'. The library and test app will be
-compiled, installed to emulator/device and launched automatically.
+    ./gradlew connectedAbi_armDebugAndroidTest
+
+to test with ARM device/emulator.
+You can select test class/method and click 'Run ..Test'.
 
 ## Settings
 
@@ -176,6 +181,8 @@ dependencies {
     implementation 'org.adblockplus:adblock-android-settings:3.0'
 }
 ```
+
+In general case it's suggested to use the most recent version.
 
 ### Usage
 
@@ -268,6 +275,8 @@ dependencies {
     implementation 'org.adblockplus:adblock-android-webview:3.0'
 }
 ```
+
+In general case it's suggested to use the most recent version.
 
 ### Usage
 

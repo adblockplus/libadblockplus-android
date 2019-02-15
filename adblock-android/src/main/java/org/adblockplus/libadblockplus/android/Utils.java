@@ -21,11 +21,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import org.json.JSONArray;
 
 import android.content.Context;
+import android.util.Log;
+
+import static org.adblockplus.libadblockplus.android.AndroidWebRequest.TAG;
 
 public final class Utils
 {
@@ -39,7 +44,7 @@ public final class Utils
     return clazz.getSimpleName();
   }
 
-  public static String stringListToJsonArray(List<String> list)
+  public static String stringListToJsonArray(final List<String> list)
   {
     JSONArray array = new JSONArray();
 
@@ -57,7 +62,9 @@ public final class Utils
     return array.toString();
   }
 
-  public static String readAssetAsString(Context context, String filename) throws IOException
+  public static String readAssetAsString(final Context context,
+                                         final String filename)
+      throws IOException
   {
     BufferedReader in = null;
     try
@@ -98,7 +105,7 @@ public final class Utils
     }
   }
 
-  public static String getUrlWithoutParams(String urlWithParams)
+  public static String getUrlWithoutParams(final String urlWithParams)
   {
     if (urlWithParams == null)
     {
@@ -107,5 +114,63 @@ public final class Utils
 
     int pos = urlWithParams.indexOf("?");
     return (pos >= 0 ? urlWithParams.substring(0, pos) : urlWithParams);
+  }
+
+  public static String readInputStreamAsString(final InputStream is) throws IOException
+  {
+    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+    StringBuilder sb = new StringBuilder();
+    String line;
+    boolean firstLine = true;
+    while ((line = br.readLine()) != null)
+    {
+      if (firstLine)
+      {
+        firstLine = false;
+      }
+      else
+      {
+        sb.append("\r\n");
+      }
+      sb.append(line);
+    }
+
+    Log.d(TAG, "Resource read (" + sb.length() + " bytes)");
+    return sb.toString();
+  }
+
+  /**
+   * Convert String to ByteBuffer
+   * @param string string
+   * @param charset charset
+   * @return byte buffer (*direct* buffer, allocated with `ByteBuffer.allocateDirect`)
+   */
+  public static ByteBuffer stringToByteBuffer(final String string, final Charset charset)
+  {
+    byte[] bytes = string.getBytes(charset);
+    ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bytes.length);
+    byteBuffer.put(bytes);
+    return byteBuffer;
+  }
+
+  /**
+   * Convert ByteBuffer to String
+   * @param buffer buffer
+   * @param charset charset
+   * @return string
+   */
+  public static String byteBufferToString(final ByteBuffer buffer, final Charset charset)
+  {
+    byte[] bytes;
+    if (buffer.hasArray())
+    {
+      bytes = buffer.array();
+    }
+    else
+    {
+      bytes = new byte[buffer.remaining()];
+      buffer.get(bytes);
+    }
+    return new String(bytes, charset);
   }
 }

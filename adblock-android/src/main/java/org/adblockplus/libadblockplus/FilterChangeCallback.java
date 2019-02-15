@@ -34,7 +34,7 @@ public abstract class FilterChangeCallback implements Disposable
     this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
   }
 
-  public abstract void filterChangeCallback(String action, JsValue jsValue);
+  public abstract void filterChangeCallback(final String action, final JsValue jsValue);
 
   @Override
   public void dispose()

@@ -8,6 +8,7 @@ android {
   defaultConfig {
     minSdkVersion 16
     targetSdkVersion 28
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
 
   flavorDimensions "abi"
@@ -57,7 +58,7 @@ android {
     userOrg = rootProject.ext.bintrayUserOrg
     groupId = rootProject.ext.bintrayGroupId
     artifactId = 'adblock-android'
-    publishVersion = '3.2'
+    publishVersion = '3.3'
     licences = rootProject.ext.bintrayLicences
     desc = 'An Android library that provides the core functionality of Adblock Plus.'
     website = rootProject.ext.bintrayWebsite
@@ -82,4 +83,15 @@ android {
     println "[Configuration] No shared v8 libraries excluded from AAR"
   }
 
+  useLibrary 'android.test.runner'
+  useLibrary 'android.test.base'
+}
+
+dependencies {
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation 'androidx.test:core:1.1.0'
+  androidTestImplementation 'androidx.test:runner:1.1.0'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+  androidTestImplementation 'org.mockito:mockito-core:2.24.0'
+  androidTestImplementation 'org.mockito:mockito-android:2.24.0'
 }

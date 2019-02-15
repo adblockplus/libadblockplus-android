@@ -191,3 +191,15 @@ jobject NewJniNotification(JNIEnv* env, AdblockPlus::Notification&& notification
   return NewJniObject<AdblockPlus::Notification>(
     env, std::move(notification), notificationClass->Get(), notificationCtor);
 }
+
+jobject JniStringVectorToArrayList(JNIEnv* env, const std::vector<std::string>& stringVector)
+{
+  jobject arrayList = NewJniArrayList(env);
+
+  for (auto it = stringVector.cbegin(), end = stringVector.cend(); it != end; ++it)
+  {
+    JniAddObjectToList(env, arrayList, JniStdStringToJava(env, *it));
+  }
+
+  return arrayList;
+}

@@ -39,7 +39,10 @@ static AdblockPlus::Platform& GetPlatformRef(jlong ptr)
 }
 
 static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz,
-                             jobject logSystem, jobject webRequest, jstring jBasePath)
+                             jobject logSystem,
+                             jobject fileSystem,
+                             jobject webRequest,
+                             jstring jBasePath)
 {
   try
   {
@@ -50,13 +53,20 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz,
     {
       platformBuilder.logSystem.reset(new JniLogSystemCallback(env, logSystem));
     }
+    if (fileSystem)
+    {
+      platformBuilder.fileSystem.reset(new JniFileSystemCallback(env, fileSystem, jBasePath));
+    }
+    else
+    {
+      if (jBasePath)
+      {
+        platformBuilder.CreateDefaultFileSystem(JniJavaToStdString(env, jBasePath));
+      }
+    }
     if (webRequest)
     {
-      platformBuilder.CreateDefaultWebRequest(AdblockPlus::WebRequestSyncPtr(new JniWebRequest(env, webRequest)));
-    }
-    if (jBasePath)
-    {
-      platformBuilder.CreateDefaultFileSystem(JniJavaToStdString(env, jBasePath));
+      platformBuilder.webRequest.reset(new JniWebRequestCallback(env, webRequest));
     }
     jniPlatform->platform = platformBuilder.CreatePlatform();
     return JniPtrToLong(jniPlatform);
@@ -135,7 +145,7 @@ static void JNICALL JniEnsureFilterEngine(JNIEnv* env, jclass clazz, jlong ptr)
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"ctor", (char*)"(" TYP("LogSystem") TYP("WebRequest") "Ljava/lang/String;)J", (void*)JniCtor },
+  { (char*)"ctor", (char*)"(" TYP("LogSystem") TYP("FileSystem") TYP("WebRequest") "Ljava/lang/String;)J", (void*)JniCtor },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor },
 
   { (char*)"setUpJsEngine", (char*)"(J" TYP("AppInfo") "J)V", (void*)JniSetUpJsEngine },

@@ -96,6 +96,15 @@ static jstring JniGetMessageString(JNIEnv* env, jclass clazz, jlong ptr)
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
+static jobject JniGetLinks(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    return JniStringVectorToArrayList(env, GetNotificationPtr(ptr)->GetLinks());
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
 static void JniMarkAsShown(JNIEnv* env, jclass clazz, jlong ptr)
 {
   try
@@ -110,7 +119,8 @@ static JNINativeMethod methods[] =
   { (char*) "markAsShown", (char*) "(J)V", (void*) JniMarkAsShown },
   { (char*) "getMessageString", (char*) "(J)Ljava/lang/String;", (void*) JniGetMessageString },
   { (char*) "getTitle", (char*) "(J)Ljava/lang/String;", (void*) JniGetTitle },
-  { (char*) "getType", (char*) "(J)" TYP("Notification$Type"), (void*) JniGetType }
+  { (char*) "getType", (char*) "(J)" TYP("Notification$Type"), (void*) JniGetType },
+  { (char*) "getLinks", (char*) "(J)Ljava/util/List;", (void*) JniGetLinks }
 };
 
 extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_Notification_registerNatives(

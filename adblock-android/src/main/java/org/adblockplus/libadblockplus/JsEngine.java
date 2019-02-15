@@ -54,6 +54,11 @@ public final class JsEngine
     return evaluate(this.ptr, source, "");
   }
 
+  public void setGlobalProperty(final String property, final JsValue value)
+  {
+    setGlobalProperty(this.ptr, property, value.ptr);
+  }
+
   public void triggerEvent(final String eventName, final List<JsValue> params)
   {
     final long[] args = new long[params.size()];
@@ -101,4 +106,6 @@ public final class JsEngine
   private final static native JsValue newValue(long ptr, boolean value);
 
   private final static native JsValue newValue(long ptr, String value);
+
+  private final static native void setGlobalProperty(long ptr, String property, long valuePtr);
 }

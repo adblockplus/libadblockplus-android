@@ -17,6 +17,8 @@
 
 package org.adblockplus.libadblockplus;
 
+import java.util.List;
+
 public class Notification extends JsValue
 {
   static
@@ -59,6 +61,11 @@ public class Notification extends JsValue
     markAsShown(this.ptr);
   }
 
+  public List<String> getLinks()
+  {
+    return getLinks(this.ptr);
+  }
+
   @Override
   public String toString()
   {
@@ -74,4 +81,6 @@ public class Notification extends JsValue
   private final static native Type getType(long ptr);
 
   private final static native void markAsShown(long ptr);
+
+  private final static native List<String> getLinks(long ptr);
 }

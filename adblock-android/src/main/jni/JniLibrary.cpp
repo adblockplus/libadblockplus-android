@@ -21,6 +21,7 @@
 #include "JniCallbacks.h"
 #include "JniNotification.h"
 #include "JniWebRequest.h"
+#include "JniFileSystem.h"
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -37,6 +38,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
   JniNotification_OnLoad(vm, env, reserved);
   JniWebRequest_OnLoad(vm, env, reserved);
   JniUtils_OnLoad(vm, env, reserved);
+  JniFileSystem_OnLoad(vm, env, reserved);
 
   return ABP_JNI_VERSION;
 }
@@ -56,4 +58,5 @@ void JNI_OnUnload(JavaVM* vm, void* reserved)
   JniNotification_OnUnload(vm, env, reserved);
   JniWebRequest_OnUnload(vm, env, reserved);
   JniUtils_OnUnload(vm, env, reserved);
+  JniFileSystem_OnUnload(vm, env, reserved);
 }

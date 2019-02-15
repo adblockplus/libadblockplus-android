@@ -23,12 +23,24 @@ import java.util.List;
 
 public final class ServerResponse
 {
-  public static enum NsStatus
+  public enum NsStatus
   {
-    OK(0), ERROR_FAILURE(0x80004005), ERROR_OUT_OF_MEMORY(0x8007000e), ERROR_MALFORMED_URI(0x804b000a), ERROR_CONNECTION_REFUSED(0x804b000d), ERROR_NET_TIMEOUT(
-        0x804b000e), ERROR_NO_CONTENT(0x804b0011), ERROR_UNKNOWN_PROTOCOL(0x804b0012), ERROR_NET_RESET(0x804b0014), ERROR_UNKNOWN_HOST(0x804b001e), ERROR_REDIRECT_LOOP(
-        0x804b001f), ERROR_UNKNOWN_PROXY_HOST(0x804b002a), ERROR_NET_INTERRUPT(0x804b0047), ERROR_UNKNOWN_PROXY_CONNECTION_REFUSED(0x804b0048), CUSTOM_ERROR_BASE(
-        0x80850000), ERROR_NOT_INITIALIZED(0xc1f30001);
+    OK(0L),
+    ERROR_FAILURE(0x80004005L),
+    ERROR_OUT_OF_MEMORY(0x8007000eL),
+    ERROR_MALFORMED_URI(0x804b000aL),
+    ERROR_CONNECTION_REFUSED(0x804b000dL),
+    ERROR_NET_TIMEOUT(0x804b000eL),
+    ERROR_NO_CONTENT(0x804b0011L),
+    ERROR_UNKNOWN_PROTOCOL(0x804b0012L),
+    ERROR_NET_RESET(0x804b0014L),
+    ERROR_UNKNOWN_HOST(0x804b001eL),
+    ERROR_REDIRECT_LOOP(0x804b001fL),
+    ERROR_UNKNOWN_PROXY_HOST(0x804b002aL),
+    ERROR_NET_INTERRUPT(0x804b0047L),
+    ERROR_UNKNOWN_PROXY_CONNECTION_REFUSED(0x804b0048L),
+    CUSTOM_ERROR_BASE(0x80850000L),
+    ERROR_NOT_INITIALIZED(0xc1f30001L);
 
     private final long statusCode;
     private final static HashMap<Long, NsStatus> ENUM_MAP = new HashMap<Long, ServerResponse.NsStatus>();
@@ -41,7 +53,7 @@ public final class ServerResponse
       }
     }
 
-    private NsStatus(final long value)
+    NsStatus(final long value)
     {
       this.statusCode = value;
     }
@@ -97,7 +109,7 @@ public final class ServerResponse
 
   public List<HeaderEntry> getResponseHeaders()
   {
-    final ArrayList<HeaderEntry> ret = new ArrayList<HeaderEntry>();
+    final List<HeaderEntry> ret = new ArrayList<HeaderEntry>();
 
     if (this.headers != null)
     {
@@ -110,7 +122,7 @@ public final class ServerResponse
     return ret;
   }
 
-  public void setReponseHeaders(final List<HeaderEntry> headers)
+  public void setResponseHeaders(final List<HeaderEntry> headers)
   {
     if (headers.isEmpty())
     {

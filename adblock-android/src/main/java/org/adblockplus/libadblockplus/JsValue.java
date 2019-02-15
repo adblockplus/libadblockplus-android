@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus;
 
+import java.util.Collections;
 import java.util.List;
 
 public class JsValue implements Disposable
@@ -97,9 +98,50 @@ public class JsValue implements Disposable
     return asBoolean(this.ptr);
   }
 
+  protected long[] convertToPtrArray(final List<JsValue> params)
+  {
+    long[] paramPtrs = new long[params.size()];
+    for (int i = 0; i < params.size(); i++)
+    {
+      paramPtrs[i] = params.get(i).ptr;
+    }
+    return paramPtrs;
+  }
+
+  public JsValue call(final List<JsValue> params)
+  {
+    return call(this.ptr, convertToPtrArray(params));
+  }
+
+  public JsValue call(final List<JsValue> params, final JsValue thisValue)
+  {
+    return call(this.ptr, convertToPtrArray(params), thisValue.ptr);
+  }
+
+  public JsValue call()
+  {
+    return this.call(Collections.<JsValue>emptyList());
+  }
+
   public JsValue getProperty(final String name)
   {
     return getProperty(this.ptr, name);
+  }
+
+  public void setProperty(final String name, final JsValue value)
+  {
+    setProperty(this.ptr, name, value.ptr);
+  }
+
+  // `getClass()` is Object's method and is reserved
+  public String getJsClass()
+  {
+    return getJsClass(this.ptr);
+  }
+
+  public List<String> getOwnPropertyNames()
+  {
+    return getOwnPropertyNames(this.ptr);
   }
 
   public List<JsValue> asList()
@@ -155,7 +197,17 @@ public class JsValue implements Disposable
 
   private final static native JsValue getProperty(long ptr, String name);
 
+  private final static native void setProperty(long ptr, String name, long valuePtr);
+
+  private final static native String getJsClass(long ptr);
+
+  private final static native List<String> getOwnPropertyNames(long ptr);
+
   private final static native List<JsValue> asList(long ptr);
+
+  private final static native JsValue call(long ptr, long[] paramPtrs);
+
+  private final static native JsValue call(long ptr, long[] paramPtrs, long thisValuePtr);
 
   private final static native void dtor(long ptr);
 }

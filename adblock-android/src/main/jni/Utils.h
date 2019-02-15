@@ -194,6 +194,8 @@ jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription
 
 jobject NewJniNotification(JNIEnv* env, AdblockPlus::Notification&& notification);
 
+jobject JniStringVectorToArrayList(JNIEnv* env, const std::vector<std::string>& stringVector);
+
 #define CATCH_AND_THROW(jEnv) \
   catch (const std::exception& except) \
   { \

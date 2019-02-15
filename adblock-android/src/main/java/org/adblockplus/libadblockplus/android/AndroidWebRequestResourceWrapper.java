@@ -37,7 +37,7 @@ import java.util.Set;
 /**
  * WebRequest wrapper to return request response from android resources for selected URLs
  */
-public class AndroidWebRequestResourceWrapper implements WebRequest
+public class AndroidWebRequestResourceWrapper extends WebRequest
 {
   private static final String TAG = Utils.getTag(AndroidWebRequestResourceWrapper.class);
 
@@ -109,7 +109,7 @@ public class AndroidWebRequestResourceWrapper implements WebRequest
   }
 
   @Override
-  public ServerResponse httpGET(String url, List<HeaderEntry> headers)
+  public void GET(String url, List<HeaderEntry> headers, Callback callback)
   {
     // since parameters may vary we need to ignore them
     String urlWithoutParams = Utils.getUrlWithoutParams(url);
@@ -128,7 +128,8 @@ public class AndroidWebRequestResourceWrapper implements WebRequest
           listener.onIntercepted(url, resourceId);
         }
 
-        return response;
+        callback.onFinished(response);
+        return;
       }
       else
       {
@@ -137,7 +138,7 @@ public class AndroidWebRequestResourceWrapper implements WebRequest
     }
 
     // delegate to wrapper request
-    return request.httpGET(url, headers);
+    request.GET(url, headers, callback);
   }
 
   protected String readResourceContent(int resourceId) throws IOException
@@ -149,25 +150,7 @@ public class AndroidWebRequestResourceWrapper implements WebRequest
     try
     {
       is = context.getResources().openRawResource(resourceId);
-      BufferedReader br = new BufferedReader(new InputStreamReader(is));
-      StringBuilder sb = new StringBuilder();
-      String line;
-      boolean firstLine = true;
-      while ((line = br.readLine()) != null)
-      {
-        if (firstLine)
-        {
-          firstLine = false;
-        }
-        else
-        {
-          sb.append("\r\n");
-        }
-        sb.append(line);
-      }
-
-      Log.d(TAG, "Resource read (" + sb.length() + " bytes)");
-      return sb.toString();
+      return Utils.readInputStreamAsString(is);
     }
     finally
     {

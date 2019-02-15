@@ -34,9 +34,9 @@ public class Platform implements Disposable
    * If basePath is null then paths are not resolved to a full path, thus
    * current working directory is used.
    */
-  public Platform(final LogSystem logSystem, final WebRequest webRequest, final String basePath)
+  public Platform(final LogSystem logSystem, final FileSystem fileSystem, final WebRequest webRequest, final String basePath)
   {
-    this(ctor(logSystem, webRequest, basePath));
+    this(ctor(logSystem, fileSystem, webRequest, basePath));
   }
 
   protected Platform(final long ptr)
@@ -99,7 +99,10 @@ public class Platform implements Disposable
 
   private final static native void registerNatives();
 
-  private final static native long ctor(LogSystem logSystem, WebRequest webRequest, String basePath);
+  private final static native long ctor(LogSystem logSystem,
+                                        FileSystem fileSystem,
+                                        WebRequest webRequest,
+                                        String basePath);
 
   private final static native void setUpJsEngine(long ptr, AppInfo appInfo, long v8IsolateProviderPtr);
 

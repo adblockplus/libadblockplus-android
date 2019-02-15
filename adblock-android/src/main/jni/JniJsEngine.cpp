@@ -131,6 +131,18 @@ static jobject JNICALL JniNewStringValue(JNIEnv* env, jclass clazz, jlong ptr, j
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
+static void JNICALL JniSetGlobalProperty(JNIEnv* env, jclass clazz, jlong ptr, jstring jproperty, jlong valuePtr)
+{
+  AdblockPlus::JsEngine& engine = GetJsEngineRef(ptr);
+
+  try
+  {
+    const std::string property = JniJavaToStdString(env, jproperty);
+    engine.SetGlobalProperty(property, JniGetJsValue(valuePtr));
+  }
+  CATCH_AND_THROW(env)
+}
+
 // TODO: List of functions that lack JNI bindings
 //JsValuePtr NewObject();
 //JsValuePtr NewCallback(v8::InvocationCallback callback);
@@ -147,7 +159,9 @@ static JNINativeMethod methods[] =
 
   { (char*)"newValue", (char*)"(JJ)" TYP("JsValue"), (void*)JniNewLongValue },
   { (char*)"newValue", (char*)"(JZ)" TYP("JsValue"), (void*)JniNewBooleanValue },
-  { (char*)"newValue", (char*)"(JLjava/lang/String;)" TYP("JsValue"), (void*)JniNewStringValue }
+  { (char*)"newValue", (char*)"(JLjava/lang/String;)" TYP("JsValue"), (void*)JniNewStringValue },
+
+  { (char*)"setGlobalProperty", (char*)"(JLjava/lang/String;J)V", (void*)JniSetGlobalProperty }
 };
 
 extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_JsEngine_registerNatives(JNIEnv *env, jclass clazz)
