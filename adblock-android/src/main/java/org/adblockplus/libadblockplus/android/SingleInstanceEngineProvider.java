@@ -88,7 +88,8 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   /**
    * Use preloaded subscriptions
    * @param preferenceName Shared Preferences name to store intercepted requests stats
-   * @param urlToResourceIdMap
+   * @param urlToResourceIdMap URL to Android resource id map
+   * @return this (for method chaining)
    */
   public SingleInstanceEngineProvider preloadSubscriptions(String preferenceName,
                                                            Map<String, Integer> urlToResourceIdMap)
