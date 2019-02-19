@@ -33,6 +33,10 @@ public class Platform implements Disposable
    * chosen.
    * If basePath is null then paths are not resolved to a full path, thus
    * current working directory is used.
+   * @param logSystem LogSystem concrete implementation
+   * @param fileSystem FileSystem concrete implementation
+   * @param webRequest WebRequest concrete implementation
+   * @param basePath base path for FileSystem (default C++ FileSystem implementation used)
    */
   public Platform(final LogSystem logSystem, final FileSystem fileSystem, final WebRequest webRequest, final String basePath)
   {

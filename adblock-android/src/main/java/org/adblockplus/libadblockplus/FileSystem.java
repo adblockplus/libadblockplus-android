@@ -202,7 +202,7 @@ public abstract class FileSystem
   /**
    * Writes to a file.
    * @param filename File name.
-   * @param data The data to write, *direct* buffer (allocated with `env->NewDirectByteBuffer()`)
+   * @param data The data to write, *direct* buffer (allocated with `env-&gt;NewDirectByteBuffer()`)
    * @param callback The callback called on completion.
    */
   public abstract void write(final String filename,
