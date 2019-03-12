@@ -78,6 +78,7 @@ public class AdblockWebView extends WebView
   private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
   private static final String BRIDGE = "jsBridge";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
+  private static final String ELEMHIDEEMU_ARRAY_DEF_TOKEN = "[{{elemHidingEmulatedPatternsDef}}]";
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private boolean adblockEnabled = true;
@@ -92,6 +93,7 @@ public class AdblockWebView extends WebView
   private String injectJs;
   private CountDownLatch elemHideLatch;
   private String elemHideSelectorsString;
+  private String elemHideEmuSelectorsString;
   private Object elemHideThreadLockObject = new Object();
   private ElemHideThread elemHideThread;
   private boolean loading;
@@ -187,6 +189,13 @@ public class AdblockWebView extends WebView
       .replace(BRIDGE_TOKEN, BRIDGE)
       .replace(DEBUG_TOKEN, (debugMode ? "" : "//"))
       .replace(HIDDEN_TOKEN, elementsHiddenFlag);
+  }
+
+  private String readEmuScriptFile(String filename) throws IOException
+  {
+    return Utils
+      .readAssetAsString(getContext(), filename)
+      .replace(ELEMHIDEEMU_ARRAY_DEF_TOKEN, "JSON.parse(jsBridge.getElemhideEmulationSelectors());");
   }
 
   private void runScript(String script)
@@ -1073,6 +1082,10 @@ public class AdblockWebView extends WebView
 
     if (url != null)
     {
+      // elemhideemu. load synchronously
+      loadElemHideEmuSelectors(url);
+
+      // elemhide
       elemHideLatch = new CountDownLatch(1);
       synchronized (elemHideThreadLockObject)
       {
@@ -1087,13 +1100,50 @@ public class AdblockWebView extends WebView
     }
   }
 
+  private void loadElemHideEmuSelectors(final String url)
+  {
+    synchronized (provider.getEngineLock())
+    {
+      if (provider.getCounter() == 0)
+      {
+        w("FilterEngine already disposed");
+        elemHideEmuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+      }
+      else
+      {
+        provider.waitForReady();
+        String[] referrers = new String[]{url};
+
+        final String domain = provider.getEngine().getFilterEngine().getHostFromURL(url);
+        if (domain == null)
+        {
+          e("Failed to extract domain from " + url);
+          elemHideEmuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+        }
+        else
+        {
+          d("Requesting elemhideemu selectors from AdblockEngine for " + url + " in " + this);
+          List<FilterEngine.EmulationSelector> selectors = provider
+            .getEngine()
+            .getElementHidingEmulationSelectors(url, domain, referrers);
+
+          d("Finished requesting elemhideemu selectors, got " + selectors.size() + " in " + this);
+          elemHideEmuSelectorsString = Utils.emulationSelectorListToJsonArray(selectors);
+        }
+      }
+    }
+  }
+
   private void buildInjectJs()
   {
     try
     {
       if (injectJs == null)
       {
-        injectJs = readScriptFile("inject.js").replace(HIDE_TOKEN, readScriptFile("css.js"));
+        StringBuffer sb = new StringBuffer();
+        sb.append(readScriptFile("inject.js").replace(HIDE_TOKEN, readScriptFile("css.js")));
+        sb.append(readEmuScriptFile("elemhideemu.jst"));
+        injectJs = sb.toString();
       }
     }
     catch (IOException e)
@@ -1238,6 +1288,21 @@ public class AdblockWebView extends WebView
         return EMPTY_ELEMHIDE_ARRAY_STRING;
       }
     }
+  }
+
+  // warning: do not rename (used in injected JS by method name)
+  @JavascriptInterface
+  public String getElemhideEmulationSelectors()
+  {
+    if (elemHideEmuSelectorsString == null)
+    {
+      return EMPTY_ELEMHIDE_ARRAY_STRING;
+    }
+
+    // elemHideEmuSelectorsString is set synchronously in startAbpLoading
+    d("ElemhideEmu selectors size: " + elemHideEmuSelectorsString.length() + " bytes");
+
+    return elemHideEmuSelectorsString;
   }
 
   private void doDispose()

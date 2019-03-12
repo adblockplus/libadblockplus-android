@@ -49,4 +49,5 @@ else
     hideElements();
   }, false);
 }
-console.log("injected JS finished")
+console.log("injected JS finished");
+

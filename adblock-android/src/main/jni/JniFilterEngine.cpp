@@ -230,6 +230,29 @@ static jobject JNICALL JniGetElementHidingSelectors(JNIEnv* env, jclass clazz,
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
+static jobject JNICALL JniGetElementHidingEmulationSelectors(JNIEnv* env, jclass clazz,
+    jlong ptr, jstring jDomain)
+{
+  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
+
+  std::string domain = JniJavaToStdString(env, jDomain);
+
+  try
+  {
+    std::vector<AdblockPlus::FilterEngine::EmulationSelector> selectors = engine.GetElementHidingEmulationSelectors(domain);
+
+    jobject list = NewJniArrayList(env);
+
+    for (auto it = selectors.cbegin(), end = selectors.cend(); it != end; ++it)
+    {
+      JniAddObjectToList(env, list, NewJniEmulationSelector(env, *it));
+    }
+
+    return list;
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
 static jobject JNICALL JniMatches(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl,
     jobjectArray jContentTypes, jstring jDocumentUrl)
 {
@@ -482,6 +505,7 @@ static JNINativeMethod methods[] =
   { (char*)"setFilterChangeCallback", (char*)"(JJ)V", (void*)JniSetFilterChangeCallback },
   { (char*)"removeFilterChangeCallback", (char*)"(J)V", (void*)JniRemoveFilterChangeCallback },
   { (char*)"getElementHidingSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingSelectors },
+  { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
   { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/lang/String;)" TYP("Filter"), (void*)JniMatches },
   { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "[Ljava/lang/String;)" TYP("Filter"), (void*)JniMatchesMany },
   { (char*)"isDocumentWhitelisted", (char*)"(JLjava/lang/String;[Ljava/lang/String;)Z", (void*)JniIsDocumentWhitelisted },

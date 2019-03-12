@@ -48,6 +48,18 @@ public final class FilterEngine
     }
   }
 
+  public static class EmulationSelector
+  {
+    public String selector;
+    public String text;
+
+    public EmulationSelector(String selector, String text)
+    {
+      this.selector = selector;
+      this.text = text;
+    }
+  }
+
   FilterEngine(long jniPlatformPtr)
   {
     this.ptr = jniPlatformPtr;
@@ -96,6 +108,11 @@ public final class FilterEngine
   public List<String> getElementHidingSelectors(final String domain)
   {
     return getElementHidingSelectors(this.ptr, domain);
+  }
+
+  public List<EmulationSelector> getElementHidingEmulationSelectors(final String domain)
+  {
+    return getElementHidingEmulationSelectors(this.ptr, domain);
   }
 
   public void showNextNotification(final String url)
@@ -225,6 +242,8 @@ public final class FilterEngine
   private final static native void setFilterChangeCallback(long ptr, long filterPtr);
 
   private final static native List<String> getElementHidingSelectors(long ptr, String domain);
+
+  private final static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
 
   private final static native void showNextNotification(long ptr, String url);
 
