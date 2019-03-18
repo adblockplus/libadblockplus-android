@@ -27,7 +27,7 @@ public class JsValue implements Disposable
 
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

@@ -18,13 +18,15 @@
 #include "JniCallbacks.h"
 #include "JniWebRequest.h"
 
+namespace
+{
 // precached in JNI_OnLoad and released in JNI_OnUnload
 JniGlobalReference<jclass>* headerEntryClass;
 JniGlobalReference<jclass>* serverResponseClass;
 
 JniGlobalReference<jclass>* webRequestCallbackClass;
 jmethodID callbackClassCtor;
-
+}
 
 void JniWebRequest_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
 {

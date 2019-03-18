@@ -11,6 +11,12 @@ android {
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  if (project.hasProperty("user_config_dir")) {
+    sourceSets.main.java.srcDirs += [project.user_config_dir]
+  } else {
+    sourceSets.main.java.srcDirs += ["src/main/java_user_config"]
+  }
+
   flavorDimensions "abi"
 
   productFlavors {
@@ -48,9 +54,14 @@ android {
     }
   }
 
-  externalNativeBuild {
-    ndkBuild {
-      path 'src/main/jni/Android.mk'
+
+  if (project.hasProperty('disable_jni_compilation')) {
+    sourceSets.main.jni.srcDirs = []
+  } else {
+    externalNativeBuild {
+      ndkBuild {
+        path 'src/main/jni/Android.mk'
+      }
     }
   }
 

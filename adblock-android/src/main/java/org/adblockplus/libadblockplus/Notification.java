@@ -23,7 +23,7 @@ public class Notification extends JsValue
 {
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

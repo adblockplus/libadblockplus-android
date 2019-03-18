@@ -23,7 +23,7 @@ public abstract class WebRequest
 {
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 
