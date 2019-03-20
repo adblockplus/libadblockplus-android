@@ -21,7 +21,7 @@ public final class Filter extends JsValue
 {
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

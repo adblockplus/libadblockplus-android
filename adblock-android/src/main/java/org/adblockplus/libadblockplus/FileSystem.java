@@ -23,7 +23,7 @@ public abstract class FileSystem
 {
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

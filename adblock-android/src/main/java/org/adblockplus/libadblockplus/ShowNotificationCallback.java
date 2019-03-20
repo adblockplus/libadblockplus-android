@@ -24,7 +24,7 @@ public abstract class ShowNotificationCallback implements Disposable
 
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

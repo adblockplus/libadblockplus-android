@@ -212,7 +212,7 @@ static jobject JNICALL JniCall(JNIEnv* env, jclass clazz, jlong ptr, jlongArray 
   {
     AdblockPlus::JsValue* jsValue = JniGetJsValuePtr(ptr);
     AdblockPlus::JsValueList jsValueList = convertToJsValueList(env, jParamPtrs);
-    return NewJniJsValue(env, std::move(jsValue->Call(jsValueList)));
+    return NewJniJsValue(env, jsValue->Call(jsValueList));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -225,7 +225,7 @@ static jobject JNICALL JniCallThisValue(
     AdblockPlus::JsValue* jsValue = JniGetJsValuePtr(ptr);
     AdblockPlus::JsValue jsThisValue = JniGetJsValue(thisValuePtr);
     AdblockPlus::JsValueList jsValueList = convertToJsValueList(env, jParamPtrs);
-    return NewJniJsValue(env, std::move(jsValue->Call(jsValueList, jsThisValue)));
+    return NewJniJsValue(env, jsValue->Call(jsValueList, jsThisValue));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }

@@ -48,3 +48,11 @@ build_libadblockplus-android:all:
     paths:
       - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
       - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
+
+
+build_libadblockplus-android:without-jni:
+  stage: build
+  # Don't get dependencies because current dependencies are merely libadblockplus but we don't need it.
+  # If the parameter is working correctly then the building should succeed without libadblockplus.
+  script:
+    - ./gradlew assemble -Pdisable_jni_compilation=true

@@ -24,7 +24,7 @@ public abstract class FilterChangeCallback implements Disposable
 
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

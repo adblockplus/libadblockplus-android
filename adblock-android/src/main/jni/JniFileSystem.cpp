@@ -28,6 +28,7 @@
 
 #define METHOD_EXCEPTION_MESSAGE(method) ("Exception thrown in FileSystem." method "(): ")
 
+namespace {
 // precached in JNI_OnLoad and released in JNI_OnUnload
 JniGlobalReference<jclass>* throwableClass;
 jmethodID throwableGetMessageMethod;
@@ -44,7 +45,7 @@ jmethodID callbackClassCtor;
 
 JniGlobalReference<jclass>* statCallbackClass;
 jmethodID statCallbackClassCtor;
-
+}
 
 void JniFileSystem_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
 {
@@ -199,7 +200,7 @@ public:
     {
       return _callback;
     }
-    const jobject GetByteBuffer() const
+    jobject GetByteBuffer() const
     {
       return _byteBuffer;
     }

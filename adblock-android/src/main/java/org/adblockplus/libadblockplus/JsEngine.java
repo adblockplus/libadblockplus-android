@@ -25,7 +25,7 @@ public final class JsEngine
 
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

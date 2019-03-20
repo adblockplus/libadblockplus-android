@@ -21,7 +21,7 @@ public final class Subscription extends JsValue
 {
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 

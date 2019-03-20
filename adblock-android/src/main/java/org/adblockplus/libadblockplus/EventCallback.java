@@ -26,7 +26,7 @@ public abstract class EventCallback implements Disposable
 
   static
   {
-    System.loadLibrary("adblockplus-jni");
+    System.loadLibrary(UserConfig.nativeLibraryName);
     registerNatives();
   }
 
