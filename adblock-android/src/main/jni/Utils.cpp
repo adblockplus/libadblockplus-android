@@ -32,6 +32,9 @@ jmethodID subscriptionCtor;
 JniGlobalReference<jclass>* notificationClass;
 jmethodID notificationCtor;
 
+JniGlobalReference<jclass>* emulationSelectorClass;
+jmethodID emulationSelectorCtor;
+
 JniGlobalReference<jclass>* exceptionClass;
 
 void JniUtils_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
@@ -47,6 +50,9 @@ void JniUtils_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
 
   notificationClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Notification")));
   notificationCtor = env->GetMethodID(notificationClass->Get(), "<init>", "(J)V");
+
+  emulationSelectorClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("FilterEngine$EmulationSelector")));
+  emulationSelectorCtor = env->GetMethodID(emulationSelectorClass->Get(), "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
 
   exceptionClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("AdblockPlusException")));
 }
@@ -190,6 +196,12 @@ jobject NewJniNotification(JNIEnv* env, AdblockPlus::Notification&& notification
 {
   return NewJniObject<AdblockPlus::Notification>(
     env, std::move(notification), notificationClass->Get(), notificationCtor);
+}
+
+jobject NewJniEmulationSelector(JNIEnv* env, const AdblockPlus::FilterEngine::EmulationSelector& emulationSelector)
+{
+  return env->NewObject(emulationSelectorClass->Get(), emulationSelectorCtor,
+    JniStdStringToJava(env, emulationSelector.selector), JniStdStringToJava(env, emulationSelector.text));
 }
 
 jobject JniStringVectorToArrayList(JNIEnv* env, const std::vector<std::string>& stringVector)

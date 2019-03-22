@@ -25,7 +25,11 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import org.adblockplus.libadblockplus.FilterEngine;
+
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Log;
@@ -55,6 +59,34 @@ public final class Utils
         if (eachString != null)
         {
           array.put(eachString);
+        }
+      }
+    }
+
+    return array.toString();
+  }
+
+  public static String emulationSelectorListToJsonArray(final List<FilterEngine.EmulationSelector> list)
+  {
+    JSONArray array = new JSONArray();
+
+    if (list != null)
+    {
+      for (FilterEngine.EmulationSelector selector : list)
+      {
+        if (selector != null)
+        {
+          try
+          {
+            JSONObject selectorObj = new JSONObject();
+            selectorObj.put("selector", selector.selector);
+            selectorObj.put("text", selector.text);
+            array.put(selectorObj);
+          }
+          catch (JSONException e)
+          {
+            Log.e(getTag(Utils.class), "Failed to create JSON object", e);
+          }
         }
       }
     }

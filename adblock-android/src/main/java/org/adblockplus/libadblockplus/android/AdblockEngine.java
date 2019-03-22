@@ -598,6 +598,19 @@ public final class AdblockEngine
     return this.filterEngine.getElementHidingSelectors(domain);
   }
 
+  public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(final String url, final String domain, final String[] referrerChainArray)
+  {
+    if (!this.enabled
+        || !this.elemhideEnabled
+        || this.isDomainWhitelisted(url, referrerChainArray)
+        || this.isDocumentWhitelisted(url, referrerChainArray)
+        || this.isElemhideWhitelisted(url, referrerChainArray))
+    {
+      return new ArrayList<FilterEngine.EmulationSelector>();
+    }
+    return this.filterEngine.getElementHidingEmulationSelectors(domain);
+  }
+
   public FilterEngine getFilterEngine()
   {
     return this.filterEngine;
