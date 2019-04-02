@@ -861,12 +861,17 @@ public class AdblockWebView extends WebView
             request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
 
       String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
-      List<String> referrers = new ArrayList<>();
-
       if (referrer != null)
       {
         d("Header referrer for " + url + " is " + referrer);
-        url2Referrer.put(url, referrer);
+        if (!url.equals(referrer))
+        {
+          url2Referrer.put(url, referrer);
+        }
+        else
+        {
+          w("Header referrer value is the same as url, skipping url2Referrer.put()");
+        }
       }
       else
       {
@@ -874,9 +879,15 @@ public class AdblockWebView extends WebView
       }
 
       // reconstruct frames hierarchy
+      List<String> referrers = new ArrayList<>();
       String parentUrl = url;
       while ((parentUrl = url2Referrer.get(parentUrl)) != null)
       {
+        if (referrers.contains(parentUrl))
+        {
+          w("Detected referrer loop, finished creating referrers list");
+          break;
+        }
         referrers.add(parentUrl);
       }
 
