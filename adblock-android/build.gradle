@@ -1,6 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
 
+private String getNativeLibraryName() {
+  def libraryName = System.getenv('LIBABP_SHARED_LIBRARY_NAME')
+  return libraryName != null ? libraryName : 'adblockplus-jni'
+}
+
 android {
   compileSdkVersion 28
   buildToolsVersion '28.0.3'
@@ -8,13 +13,8 @@ android {
   defaultConfig {
     minSdkVersion 16
     targetSdkVersion 28
+    buildConfigField "String", "nativeLibraryName", '"' + getNativeLibraryName() + '"'
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-  }
-
-  if (project.hasProperty("user_config_dir")) {
-    sourceSets.main.java.srcDirs += [project.user_config_dir]
-  } else {
-    sourceSets.main.java.srcDirs += ["src/main/java_user_config"]
   }
 
   flavorDimensions "abi"
@@ -55,7 +55,8 @@ android {
   }
 
 
-  if (project.hasProperty('disable_jni_compilation')) {
+  if (System.getenv('SKIP_JNI_COMPILATION') != null) {
+    println "[Configuration] Skipping JNI compilation"
     sourceSets.main.jni.srcDirs = []
   } else {
     externalNativeBuild {
@@ -69,7 +70,7 @@ android {
     userOrg = rootProject.ext.bintrayUserOrg
     groupId = rootProject.ext.bintrayGroupId
     artifactId = 'adblock-android'
-    publishVersion = '3.3'
+    publishVersion = '3.3.1'
     licences = rootProject.ext.bintrayLicences
     desc = 'An Android library that provides the core functionality of Adblock Plus.'
     website = rootProject.ext.bintrayWebsite

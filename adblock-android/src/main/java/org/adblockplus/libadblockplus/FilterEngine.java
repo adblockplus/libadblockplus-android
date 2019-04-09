@@ -27,7 +27,7 @@ public final class FilterEngine
 
   static
   {
-    System.loadLibrary(UserConfig.nativeLibraryName);
+    System.loadLibrary(BuildConfig.nativeLibraryName);
     registerNatives();
   }
 

@@ -21,7 +21,7 @@ public final class Subscription extends JsValue
 {
   static
   {
-    System.loadLibrary(UserConfig.nativeLibraryName);
+    System.loadLibrary(BuildConfig.nativeLibraryName);
     registerNatives();
   }
 

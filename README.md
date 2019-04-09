@@ -123,16 +123,15 @@ For example:
 
     EXPOSE_LIBABP_OBJECTS=y ./gradlew clean assembleAbi_arm
 
-### Building with custom user configuration
+### JNI adjustments
 
-Custom user configuration is a mechanism allowing to define certain parameters
-which are used in static initializers without modifying the original source
-code. In order to do it you have to copy `adblock-android/src/main/java_user_config`,
-set values in `org/adblockplus/libadblockplus/UserConfig.java`, which resides
-in the copied directory, and pass the path to your copy of `java_user_config` in
-`user_config_dir` gradle parameter.
+In order to load custom library name pass `LIBABP_SHARED_LIBRARY_NAME` environment variable (without `lib` and `.so`):
 
-    `./gradlew assembleRelease -Puser_config_dir=/path/to/java_user_config/`
+    LIBABP_SHARED_LIBRARY_NAME=adblockplus ./gradlew assembleRelease
+    
+In order to skip compilation of JNI classes pass `SKIP_JNI_COMPILATION` environment variable:
+
+    SKIP_JNI_COMPILATION=true ./gradlew assembleRelease
 
 ### Building for single ARCH
 
