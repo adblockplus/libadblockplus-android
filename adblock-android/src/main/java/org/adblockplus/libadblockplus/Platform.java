@@ -24,7 +24,7 @@ public class Platform implements Disposable
 
   static
   {
-    System.loadLibrary(UserConfig.nativeLibraryName);
+    System.loadLibrary(BuildConfig.nativeLibraryName);
     registerNatives();
   }
 

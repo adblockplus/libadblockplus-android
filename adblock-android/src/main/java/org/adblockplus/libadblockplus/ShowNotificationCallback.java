@@ -24,7 +24,7 @@ public abstract class ShowNotificationCallback implements Disposable
 
   static
   {
-    System.loadLibrary(UserConfig.nativeLibraryName);
+    System.loadLibrary(BuildConfig.nativeLibraryName);
     registerNatives();
   }
 

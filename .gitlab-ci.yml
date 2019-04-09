@@ -50,9 +50,23 @@ build_libadblockplus-android:all:
       - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
 
 
+build_libadblockplus-android:custom-jni:
+  stage: build
+  before_script:
+    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
+    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
+    - mkdir -p .git/info
+    - ./ensure_dependencies.py
+    - cd ./libadblockplus
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
+    - cd ..
+  script:
+    - LIBABP_SHARED_LIBRARY_NAME=adblockplus ./gradlew clean assembleAbi_arm
+
 build_libadblockplus-android:without-jni:
   stage: build
   # Don't get dependencies because current dependencies are merely libadblockplus but we don't need it.
   # If the parameter is working correctly then the building should succeed without libadblockplus.
   script:
-    - ./gradlew assemble -Pdisable_jni_compilation=true
+    - SKIP_JNI_COMPILATION=true ./gradlew clean assemble
