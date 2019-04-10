@@ -625,49 +625,118 @@ public class FilterEngineTest extends BaseFilterEngineTest
     final List<String> selsGen = filterEngine.getElementHidingSelectors("");
     assertTrue(selsGen.isEmpty());
 
-    final List<String> selsNonExisting = filterEngine.getElementHidingSelectors("non-existing-domain.com");
+    final List<String> selsNonExisting =
+      filterEngine.getElementHidingSelectors("non-existing-domain.com");
     assertTrue(selsNonExisting.isEmpty());
   }
 
   @Test
   public void testElementHidingEmulationSelectorsListEmpty()
   {
-    List<FilterEngine.EmulationSelector> selectors = filterEngine.getElementHidingEmulationSelectors("example.org");
+    final List<FilterEngine.EmulationSelector> selectors =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
     assertTrue(selectors.isEmpty());
+  }
+
+  @Test
+  public void testElementHidingEmulationSelectorsWhitelist()
+  {
+    filterEngine.getFilter("example.org#?#foo").addToList();
+
+    // before whitelisting
+    final List<FilterEngine.EmulationSelector> selectorsBeforeWhitelisting =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
+    assertEquals(1, selectorsBeforeWhitelisting.size());
+    assertEquals("foo", selectorsBeforeWhitelisting.get(0).selector);
+    assertEquals("example.org#?#foo", selectorsBeforeWhitelisting.get(0).text);
+
+    // whitelist it
+    filterEngine.getFilter("example.org#@#foo").addToList();
+
+    final List<FilterEngine.EmulationSelector> selectorsAfterWhitelisting =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
+    assertTrue(selectorsAfterWhitelisting.isEmpty());
+
+    // add another filter
+    filterEngine.getFilter("example.org#?#another").addToList();
+
+    final List<FilterEngine.EmulationSelector> selectorsAnother =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
+    assertEquals(1, selectorsAnother.size());
+    assertEquals("another", selectorsAnother.get(0).selector);
+    assertEquals("example.org#?#another", selectorsAnother.get(0).text);
+
+    // check another domain
+    filterEngine.getFilter("example2.org#?#foo").addToList();
+
+    final List<FilterEngine.EmulationSelector> selectors2 =
+      filterEngine.getElementHidingEmulationSelectors("example2.org");
+    assertEquals(1, selectors2.size());
+    assertEquals("foo", selectors2.get(0).selector);
+    assertEquals("example2.org#?#foo", selectors2.get(0).text);
+
+    // check the type of the whitelist (exception) filter
+    final Filter filter = filterEngine.getFilter("example.org#@#bar");
+    assertEquals(Filter.Type.ELEMHIDE_EXCEPTION, filter.getType());
   }
 
   @Test
   public void testElementHidingEmulationSelectorsList()
   {
-    String[] filters =
+    final String[] filters =
       {
         // other type of filters
         "/testcasefiles/blocking/addresspart/abptestcasepath/",
         "example.org###testcase-eh-id",
 
-        // element hiding emulatiion selectors
+        // element hiding emulation selectors
         "example.org#?#div:-abp-properties(width: 213px)",
         "example.org#?#div:-abp-has(>div>img.testcase-es-has)",
         "example.org#?#span:-abp-contains(ESContainsTarget)",
         "~foo.example.org,example.org#?#div:-abp-properties(width: 213px)",
         "~othersiteneg.org#?#div:-abp-properties(width: 213px)",
 
+        // whitelisted
+        "example.org#@#foo",
+
         // other site
         "othersite.com###testcase-eh-id"
       };
 
-    for (String filter : filters)
+    for (final String filter : filters)
     {
       filterEngine.getFilter(filter).addToList();
     }
 
-    List<FilterEngine.EmulationSelector> selectors = filterEngine.getElementHidingEmulationSelectors("example.org");
+    final List<FilterEngine.EmulationSelector> selectors =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
 
     assertEquals(4, selectors.size());
     assertEquals("div:-abp-properties(width: 213px)", selectors.get(0).selector);
     assertEquals("div:-abp-has(>div>img.testcase-es-has)", selectors.get(1).selector);
     assertEquals("span:-abp-contains(ESContainsTarget)", selectors.get(2).selector);
     assertEquals("div:-abp-properties(width: 213px)", selectors.get(3).selector);
+
+    // text field
+    assertEquals("example.org#?#div:-abp-properties(width: 213px)", selectors.get(0).text);
+    assertEquals("example.org#?#div:-abp-has(>div>img.testcase-es-has)", selectors.get(1).text);
+    assertEquals("example.org#?#span:-abp-contains(ESContainsTarget)", selectors.get(2).text);
+    assertEquals("~foo.example.org,example.org#?#div:-abp-properties(width: 213px)", selectors.get(3).text);
+
+    final List<FilterEngine.EmulationSelector> selectors2 =
+      filterEngine.getElementHidingEmulationSelectors("foo.example.org");
+    assertEquals(3, selectors2.size());
+    assertEquals("div:-abp-properties(width: 213px)", selectors2.get(0).selector);
+    assertEquals("div:-abp-has(>div>img.testcase-es-has)", selectors2.get(1).selector);
+    assertEquals("span:-abp-contains(ESContainsTarget)", selectors2.get(2).selector);
+
+    assertEquals("example.org#?#div:-abp-properties(width: 213px)", selectors2.get(0).text);
+    assertEquals("example.org#?#div:-abp-has(>div>img.testcase-es-has)", selectors2.get(1).text);
+    assertEquals("example.org#?#span:-abp-contains(ESContainsTarget)", selectors2.get(2).text);
+
+    final List<FilterEngine.EmulationSelector> selectors3 =
+      filterEngine.getElementHidingEmulationSelectors("othersiteneg.org");
+    assertEquals(0, selectors3.size());
   }
 
   @Test
@@ -676,14 +745,16 @@ public class FilterEngineTest extends BaseFilterEngineTest
     // element hiding emulation selector
     filterEngine.getFilter("example.org#?#div:-abp-properties(width: 213px)").addToList();
 
-    List<FilterEngine.EmulationSelector> selectors = filterEngine.getElementHidingEmulationSelectors("example.org");
+    final List<FilterEngine.EmulationSelector> selectors =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
 
     assertEquals(1, selectors.size());
     assertEquals("div:-abp-properties(width: 213px)", selectors.get(0).selector);
+    assertEquals("example.org#?#div:-abp-properties(width: 213px)", selectors.get(0).text);
   }
 
   @Test
-  public void testElementHidingEmulationSelectorsListDup()
+  public void testElementHidingEmulationSelectorsListNoDuplicates()
   {
     // element hiding emulation selectors - duplicates
     filterEngine.getFilter("example.org#?#dup").addToList();
@@ -691,17 +762,25 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("othersite.org#?#dup").addToList();
     filterEngine.getFilter("~foo.example.org#?#dup").addToList();
 
-    List<FilterEngine.EmulationSelector> selectors = filterEngine.getElementHidingEmulationSelectors("example.org");
+    final List<FilterEngine.EmulationSelector> selectors =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
 
     // no dups
     assertEquals(1, selectors.size());
     assertEquals("dup", selectors.get(0).selector);
+    assertEquals("example.org#?#dup", selectors.get(0).text);
+  }
 
-    // these make duplicates
+  @Test
+  public void testElementHidingEmulationSelectorsListDuplicates()
+  {
+    // element hiding emulation selectors - duplicates
+    filterEngine.getFilter("example.org#?#dup").addToList();
     filterEngine.getFilter("~foo.example.org,example.org#?#dup").addToList();
     filterEngine.getFilter("~bar.example.org,example.org#?#dup").addToList();
 
-    List<FilterEngine.EmulationSelector> selectorsDup = filterEngine.getElementHidingEmulationSelectors("example.org");
+    final List<FilterEngine.EmulationSelector> selectorsDup =
+      filterEngine.getElementHidingEmulationSelectors("example.org");
 
     // dups
     assertEquals(3, selectorsDup.size());
@@ -709,10 +788,18 @@ public class FilterEngineTest extends BaseFilterEngineTest
     assertEquals("dup", selectorsDup.get(1).selector);
     assertEquals("dup", selectorsDup.get(2).selector);
 
-    List<FilterEngine.EmulationSelector> selsBar = filterEngine.getElementHidingEmulationSelectors("bar.example.org");
-    assertEquals(2, selsBar.size());
-    assertEquals("dup", selsBar.get(0).selector);
-    assertEquals("dup", selsBar.get(1).selector);
+    assertEquals("example.org#?#dup", selectorsDup.get(0).text);
+    assertEquals("~foo.example.org,example.org#?#dup", selectorsDup.get(1).text);
+    assertEquals("~bar.example.org,example.org#?#dup", selectorsDup.get(2).text);
+
+    final List<FilterEngine.EmulationSelector> selectorsBar =
+      filterEngine.getElementHidingEmulationSelectors("bar.example.org");
+    assertEquals(2, selectorsBar.size());
+    assertEquals("dup", selectorsBar.get(0).selector);
+    assertEquals("dup", selectorsBar.get(1).selector);
+
+    assertEquals("example.org#?#dup", selectorsBar.get(0).text);
+    assertEquals("~foo.example.org,example.org#?#dup", selectorsBar.get(1).text);
   }
 
   @Test
@@ -720,20 +807,46 @@ public class FilterEngineTest extends BaseFilterEngineTest
   {
     filterEngine.getFilter("example1.org#?#div:-abp-properties(width: 213px)").addToList();
     filterEngine.getFilter("example2.org#?#div:-abp-properties(width: 213px)").addToList();
+    // whitelisted
+    filterEngine.getFilter("example2.org#@#div:-abp-properties(width: 213px)").addToList();
 
-    List<FilterEngine.EmulationSelector> selectors1 = filterEngine.getElementHidingEmulationSelectors("example1.org");
+    final List<FilterEngine.EmulationSelector> selectors1 =
+      filterEngine.getElementHidingEmulationSelectors("example1.org");
     assertEquals(1, selectors1.size());
     assertEquals("div:-abp-properties(width: 213px)", selectors1.get(0).selector);
+    assertEquals("example1.org#?#div:-abp-properties(width: 213px)", selectors1.get(0).text);
 
-    List<FilterEngine.EmulationSelector> selectors2 = filterEngine.getElementHidingEmulationSelectors("example2.org");
-    assertEquals(1, selectors2.size());
-    assertEquals("div:-abp-properties(width: 213px)", selectors2.get(0).selector);
+    final List<FilterEngine.EmulationSelector> selectors2 =
+      filterEngine.getElementHidingEmulationSelectors("example2.org");
+    assertTrue(selectors2.isEmpty());
+  }
 
-    List<FilterEngine.EmulationSelector> selectorsGen = filterEngine.getElementHidingEmulationSelectors("");
+  @Test
+  public void testElementHidingEmulationSelectorsGeneric()
+  {
+    filterEngine.getFilter("example1.org#?#foo").addToList();
+    filterEngine.getFilter("example2.org#@#bar").addToList();
+
+    // there are no generic el-hiding emulation filters.
+    // this should have no effect on selectors returned and the type should be invalid
+    final Filter genFilter = filterEngine.getFilter("#?#foo");
+    genFilter.addToList();
+
+    assertEquals(Filter.Type.INVALID, genFilter.getType());
+
+    final List<FilterEngine.EmulationSelector> selectorsGen =
+      filterEngine.getElementHidingEmulationSelectors("");
     assertTrue(selectorsGen.isEmpty());
+  }
 
-    List<FilterEngine.EmulationSelector> selectorsNonExisting = filterEngine.getElementHidingEmulationSelectors("non-existing-domain.com");
+  @Test
+  public void testElementHidingEmulationSelectorsNonExisting()
+  {
+    filterEngine.getFilter("example1.org#?#foo").addToList();
+    filterEngine.getFilter("example2.org#@#bar").addToList();
+
+    final List<FilterEngine.EmulationSelector> selectorsNonExisting =
+      filterEngine.getElementHidingEmulationSelectors("non-existing-domain.com");
     assertTrue(selectorsNonExisting.isEmpty());
   }
 }
-
