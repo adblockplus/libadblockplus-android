@@ -10,7 +10,7 @@ android {
         targetSdkVersion 28
         versionCode 11
         versionName "3.3"
-        missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_x86'
+        missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
     }
 }
 

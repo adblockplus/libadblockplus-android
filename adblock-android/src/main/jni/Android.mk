@@ -64,6 +64,8 @@ ifeq ($(SHARED_V8_LIB_DIR),)
 
     ifeq ($(APP_ABI),armeabi-v7a)
       ABP_TARGET_ARCH := arm
+    else ifeq ($(APP_ABI),arm64-v8a)
+      ABP_TARGET_ARCH := arm64
     else
       ABP_TARGET_ARCH := ia32
     endif

@@ -15,6 +15,20 @@ build_libadblockplus-android:arm:
   script:
     - ./gradlew clean assembleAbi_arm
 
+build_libadblockplus-android:arm64:
+  stage: build
+  before_script:
+    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
+    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
+    - mkdir -p .git/info
+    - ./ensure_dependencies.py
+    - cd ./libadblockplus
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
+    - cd ..
+  script:
+    - ./gradlew clean assembleAbi_arm64
+
 build_libadblockplus-android:x86:
   stage: build
   before_script:
@@ -39,6 +53,8 @@ build_libadblockplus-android:all:
     - cd ./libadblockplus
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
     - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
     - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
     - cd ..
