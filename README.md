@@ -44,11 +44,13 @@ See `libadblockplus/README` or V8 documentation on how to build V8 or
 fetch precompiled one. For the latter, run in 'libadblockplus' directory:
 
     make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
+    make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
     make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
 
 Then we can build `libadblockplus`:
 
     make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
+    make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
     make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
 
 #### Building from command-line
