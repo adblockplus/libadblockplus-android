@@ -21,8 +21,12 @@
 namespace
 {
 // precached in JNI_OnLoad and released in JNI_OnUnload
+JniGlobalReference<jclass>* httpRequestClass;
+jmethodID httpRequestClassCtor;
+
 JniGlobalReference<jclass>* headerEntryClass;
 JniGlobalReference<jclass>* serverResponseClass;
+jfieldID responseField;
 
 JniGlobalReference<jclass>* webRequestCallbackClass;
 jmethodID callbackClassCtor;
@@ -30,15 +34,27 @@ jmethodID callbackClassCtor;
 
 void JniWebRequest_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
 {
+  httpRequestClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("HttpRequest")));
+  httpRequestClassCtor = env->GetMethodID(httpRequestClass->Get(), "<init>",
+      "(Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)V");
+
   headerEntryClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("HeaderEntry")));
   serverResponseClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("ServerResponse")));
 
-  webRequestCallbackClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("WebRequest$Callback")));
+  webRequestCallbackClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("HttpClient$JniCallback")));
   callbackClassCtor = env->GetMethodID(webRequestCallbackClass->Get(), "<init>", "(J)V");
+
+  responseField = env->GetFieldID(serverResponseClass->Get(), "response", "Ljava/nio/ByteBuffer;");
 }
 
 void JniWebRequest_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
 {
+  if (httpRequestClass)
+  {
+    delete httpRequestClass;
+    httpRequestClass = NULL;
+  }
+
   if (headerEntryClass)
   {
     delete headerEntryClass;
@@ -71,12 +87,15 @@ void JniWebRequestCallback::GET(const std::string& url,
 
   jmethodID method = env->GetMethodID(
       *JniLocalReference<jclass>(*env, env->GetObjectClass(GetCallbackObject())),
-      "GET",
-      "(Ljava/lang/String;Ljava/util/List;" TYP("WebRequest$Callback") ")V" );
+      "request",
+      "(" TYP("HttpRequest") TYP("HttpClient$Callback") ")V" );
 
   if (method)
   {
     jstring jUrl = JniStdStringToJava(*env, url);
+
+    std::string stdRequestMethod = "GET";
+    jstring jRequestMethod = JniStdStringToJava(*env, stdRequestMethod);
 
     JniLocalReference<jobject> jHeaders(*env, NewJniArrayList(*env));
     jmethodID addMethod = JniGetAddToListMethod(*env, *jHeaders);
@@ -88,16 +107,17 @@ void JniWebRequestCallback::GET(const std::string& url,
       JniAddObjectToList(*env, *jHeaders, addMethod, *headerEntry);
     }
 
+    jobject jHttpRequest = env->NewObject(
+        httpRequestClass->Get(),
+        httpRequestClassCtor,
+        jUrl, jRequestMethod, *jHeaders, true);
+
     jobject jCallback = env->NewObject(
         webRequestCallbackClass->Get(),
         callbackClassCtor,
         JniPtrToLong(new AdblockPlus::IWebRequest::GetCallback(getCallback)));
 
-    jvalue args[3];
-    args[0].l = jUrl;
-    args[1].l = *jHeaders;
-    args[2].l = jCallback;
-    env->CallVoidMethodA(GetCallbackObject(), method, args);
+    env->CallVoidMethod(GetCallbackObject(), method, jHttpRequest, jCallback);
 
     if (CheckAndLogJavaException(*env))
     {
@@ -132,10 +152,21 @@ static void JNICALL JniCallbackOnFinished(JNIEnv* env, jclass clazz, jlong ptr, 
                                               serverResponseClass->Get(),
                                               response,
                                               "responseStatus");
-    sResponse.responseText = JniGetStringField(env,
-                                               serverResponseClass->Get(),
-                                               response,
-                                               "response");
+    jobject jByteBuffer = env->GetObjectField(response, responseField);
+
+    if (jByteBuffer)
+    {
+      // obtain and call method limit() on ByteBuffer object
+      jmethodID byteBufferLimitMethod = env->GetMethodID(env->GetObjectClass(jByteBuffer), "limit", "()I");
+      int responseSize = env->CallIntMethod(jByteBuffer, byteBufferLimitMethod);
+
+      const char* responseBuffer = reinterpret_cast<const char*>(env->GetDirectBufferAddress(jByteBuffer));
+      if (responseBuffer == NULL)
+      {
+        throw std::runtime_error("GetDirectBufferAddress() returned NULL");
+      }
+      sResponse.responseText.assign(responseBuffer, responseSize);
+    }
 
     // map headers
     jobjectArray responseHeadersArray = JniGetStringArrayField(env,
@@ -173,7 +204,7 @@ static JNINativeMethod methods[] =
   { (char*)"callbackDtor", (char*)"(J)V", (void*)JniCallbackDtor }
 };
 
-extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_WebRequest_registerNatives(
+extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_HttpClient_registerNatives(
     JNIEnv *env, jclass clazz)
 {
   env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0]));

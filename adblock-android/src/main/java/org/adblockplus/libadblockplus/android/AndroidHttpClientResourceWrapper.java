@@ -20,26 +20,24 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import org.adblockplus.libadblockplus.HeaderEntry;
+import org.adblockplus.libadblockplus.HttpClient;
+import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.ServerResponse;
-import org.adblockplus.libadblockplus.WebRequest;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * WebRequest wrapper to return request response from android resources for selected URLs
+ * HttpClient wrapper to return request response from android resources for selected URLs
  */
-public class AndroidWebRequestResourceWrapper extends WebRequest
+public class AndroidHttpClientResourceWrapper extends HttpClient
 {
-  private static final String TAG = Utils.getTag(AndroidWebRequestResourceWrapper.class);
+  private static final String TAG = Utils.getTag(AndroidHttpClientResourceWrapper.class);
 
   public static final String EASYLIST =
     "https://easylist-downloads.adblockplus.org/easylist.txt";
@@ -75,7 +73,7 @@ public class AndroidWebRequestResourceWrapper extends WebRequest
     "https://easylist-downloads.adblockplus.org/exceptionrules.txt";
 
   private Context context;
-  private WebRequest request;
+  private HttpClient httpClient;
   private Map<String, Integer> urlToResourceIdMap;
   private Storage storage;
   private Listener listener;
@@ -83,17 +81,17 @@ public class AndroidWebRequestResourceWrapper extends WebRequest
   /**
    * Constructor
    * @param context android context
-   * @param request wrapped request to perform the request if it's not preloaded subscription requested
+   * @param httpClient wrapped http client to perform the request if it's not preloaded subscription requested
    * @param urlToResourceIdMap map URL to android resource id for preloaded subscriptions
-   *                           See AndroidWebRequestResourceWrapper.EASYLIST_... constants
+   *                           See AndroidHttpClientResourceWrapper.EASYLIST_... constants
    * @param storage Storage impl to remember served interceptions
    */
-  public AndroidWebRequestResourceWrapper(Context context, WebRequest request,
-                                          Map<String, Integer> urlToResourceIdMap,
-                                          Storage storage)
+  public AndroidHttpClientResourceWrapper(final Context context, final HttpClient httpClient,
+                                          final Map<String, Integer> urlToResourceIdMap,
+                                          final Storage storage)
   {
     this.context = context;
-    this.request = request;
+    this.httpClient = httpClient;
     this.urlToResourceIdMap = Collections.synchronizedMap(urlToResourceIdMap);
     this.storage = storage;
   }
@@ -109,23 +107,23 @@ public class AndroidWebRequestResourceWrapper extends WebRequest
   }
 
   @Override
-  public void GET(String url, List<HeaderEntry> headers, Callback callback)
+  public void request(final HttpRequest request, final Callback callback)
   {
     // since parameters may vary we need to ignore them
-    String urlWithoutParams = Utils.getUrlWithoutParams(url);
+    String urlWithoutParams = Utils.getUrlWithoutParams(request.getUrl());
     Integer resourceId = urlToResourceIdMap.get(urlWithoutParams);
 
     if (resourceId != null)
     {
       if (!storage.contains(urlWithoutParams))
       {
-        Log.w(TAG, "Intercepting request for " + url + " with resource #" + resourceId.intValue());
+        Log.w(TAG, "Intercepting request for " + request.getUrl() + " with resource #" + resourceId.intValue());
         ServerResponse response = buildResourceContentResponse(resourceId);
         storage.put(urlWithoutParams);
 
         if (listener != null)
         {
-          listener.onIntercepted(url, resourceId);
+          listener.onIntercepted(request.getUrl(), resourceId);
         }
 
         callback.onFinished(response);
@@ -138,10 +136,10 @@ public class AndroidWebRequestResourceWrapper extends WebRequest
     }
 
     // delegate to wrapper request
-    request.GET(url, headers, callback);
+    httpClient.request(request, callback);
   }
 
-  protected String readResourceContent(int resourceId) throws IOException
+  protected ByteBuffer readResourceContent(int resourceId) throws IOException
   {
     Log.d(TAG, "Reading from resource ...");
 
@@ -150,7 +148,7 @@ public class AndroidWebRequestResourceWrapper extends WebRequest
     try
     {
       is = context.getResources().openRawResource(resourceId);
-      return Utils.readInputStreamAsString(is);
+      return Utils.readFromInputStream(is);
     }
     finally
     {

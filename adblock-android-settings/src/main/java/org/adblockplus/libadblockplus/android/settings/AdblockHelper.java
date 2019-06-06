@@ -21,10 +21,20 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
+import org.adblockplus.libadblockplus.android.AndroidBase64Processor;
+import org.adblockplus.libadblockplus.android.AndroidHttpClient;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
+import org.adblockplus.libadblockplus.security.JavaSignatureVerifier;
+import org.adblockplus.libadblockplus.security.SignatureVerifier;
+import org.adblockplus.libadblockplus.sitekey.PublicKeyHolder;
+import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl;
+import org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier;
+import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
+import org.adblockplus.libadblockplus.util.Base64Processor;
 
 /**
  * AdblockHelper shared resources
@@ -48,6 +58,7 @@ public class AdblockHelper
   private boolean isInitialized;
   private SingleInstanceEngineProvider provider;
   private AdblockSettingsStorage storage;
+  private SiteKeysConfiguration siteKeysConfiguration;
 
   private final SingleInstanceEngineProvider.EngineCreatedListener engineCreatedListener =
     new SingleInstanceEngineProvider.EngineCreatedListener()
@@ -127,6 +138,11 @@ public class AdblockHelper
     return storage;
   }
 
+  public SiteKeysConfiguration getSiteKeysConfiguration()
+  {
+    return siteKeysConfiguration;
+  }
+
   /**
    * Init with context
    * @param context application context
@@ -149,6 +165,7 @@ public class AdblockHelper
 
     initProvider(context, basePath, developmentBuild);
     initStorage(context, preferenceName);
+    initSiteKeysConfiguration();
     isInitialized = true;
     return provider;
   }
@@ -176,6 +193,19 @@ public class AdblockHelper
       Context.MODE_PRIVATE);
 
     storage = new SharedPrefsStorage(settingsPrefs);
+  }
+
+  private void initSiteKeysConfiguration()
+  {
+    final SignatureVerifier signatureVerifier = new JavaSignatureVerifier();
+    final PublicKeyHolder publicKeyHolder = new PublicKeyHolderImpl();
+    final HttpClient httpClient = new AndroidHttpClient(true, "UTF-8");
+    final Base64Processor base64Processor = new AndroidBase64Processor();
+    final SiteKeyVerifier siteKeyVerifier =
+        new SiteKeyVerifier(signatureVerifier, publicKeyHolder, base64Processor);
+
+    siteKeysConfiguration = new SiteKeysConfiguration(
+        signatureVerifier, publicKeyHolder, httpClient, siteKeyVerifier);
   }
 
   /**

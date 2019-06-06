@@ -18,10 +18,13 @@
 package org.adblockplus.libadblockplus.test;
 
 import org.adblockplus.libadblockplus.HeaderEntry;
-import org.adblockplus.libadblockplus.MockWebRequest;
+import org.adblockplus.libadblockplus.HttpClient;
+import org.adblockplus.libadblockplus.MockHttpClient;
 import org.adblockplus.libadblockplus.ServerResponse;
+import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
+import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,14 +33,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class WebRequestTest extends BaseFilterEngineTest
+public class HttpClientTest extends BaseFilterEngineTest
 {
   private final static int RESPONSE_STATUS = 123;
   private final static String HEADER_KEY = "Foo";
   private final static String HEADER_VALUE = "Bar";
+  private final static Charset CHARSET = Charset.forName("UTF-8");
   private final static String RESPONSE = "(responseText)";
 
-  private MockWebRequest mockWebRequest = new MockWebRequest();
+  private MockHttpClient mockHttpClient = new MockHttpClient();
 
   @Override
   public void setUp()
@@ -45,13 +49,13 @@ public class WebRequestTest extends BaseFilterEngineTest
     final ServerResponse response = new ServerResponse();
     response.setResponseStatus(RESPONSE_STATUS);
     response.setStatus(ServerResponse.NsStatus.OK);
-    response.setResponse(RESPONSE);
+    response.setResponse(Utils.stringToByteBuffer(RESPONSE, CHARSET));
     final List<HeaderEntry> headers = new LinkedList<HeaderEntry>();
     headers.add(new HeaderEntry(HEADER_KEY, HEADER_VALUE));
     response.setResponseHeaders(headers);
-    mockWebRequest.response = response;
+    mockHttpClient.response = response;
 
-    setUpWebRequest(mockWebRequest);
+    setUpHttpClient(mockHttpClient);
     super.setUp();
   }
 
@@ -60,9 +64,11 @@ public class WebRequestTest extends BaseFilterEngineTest
   {
     jsEngine.evaluate(
         "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
-    assertTrue(mockWebRequest.called);
-    assertNotNull(mockWebRequest.getLastUrl());
-    assertEquals("http://example.com/", mockWebRequest.getLastUrl());
+    assertTrue(mockHttpClient.called);
+    assertNotNull(mockHttpClient.getLastRequest());
+    assertNotNull(mockHttpClient.getLastRequest().getUrl());
+    assertEquals("http://example.com/", mockHttpClient.getLastRequest().getUrl());
+    assertEquals(HttpClient.REQUEST_METHOD_GET, mockHttpClient.getLastRequest().getMethod());
     assertFalse(jsEngine.evaluate("foo").isUndefined());
     assertEquals(
         ServerResponse.NsStatus.OK.getStatusCode(),
@@ -79,13 +85,15 @@ public class WebRequestTest extends BaseFilterEngineTest
   @Test
   public void testRequestException()
   {
-    mockWebRequest.exception = true;
+    mockHttpClient.exception = true;
 
     jsEngine.evaluate(
         "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
-    assertTrue(mockWebRequest.called);
-    assertNotNull(mockWebRequest.getLastUrl());
-    assertEquals("http://example.com/", mockWebRequest.getLastUrl());
+    assertTrue(mockHttpClient.called);
+    assertNotNull(mockHttpClient.getLastRequest());
+    assertNotNull(mockHttpClient.getLastRequest().getUrl());
+    assertEquals("http://example.com/", mockHttpClient.getLastRequest().getUrl());
+    assertEquals(HttpClient.REQUEST_METHOD_GET, mockHttpClient.getLastRequest().getMethod());
     assertFalse(jsEngine.evaluate("foo").isUndefined());
     assertEquals(
         ServerResponse.NsStatus.ERROR_FAILURE.getStatusCode(),

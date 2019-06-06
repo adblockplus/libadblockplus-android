@@ -125,9 +125,31 @@ jmethodID JniGetAddToListMethod(JNIEnv* env, jobject list)
   return env->GetMethodID(*clazz, "add", "(Ljava/lang/Object;)Z");
 }
 
+jmethodID JniGetListSizeMethod(JNIEnv* env, jobject list)
+{
+  JniLocalReference<jclass> clazz(env, env->GetObjectClass(list));
+  return env->GetMethodID(*clazz, "size", "()I");
+}
+
+jint JniGetListSize(JNIEnv* env, jobject list, jmethodID getSizeMethod)
+{
+  return env->CallIntMethod(list, getSizeMethod);
+}
+
+jmethodID JniGetGetFromListMethod(JNIEnv* env, jobject list)
+{
+  JniLocalReference<jclass> clazz(env, env->GetObjectClass(list));
+  return env->GetMethodID(*clazz, "get", "(I)Ljava/lang/Object;");
+}
+
 void JniAddObjectToList(JNIEnv* env, jobject list, jmethodID addMethod, jobject value)
 {
   env->CallBooleanMethod(list, addMethod, value);
+}
+
+jobject JniGetObjectFromList(JNIEnv* env, jobject list, jmethodID getMethod, jint i)
+{
+  return env->CallObjectMethod(list, getMethod, i);
 }
 
 void JniAddObjectToList(JNIEnv* env, jobject list, jobject value)

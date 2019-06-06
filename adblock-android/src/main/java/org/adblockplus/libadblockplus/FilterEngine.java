@@ -135,34 +135,53 @@ public final class FilterEngine
     removeShowNotificationCallback(this.ptr);
   }
 
-  public Filter matches(final String url, final Set<ContentType> contentTypes, final String documentUrl)
+  /**
+   * Checks if any active filter matches the supplied URL.
+   * @param url url URL to match.
+   * @param contentTypes Content type mask of the requested resource.
+   * @param documentUrls Chain of documents requesting the resource, starting
+   *                     with the current resource's parent frame, ending with the
+   *                     top-level frame.
+   * @param siteKey sitekey or null/empty string
+   * @return Matching filter, or a `null` if there was no match.
+   */
+  public Filter matches(final String url, final Set<ContentType> contentTypes,
+                        final List<String> documentUrls, final String siteKey)
   {
-    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrl);
+    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
+            documentUrls, siteKey);
   }
 
-  public Filter matches(final String url, final ContentType contentType, final String documentUrl)
+  /**
+   * Check if the document with URL is whitelisted
+   * @param url URL
+   * @param documentUrls Chain of document URLs requesting the document,
+   *                     starting with the current document's parent frame, ending with
+   *                     the top-level frame.
+   * @param siteKey sitekey or null/empty string
+   * @return `true` if the URL is whitelisted
+   */
+  public boolean isDocumentWhitelisted(final String url,
+                                       final List<String> documentUrls,
+                                       final String siteKey)
   {
-    return matches(url, ContentType.maskOf(contentType), documentUrl);
+    return isDocumentWhitelisted(this.ptr, url, documentUrls, siteKey);
   }
 
-  public Filter matches(final String url, final Set<ContentType> contentTypes, final String[] documentUrls)
+  /**
+   * Check if the element hiding is whitelisted
+   * @param url URL
+   * @param documentUrls Chain of document URLs requesting the document,
+   *                     starting with the current document's parent frame, ending with
+   *                     the top-level frame.
+   * @param siteKey sitekey or null/empty string
+   * @return `true` if element hiding is whitelisted for the supplied URL.
+   */
+  public boolean isElemhideWhitelisted(final String url,
+                                       final List<String> documentUrls,
+                                       final String siteKey)
   {
-    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls);
-  }
-
-  public Filter matches(final String url, final ContentType contentType, final String[] documentUrls)
-  {
-    return matches(url, ContentType.maskOf(contentType), documentUrls);
-  }
-
-  public boolean isDocumentWhitelisted(String url, String[] documentUrls)
-  {
-    return isDocumentWhitelisted(this.ptr, url, documentUrls);
-  }
-
-  public boolean isElemhideWhitelisted(String url, String[] documentUrls)
-  {
-    return isElemhideWhitelisted(this.ptr, url, documentUrls);
+    return isElemhideWhitelisted(this.ptr, url, documentUrls, siteKey);
   }
 
   public JsValue getPref(final String pref)
@@ -253,13 +272,16 @@ public final class FilterEngine
 
   private final static native JsValue getPref(long ptr, String pref);
 
-  private final static native Filter matches(long ptr, String url, ContentType[] contentType, String documentUrl);
+  private final static native Filter matches(long ptr, String url, ContentType[] contentType,
+                                             List<String> referrerChain, String siteKey);
 
-  private final static native Filter matches(long ptr, String url, ContentType[] contentType, String[] documentUrls);
+  private final static native boolean isDocumentWhitelisted(long ptr, String url,
+                                                            List<String> referrerChain,
+                                                            String siteKey);
 
-  private final static native boolean isDocumentWhitelisted(long ptr, String url, String[] documentUrls);
-
-  private final static native boolean isElemhideWhitelisted(long ptr, String url, String[] documentUrls);
+  private final static native boolean isElemhideWhitelisted(long ptr, String url,
+                                                            List<String> referrerChain,
+                                                            String siteKey);
 
   private final static native void setPref(long ptr, String pref, long valuePtr);
 

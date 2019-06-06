@@ -23,7 +23,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
-import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -44,14 +43,24 @@ import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.libadblockplus.HeaderEntry;
+import org.adblockplus.libadblockplus.HttpClient;
+import org.adblockplus.libadblockplus.HttpRequest;
+import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
+import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl;
+import org.adblockplus.libadblockplus.sitekey.SiteKeyException;
+import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,6 +69,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
+import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
 
 /**
  * WebView with ad blocking
@@ -71,7 +83,16 @@ public class AdblockWebView extends WebView
   protected static final String HEADER_REFERRER = "Referer";
   protected static final String HEADER_REQUESTED_WITH = "X-Requested-With";
   protected static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
+  protected static final String HEADER_LOCATION = "Location";
+  protected static final String HEADER_USER_AGENT = "User-Agent";
+  protected static final String HEADER_ACCEPT = "Accept";
 
+  // use low-case strings as in WebResponse all header keys are lowered-case
+  protected static final String HEADER_SITEKEY = "x-adblock-key";
+  protected static final String HEADER_CONTENT_TYPE = "content-type";
+  protected static final String HEADER_CONTENT_ENCODING = "content-encoding";
+
+  private static final String ASSETS_CHARSET_NAME = "UTF-8";
   private static final String BRIDGE_TOKEN = "{{BRIDGE}}";
   private static final String DEBUG_TOKEN = "{{DEBUG}}";
   private static final String HIDE_TOKEN = "{{HIDE}}";
@@ -98,6 +119,7 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
+  private SiteKeysConfiguration siteKeysConfiguration;
 
   public AdblockWebView(Context context)
   {
@@ -115,6 +137,21 @@ public class AdblockWebView extends WebView
   {
     super(context, attrs, defStyle);
     initAbp();
+  }
+
+  private static class ResponseHolder
+  {
+    ServerResponse response;
+  }
+
+  public SiteKeysConfiguration getSiteKeysConfiguration()
+  {
+    return siteKeysConfiguration;
+  }
+
+  public void setSiteKeysConfiguration(final SiteKeysConfiguration siteKeysConfiguration)
+  {
+    this.siteKeysConfiguration = siteKeysConfiguration;
   }
 
   public boolean isAdblockEnabled()
@@ -185,7 +222,7 @@ public class AdblockWebView extends WebView
   private String readScriptFile(String filename) throws IOException
   {
     return Utils
-      .readAssetAsString(getContext(), filename)
+      .readAssetAsString(getContext(), filename, ASSETS_CHARSET_NAME)
       .replace(BRIDGE_TOKEN, BRIDGE)
       .replace(DEBUG_TOKEN, (debugMode ? "" : "//"))
       .replace(HIDDEN_TOKEN, elementsHiddenFlag);
@@ -194,7 +231,7 @@ public class AdblockWebView extends WebView
   private String readEmuScriptFile(String filename) throws IOException
   {
     return Utils
-      .readAssetAsString(getContext(), filename)
+      .readAssetAsString(getContext(), filename, ASSETS_CHARSET_NAME)
       .replace(ELEMHIDEEMU_ARRAY_DEF_TOKEN, "JSON.parse(jsBridge.getElemhideEmulationSelectors())");
   }
 
@@ -772,8 +809,10 @@ public class AdblockWebView extends WebView
     }
 
     protected WebResourceResponse shouldInterceptRequest(
-      WebView webview, String url, boolean isMainFrame,
-      boolean isXmlHttpRequest, String[] referrerChainArray)
+      final WebView webview, final String url,
+      final boolean isMainFrame, final boolean isXmlHttpRequest,
+      final String requestMethod, final List<String> referrerChain,
+      final Map<String, String> requestHeadersMap)
     {
       synchronized (provider.getEngineLock())
       {
@@ -794,56 +833,241 @@ public class AdblockWebView extends WebView
         {
           // never blocking main frame requests, just subrequests
           w(url + " is main frame, allow loading");
-
-          // allow loading by returning null
-          return null;
-        }
-
-        // whitelisted
-        if (provider.getEngine().isDomainWhitelisted(url, referrerChainArray))
-        {
-          w(url + " domain is whitelisted, allow loading");
-
-          // allow loading by returning null
-          return null;
-        }
-
-        if (provider.getEngine().isDocumentWhitelisted(url, referrerChainArray))
-        {
-          w(url + " document is whitelisted, allow loading");
-
-          // allow loading by returning null
-          return null;
-        }
-
-        // determine the content
-        FilterEngine.ContentType contentType;
-        if (isXmlHttpRequest)
-        {
-          contentType = FilterEngine.ContentType.XMLHTTPREQUEST;
         }
         else
         {
-          contentType = contentTypeDetector.detect(url);
-          if (contentType == null)
+          final String siteKey = (siteKeysConfiguration != null
+            ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+              .getAny(referrerChain, ""))
+            : null);
+
+          // whitelisted
+          if (provider.getEngine().isDomainWhitelisted(url, referrerChain))
           {
-            contentType = FilterEngine.ContentType.OTHER;
+            w(url + " domain is whitelisted, allow loading");
+          }
+          else if (provider.getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
+          {
+            w(url + " document is whitelisted, allow loading");
+          }
+          else
+          {
+            // determine the content
+            FilterEngine.ContentType contentType;
+            if (isXmlHttpRequest)
+            {
+              contentType = FilterEngine.ContentType.XMLHTTPREQUEST;
+            }
+            else
+            {
+              contentType = contentTypeDetector.detect(url);
+              if (contentType == null)
+              {
+                w("contentTypeDetector didn't recognize content type");
+                final String acceptType = requestHeadersMap.get(HEADER_ACCEPT);
+                if (acceptType != null && acceptType.contains("text/html"))
+                {
+                  w("using subdocument content type");
+                  contentType = FilterEngine.ContentType.SUBDOCUMENT;
+                }
+                else
+                {
+                  w("using other content type");
+                  contentType = FilterEngine.ContentType.OTHER;
+                }
+              }
+            }
+
+            // check if we should block
+            if (provider.getEngine().matches(url, FilterEngine.ContentType.maskOf(contentType),
+                    referrerChain, siteKey))
+            {
+              w("Blocked loading " + url);
+
+              // if we should block, return empty response which results in 'errorLoading' callback
+              return new WebResourceResponse("text/plain", "UTF-8", null);
+            }
+            d("Allowed loading " + url);
           }
         }
+      } // end of provider.getEngineLock()
 
-        // check if we should block
-        if (provider.getEngine().matches(url, contentType, referrerChainArray))
-        {
-          w("Blocked loading " + url);
+      return fetchUrlAndCheckSiteKey(isMainFrame ? webview : null, url, requestHeadersMap, requestMethod);
+    }
 
-          // if we should block, return empty response which results in 'errorLoading' callback
-          return new WebResourceResponse("text/plain", "UTF-8", null);
-        }
-
-        d("Allowed loading " + url);
-
-        // continue by returning null
+    private WebResourceResponse fetchUrlAndCheckSiteKey(final WebView webview, String url,
+                                                        final Map<String, String> requestHeadersMap,
+                                                        final String requestMethod)
+    {
+      if (siteKeysConfiguration == null ||
+          !requestMethod.equalsIgnoreCase(HttpClient.REQUEST_METHOD_GET))
+      {
+        // for now we handle site key only for GET requests
         return null;
+      }
+
+      Log.d(TAG, "fetchUrlAndCheckSiteKey() called from Thread " + Thread.currentThread().getId());
+      final boolean autoFollowRedirect = webview == null;
+      final ResponseHolder responseHolder = new ResponseHolder();
+      final CountDownLatch latch = new CountDownLatch(1);
+      final HttpClient.Callback callback = new HttpClient.Callback()
+      {
+        @Override
+        public void onFinished(final ServerResponse response_)
+        {
+          responseHolder.response = response_;
+          latch.countDown();
+        }
+      };
+
+      try
+      {
+        final HttpRequest request = new HttpRequest(url, requestMethod,
+            convertMapToHeaderEntries(requestHeadersMap), autoFollowRedirect);
+        siteKeysConfiguration.getHttpClient().request(request, callback);
+      }
+      catch (final AdblockPlusException e)
+      {
+        Log.e(TAG, "WebRequest failed", e);
+        // allow WebView to continue, repeating the request and handling the response
+        return null;
+      }
+
+      try
+      {
+        latch.await();
+      }
+      catch (final InterruptedException e)
+      {
+        // error waiting for the response, continue by returning null
+        return null;
+      }
+
+      final ServerResponse response = responseHolder.response;
+      final ServerResponse.NsStatus status = response.getStatus();
+      int statusCode = response.getResponseStatus();
+
+      if (HttpClient.isRedirectCode(statusCode))
+      {
+        if (webview != null)
+        {
+          reloadWebViewUrl(webview, url, responseHolder);
+        }
+        return null;
+      }
+
+      if (response.getFinalUrl() != null)
+      {
+        d("Updating url to " + response.getFinalUrl() + ", was (" + url + ")");
+        url = response.getFinalUrl();
+      }
+
+      for (HeaderEntry header : responseHolder.response.getResponseHeaders())
+      {
+        if (header.getKey().equals(HEADER_SITEKEY))
+        {
+          // verify signature and save public key to be used as sitekey for next requests
+          try
+          {
+            if (siteKeysConfiguration.getSiteKeyVerifier().verify(
+                Utils.getUrlWithoutAnchor(url), requestHeadersMap.get(HEADER_USER_AGENT), header.getValue()))
+            {
+              d("Url " + url + " public key verified successfully");
+            }
+            else
+            {
+              e("Url " + url + " public key is not verified");
+            }
+          }
+          catch (final SiteKeyException e)
+          {
+            e("Failed to verify sitekey header", e);
+          }
+          break;
+        }
+      }
+
+      final Map<String, String> responseHeadersMap = convertHeaderEntriesToMap(response.getResponseHeaders());
+      final String responseContentType = responseHeadersMap.get(HEADER_CONTENT_TYPE);
+      String responseMimeType = null;
+      String responseEncoding = null;
+      if (responseContentType != null)
+      {
+        final int semicolonPos = responseContentType.indexOf(";");
+        if (semicolonPos > 0)
+        {
+          responseMimeType = responseContentType.substring(0, semicolonPos);
+          final String charsetKey = "charset=";
+          final int charsetPos = responseContentType.indexOf(charsetKey);
+          if ((charsetPos >= 0) && (charsetPos < responseContentType.length() - charsetKey.length()))
+          {
+            responseEncoding = responseContentType.substring(charsetPos + charsetKey.length());
+          }
+        }
+        else if (responseContentType.indexOf("/") > 0)
+        {
+          responseMimeType = responseContentType;
+        }
+      }
+      if (responseEncoding == null)
+      {
+        responseEncoding = responseHeadersMap.get(HEADER_CONTENT_ENCODING);
+      }
+
+      if (response.getResponse() != null)
+      {
+        final byte[] buffer = Utils.byteBufferToByteArray(response.getResponse());
+        final InputStream byteBufferInputStream = new ByteArrayInputStream(buffer);
+        return new WebResourceResponse(
+                responseMimeType, responseEncoding,
+                statusCode, getReasonPhrase(status),
+                responseHeadersMap, byteBufferInputStream);
+      }
+      return null;
+    }
+
+    private void reloadWebViewUrl(final WebView webview,
+                                  final String url,
+                                  final ResponseHolder responseHolder)
+    {
+      String redirectedUrl = null;
+      for (final HeaderEntry header : responseHolder.response.getResponseHeaders())
+      {
+        if (header.getKey().equalsIgnoreCase(HEADER_LOCATION) &&
+            header.getValue() != null &&
+            !header.getValue().isEmpty())
+        {
+          redirectedUrl = header.getValue();
+          try
+          {
+            // check and handle relative url redirection
+            if (!Utils.isAbsoluteUrl(redirectedUrl))
+            {
+              redirectedUrl = Utils.getAbsoluteUrl(url, redirectedUrl);
+            }
+          }
+          catch (final Exception e)
+          {
+            Log.e(TAG, "Failed to build absolute redirect URL", e);
+            redirectedUrl = null;
+          }
+          break;
+        }
+      }
+
+      if (redirectedUrl != null)
+      {
+        final String finalUrl = redirectedUrl;
+        // we need to reload webview url to make it aware of new new url after redirection
+        webview.post(new Runnable()
+        {
+          @Override
+          public void run()
+          {
+            webview.stopLoading();
+            webview.loadUrl(finalUrl);
+          }
+        });
       }
     }
 
@@ -888,12 +1112,18 @@ public class AdblockWebView extends WebView
           w("Detected referrer loop, finished creating referrers list");
           break;
         }
-        referrers.add(parentUrl);
+        referrers.add(0, parentUrl);
       }
 
       return shouldInterceptRequest(view, url, request.isForMainFrame(),
-          isXmlHttpRequest, referrers.toArray(new String[referrers.size()]));
+              isXmlHttpRequest, request.getMethod(),
+              referrers, request.getRequestHeaders());
     }
+  }
+
+  private String getReasonPhrase(ServerResponse.NsStatus status)
+  {
+    return status.name().replace("_", "");
   }
 
   private void initAbp()
@@ -945,10 +1175,18 @@ public class AdblockWebView extends WebView
           else
           {
             provider.waitForReady();
-            String[] referrers = new String[]
+            List<String> referrerChain = new ArrayList<String>(1);
+            referrerChain.add(url);
+            String parentUrl = url;
+            while ((parentUrl = url2Referrer.get(parentUrl)) != null)
+            {
+              if (referrerChain.contains(parentUrl))
               {
-                url
-              };
+                w("Detected referrer loop, finished creating referrers list");
+                break;
+              }
+              referrerChain.add(0, parentUrl);
+            }
 
             List<Subscription> subscriptions = provider
               .getEngine()
@@ -987,9 +1225,15 @@ public class AdblockWebView extends WebView
             {
               // elemhide
               d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
+
+              final String siteKey = (siteKeysConfiguration != null
+                ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+                  .getAny(referrerChain, ""))
+                : null);
+
               List<String> selectors = provider
                 .getEngine()
-                .getElementHidingSelectors(url, domain, referrers);
+                .getElementHidingSelectors(url, domain, referrerChain, siteKey);
 
               d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
               selectorsString = Utils.stringListToJsonArray(selectors);
@@ -998,7 +1242,7 @@ public class AdblockWebView extends WebView
               d("Requesting elemhideemu selectors from AdblockEngine for " + url + " in " + this);
               List<FilterEngine.EmulationSelector> emuSelectors = provider
                 .getEngine()
-                .getElementHidingEmulationSelectors(url, domain, referrers);
+                .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
 
               d("Finished requesting elemhideemu selectors, got " + emuSelectors.size() + " in " + this);
               emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
@@ -1137,7 +1381,7 @@ public class AdblockWebView extends WebView
         injectJs = sb.toString();
       }
     }
-    catch (IOException e)
+    catch (final IOException e)
     {
       e("Failed to read script", e);
     }
@@ -1273,7 +1517,7 @@ public class AdblockWebView extends WebView
 
         return elemHideSelectorsString;
       }
-      catch (InterruptedException e)
+      catch (final InterruptedException e)
       {
         w("Interrupted, returning empty selectors list");
         return EMPTY_ELEMHIDE_ARRAY_STRING;
@@ -1300,7 +1544,7 @@ public class AdblockWebView extends WebView
 
         return elemHideEmuSelectorsString;
       }
-      catch (InterruptedException e)
+      catch (final InterruptedException e)
       {
         w("Interrupted, returning empty elemhideemu selectors list");
         return EMPTY_ELEMHIDE_ARRAY_STRING;

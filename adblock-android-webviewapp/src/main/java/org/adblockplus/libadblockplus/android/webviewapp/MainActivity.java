@@ -40,6 +40,9 @@ public class MainActivity extends Activity
   // webView can create AdblockEngine instance itself if not passed with `webView.setProvider()`
   public static final boolean USE_EXTERNAL_ADBLOCKENGINE = true;
 
+  // sitekeys can be used for whitelisting [Optional and have small negative impact on performance]
+  public static final boolean SITEKEYS_WHITELISTING = true;
+
   private ProgressBar progress;
   private EditText url;
   private Button ok;
@@ -201,6 +204,11 @@ public class MainActivity extends Activity
     else
     {
       // AdblockWebView will create internal AdblockEngine instance
+    }
+
+    if (SITEKEYS_WHITELISTING)
+    {
+      webView.setSiteKeysConfiguration(AdblockHelper.get().getSiteKeysConfiguration());
     }
   }
 

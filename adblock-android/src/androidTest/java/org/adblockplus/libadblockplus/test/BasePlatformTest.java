@@ -9,7 +9,7 @@
  * Adblock Plus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU General Public License for more details.~
  *
  * You should have received a copy of the GNU General Public License
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
@@ -20,9 +20,9 @@ package org.adblockplus.libadblockplus.test;
 import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FileSystem;
 import org.adblockplus.libadblockplus.LogSystem;
-import org.adblockplus.libadblockplus.MockWebRequest;
+import org.adblockplus.libadblockplus.MockHttpClient;
 import org.adblockplus.libadblockplus.Platform;
-import org.adblockplus.libadblockplus.WebRequest;
+import org.adblockplus.libadblockplus.HttpClient;
 import org.mockito.Mockito;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -38,7 +38,7 @@ public abstract class BasePlatformTest extends BaseTest
     AppInfo appInfo = AppInfo.builder().build();
     LogSystem logSystem = BasePlatformTest.buildNoopLogSystem();
     FileSystem fileSystem = null; // using Default implementation in C++
-    WebRequest webRequest = BasePlatformTest.buildThrowingWebRequest();
+    HttpClient httpClient = BasePlatformTest.buildThrowingHttpClient();
   }
 
   public static Throwable buildThrowable()
@@ -61,11 +61,11 @@ public abstract class BasePlatformTest extends BaseTest
     return mock(LogSystem.class);
   }
 
-  public static WebRequest buildThrowingWebRequest()
+  public static HttpClient buildThrowingHttpClient()
   {
-    MockWebRequest throwingWebRequest = new MockWebRequest();
-    throwingWebRequest.exception = true;
-    return throwingWebRequest;
+    MockHttpClient throwingHttpClient = new MockHttpClient();
+    throwingHttpClient.exception = true;
+    return throwingHttpClient;
   }
 
   protected void setUpAppInfo(AppInfo appInfo)
@@ -83,14 +83,14 @@ public abstract class BasePlatformTest extends BaseTest
     setUpInfo.fileSystem = fileSystem;
   }
 
-  protected  void setUpWebRequest(WebRequest webRequest)
+  protected  void setUpHttpClient(HttpClient httpClient)
   {
-    setUpInfo.webRequest = webRequest;
+    setUpInfo.httpClient = httpClient;
   }
 
   private void setUpPlatform()
   {
-    platform = new Platform(setUpInfo.logSystem, setUpInfo.fileSystem, setUpInfo.webRequest, basePath.getAbsolutePath());
+    platform = new Platform(setUpInfo.logSystem, setUpInfo.fileSystem, setUpInfo.httpClient, basePath.getAbsolutePath());
   }
 
   @Override

@@ -19,11 +19,17 @@ package org.adblockplus.libadblockplus.test;
 
 import android.os.SystemClock;
 
+import org.adblockplus.libadblockplus.HttpClient;
+import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.ServerResponse;
-import org.adblockplus.libadblockplus.WebRequest;
-import org.adblockplus.libadblockplus.android.AndroidWebRequest;
+import org.adblockplus.libadblockplus.android.AndroidHttpClient;
+import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
+
+import java.nio.charset.Charset;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -34,17 +40,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 // The test requires active internet connection and actually downloads files from the internet
-public class AndroidWebRequestTest extends BaseFilterEngineTest
+public class AndroidHttpClientTest extends BaseFilterEngineTest
 {
   protected static final int SLEEP_STEP_MS = 50; // 50 ms
   protected static final int SLEEP_MAX_TIME_MS = 1 * 60 * 1000; // 1 minute
+  protected static final Charset charset = Charset.forName("UTF-8");
+  protected ServerResponse serverResponse = null;
 
-  private WebRequest androidWebRequest = new AndroidWebRequest(true, true);
+  private HttpClient androidHttpClient = new AndroidHttpClient(true, "UTF-8");
 
   @Override
   public void setUp()
   {
-    setUpWebRequest(androidWebRequest);
+    setUpHttpClient(androidHttpClient);
     super.setUp();
   }
 
@@ -64,7 +72,7 @@ public class AndroidWebRequestTest extends BaseFilterEngineTest
   }
 
   @Test
-  public void testSuccessfulRealWebRequest()
+  public void testSuccessfulRealHttpClientRequest()
   {
     jsEngine.evaluate(
         "let foo; _webRequest.GET('https://easylist-downloads.adblockplus.org/easylist.txt', {}, " +
@@ -93,7 +101,62 @@ public class AndroidWebRequestTest extends BaseFilterEngineTest
   }
 
   @Test
-  public void testRealWebRequestError()
+  public void testSuccessfulRealHttpClientRequestWithJavaCallback() throws InterruptedException
+  {
+    serverResponse = null;
+    final CountDownLatch latch = new CountDownLatch(1);
+    final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
+    {
+      @Override
+      public void onFinished(ServerResponse response)
+      {
+        serverResponse = response;
+        latch.countDown();
+      }
+    };
+    androidHttpClient.request(
+        new HttpRequest("https://easylist-downloads.adblockplus.org/easylist.txt"),
+        javaCallback);
+    latch.await(SLEEP_MAX_TIME_MS, TimeUnit.MILLISECONDS);
+
+    assertNotNull(serverResponse);
+    assertEquals(
+        ServerResponse.NsStatus.OK,
+        serverResponse.getStatus());
+    assertEquals(HTTP_OK, serverResponse.getResponseStatus());
+    assertEquals(
+        "[Adblock Plus ",
+        new String(Utils.byteBufferToByteArray(serverResponse.getResponse()), charset).substring(0, 14));
+  }
+
+  @Test
+  public void testRealHttpClientRequestErrorWithJavaCallback() throws InterruptedException
+  {
+    serverResponse = null;
+    final CountDownLatch latch = new CountDownLatch(1);
+    final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
+    {
+      @Override
+      public void onFinished(ServerResponse response)
+      {
+        serverResponse = response;
+        latch.countDown();
+      }
+    };
+    androidHttpClient.request(
+        new HttpRequest("https://easylist-downloads.adblockplus.org/easylist_invalid.txt"),
+        javaCallback);
+    latch.await(SLEEP_MAX_TIME_MS, TimeUnit.MILLISECONDS);
+
+    assertNotNull(serverResponse);
+    assertEquals(
+        ServerResponse.NsStatus.ERROR_FAILURE,
+        serverResponse.getStatus());
+    assertEquals(HTTP_NOT_FOUND, serverResponse.getResponseStatus());
+  }
+
+  @Test
+  public void testRealHttpClientRequestError()
   {
     jsEngine.evaluate(
         "let foo; _webRequest.GET('https://easylist-downloads.adblockplus.org/easylist_invalid.txt', {}, " +
@@ -135,5 +198,53 @@ public class AndroidWebRequestTest extends BaseFilterEngineTest
         "text/plain",
         jsEngine.evaluate("request.getResponseHeader('Content-Type').substr(0, 10)").asString());
     assertTrue(jsEngine.evaluate("request.getResponseHeader('Location')").isNull());
+  }
+
+  @Test
+  public void testMalformedUriError() throws InterruptedException
+  {
+    serverResponse = null;
+    final CountDownLatch latch = new CountDownLatch(1);
+    final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
+    {
+      @Override
+      public void onFinished(ServerResponse response)
+      {
+        serverResponse = response;
+        latch.countDown();
+      }
+    };
+    androidHttpClient.request(new HttpRequest("wronProtool://some.url"), javaCallback);
+    latch.await(SLEEP_MAX_TIME_MS, TimeUnit.MILLISECONDS);
+
+    assertNotNull(serverResponse);
+    assertEquals(
+            ServerResponse.NsStatus.ERROR_MALFORMED_URI,
+            serverResponse.getStatus());
+  }
+
+  @Test
+  public void testUnknownHostError() throws InterruptedException
+  {
+    serverResponse = null;
+    final CountDownLatch latch = new CountDownLatch(1);
+    final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
+    {
+      @Override
+      public void onFinished(ServerResponse response)
+      {
+        serverResponse = response;
+        latch.countDown();
+      }
+    };
+    androidHttpClient.request(
+        new HttpRequest("https://non.exisiting.url.abc.def"),
+        javaCallback);
+    latch.await(SLEEP_MAX_TIME_MS, TimeUnit.MILLISECONDS);
+
+    assertNotNull(serverResponse);
+    assertEquals(
+            ServerResponse.NsStatus.ERROR_UNKNOWN_HOST,
+            serverResponse.getStatus());
   }
 }

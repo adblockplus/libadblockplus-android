@@ -138,7 +138,7 @@ public class MockFileSystem extends FileSystem
           }
 
           lastWrittenFile = filename;
-          lastWrittenContent = Utils.byteBufferToString(data, charset);
+          lastWrittenContent = new String(Utils.byteBufferToByteArray(data), charset);
           callback.onFinished(null);
         }
         catch (Exception e)

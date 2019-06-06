@@ -145,7 +145,7 @@ static void JNICALL JniEnsureFilterEngine(JNIEnv* env, jclass clazz, jlong ptr)
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"ctor", (char*)"(" TYP("LogSystem") TYP("FileSystem") TYP("WebRequest") "Ljava/lang/String;)J", (void*)JniCtor },
+  { (char*)"ctor", (char*)"(" TYP("LogSystem") TYP("FileSystem") TYP("HttpClient") "Ljava/lang/String;)J", (void*)JniCtor },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor },
 
   { (char*)"setUpJsEngine", (char*)"(J" TYP("AppInfo") "J)V", (void*)JniSetUpJsEngine },

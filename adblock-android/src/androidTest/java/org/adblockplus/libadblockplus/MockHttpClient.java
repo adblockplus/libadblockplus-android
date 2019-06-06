@@ -20,27 +20,27 @@ package org.adblockplus.libadblockplus;
 import java.util.LinkedList;
 import java.util.List;
 
-public class MockWebRequest extends WebRequest
+public class MockHttpClient extends HttpClient
 {
   public boolean exception;
-  public List<String> urls = new LinkedList<String>();
+  public List<HttpRequest> requests = new LinkedList<HttpRequest>();
   public ServerResponse response;
   public boolean called = false;
 
-  public String getLastUrl()
+  public HttpRequest getLastRequest()
   {
-    return (urls.size() > 0 ? urls.get(urls.size() - 1) : null);
+    return (requests.size() > 0 ? requests.get(requests.size() - 1) : null);
   }
 
   @Override
-  public void GET(final String url, final List<HeaderEntry> headers, final Callback callback)
+  public void request(final HttpRequest request, final Callback callback)
   {
     this.called = true;
-    this.urls.add(url);
+    this.requests.add(request);
 
     if (exception)
     {
-      throw new RuntimeException("Exception simulation while downloading " + url);
+      throw new RuntimeException("Exception simulation while downloading " + request.getUrl());
     }
 
     callback.onFinished(response);
