@@ -20,7 +20,7 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 import android.content.Context;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.AndroidWebRequestResourceWrapper;
+import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
@@ -62,9 +62,10 @@ public class Application extends android.app.Application
 
       // provide preloaded subscriptions
       Map<String, Integer> map = new HashMap<String, Integer>();
-      map.put(AndroidWebRequestResourceWrapper.EASYLIST, R.raw.easylist);
-      map.put(AndroidWebRequestResourceWrapper.EASYLIST_CHINESE, R.raw.easylist);
-      map.put(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
+      map.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
+      map.put(AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN, R.raw.easylist);
+      map.put(AndroidHttpClientResourceWrapper.EASYLIST_CHINESE, R.raw.easylist);
+      map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 
       AdblockHelper
         .get()

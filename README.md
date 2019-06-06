@@ -316,6 +316,9 @@ The simplest solution is to use `AdblockHelper` from `-settings` as external adb
 
 If adblock engine provider is not set, it's created by AdblockWebView instance automatically.
 
+Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
+This is optional but highly suggested. See `MainActivity.java` on usage example. 
+
 Use `dispose(Runnable disposeFinished)` to release resources (**required**).
 Note it can be invoked from background thread.
 

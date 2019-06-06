@@ -156,10 +156,13 @@ jstring JniStdStringToJava(JNIEnv* env, std::string str);
 bool stringBeginsWith(const std::string& string, const std::string& beginning);
 
 jmethodID JniGetAddToListMethod(JNIEnv* env, jobject list);
-
 void JniAddObjectToList(JNIEnv* env, jobject list, jmethodID addMethod, jobject value);
-
 void JniAddObjectToList(JNIEnv* env, jobject list, jobject value);
+
+jmethodID JniGetGetFromListMethod(JNIEnv* env, jobject list);
+jobject JniGetObjectFromList(JNIEnv* env, jobject list, jmethodID getMethod, jint i);
+jmethodID JniGetListSizeMethod(JNIEnv* env, jobject list);
+jint JniGetListSize(JNIEnv* env, jobject list, jmethodID getSizeMethod);
 
 inline std::string JniGetStringField(JNIEnv* env, jclass clazz, jobject jObj, const char* name)
 {

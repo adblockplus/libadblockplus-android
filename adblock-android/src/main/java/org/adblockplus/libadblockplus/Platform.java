@@ -35,12 +35,12 @@ public class Platform implements Disposable
    * current working directory is used.
    * @param logSystem LogSystem concrete implementation
    * @param fileSystem FileSystem concrete implementation
-   * @param webRequest WebRequest concrete implementation
+   * @param httpClient HttpClient concrete implementation
    * @param basePath base path for FileSystem (default C++ FileSystem implementation used)
    */
-  public Platform(final LogSystem logSystem, final FileSystem fileSystem, final WebRequest webRequest, final String basePath)
+  public Platform(final LogSystem logSystem, final FileSystem fileSystem, final HttpClient httpClient, final String basePath)
   {
-    this(ctor(logSystem, fileSystem, webRequest, basePath));
+    this(ctor(logSystem, fileSystem, httpClient, basePath));
   }
 
   protected Platform(final long ptr)
@@ -105,7 +105,7 @@ public class Platform implements Disposable
 
   private final static native long ctor(LogSystem logSystem,
                                         FileSystem fileSystem,
-                                        WebRequest webRequest,
+                                        HttpClient httpClient,
                                         String basePath);
 
   private final static native void setUpJsEngine(long ptr, AppInfo appInfo, long v8IsolateProviderPtr);

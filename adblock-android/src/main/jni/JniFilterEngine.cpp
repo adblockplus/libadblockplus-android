@@ -253,36 +253,15 @@ static jobject JNICALL JniGetElementHidingEmulationSelectors(JNIEnv* env, jclass
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
-static jobject JNICALL JniMatches(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl,
-    jobjectArray jContentTypes, jstring jDocumentUrl)
+static std::vector<std::string> JavaStringListToStringVector(JNIEnv* env, jobject jList)
 {
-  AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
-
-  std::string url = JniJavaToStdString(env, jUrl);
-  AdblockPlus::FilterEngine::ContentTypeMask contentTypeMask = 0;
-
-  int contentTypesSize = env->GetArrayLength(jContentTypes);
-  for (int i = 0; i < contentTypesSize; i++)
+  std::vector<std::string> out;
+  if (jList)
   {
-    contentTypeMask |= ConvertContentType(env, env->GetObjectArrayElement(jContentTypes, i));
-  }
-  std::string documentUrl = JniJavaToStdString(env, jDocumentUrl);
-
-  try
-  {
-    AdblockPlus::FilterPtr filterPtr = engine.Matches(url, contentTypeMask, documentUrl);
-
-    return filterPtr.get() ? NewJniFilter(env, std::move(*filterPtr)) : 0;
-  }
-  CATCH_THROW_AND_RETURN(env, 0)
-}
-
-static void JavaStringArrayToStringVector(JNIEnv* env, jobjectArray jArray,
-    std::vector<std::string>& out)
-{
-  if (jArray)
-  {
-    jsize len = env->GetArrayLength(jArray);
+    jmethodID getFromListMethod = JniGetGetFromListMethod(env, jList);
+    jmethodID getListSizeMethod = JniGetListSizeMethod(env, jList);
+    jsize len = JniGetListSize(env, jList, getListSizeMethod);
+    out.reserve(len);
 
     for (jsize i = 0; i < len; i++)
     {
@@ -290,17 +269,19 @@ static void JavaStringArrayToStringVector(JNIEnv* env, jobjectArray jArray,
           JniJavaToStdString(env,
               *JniLocalReference<jstring>(env,
                   static_cast<jstring>(
-                      env->GetObjectArrayElement(jArray, i)))));
+                      JniGetObjectFromList(env, jList, getFromListMethod, i)))));
     }
   }
+  return out;
 }
 
 static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
-    jstring jUrl, jobjectArray jContentTypes, jobjectArray jDocumentUrls)
+    jstring jUrl, jobjectArray jContentTypes, jobject jReferrerChain, jstring jSiteKey)
 {
   AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jUrl);
+
   AdblockPlus::FilterEngine::ContentTypeMask contentTypeMask = 0;
   int contentTypesSize = env->GetArrayLength(jContentTypes);
   for (int i = 0; i < contentTypesSize; i++)
@@ -308,12 +289,12 @@ static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
     contentTypeMask |= ConvertContentType(env, env->GetObjectArrayElement(jContentTypes, i));
   }
 
-  std::vector<std::string> documentUrls;
-  JavaStringArrayToStringVector(env, jDocumentUrls, documentUrls);
+  std::string siteKey = JniJavaToStdString(env, jSiteKey);
+    std::vector<std::string> documentUrls = JavaStringListToStringVector(env, jReferrerChain);
 
   try
   {
-    AdblockPlus::FilterPtr filterPtr = engine.Matches(url, contentTypeMask, documentUrls);
+    AdblockPlus::FilterPtr filterPtr = engine.Matches(url, contentTypeMask, documentUrls, siteKey);
 
     return (filterPtr.get() ? NewJniFilter(env, std::move(*filterPtr)) : 0);
   }
@@ -321,33 +302,31 @@ static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
 }
 
 static jboolean JNICALL JniIsDocumentWhitelisted(JNIEnv* env, jclass clazz, jlong ptr,
-    jstring jUrl, jobjectArray jDocumentUrls)
+    jstring jUrl, jobject jReferrerChain, jstring jSiteKey)
 {
   AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jUrl);
-  std::vector<std::string> documentUrls;
-  JavaStringArrayToStringVector(env, jDocumentUrls, documentUrls);
+  std::vector<std::string> documentUrls = JavaStringListToStringVector(env, jReferrerChain);
+  std::string siteKey = JniJavaToStdString(env, jSiteKey);
   try
   {
-    return engine.IsDocumentWhitelisted(url, documentUrls) ?
-        JNI_TRUE : JNI_FALSE;
+    return engine.IsDocumentWhitelisted(url, documentUrls, siteKey) ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
 
 static jboolean JNICALL JniIsElemhideWhitelisted(JNIEnv* env, jclass clazz, jlong ptr,
-    jstring jUrl, jobjectArray jDocumentUrls)
+    jstring jUrl, jobject jReferrerChain, jstring jSiteKey)
 {
   AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
   std::string url = JniJavaToStdString(env, jUrl);
-  std::vector<std::string> documentUrls;
-  JavaStringArrayToStringVector(env, jDocumentUrls, documentUrls);
+  std::vector<std::string> documentUrls = JavaStringListToStringVector(env, jReferrerChain);
+  std::string siteKey = JniJavaToStdString(env, jSiteKey);
   try
   {
-    return engine.IsElemhideWhitelisted(url, documentUrls) ?
-        JNI_TRUE : JNI_FALSE;
+    return engine.IsElemhideWhitelisted(url, documentUrls, siteKey) ? JNI_TRUE : JNI_FALSE;
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
@@ -506,10 +485,9 @@ static JNINativeMethod methods[] =
   { (char*)"removeFilterChangeCallback", (char*)"(J)V", (void*)JniRemoveFilterChangeCallback },
   { (char*)"getElementHidingSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingSelectors },
   { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
-  { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/lang/String;)" TYP("Filter"), (void*)JniMatches },
-  { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "[Ljava/lang/String;)" TYP("Filter"), (void*)JniMatchesMany },
-  { (char*)"isDocumentWhitelisted", (char*)"(JLjava/lang/String;[Ljava/lang/String;)Z", (void*)JniIsDocumentWhitelisted },
-  { (char*)"isElemhideWhitelisted", (char*)"(JLjava/lang/String;[Ljava/lang/String;)Z", (void*)JniIsElemhideWhitelisted },
+  { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;)" TYP("Filter"), (void*)JniMatchesMany },
+  { (char*)"isDocumentWhitelisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsDocumentWhitelisted },
+  { (char*)"isElemhideWhitelisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsElemhideWhitelisted },
   { (char*)"getPref", (char*)"(JLjava/lang/String;)" TYP("JsValue"), (void*)JniGetPref },
   { (char*)"setPref", (char*)"(JLjava/lang/String;J)V", (void*)JniSetPref },
   { (char*)"getHostFromURL", (char*)"(JLjava/lang/String;)Ljava/lang/String;", (void*)JniGetHostFromURL },

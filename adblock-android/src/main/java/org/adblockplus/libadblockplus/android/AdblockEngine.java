@@ -17,14 +17,11 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.Build.VERSION;
+import android.util.Log;
 
 import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FileSystem;
@@ -32,19 +29,21 @@ import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterChangeCallback;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.FilterEngine.ContentType;
+import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.Platform;
 import org.adblockplus.libadblockplus.ShowNotificationCallback;
 import org.adblockplus.libadblockplus.Subscription;
-import org.adblockplus.libadblockplus.WebRequest;
 
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Build.VERSION;
-import android.util.Log;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public final class AdblockEngine
 {
@@ -68,7 +67,7 @@ public final class AdblockEngine
   private volatile FilterEngine filterEngine;
   private volatile LogSystem logSystem;
   private volatile FileSystem fileSystem;
-  private volatile WebRequest webRequest;
+  private volatile HttpClient httpClient;
   private volatile FilterChangeCallback filterChangeCallback;
   private volatile ShowNotificationCallback showNotificationCallback;
   private volatile boolean elemhideEnabled;
@@ -128,8 +127,8 @@ public final class AdblockEngine
   {
     private Context context;
     private Map<String, Integer> urlToResourceIdMap;
-    private AndroidWebRequestResourceWrapper.Storage resourceStorage;
-    private AndroidWebRequest androidWebRequest;
+    private AndroidHttpClientResourceWrapper.Storage resourceStorage;
+    private AndroidHttpClient androidHttpClient;
     private AppInfo appInfo;
     private String basePath;
     private IsAllowedConnectionCallback isAllowedConnectionCallback;
@@ -143,7 +142,7 @@ public final class AdblockEngine
       engine.elemhideEnabled = true;
 
       // we can't create JsEngine and FilterEngine right now as it starts to download subscriptions
-      // and requests (AndroidWebRequest and probbaly wrappers) are not specified yet
+      // and requests (AndroidHttpClient and probably wrappers) are not specified yet
       this.appInfo = appInfo;
       this.basePath = basePath;
     }
@@ -156,7 +155,7 @@ public final class AdblockEngine
 
     public Builder preloadSubscriptions(Context context,
                                         Map<String, Integer> urlToResourceIdMap,
-                                        AndroidWebRequestResourceWrapper.Storage storage)
+                                        AndroidHttpClientResourceWrapper.Storage storage)
     {
       this.context = context;
       this.urlToResourceIdMap = urlToResourceIdMap;
@@ -190,14 +189,14 @@ public final class AdblockEngine
 
     private void initRequests()
     {
-      androidWebRequest = new AndroidWebRequest(engine.elemhideEnabled, true);
-      engine.webRequest = androidWebRequest;
+      androidHttpClient = new AndroidHttpClient(true, "UTF-8");
+      engine.httpClient = androidHttpClient;
 
       if (urlToResourceIdMap != null)
       {
-        AndroidWebRequestResourceWrapper wrapper = new AndroidWebRequestResourceWrapper(
-          context, engine.webRequest, urlToResourceIdMap, resourceStorage);
-        wrapper.setListener(new AndroidWebRequestResourceWrapper.Listener()
+        AndroidHttpClientResourceWrapper wrapper = new AndroidHttpClientResourceWrapper(
+          context, engine.httpClient, urlToResourceIdMap, resourceStorage);
+        wrapper.setListener(new AndroidHttpClientResourceWrapper.Listener()
         {
           @Override
           public void onIntercepted(String url, int resourceId)
@@ -210,7 +209,7 @@ public final class AdblockEngine
           }
         });
 
-        engine.webRequest = wrapper;
+        engine.httpClient = wrapper;
       }
     }
 
@@ -231,15 +230,10 @@ public final class AdblockEngine
     {
       initRequests();
 
-      // webRequest should be ready to be used passed right after JsEngine is created
+      // httpClient should be ready to be used passed right after JsEngine is created
       createEngines();
 
       initCallbacks();
-
-      if (!engine.elemhideEnabled)
-      {
-        androidWebRequest.updateSubscriptionURLs(engine.filterEngine);
-      }
 
       return engine;
     }
@@ -248,7 +242,7 @@ public final class AdblockEngine
     {
       engine.logSystem = new AndroidLogSystem();
       engine.fileSystem = null; // using default
-      engine.platform = new Platform(engine.logSystem, engine.fileSystem, engine.webRequest, basePath);
+      engine.platform = new Platform(engine.logSystem, engine.fileSystem, engine.httpClient, basePath);
       if (v8IsolateProviderPtr != null)
       {
         engine.platform.setUpJsEngine(appInfo, v8IsolateProviderPtr);
@@ -489,14 +483,15 @@ public final class AdblockEngine
     }
   }
 
-  public boolean matches(final String fullUrl, final ContentType contentType, final String[] referrerChainArray)
+  public boolean matches(final String fullUrl, final Set<ContentType> contentTypes,
+                         final List<String> referrerChain, final String siteKey)
   {
     if (!enabled)
     {
       return false;
     }
 
-    final Filter filter = this.filterEngine.matches(fullUrl, contentType, referrerChainArray);
+    final Filter filter = this.filterEngine.matches(fullUrl, contentTypes, referrerChain, siteKey);
 
     if (filter == null)
     {
@@ -513,7 +508,7 @@ public final class AdblockEngine
         JsValue jsText = filter.getProperty("text");
         try
         {
-          if (referrerChainArray.length == 0 && (jsText.toString()).contains("||"))
+          if (referrerChain.isEmpty() && (jsText.toString()).contains("||"))
           {
             return false;
           }
@@ -535,12 +530,14 @@ public final class AdblockEngine
     }
   }
 
-  public boolean isDocumentWhitelisted(final String url, final String[] referrerChainArray)
+  public boolean isDocumentWhitelisted(final String url,
+                                       final List<String> referrerChain,
+                                       final String sitekey)
   {
-    return this.filterEngine.isDocumentWhitelisted(url, referrerChainArray);
+    return this.filterEngine.isDocumentWhitelisted(url, referrerChain, sitekey);
   }
 
-  public boolean isDomainWhitelisted(final String url, final String[] referrerChainArray)
+  public boolean isDomainWhitelisted(final String url, final List<String> referrerChain)
   {
     if (whitelistedDomains == null)
     {
@@ -548,11 +545,7 @@ public final class AdblockEngine
     }
 
     // using Set to remove duplicates
-    Set<String> referrersAndResourceUrls = new HashSet<String>();
-    if (referrerChainArray != null)
-    {
-      referrersAndResourceUrls.addAll(Arrays.asList(referrerChainArray));
-    }
+    Set<String> referrersAndResourceUrls = new HashSet<String>(referrerChain);
     referrersAndResourceUrls.add(url);
 
     for (String eachUrl : referrersAndResourceUrls)
@@ -566,12 +559,18 @@ public final class AdblockEngine
     return false;
   }
 
-  public boolean isElemhideWhitelisted(final String url, final String[] referrerChainArray)
+  public boolean isElemhideWhitelisted(final String url,
+                                       final List<String> referrerChain,
+                                       final String sitekey)
   {
-    return this.filterEngine.isElemhideWhitelisted(url, referrerChainArray);
+    return this.filterEngine.isElemhideWhitelisted(url, referrerChain, sitekey);
   }
 
-  public List<String> getElementHidingSelectors(final String url, final String domain, final String[] referrerChainArray)
+  public List<String> getElementHidingSelectors(
+      final String url,
+      final String domain,
+      final List<String> referrerChain,
+      final String sitekey)
   {
     /*
      * Issue 3364 (https://issues.adblockplus.org/ticket/3364) introduced the
@@ -589,22 +588,26 @@ public final class AdblockEngine
      */
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDomainWhitelisted(url, referrerChainArray)
-        || this.isDocumentWhitelisted(url, referrerChainArray)
-        || this.isElemhideWhitelisted(url, referrerChainArray))
+        || this.isDomainWhitelisted(url, referrerChain)
+        || this.isDocumentWhitelisted(url, referrerChain, sitekey)
+        || this.isElemhideWhitelisted(url, referrerChain, sitekey))
     {
       return new ArrayList<String>();
     }
     return this.filterEngine.getElementHidingSelectors(domain);
   }
 
-  public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(final String url, final String domain, final String[] referrerChainArray)
+  public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(
+      final String url,
+      final String domain,
+      final List<String> referrerChainArray,
+      final String sitekey)
   {
     if (!this.enabled
         || !this.elemhideEnabled
         || this.isDomainWhitelisted(url, referrerChainArray)
-        || this.isDocumentWhitelisted(url, referrerChainArray)
-        || this.isElemhideWhitelisted(url, referrerChainArray))
+        || this.isDocumentWhitelisted(url, referrerChainArray, sitekey)
+        || this.isElemhideWhitelisted(url, referrerChainArray, sitekey))
     {
       return new ArrayList<FilterEngine.EmulationSelector>();
     }

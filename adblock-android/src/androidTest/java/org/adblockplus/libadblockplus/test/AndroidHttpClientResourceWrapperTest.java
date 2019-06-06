@@ -19,8 +19,9 @@ package org.adblockplus.libadblockplus.test;
 
 import android.os.SystemClock;
 
-import org.adblockplus.libadblockplus.MockWebRequest;
-import org.adblockplus.libadblockplus.android.AndroidWebRequestResourceWrapper;
+import org.adblockplus.libadblockplus.HttpRequest;
+import org.adblockplus.libadblockplus.MockHttpClient;
+import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
@@ -39,12 +40,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
+public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
 {
   protected final static int UPDATE_SUBSCRIPTIONS_WAIT_DELAY_MS = 5 * 1000;
   protected final static int UPDATE_SUBSCRIPTIONS_WAIT_CHUNKS = 50;
 
-  private static final class TestStorage implements AndroidWebRequestResourceWrapper.Storage
+  private static final class TestStorage implements AndroidHttpClientResourceWrapper.Storage
   {
     private Set<String> interceptedUrls = new HashSet<String>();
 
@@ -66,7 +67,7 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
     }
   }
 
-  private static final class TestWrapperListener implements AndroidWebRequestResourceWrapper.Listener
+  private static final class TestWrapperListener implements AndroidHttpClientResourceWrapper.Listener
   {
     private Map<String, Integer> urlsToResourceId = new HashMap<String, Integer>();
 
@@ -82,32 +83,42 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
     }
   }
 
-  private MockWebRequest request;
+  private MockHttpClient request;
   private Map<String, Integer> preloadMap;
   private TestStorage storage;
-  private AndroidWebRequestResourceWrapper wrapper;
+  private AndroidHttpClientResourceWrapper wrapper;
   private TestWrapperListener wrapperListener;
 
   @Override
   public void setUp()
   {
-    request = new MockWebRequest();
+    request = new MockHttpClient();
     request.exception = true;
     preloadMap = new HashMap<String, Integer>();
     storage = new TestStorage();
-    wrapper = new AndroidWebRequestResourceWrapper(
+    wrapper = new AndroidHttpClientResourceWrapper(
         ApplicationProvider.getApplicationContext(), request, preloadMap, storage);
     wrapperListener = new TestWrapperListener();
     wrapper.setListener(wrapperListener);
 
-    setUpWebRequest(wrapper);
+    setUpHttpClient(wrapper);
     super.setUp();
   }
 
-  private List<String> getUrlsListWithoutParams(Collection<String> urlWithParams)
+  private List<String> getUrlsListWithoutParams(Collection<HttpRequest> requestsWithParams)
   {
     final List<String> list = new LinkedList<String>();
-    for (String eachUrl : urlWithParams)
+    for (final HttpRequest eachRequest : requestsWithParams)
+    {
+      list.add(Utils.getUrlWithoutParams(eachRequest.getUrl()));
+    }
+    return list;
+  }
+
+  private List<String> getUrlsListWithoutParams2(Collection<String> requestsWithParams)
+  {
+    final List<String> list = new LinkedList<String>();
+    for (final String eachUrl : requestsWithParams)
     {
       list.add(Utils.getUrlWithoutParams(eachUrl));
     }
@@ -117,14 +128,14 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
   private void reset()
   {
     preloadMap.clear();
-    request.urls.clear();
+    request.requests.clear();
     storage.getInterceptedUrls().clear();
     wrapperListener.getUrlsToResourceId().clear();
   }
 
   protected int getUpdateRequestCount()
   {
-    return request.urls.size() + storage.getInterceptedUrls().size();
+    return request.requests.size() + storage.getInterceptedUrls().size();
   }
 
   protected String getUrlRequestJs(String url)
@@ -136,8 +147,8 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
   {
     updateSubscriptions(new String[]
       {
-        AndroidWebRequestResourceWrapper.EASYLIST,
-        AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS,
+        AndroidHttpClientResourceWrapper.EASYLIST,
+        AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS,
       },
       true);
   }
@@ -168,15 +179,15 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
   {
     reset();
     preloadMap.put(preloadUrl, resourceId);
-    assertEquals(0, request.urls.size());
+    assertEquals(0, request.requests.size());
     assertEquals(0, storage.getInterceptedUrls().size());
     assertEquals(0, wrapperListener.getUrlsToResourceId().size());
 
     updateSubscriptions();
 
-    if (request.urls.size() > 0)
+    if (request.requests.size() > 0)
     {
-      final List<String> requestsWithoutParams = getUrlsListWithoutParams(request.urls);
+      final List<String> requestsWithoutParams = getUrlsListWithoutParams(request.requests);
       assertFalse(requestsWithoutParams.contains(preloadUrl));
     }
 
@@ -184,7 +195,7 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
     assertTrue(storage.getInterceptedUrls().contains(preloadUrl));
 
     assertTrue(wrapperListener.getUrlsToResourceId().size() >= 0);
-    List<String> notifiedInterceptedUrls = getUrlsListWithoutParams(
+    List<String> notifiedInterceptedUrls = getUrlsListWithoutParams2(
         wrapperListener.getUrlsToResourceId().keySet());
     assertTrue(notifiedInterceptedUrls.contains(preloadUrl));
     for (final String eachString : wrapperListener.getUrlsToResourceId().keySet())
@@ -200,39 +211,39 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
   @Test
   public void testIntercepted_Easylist()
   {
-    testIntercepted(AndroidWebRequestResourceWrapper.EASYLIST, R.raw.easylist);
+    testIntercepted(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
   }
 
   @Test
   public void testIntercepted_AcceptableAds()
   {
-    testIntercepted(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
+    testIntercepted(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
   }
 
   @Test
   public void testIntercepted_OnceOnly()
   {
     reset();
-    final String preloadUrl = AndroidWebRequestResourceWrapper.EASYLIST;
+    final String preloadUrl = AndroidHttpClientResourceWrapper.EASYLIST;
 
     preloadMap.put(preloadUrl, R.raw.easylist);
-    assertEquals(0, request.urls.size());
+    assertEquals(0, request.requests.size());
     assertEquals(0, storage.getInterceptedUrls().size());
     assertEquals(0, wrapperListener.getUrlsToResourceId().size());
 
     // update #1 -  should be intercepted
     updateSubscriptions(new String[]
         {
-          AndroidWebRequestResourceWrapper.EASYLIST
+          AndroidHttpClientResourceWrapper.EASYLIST
         },
         true);
 
-    assertEquals(0, request.urls.size());
+    assertEquals(0, request.requests.size());
     assertEquals(1, storage.getInterceptedUrls().size());
     assertTrue(storage.getInterceptedUrls().contains(preloadUrl));
 
     assertTrue(wrapperListener.getUrlsToResourceId().size() >= 0);
-    final List<String> notifiedInterceptedUrls = getUrlsListWithoutParams(
+    final List<String> notifiedInterceptedUrls = getUrlsListWithoutParams2(
         wrapperListener.getUrlsToResourceId().keySet());
     assertTrue(notifiedInterceptedUrls.contains(preloadUrl));
 
@@ -241,8 +252,8 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
 
     updateSubscriptions();
 
-    assertTrue(request.urls.size() > 0);
-    final List<String> requestsWithoutParams = getUrlsListWithoutParams(request.urls);
+    assertTrue(request.requests.size() > 0);
+    final List<String> requestsWithoutParams = getUrlsListWithoutParams(request.requests);
     assertTrue(requestsWithoutParams.contains(preloadUrl));
     assertEquals(0, wrapperListener.getUrlsToResourceId().size());
   }
@@ -252,14 +263,14 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
   {
     reset();
     preloadMap.put(interceptedUrl, resourceId);
-    assertEquals(0, request.urls.size());
+    assertEquals(0, request.requests.size());
     assertEquals(0, storage.getInterceptedUrls().size());
     assertEquals(0, wrapperListener.getUrlsToResourceId().size());
 
     updateSubscriptions();
 
-    assertEquals(1, request.urls.size());
-    List<String> requestUrlsWithoutParams = getUrlsListWithoutParams(request.urls);
+    assertEquals(1, request.requests.size());
+    List<String> requestUrlsWithoutParams = getUrlsListWithoutParams(request.requests);
     assertFalse(requestUrlsWithoutParams.contains(interceptedUrl));
     assertTrue(requestUrlsWithoutParams.contains(notInterceptedUrl));
     assertEquals(1, storage.getInterceptedUrls().size());
@@ -280,36 +291,36 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
   public void testInterceptedAll()
   {
     reset();
-    preloadMap.put(AndroidWebRequestResourceWrapper.EASYLIST, R.raw.easylist);
-    preloadMap.put(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
+    preloadMap.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
+    preloadMap.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 
-    assertEquals(0, request.urls.size());
+    assertEquals(0, request.requests.size());
     assertEquals(0, storage.getInterceptedUrls().size());
     assertEquals(0, wrapperListener.getUrlsToResourceId().size());
 
     updateSubscriptions();
 
-    assertEquals(0, request.urls.size());
+    assertEquals(0, request.requests.size());
     assertEquals(2, storage.getInterceptedUrls().size());
-    assertTrue(storage.getInterceptedUrls().contains(AndroidWebRequestResourceWrapper.EASYLIST));
-    assertTrue(storage.getInterceptedUrls().contains(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS));
+    assertTrue(storage.getInterceptedUrls().contains(AndroidHttpClientResourceWrapper.EASYLIST));
+    assertTrue(storage.getInterceptedUrls().contains(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS));
     assertTrue(wrapperListener.getUrlsToResourceId().size() >= 0);
-    final List<String> notifiedInterceptedUrls = getUrlsListWithoutParams(
+    final List<String> notifiedInterceptedUrls = getUrlsListWithoutParams2(
         wrapperListener.getUrlsToResourceId().keySet());
-    assertTrue(notifiedInterceptedUrls.contains(AndroidWebRequestResourceWrapper.EASYLIST));
-    assertTrue(notifiedInterceptedUrls.contains(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS));
+    assertTrue(notifiedInterceptedUrls.contains(AndroidHttpClientResourceWrapper.EASYLIST));
+    assertTrue(notifiedInterceptedUrls.contains(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS));
 
     for (final String eachString : wrapperListener.getUrlsToResourceId().keySet())
     {
       final String urlWithoutParams = Utils.getUrlWithoutParams(eachString);
-      if (urlWithoutParams.equals(AndroidWebRequestResourceWrapper.EASYLIST))
+      if (urlWithoutParams.equals(AndroidHttpClientResourceWrapper.EASYLIST))
       {
         assertEquals(
             R.raw.easylist,
             wrapperListener.getUrlsToResourceId().get(eachString).intValue());
       }
 
-      if (urlWithoutParams.equals(AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS))
+      if (urlWithoutParams.equals(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS))
       {
         assertEquals(
             R.raw.exceptionrules,
@@ -322,15 +333,15 @@ public class AndroidWebRequestResourceWrapperTest extends BaseJsEngineTest
   public void testNotIntercepted_Easylist()
   {
     testNotIntercepted(
-        AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS,R.raw.exceptionrules,
-        AndroidWebRequestResourceWrapper.EASYLIST);
+        AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS,R.raw.exceptionrules,
+        AndroidHttpClientResourceWrapper.EASYLIST);
   }
 
   @Test
   public void testNotIntercepted_AcceptableAds()
   {
     testNotIntercepted(
-        AndroidWebRequestResourceWrapper.EASYLIST, R.raw.easylist,
-        AndroidWebRequestResourceWrapper.ACCEPTABLE_ADS);
+        AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist,
+        AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS);
   }
 }
