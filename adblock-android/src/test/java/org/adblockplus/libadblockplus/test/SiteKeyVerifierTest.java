@@ -175,6 +175,15 @@ public class SiteKeyVerifierTest
   }
 
   @Test
+  public void testVerifySuccessfullyUrlWithComplexQuery() throws Exception
+  {
+    final String url = "http://demo.aaxdemo.com/display.html?&_otarOg=http%3A%2F%2Faaxdemo.com&_cpub=AAXSFY9XU&_csvr=2019052905_3022&_cgdpr=0&_cgdprconsent=0";
+    final String userAgent = "Mozilla/5.0 (Linux; Android 9; Android SDK built for x86 Build/PSR1.180720.075; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.157 Mobile Safari/537.36";
+    final String value = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMLlOP3Rke738aeqtDCGp0IgSY5XBv7c+brDMmurbYvOFgakGw6sUG8fwt6VkjnOX9s9Kba1Drg2M9Bye/F3x7MCAwEAAQ==_KeG8qinJIkcjfinTUBViCW/mmk/WnjPm2Bz+OTD0ffqBmdo31us7KP4vXyfXoiKVfmCxeKNmYO09u+kYlI4wLw==";
+    assertVerified(url, userAgent, value);
+  }
+
+  @Test
   public void testVerifySuccessfullyNonEnglish() throws Exception
   {
     final String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36";
