@@ -116,7 +116,7 @@ public class SiteKeyVerifier
     if (uri.getQuery() != null)
     {
       uriBuilder.append("?");
-      uriBuilder.append(uri.getQuery());
+      uriBuilder.append(uri.getRawQuery());
     }
     final byte[] urlBytes = uriBuilder.toString().getBytes();
     final byte[] hostBytes = uri.getAuthority().getBytes();
