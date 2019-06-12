@@ -29,6 +29,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.ConsoleMessage;
+import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.HttpAuthHandler;
 import android.webkit.JavascriptInterface;
@@ -84,6 +85,8 @@ public class AdblockWebView extends WebView
   protected static final String HEADER_REQUESTED_WITH = "X-Requested-With";
   protected static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
   protected static final String HEADER_LOCATION = "Location";
+  protected static final String HEADER_SET_COOKIE = "Set-Cookie";
+  protected static final String HEADER_COOKIE = "Cookie";
   protected static final String HEADER_USER_AGENT = "User-Agent";
   protected static final String HEADER_ACCEPT = "Accept";
 
@@ -922,8 +925,13 @@ public class AdblockWebView extends WebView
 
       try
       {
-        final HttpRequest request = new HttpRequest(url, requestMethod,
-            convertMapToHeaderEntries(requestHeadersMap), autoFollowRedirect);
+        final List<HeaderEntry> headersList = convertMapToHeaderEntries(requestHeadersMap);
+        final String cookieValue = CookieManager.getInstance().getCookie(url);
+        if (cookieValue != null && !cookieValue.isEmpty())
+        {
+          headersList.add(new HeaderEntry(HEADER_COOKIE, cookieValue));
+        }
+        final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect);
         siteKeysConfiguration.getHttpClient().request(request, callback);
       }
       catch (final AdblockPlusException e)
@@ -1034,8 +1042,7 @@ public class AdblockWebView extends WebView
       for (final HeaderEntry header : responseHolder.response.getResponseHeaders())
       {
         if (header.getKey().equalsIgnoreCase(HEADER_LOCATION) &&
-            header.getValue() != null &&
-            !header.getValue().isEmpty())
+            header.getValue() != null && !header.getValue().isEmpty())
         {
           redirectedUrl = header.getValue();
           try
@@ -1051,12 +1058,17 @@ public class AdblockWebView extends WebView
             Log.e(TAG, "Failed to build absolute redirect URL", e);
             redirectedUrl = null;
           }
-          break;
+        }
+        if (header.getKey().equalsIgnoreCase(HEADER_SET_COOKIE) &&
+            header.getValue() != null && !header.getValue().isEmpty())
+        {
+          CookieManager.getInstance().setCookie(url, header.getValue());
         }
       }
 
       if (redirectedUrl != null)
       {
+        Log.d(TAG, "redirecting webview from " + url + " to " + redirectedUrl);
         final String finalUrl = redirectedUrl;
         // we need to reload webview url to make it aware of new new url after redirection
         webview.post(new Runnable()
