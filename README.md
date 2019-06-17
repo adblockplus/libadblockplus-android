@@ -47,7 +47,11 @@ fetch precompiled one. For the latter, run in 'libadblockplus' directory:
     make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
     make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
 
-Then we can build `libadblockplus`:
+Make sure to set `ANDROID_NDK_ROOT` environment variable to point to Android NDK installation, eg.:
+
+    export ANDROID_NDK_ROOT=/Users/developer/ndk/android-ndk-r16b
+
+After that we can build `libadblockplus`:
 
     make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
     make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
@@ -65,7 +69,14 @@ In the project root directory run:
 
     ./gradlew assembleDebug
 
-This will generate *.aar library artifact in the 'adblock-android/build/outputs/aar/' directory.
+This will generate *.aar artifacts in the '.../build/outputs/aar/' directories:
+
+* adblock-android-abi_all-... - AAR for all the ARCHs (x86, armv7a, arm64)
+* adblock-android-abi_x86-... - AAR for x86 only
+* adblock-android-abi_arm-... - AAR for armv7a only
+* adblock-android-abi_arm64-... - AAR for arm64 only
+* adblock-android-webview-... - AAR for AdblockWebView
+* adblock-android-settings-... - AAR for Settings
 
 **Android permissions note**
 
@@ -141,7 +152,7 @@ By default adblock-android is built for both ARM and x86 and it can be filtered 
 building end-user android application. However sometimes it can be desired to build
 "adblock-android.aar" for single ARCH.
 
-Pass `abi_arm` or `abi_x86` to build it for single arch or `abi_all` for all ARCHs:
+Pass `abi_arm`, `abi_arm64` or `abi_x86` to build it for single arch or `abi_all` for all ARCHs:
 
     `./gradlew clean assembleAbi_arm`
 
