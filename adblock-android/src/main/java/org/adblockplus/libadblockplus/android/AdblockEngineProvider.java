@@ -57,4 +57,26 @@ public interface AdblockEngineProvider
    * @return lock object
    */
   Object getEngineLock();
+
+  interface EngineCreatedListener
+  {
+    void onAdblockEngineCreated(AdblockEngine engine);
+  }
+
+  interface EngineDisposedListener
+  {
+    void onAdblockEngineDisposed();
+  }
+
+  AdblockEngineProvider addEngineCreatedListener(EngineCreatedListener listener);
+
+  void removeEngineCreatedListener(EngineCreatedListener listener);
+
+  void clearEngineCreatedListeners();
+
+  AdblockEngineProvider addEngineDisposedListener(EngineDisposedListener listener);
+
+  void removeEngineDisposedListener(EngineDisposedListener listener);
+
+  void clearEngineDisposedListeners();
 }

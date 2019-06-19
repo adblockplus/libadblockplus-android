@@ -105,7 +105,6 @@ public class AdblockWebView extends WebView
   private static final String ELEMHIDEEMU_ARRAY_DEF_TOKEN = "[{{elemHidingEmulatedPatternsDef}}]";
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
-  private boolean adblockEnabled = true;
   private boolean debugMode;
   private AdblockEngineProvider provider;
   private Integer loadError;
@@ -116,6 +115,7 @@ public class AdblockWebView extends WebView
   private String url;
   private String injectJs;
   private CountDownLatch elemHideLatch;
+  private AtomicBoolean adblockEnabled;
   private String elemHideSelectorsString;
   private String elemHideEmuSelectorsString;
   private Object elemHideThreadLockObject = new Object();
@@ -123,6 +123,60 @@ public class AdblockWebView extends WebView
   private boolean loading;
   private String elementsHiddenFlag;
   private SiteKeysConfiguration siteKeysConfiguration;
+  private AdblockEngine.SettingsChangedListener engineSettingsChangedCb = new AdblockEngine.SettingsChangedListener()
+  {
+    @Override
+    public void onEnableStateChanged(final boolean enabled)
+    {
+      if (adblockEnabled == null)
+      {
+        return;
+      }
+      boolean oldValue = adblockEnabled.getAndSet(enabled);
+      if (oldValue != enabled)
+      {
+        Log.d(TAG, "Filter Engine status changed, enable status is " + adblockEnabled.get());
+        AdblockWebView.this.post(new Runnable()
+        {
+          @Override
+          public void run()
+          {
+            applyClients();
+            if (enabled)
+            {
+              clearCache(true);
+            }
+          }
+        });
+      }
+    }
+  };
+  private AdblockEngineProvider.EngineCreatedListener engineCreatedCb = new AdblockEngineProvider.EngineCreatedListener()
+  {
+    @Override
+    public void onAdblockEngineCreated(final AdblockEngine engine)
+    {
+      adblockEnabled = new AtomicBoolean(engine.isEnabled());
+      Log.d(TAG, "Filter Engine created, enable status is " + adblockEnabled.get());
+      AdblockWebView.this.post(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          applyClients();
+        }
+      });
+      engine.addSettingsChangedListener(engineSettingsChangedCb);
+    }
+  };
+  private AdblockEngineProvider.EngineDisposedListener engineDisposedCb = new AdblockEngineProvider.EngineDisposedListener()
+  {
+    @Override
+    public void onAdblockEngineDisposed()
+    {
+      adblockEnabled = null;
+    }
+  };
 
   public AdblockWebView(Context context)
   {
@@ -157,28 +211,52 @@ public class AdblockWebView extends WebView
     this.siteKeysConfiguration = siteKeysConfiguration;
   }
 
-  public boolean isAdblockEnabled()
+  private boolean isAdblockEnabled()
   {
-    return adblockEnabled;
+    if (adblockEnabled == null)
+    {
+      // this means that filter engine is not yet ready
+      return false;
+    }
+    ensureProvider(); // this is rather redundant but just in case provider is null
+    synchronized (provider.getEngineLock())
+    {
+      AdblockEngine engine = provider.getEngine();
+      return engine != null && engine.isEnabled();
+    }
   }
 
-  private void applyAdblockEnabled()
+  private void applyClients()
   {
-    super.setWebViewClient(adblockEnabled ? intWebViewClient : extWebViewClient);
-    super.setWebChromeClient(adblockEnabled ? intWebChromeClient : extWebChromeClient);
-  }
-
-  public void setAdblockEnabled(boolean adblockEnabled)
-  {
-    this.adblockEnabled = adblockEnabled;
-    applyAdblockEnabled();
+    if (adblockEnabled == null)
+    {
+      return;
+    }
+    super.setWebChromeClient(adblockEnabled.get() || extWebChromeClient == null ?
+            intWebChromeClient : extWebChromeClient);
+    super.setWebViewClient(adblockEnabled.get() || extWebViewClient == null ?
+            intWebViewClient : extWebViewClient);
   }
 
   @Override
-  public void setWebChromeClient(WebChromeClient client)
+  public void setWebChromeClient(final WebChromeClient client)
   {
     extWebChromeClient = client;
-    applyAdblockEnabled();
+    applyClients();
+  }
+
+  @Override
+  public void setWebViewClient(final WebViewClient client)
+  {
+    extWebViewClient = client;
+    applyClients();
+  }
+
+  private void initAbp()
+  {
+    addJavascriptInterface(this, BRIDGE);
+    initRandom();
+    intWebViewClient = new AdblockWebViewClient();
   }
 
   public boolean isDebugMode()
@@ -258,9 +336,24 @@ public class AdblockWebView extends WebView
       public void run()
       {
         AdblockWebView.this.provider = provider;
-        if (AdblockWebView.this.provider != null)
+        if (provider != null)
         {
-          AdblockWebView.this.provider.retain(true); // asynchronously
+          provider.retain(true); // asynchronously
+          synchronized (provider.getEngineLock())
+          {
+            if (provider.getEngine() != null)
+            {
+              adblockEnabled = new AtomicBoolean(provider.getEngine().isEnabled());
+              Log.d(TAG, "Filter Engine already created, enable status is " + adblockEnabled);
+              applyClients();
+              provider.getEngine().addSettingsChangedListener(engineSettingsChangedCb);
+            }
+            else
+            {
+              provider.addEngineCreatedListener(engineCreatedCb);
+              provider.addEngineDisposedListener(engineDisposedCb);
+            }
+          }
         }
       }
     };
@@ -587,18 +680,11 @@ public class AdblockWebView extends WebView
 
   private void tryInjectJs()
   {
-    if (loadError == null && injectJs != null)
+    if (isAdblockEnabled() && loadError == null && injectJs != null)
     {
       d("Injecting script");
       runScript(injectJs);
     }
-  }
-
-  @Override
-  public void setWebViewClient(WebViewClient client)
-  {
-    extWebViewClient = client;
-    applyAdblockEnabled();
   }
 
   private void clearReferrers()
@@ -1087,6 +1173,11 @@ public class AdblockWebView extends WebView
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
     {
+      if (!isAdblockEnabled())
+      {
+        w("Filter engine disabled");
+        return null;
+      }
       // here we just trying to fill url -> referrer map
       // blocking/allowing loading will happen in `shouldInterceptRequest(WebView,String)`
       String url = request.getUrl().toString();
@@ -1138,22 +1229,9 @@ public class AdblockWebView extends WebView
     return status.name().replace("_", "");
   }
 
-  private void initAbp()
-  {
-    addJavascriptInterface(this, BRIDGE);
-    initClients();
-    initRandom();
-  }
-
   private void initRandom()
   {
     elementsHiddenFlag = "abp" + Math.abs(new Random().nextLong());
-  }
-
-  private void initClients()
-  {
-    intWebViewClient = new AdblockWebViewClient();
-    applyAdblockEnabled();
   }
 
   private class ElemHideThread extends Thread
@@ -1607,6 +1685,17 @@ public class AdblockWebView extends WebView
       return;
     }
 
+    synchronized (provider.getEngineLock())
+    {
+      AdblockEngine engine = provider.getEngine();
+      if (engine != null)
+      {
+        engine.removeSettingsChangedListener(engineSettingsChangedCb);
+      }
+    }
+
+    provider.removeEngineCreatedListener(engineCreatedCb);
+    provider.removeEngineDisposedListener(engineDisposedCb);
     stopLoading();
 
     DisposeRunnable disposeRunnable = new DisposeRunnable(disposeFinished);
