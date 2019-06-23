@@ -85,6 +85,10 @@ public final class AdblockEngine
 
   public AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
   {
+    if (listener == null)
+    {
+      throw new IllegalArgumentException("SettingsChangedListener cannot be null");
+    }
     settingsChangedListeners.add(listener);
     return this;
   }
@@ -468,10 +472,14 @@ public final class AdblockEngine
 
   public void setEnabled(final boolean enabled)
   {
+    final boolean valueChanged = this.enabled != enabled;
     this.enabled = enabled;
-    for (SettingsChangedListener listener : settingsChangedListeners)
+    if (valueChanged)
     {
-      listener.onEnableStateChanged(enabled);
+      for (SettingsChangedListener listener : settingsChangedListeners)
+      {
+        listener.onEnableStateChanged(enabled);
+      }
     }
   }
 
