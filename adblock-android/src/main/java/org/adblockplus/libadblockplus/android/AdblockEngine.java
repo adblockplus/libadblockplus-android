@@ -39,7 +39,6 @@ import org.adblockplus.libadblockplus.Subscription;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -80,10 +79,9 @@ public final class AdblockEngine
   private volatile boolean elemhideEnabled;
   private volatile boolean enabled = true;
   private volatile List<String> whitelistedDomains;
-  private Set<SettingsChangedListener> settingsChangedListeners =
-          Collections.synchronizedSet(new HashSet<SettingsChangedListener>());
+  private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
 
-  public AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
+  public synchronized AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
   {
     if (listener == null)
     {
@@ -93,7 +91,7 @@ public final class AdblockEngine
     return this;
   }
 
-  public AdblockEngine removeSettingsChangedListener(final SettingsChangedListener listener)
+  public synchronized AdblockEngine removeSettingsChangedListener(final SettingsChangedListener listener)
   {
     settingsChangedListeners.remove(listener);
     return this;
@@ -476,9 +474,12 @@ public final class AdblockEngine
     this.enabled = enabled;
     if (valueChanged)
     {
-      for (SettingsChangedListener listener : settingsChangedListeners)
+      synchronized(this)
       {
-        listener.onEnableStateChanged(enabled);
+        for (final SettingsChangedListener listener : settingsChangedListeners)
+        {
+          listener.onEnableStateChanged(enabled);
+        }
       }
     }
   }
