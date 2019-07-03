@@ -142,10 +142,7 @@ public class AdblockWebView extends WebView
           public void run()
           {
             applyClients();
-            if (enabled)
-            {
-              clearCache(true);
-            }
+            clearCache(true);
           }
         });
       }
