@@ -39,7 +39,8 @@ Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
 
 #### Building of libadblockplus
 
-First, we need to build `V8` required for `libadblockplus`.
+First, make sure all the [prerequisites](https://gitlab.com/eyeo/adblockplus/libadblockplus/blob/master/README.md#supported-target-platforms-and-prerequisites) are installed.
+Second, one needs to build `V8` required for `libadblockplus`.
 See `libadblockplus/README` or V8 documentation on how to build V8 or
 fetch precompiled one. For the latter, run in 'libadblockplus' directory:
 
