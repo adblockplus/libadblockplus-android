@@ -36,16 +36,6 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 {
   private static final String TAG = Utils.getTag(SingleInstanceEngineProvider.class);
 
-  public interface EngineCreatedListener
-  {
-    void onAdblockEngineCreated(AdblockEngine engine);
-  }
-
-  public interface EngineDisposedListener
-  {
-    void onAdblockEngineDisposed();
-  }
-
   private Context context;
   private String basePath;
   private boolean developmentBuild;
@@ -105,33 +95,39 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     return this;
   }
 
+  @Override
   public SingleInstanceEngineProvider addEngineCreatedListener(EngineCreatedListener listener)
   {
     this.engineCreatedListeners.add(listener);
     return this;
   }
 
+  @Override
   public void removeEngineCreatedListener(EngineCreatedListener listener)
   {
     this.engineCreatedListeners.remove(listener);
   }
 
+  @Override
   public void clearEngineCreatedListeners()
   {
     this.engineCreatedListeners.clear();
   }
 
+  @Override
   public SingleInstanceEngineProvider addEngineDisposedListener(EngineDisposedListener listener)
   {
     this.engineDisposedListeners.add(listener);
     return this;
   }
 
+  @Override
   public void removeEngineDisposedListener(EngineDisposedListener listener)
   {
     this.engineDisposedListeners.remove(listener);
   }
 
+  @Override
   public void clearEngineDisposedListeners()
   {
     this.engineDisposedListeners.clear();
@@ -140,7 +136,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private void createAdblock()
   {
     Log.w(TAG, "Waiting for lock");
-    synchronized (engineLock)
+    synchronized (getEngineLock())
     {
       Log.d(TAG, "Creating adblock engine ...");
       ConnectivityManager connectivityManager =
@@ -207,7 +203,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
           @Override
           public void run()
           {
-            synchronized (engineLock)
+            synchronized (getEngineLock())
             {
               createAdblock();
 
@@ -277,7 +273,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private void disposeAdblock()
   {
     Log.w(TAG, "Waiting for lock");
-    synchronized (engineLock)
+    synchronized (getEngineLock())
     {
       Log.w(TAG, "Disposing adblock engine");
 
@@ -302,6 +298,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   @Override
   public Object getEngineLock()
   {
+    Log.d(TAG, "getEngineLock() called from " + Thread.currentThread());
     return engineLock;
   }
 }

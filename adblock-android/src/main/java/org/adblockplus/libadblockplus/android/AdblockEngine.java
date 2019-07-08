@@ -47,6 +47,12 @@ import java.util.Set;
 
 public final class AdblockEngine
 {
+
+  public interface SettingsChangedListener
+  {
+    void onEnableStateChanged(boolean enabled);
+  }
+
   // default base path to store subscription files in android app
   public static final String BASE_PATH_DIRECTORY = "adblock";
 
@@ -73,6 +79,23 @@ public final class AdblockEngine
   private volatile boolean elemhideEnabled;
   private volatile boolean enabled = true;
   private volatile List<String> whitelistedDomains;
+  private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
+
+  public synchronized AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
+  {
+    if (listener == null)
+    {
+      throw new IllegalArgumentException("SettingsChangedListener cannot be null");
+    }
+    settingsChangedListeners.add(listener);
+    return this;
+  }
+
+  public synchronized AdblockEngine removeSettingsChangedListener(final SettingsChangedListener listener)
+  {
+    settingsChangedListeners.remove(listener);
+    return this;
+  }
 
   public static AppInfo generateAppInfo(final Context context, boolean developmentBuild,
                                         String application, String applicationVersion)
@@ -447,7 +470,18 @@ public final class AdblockEngine
 
   public void setEnabled(final boolean enabled)
   {
+    final boolean valueChanged = this.enabled != enabled;
     this.enabled = enabled;
+    if (valueChanged)
+    {
+      synchronized(this)
+      {
+        for (final SettingsChangedListener listener : settingsChangedListeners)
+        {
+          listener.onEnableStateChanged(enabled);
+        }
+      }
+    }
   }
 
   public boolean isEnabled()
