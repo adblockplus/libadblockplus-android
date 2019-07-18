@@ -518,14 +518,16 @@ public final class AdblockEngine
   }
 
   public boolean matches(final String fullUrl, final Set<ContentType> contentTypes,
-                         final List<String> referrerChain, final String siteKey)
+                         final List<String> referrerChain, final String siteKey,
+                         final boolean specificOnly)
   {
     if (!enabled)
     {
       return false;
     }
 
-    final Filter filter = this.filterEngine.matches(fullUrl, contentTypes, referrerChain, siteKey);
+    final Filter filter = this.filterEngine.matches(fullUrl, contentTypes, referrerChain,
+            siteKey, specificOnly);
 
     if (filter == null)
     {
@@ -562,6 +564,13 @@ public final class AdblockEngine
     {
       filter.dispose();
     }
+  }
+
+  public boolean isGenericblockWhitelisted(final String url,
+                                           final List<String> referrerChain,
+                                           final String sitekey)
+  {
+    return this.filterEngine.isGenericblockWhitelisted(url, referrerChain, sitekey);
   }
 
   public boolean isDocumentWhitelisted(final String url,

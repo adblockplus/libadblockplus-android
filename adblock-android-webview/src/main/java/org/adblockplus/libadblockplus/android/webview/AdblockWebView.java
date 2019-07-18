@@ -915,6 +915,8 @@ public class AdblockWebView extends WebView
           provider.waitForReady();
         }
 
+        d("Loading url " + url);
+
         if (isMainFrame)
         {
           // never blocking main frame requests, just subrequests
@@ -964,9 +966,21 @@ public class AdblockWebView extends WebView
               }
             }
 
+            boolean specificOnly = false;
+            if (!referrerChain.isEmpty())
+            {
+              final String parentUrl = referrerChain.get(0);
+              final List<String> referrerChainForGenericblock = referrerChain.subList(1, referrerChain.size());
+              specificOnly = provider.getEngine().isGenericblockWhitelisted(parentUrl,
+                      referrerChainForGenericblock, siteKey);
+              if (specificOnly)
+              {
+                w("Found genericblock filter for url " + url + " which parent is " + parentUrl);
+              }
+            }
             // check if we should block
             if (provider.getEngine().matches(url, FilterEngine.ContentType.maskOf(contentType),
-                    referrerChain, siteKey))
+                    referrerChain, siteKey, specificOnly))
             {
               w("Blocked loading " + url);
 
