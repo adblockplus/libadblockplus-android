@@ -280,6 +280,51 @@ public class FilterEngineTest extends BaseFilterEngineTest
   }
 
   @Test
+  public void testGenericblock()
+  {
+    filterEngine.getFilter("/testcasefiles/genericblock/target-generic.jpg").addToList();
+    filterEngine.getFilter("/testcasefiles/genericblock/target-notgeneric.jpg$domain=testpages.adblockplus.org").addToList();
+
+    final String urlGeneric = "http://testpages.adblockplus.org/testcasefiles/genericblock/target-generic.jpg";
+    final String urlNotGeneric = "http://testpages.adblockplus.org/testcasefiles/genericblock/target-notgeneric.jpg";
+    final String firstParent = "http://testpages.adblockplus.org/en/exceptions/genericblock/frame.html";
+
+    final List<String> documentUrls = new ArrayList<String>();
+    documentUrls.add("http://testpages.adblockplus.org/en/exceptions/genericblock/frame.html");
+    documentUrls.add("http://testpages.adblockplus.org/en/exceptions/genericblock/");
+    final List<String> documentUrlsForGenericblock = new ArrayList<String>();
+    documentUrlsForGenericblock.add("http://testpages.adblockplus.org/en/exceptions/genericblock/");
+
+    // Go through all parent frames/refs to check if any of them has genericblock filter exception
+    boolean specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    assertFalse(specificOnly);
+    Filter match1 = filterEngine.matches(urlNotGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
+    assertNotNull(match1);
+    assertEquals(Filter.Type.BLOCKING, match1.getType());
+
+    specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    assertFalse(specificOnly);
+    Filter match2 = filterEngine.matches(urlGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
+    assertNotNull(match2);
+    assertEquals(Filter.Type.BLOCKING, match2.getType());
+
+    // Now add genericblock filter and do the checks
+    filterEngine.getFilter("@@||testpages.adblockplus.org/en/exceptions/genericblock$genericblock").addToList();
+
+    // Go again through all parent frames/refs to check if any of them has genericblock filter exception
+    specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    assertTrue(specificOnly);
+    match1 = filterEngine.matches(urlNotGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
+    assertNotNull(match1);
+    assertEquals(Filter.Type.BLOCKING, match1.getType());
+
+    specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    assertTrue(specificOnly);
+    match2 = filterEngine.matches(urlGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
+    assertNull(match2);
+  }
+
+  @Test
   public void testMatchesOnWhitelistedDomain()
   {
     filterEngine.getFilter("adbanner.gif").addToList();

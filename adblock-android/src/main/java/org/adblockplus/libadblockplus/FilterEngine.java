@@ -149,7 +149,44 @@ public final class FilterEngine
                         final List<String> documentUrls, final String siteKey)
   {
     return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-            documentUrls, siteKey);
+            documentUrls, siteKey, false);
+  }
+
+  /**
+   * Checks if any active filter matches the supplied URL.
+   * @param url url URL to match.
+   * @param contentTypes Content type mask of the requested resource.
+   * @param documentUrls Chain of documents requesting the resource, starting
+   *                     with the current resource's parent frame, ending with the
+   *                     top-level frame.
+   * @param siteKey sitekey or null/empty string
+   * @param specificOnly if set to `true` then skips generic filters
+   * @return Matching filter, or a `null` if there was no match.
+   */
+  public Filter matches(final String url, final Set<ContentType> contentTypes,
+                        final List<String> documentUrls, final String siteKey,
+                        final boolean specificOnly)
+  {
+    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
+            documentUrls, siteKey, specificOnly);
+  }
+
+  /**
+   * Checks if any active filter matches the supplied URL.
+   * @param url URL to match which is actually first parent of URL for which we
+   *            want to check a $genericblock filter.
+   *            Value obtained by `IsGenericblockWhitelisted()` is used later
+   *            on as a `specificOnly` parameter value for `Matches()` call.
+   * @param documentUrls Chain of documents requesting the resource, starting
+   *                     with the current resource's parent frame, ending with the
+   *                     top-level frame.
+   * @param siteKey sitekey or null/empty string
+   * @return `true` if the URL is whitelisted by $genericblock filter
+   */
+  public boolean isGenericblockWhitelisted(final String url, final List<String> documentUrls,
+                                           final String siteKey)
+  {
+    return isGenericblockWhitelisted(this.ptr, url, documentUrls, siteKey);
   }
 
   /**
@@ -273,7 +310,12 @@ public final class FilterEngine
   private final static native JsValue getPref(long ptr, String pref);
 
   private final static native Filter matches(long ptr, String url, ContentType[] contentType,
-                                             List<String> referrerChain, String siteKey);
+                                             List<String> referrerChain, String siteKey,
+                                             boolean specificOnly);
+
+  private final static native boolean isGenericblockWhitelisted(long ptr, String url,
+                                                                List<String> referrerChain,
+                                                                String siteKey);
 
   private final static native boolean isDocumentWhitelisted(long ptr, String url,
                                                             List<String> referrerChain,
