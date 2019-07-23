@@ -613,7 +613,8 @@ public final class AdblockEngine
       final String url,
       final String domain,
       final List<String> referrerChain,
-      final String sitekey)
+      final String sitekey,
+      final boolean specificOnly)
   {
     /*
      * Issue 3364 (https://issues.adblockplus.org/ticket/3364) introduced the
@@ -637,7 +638,8 @@ public final class AdblockEngine
     {
       return new ArrayList<String>();
     }
-    return this.filterEngine.getElementHidingSelectors(domain);
+
+    return this.filterEngine.getElementHidingSelectors(domain, specificOnly);
   }
 
   public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(
