@@ -107,7 +107,12 @@ public final class FilterEngine
 
   public List<String> getElementHidingSelectors(final String domain)
   {
-    return getElementHidingSelectors(this.ptr, domain);
+    return getElementHidingSelectors(domain, false);
+  }
+
+  public List<String> getElementHidingSelectors(final String domain, final boolean specificOnly)
+  {
+    return getElementHidingSelectors(this.ptr, domain, specificOnly);
   }
 
   public List<EmulationSelector> getElementHidingEmulationSelectors(final String domain)
@@ -297,7 +302,7 @@ public final class FilterEngine
 
   private final static native void setFilterChangeCallback(long ptr, long filterPtr);
 
-  private final static native List<String> getElementHidingSelectors(long ptr, String domain);
+  private final static native List<String> getElementHidingSelectors(long ptr, String domain, boolean specificOnly);
 
   private final static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
 

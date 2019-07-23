@@ -1289,10 +1289,9 @@ public class AdblockWebView extends WebView
               referrerChain.add(0, parentUrl);
             }
 
-            List<Subscription> subscriptions = provider
-              .getEngine()
-              .getFilterEngine()
-              .getListedSubscriptions();
+            final FilterEngine filterEngine = provider.getEngine().getFilterEngine();
+
+            List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
 
             try
             {
@@ -1315,7 +1314,7 @@ public class AdblockWebView extends WebView
               }
             }
 
-            final String domain = provider.getEngine().getFilterEngine().getHostFromURL(url);
+            final String domain = filterEngine.getHostFromURL(url);
             if (domain == null)
             {
               e("Failed to extract domain from " + url);
@@ -1332,9 +1331,18 @@ public class AdblockWebView extends WebView
                   .getAny(referrerChain, ""))
                 : null);
 
+              final boolean specificOnly = filterEngine.matches(url,
+                FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
+                Collections.<String>emptyList(), null) != null;
+
+              if (specificOnly)
+              {
+                d("elemhide - specificOnly selectors");
+              }
+
               List<String> selectors = provider
                 .getEngine()
-                .getElementHidingSelectors(url, domain, referrerChain, siteKey);
+                .getElementHidingSelectors(url, domain, referrerChain, siteKey, specificOnly);
 
               d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
               selectorsString = Utils.stringListToJsonArray(selectors);

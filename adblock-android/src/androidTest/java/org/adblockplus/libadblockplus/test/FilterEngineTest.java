@@ -325,6 +325,25 @@ public class FilterEngineTest extends BaseFilterEngineTest
   }
 
   @Test
+  public void testGenerichide()
+  {
+    filterEngine.getFilter("##.testcase-generichide-generic").addToList();
+    filterEngine.getFilter("example.org##.testcase-generichide-notgeneric").addToList();
+
+    final String url = "http://www.example.org";
+
+    // before generichide option
+    assertNull(filterEngine.matches(url, FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
+      Collections.<String>emptyList(), null));
+
+    // add filter with generichide option
+    filterEngine.getFilter("@@||example.org$generichide").addToList();
+
+    assertNotNull(filterEngine.matches(url, FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
+      Collections.<String>emptyList(), null));
+  }
+
+  @Test
   public void testMatchesOnWhitelistedDomain()
   {
     filterEngine.getFilter("adbanner.gif").addToList();
@@ -731,6 +750,28 @@ public class FilterEngineTest extends BaseFilterEngineTest
     final List<String> selsNonExisting =
       filterEngine.getElementHidingSelectors("non-existing-domain.com");
     assertTrue(selsNonExisting.isEmpty());
+  }
+
+  @Test
+  public void testElementHidingSelectorsGenerichide()
+  {
+    // element hiding selectors
+    filterEngine.getFilter("##.testcase-generichide-generic").addToList();
+    filterEngine.getFilter("example.org##.testcase-generichide-notgeneric").addToList();
+    filterEngine.getFilter("@@||example.org$generichide").addToList();
+
+    final List<String> selectors = filterEngine.getElementHidingSelectors("example.org");
+
+    assertNotNull(selectors);
+    assertEquals(2, selectors.size());
+    assertEquals(".testcase-generichide-generic", selectors.get(0));
+    assertEquals(".testcase-generichide-notgeneric", selectors.get(1));
+
+    final List<String> selectorsSpecificOnly = filterEngine.getElementHidingSelectors("example.org", true);
+
+    assertNotNull(selectorsSpecificOnly);
+    assertEquals(1, selectorsSpecificOnly.size());
+    assertEquals(".testcase-generichide-notgeneric", selectorsSpecificOnly.get(0));
   }
 
   @Test
