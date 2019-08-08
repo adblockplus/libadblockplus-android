@@ -105,13 +105,18 @@ public:
 class JniWebRequestCallback : public JniCallbackBase, public AdblockPlus::IWebRequest
 {
 public:
-    JniWebRequestCallback(JNIEnv* env, jobject callbackObject);
+    JniWebRequestCallback(JNIEnv* env, const AdblockPlus::Scheduler& scheduler, jobject callbackObject);
     void GET(const std::string& url,
              const AdblockPlus::HeaderList& requestHeaders,
              const AdblockPlus::IWebRequest::GetCallback& getCallback) override;
+    void SyncGET(const std::string& url,
+             const AdblockPlus::HeaderList& requestHeaders,
+             const AdblockPlus::IWebRequest::GetCallback& getCallback);
 
 private:
   jobject NewTuple(JNIEnv* env, const std::string& a, const std::string& b) const;
+private:
+  AdblockPlus::Scheduler m_scheduler;
 };
 
 class JniIsAllowedConnectionTypeCallback : public JniCallbackBase

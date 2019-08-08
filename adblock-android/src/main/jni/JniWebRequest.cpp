@@ -74,12 +74,23 @@ void JniWebRequest_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
   }
 }
 
-JniWebRequestCallback::JniWebRequestCallback(JNIEnv* env, jobject callbackObject)
+JniWebRequestCallback::JniWebRequestCallback(JNIEnv* env, const AdblockPlus::Scheduler& scheduler, jobject callbackObject)
   : JniCallbackBase(env, callbackObject)
+  , m_scheduler(scheduler)
 {
 }
 
 void JniWebRequestCallback::GET(const std::string& url,
+         const AdblockPlus::HeaderList& requestHeaders,
+         const AdblockPlus::IWebRequest::GetCallback& getCallback)
+{
+  m_scheduler([this, url, requestHeaders, getCallback]()->void
+  {
+    SyncGET(url, requestHeaders, getCallback);
+  });
+}
+
+void JniWebRequestCallback::SyncGET(const std::string& url,
          const AdblockPlus::HeaderList& requestHeaders,
          const AdblockPlus::IWebRequest::GetCallback& getCallback)
 {
