@@ -66,7 +66,7 @@ static jlong JNICALL JniCtor(JNIEnv* env, jclass clazz,
     }
     if (webRequest)
     {
-      platformBuilder.webRequest.reset(new JniWebRequestCallback(env, webRequest));
+      platformBuilder.webRequest.reset(new JniWebRequestCallback(env, jniPlatform->scheduler,  webRequest));
     }
     jniPlatform->platform = platformBuilder.CreatePlatform();
     return JniPtrToLong(jniPlatform);
