@@ -53,14 +53,21 @@ public:
   JniLocalReference(JNIEnv* jniEnv, T object)
       : jniEnv(jniEnv), object(object)
   {
-
   }
 
-  JniLocalReference(const JniLocalReference<T>& other);
+  JniLocalReference(JniLocalReference<T>&& other)
+  {
+    std::swap(jniEnv = nullptr, other.jniEnv);
+    std::swap(object = nullptr, other.object);
+  }
+  JniLocalReference(const JniLocalReference<T>& other) = delete;
 
   ~JniLocalReference()
   {
-    jniEnv->DeleteLocalRef(object);
+    if (jniEnv)
+    {
+      jniEnv->DeleteLocalRef(object);
+    }
   }
 
   T operator*()
@@ -70,6 +77,10 @@ public:
 
   T Get()
   {
+    return object;
+  }
+
+  operator bool() const {
     return object;
   }
 

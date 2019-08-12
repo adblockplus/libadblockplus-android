@@ -21,7 +21,7 @@ publish {
   userOrg = rootProject.ext.bintrayUserOrg
   groupId = rootProject.ext.bintrayGroupId
   artifactId = 'adblock-android-webview'
-  publishVersion = '3.7'
+  publishVersion = '3.8'
   licences = rootProject.ext.bintrayLicences
   desc = 'An Android library that provides a WebView component with Adblock Plus integrated.'
   website = rootProject.ext.bintrayWebsite

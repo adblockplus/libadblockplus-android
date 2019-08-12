@@ -103,10 +103,10 @@ void JniWebRequestCallback::SyncGET(const std::string& url,
 
   if (method)
   {
-    jstring jUrl = JniStdStringToJava(*env, url);
+    JniLocalReference<jstring> jUrl{*env, JniStdStringToJava(*env, url)};
 
     std::string stdRequestMethod = "GET";
-    jstring jRequestMethod = JniStdStringToJava(*env, stdRequestMethod);
+    JniLocalReference<jstring> jRequestMethod{*env, JniStdStringToJava(*env, stdRequestMethod)};
 
     JniLocalReference<jobject> jHeaders(*env, NewJniArrayList(*env));
     jmethodID addMethod = JniGetAddToListMethod(*env, *jHeaders);
@@ -114,21 +114,21 @@ void JniWebRequestCallback::SyncGET(const std::string& url,
     for (AdblockPlus::HeaderList::const_iterator it = requestHeaders.begin(),
         end = requestHeaders.end(); it != end; it++)
     {
-      JniLocalReference<jobject> headerEntry(*env, NewTuple(*env, it->first, it->second));
+      JniLocalReference<jobject> headerEntry = NewTuple(*env, it->first, it->second);
       JniAddObjectToList(*env, *jHeaders, addMethod, *headerEntry);
     }
 
-    jobject jHttpRequest = env->NewObject(
+    JniLocalReference<jobject> jHttpRequest{*env, env->NewObject(
         httpRequestClass->Get(),
         httpRequestClassCtor,
-        jUrl, jRequestMethod, *jHeaders, true);
+        *jUrl, *jRequestMethod, *jHeaders, true)};
 
-    jobject jCallback = env->NewObject(
+    JniLocalReference<jobject> jCallback{*env, env->NewObject(
         webRequestCallbackClass->Get(),
         callbackClassCtor,
-        JniPtrToLong(new AdblockPlus::IWebRequest::GetCallback(getCallback)));
+        JniPtrToLong(new AdblockPlus::IWebRequest::GetCallback(getCallback)))};
 
-    env->CallVoidMethod(GetCallbackObject(), method, jHttpRequest, jCallback);
+    env->CallVoidMethod(GetCallbackObject(), method, *jHttpRequest, *jCallback);
 
     if (CheckAndLogJavaException(*env))
     {
@@ -139,8 +139,8 @@ void JniWebRequestCallback::SyncGET(const std::string& url,
   }
 }
 
-jobject JniWebRequestCallback::NewTuple(JNIEnv* env, const std::string& a,
-    const std::string& b) const
+JniLocalReference<jobject> JniWebRequestCallback::NewTuple(JNIEnv* env, const std::string& a,
+    const std::string& b)
 {
   jmethodID factory = env->GetMethodID(headerEntryClass->Get(), "<init>",
       "(Ljava/lang/String;Ljava/lang/String;)V");
@@ -148,7 +148,7 @@ jobject JniWebRequestCallback::NewTuple(JNIEnv* env, const std::string& a,
   JniLocalReference<jstring> strA(env, env->NewStringUTF(a.c_str()));
   JniLocalReference<jstring> strB(env, env->NewStringUTF(b.c_str()));
 
-  return env->NewObject(headerEntryClass->Get(), factory, *strA, *strB);
+  return JniLocalReference<jobject>{env, env->NewObject(headerEntryClass->Get(), factory, *strA, *strB)};
 }
 
 static void JNICALL JniCallbackOnFinished(JNIEnv* env, jclass clazz, jlong ptr, jobject response)
@@ -165,38 +165,37 @@ static void JNICALL JniCallbackOnFinished(JNIEnv* env, jclass clazz, jlong ptr, 
                                                 serverResponseClass->Get(),
                                                 response,
                                                 "responseStatus");
-      jobject jByteBuffer = env->GetObjectField(response, responseField);
+      JniLocalReference<jobject> jByteBuffer{env, env->GetObjectField(response, responseField)};
 
       if (jByteBuffer)
       {
-        // obtain and call method limit() on ByteBuffer object
-        jmethodID byteBufferLimitMethod = env->GetMethodID(env->GetObjectClass(jByteBuffer), "limit", "()I");
-        int responseSize = env->CallIntMethod(jByteBuffer, byteBufferLimitMethod);
-
-        const char* responseBuffer = reinterpret_cast<const char*>(env->GetDirectBufferAddress(jByteBuffer));
+        const char* responseBuffer = reinterpret_cast<const char*>(env->GetDirectBufferAddress(*jByteBuffer));
         if (responseBuffer == NULL)
         {
           throw std::runtime_error("GetDirectBufferAddress() returned NULL");
         }
+        // obtain and call method limit() on ByteBuffer object
+        jmethodID byteBufferLimitMethod = env->GetMethodID(env->GetObjectClass(*jByteBuffer), "limit", "()I");
+        int responseSize = env->CallIntMethod(*jByteBuffer, byteBufferLimitMethod);
         sResponse.responseText.assign(responseBuffer, responseSize);
       }
 
       // map headers
-      jobjectArray responseHeadersArray = JniGetStringArrayField(env,
+      JniLocalReference<jobjectArray> responseHeadersArray{env, JniGetStringArrayField(env,
                                                                  serverResponseClass->Get(),
                                                                  response,
-                                                                 "headers");
+                                                                 "headers")};
 
       if (responseHeadersArray)
       {
-        int itemsCount = env->GetArrayLength(responseHeadersArray) / 2;
+        int itemsCount = env->GetArrayLength(*responseHeadersArray) / 2;
         for (int i = 0; i < itemsCount; i++)
         {
-          jstring jKey = (jstring) env->GetObjectArrayElement(responseHeadersArray, i * 2);
-          std::string stdKey = JniJavaToStdString(env, jKey);
+          JniLocalReference<jstring> jKey{env, (jstring)env->GetObjectArrayElement(*responseHeadersArray, i * 2)};
+          std::string stdKey = JniJavaToStdString(env, *jKey);
 
-          jstring jValue = (jstring) env->GetObjectArrayElement(responseHeadersArray, i * 2 + 1);
-          std::string stdValue = JniJavaToStdString(env, jValue);
+          JniLocalReference<jstring> jValue{env, (jstring)env->GetObjectArrayElement(*responseHeadersArray, i * 2 + 1)};
+          std::string stdValue = JniJavaToStdString(env, *jValue);
 
           sResponse.responseHeaders.push_back(std::make_pair(stdKey, stdValue));
         }

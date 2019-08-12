@@ -114,7 +114,7 @@ public:
              const AdblockPlus::IWebRequest::GetCallback& getCallback);
 
 private:
-  jobject NewTuple(JNIEnv* env, const std::string& a, const std::string& b) const;
+  static JniLocalReference<jobject> NewTuple(JNIEnv* env, const std::string& a, const std::string& b);
 private:
   AdblockPlus::Scheduler m_scheduler;
 };
