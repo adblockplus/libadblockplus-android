@@ -8,8 +8,8 @@ android {
         applicationId "org.adblockplus.libadblockplus.android.webviewapp"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 14
-        versionName "3.6.1"
+        versionCode 15
+        versionName "3.7"
         missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
     }
 
