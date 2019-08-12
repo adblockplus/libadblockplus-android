@@ -153,55 +153,59 @@ jobject JniWebRequestCallback::NewTuple(JNIEnv* env, const std::string& a,
 
 static void JNICALL JniCallbackOnFinished(JNIEnv* env, jclass clazz, jlong ptr, jobject response)
 {
-  AdblockPlus::ServerResponse sResponse;
-  sResponse.status = AdblockPlus::IWebRequest::NS_ERROR_FAILURE;
-
-  if (response)
+  try
   {
-    sResponse.status = JniGetLongField(env, serverResponseClass->Get(), response, "status");
-    sResponse.responseStatus = JniGetIntField(env,
-                                              serverResponseClass->Get(),
-                                              response,
-                                              "responseStatus");
-    jobject jByteBuffer = env->GetObjectField(response, responseField);
+    AdblockPlus::ServerResponse sResponse;
+    sResponse.status = AdblockPlus::IWebRequest::NS_ERROR_FAILURE;
 
-    if (jByteBuffer)
+    if (response)
     {
-      // obtain and call method limit() on ByteBuffer object
-      jmethodID byteBufferLimitMethod = env->GetMethodID(env->GetObjectClass(jByteBuffer), "limit", "()I");
-      int responseSize = env->CallIntMethod(jByteBuffer, byteBufferLimitMethod);
+      sResponse.status = JniGetLongField(env, serverResponseClass->Get(), response, "status");
+      sResponse.responseStatus = JniGetIntField(env,
+                                                serverResponseClass->Get(),
+                                                response,
+                                                "responseStatus");
+      jobject jByteBuffer = env->GetObjectField(response, responseField);
 
-      const char* responseBuffer = reinterpret_cast<const char*>(env->GetDirectBufferAddress(jByteBuffer));
-      if (responseBuffer == NULL)
+      if (jByteBuffer)
       {
-        throw std::runtime_error("GetDirectBufferAddress() returned NULL");
+        // obtain and call method limit() on ByteBuffer object
+        jmethodID byteBufferLimitMethod = env->GetMethodID(env->GetObjectClass(jByteBuffer), "limit", "()I");
+        int responseSize = env->CallIntMethod(jByteBuffer, byteBufferLimitMethod);
+
+        const char* responseBuffer = reinterpret_cast<const char*>(env->GetDirectBufferAddress(jByteBuffer));
+        if (responseBuffer == NULL)
+        {
+          throw std::runtime_error("GetDirectBufferAddress() returned NULL");
+        }
+        sResponse.responseText.assign(responseBuffer, responseSize);
       }
-      sResponse.responseText.assign(responseBuffer, responseSize);
+
+      // map headers
+      jobjectArray responseHeadersArray = JniGetStringArrayField(env,
+                                                                 serverResponseClass->Get(),
+                                                                 response,
+                                                                 "headers");
+
+      if (responseHeadersArray)
+      {
+        int itemsCount = env->GetArrayLength(responseHeadersArray) / 2;
+        for (int i = 0; i < itemsCount; i++)
+        {
+          jstring jKey = (jstring) env->GetObjectArrayElement(responseHeadersArray, i * 2);
+          std::string stdKey = JniJavaToStdString(env, jKey);
+
+          jstring jValue = (jstring) env->GetObjectArrayElement(responseHeadersArray, i * 2 + 1);
+          std::string stdValue = JniJavaToStdString(env, jValue);
+
+          sResponse.responseHeaders.push_back(std::make_pair(stdKey, stdValue));
+        }
+      }
     }
 
-    // map headers
-    jobjectArray responseHeadersArray = JniGetStringArrayField(env,
-                                                               serverResponseClass->Get(),
-                                                               response,
-                                                               "headers");
-
-    if (responseHeadersArray)
-    {
-      int itemsCount = env->GetArrayLength(responseHeadersArray) / 2;
-      for (int i = 0; i < itemsCount; i++)
-      {
-        jstring jKey = (jstring) env->GetObjectArrayElement(responseHeadersArray, i * 2);
-        std::string stdKey = JniJavaToStdString(env, jKey);
-
-        jstring jValue = (jstring) env->GetObjectArrayElement(responseHeadersArray, i * 2 + 1);
-        std::string stdValue = JniJavaToStdString(env, jValue);
-
-        sResponse.responseHeaders.push_back(std::make_pair(stdKey, stdValue));
-      }
-    }
+    (*JniLongToTypePtr<AdblockPlus::IWebRequest::GetCallback>(ptr))(sResponse);
   }
-
-  (*JniLongToTypePtr<AdblockPlus::IWebRequest::GetCallback>(ptr))(sResponse);
+  CATCH_AND_THROW(env)
 }
 
 static void JNICALL JniCallbackDtor(JNIEnv* env, jclass clazz, jlong ptr)
