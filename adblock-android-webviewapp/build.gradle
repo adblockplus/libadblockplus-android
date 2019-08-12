@@ -9,8 +9,15 @@ android {
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 14
-        versionName "3.6"
+        versionName "3.6.1"
         missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
     }
 }
 

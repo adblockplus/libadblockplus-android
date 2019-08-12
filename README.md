@@ -356,3 +356,22 @@ In the project root directory run:
     ./gradlew assemble
 
 This will generate *.apk in the 'adblock-android-webviewapp/build/outputs/apk/' directory.
+
+### Proguard
+
+## Required configuration changes
+
+Configure Proguard/R8 to skip Adblock Android SDK files (root package `org.adblockplus.libadblockplus`)
+from being modified for `Release` build of end-user application.
+See `adblock-android/proguard-rules-adblock.txt` as an example. If building end-user application
+with Gradle, no actions are required - Gradle will use provided consumer Proguard file automatically.
+See https://developer.android.com/studio/projects/android-library
+"A library module may include its own ProGuard configuration file" section for further information.
+
+## Reason
+
+Adblock Android SDK uses JNI behind the scene so Java classes and methods are accessed by full
+names from native code. If class names/members are modified by Proguard/R8 during `Release` build
+they can't be accessed from native code resulting into Runtime exceptions like follows:
+
+    java.lang.NoSuchMethodError: no non-static method "Lorg/adblockplus/libadblockplus/JsValue;.<init>(J)V"
