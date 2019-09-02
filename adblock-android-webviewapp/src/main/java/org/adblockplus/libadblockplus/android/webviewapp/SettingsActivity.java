@@ -42,10 +42,10 @@ public class SettingsActivity
   @Override
   protected void onCreate(Bundle savedInstanceState)
   {
-    super.onCreate(savedInstanceState);
-
     // retaining AdblockEngine asynchronously
     AdblockHelper.get().getProvider().retain(true);
+
+    super.onCreate(savedInstanceState);
 
     insertGeneralFragment();
   }
