@@ -33,7 +33,7 @@ publish {
     userOrg = rootProject.ext.bintrayUserOrg
     groupId = rootProject.ext.bintrayGroupId
     artifactId = 'adblock-android-settings'
-    publishVersion = '3.8'
+    publishVersion = '3.8.1'
     licences = rootProject.ext.bintrayLicences
     desc = 'An Android library that provides a configuration interface for Adblock Plus.'
     website = rootProject.ext.bintrayWebsite
