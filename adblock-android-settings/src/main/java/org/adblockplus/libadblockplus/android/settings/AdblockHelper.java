@@ -120,6 +120,11 @@ public class AdblockHelper
     return _instance;
   }
 
+  public static synchronized void deinit()
+  {
+    _instance = null;
+  }
+
   public AdblockEngineProvider getProvider()
   {
     if (provider == null)

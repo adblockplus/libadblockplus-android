@@ -92,6 +92,14 @@ public class GeneralSettingsFragment
 
     addPreferencesFromResource(R.xml.preference_adblock_general);
     bindPreferences();
+    // Issue DP-212: In case GeneralSettingsFragment was destroyed and recreated
+    // (app minimized and restored scenario) and some of it's child views were
+    // displayed before app was minimized, app can crash after restoring because
+    // of not initialized preferences becuase child views are being displayed before
+    // onResume() is called.
+    // So we call also here initPreferences() to fix that allowing to be called
+    // twice when  GeneralSettingsFragment is created.
+    initPreferences();
   }
 
   @Override

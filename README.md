@@ -244,6 +244,12 @@ or disposed:
       .init(...)
       .addEngineDisposedListener(engineDisposedListener)
 
+Make sure you deinitialize it when values used during initialization are no longer valid:
+
+    AdblockHelper.get().deinit();
+
+Note one have to initialize it again to be used.
+
 Implement the following interfaces in your settings activity:
 
 * `BaseSettingsFragment.Provider`
