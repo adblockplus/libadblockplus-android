@@ -208,21 +208,6 @@ public class AdblockWebView extends WebView
     this.siteKeysConfiguration = siteKeysConfiguration;
   }
 
-  private boolean isAdblockEnabled()
-  {
-    if (adblockEnabled == null)
-    {
-      // this means that filter engine is not yet ready
-      return false;
-    }
-    ensureProvider(); // this is rather redundant but just in case provider is null
-    synchronized (provider.getEngineLock())
-    {
-      AdblockEngine engine = provider.getEngine();
-      return engine != null && engine.isEnabled();
-    }
-  }
-
   private void applyClients()
   {
     if (adblockEnabled == null)
@@ -677,7 +662,11 @@ public class AdblockWebView extends WebView
 
   private void tryInjectJs()
   {
-    if (isAdblockEnabled() && loadError == null && injectJs != null)
+    if (adblockEnabled == null || !adblockEnabled.get())
+    {
+      return;
+    }
+    if (loadError == null && injectJs != null)
     {
       d("Injecting script");
       runScript(injectJs);
@@ -897,7 +886,7 @@ public class AdblockWebView extends WebView
     protected WebResourceResponse shouldInterceptRequest(
       final WebView webview, final String url,
       final boolean isMainFrame, final boolean isXmlHttpRequest,
-      final String requestMethod, final List<String> referrerChain,
+      final String requestMethod, final String referrer,
       final Map<String, String> requestHeadersMap)
     {
       synchronized (provider.getEngineLock())
@@ -915,7 +904,52 @@ public class AdblockWebView extends WebView
           provider.waitForReady();
         }
 
+        if (adblockEnabled == null)
+        {
+          return null;
+        }
+        else
+        {
+          // check the real enable status and update adblockEnabled flag which is used
+          // later on to check if we should execute element hiding JS
+          adblockEnabled.set(provider.getEngine().isEnabled());
+          if (!adblockEnabled.get())
+          {
+            return null;
+          }
+        }
+
         d("Loading url " + url);
+
+        if (referrer != null)
+        {
+          d("Header referrer for " + url + " is " + referrer);
+          if (!url.equals(referrer))
+          {
+            url2Referrer.put(url, referrer);
+          }
+          else
+          {
+            w("Header referrer value is the same as url, skipping url2Referrer.put()");
+          }
+        }
+        else
+        {
+          w("No referrer header for " + url);
+        }
+
+        // reconstruct frames hierarchy
+        List<String> referrerChain = new ArrayList<>();
+        String parent = url;
+        while ((parent = url2Referrer.get(parent)) != null)
+        {
+          if (referrerChain.contains(parent))
+          {
+            w("Detected referrer loop, finished creating referrers list");
+            break;
+          }
+          referrerChain.add(0, parent);
+        }
 
         if (isMainFrame)
         {
@@ -1184,11 +1218,6 @@ public class AdblockWebView extends WebView
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
     {
-      if (!isAdblockEnabled())
-      {
-        w("Filter engine disabled");
-        return null;
-      }
       // here we just trying to fill url -> referrer map
       // blocking/allowing loading will happen in `shouldInterceptRequest(WebView,String)`
       String url = request.getUrl().toString();
@@ -1198,40 +1227,10 @@ public class AdblockWebView extends WebView
           HEADER_REQUESTED_WITH_XMLHTTPREQUEST.equals(
             request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
 
-      String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
-      if (referrer != null)
-      {
-        d("Header referrer for " + url + " is " + referrer);
-        if (!url.equals(referrer))
-        {
-          url2Referrer.put(url, referrer);
-        }
-        else
-        {
-          w("Header referrer value is the same as url, skipping url2Referrer.put()");
-        }
-      }
-      else
-      {
-        w("No referrer header for " + url);
-      }
-
-      // reconstruct frames hierarchy
-      List<String> referrers = new ArrayList<>();
-      String parentUrl = url;
-      while ((parentUrl = url2Referrer.get(parentUrl)) != null)
-      {
-        if (referrers.contains(parentUrl))
-        {
-          w("Detected referrer loop, finished creating referrers list");
-          break;
-        }
-        referrers.add(0, parentUrl);
-      }
-
       return shouldInterceptRequest(view, url, request.isForMainFrame(),
               isXmlHttpRequest, request.getMethod(),
-              referrers, request.getRequestHeaders());
+              request.getRequestHeaders().get(HEADER_REFERRER),
+              request.getRequestHeaders());
     }
   }
 
