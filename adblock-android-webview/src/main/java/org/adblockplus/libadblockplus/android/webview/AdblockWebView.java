@@ -307,7 +307,12 @@ public class AdblockWebView extends WebView
 
   public void setProvider(final AdblockEngineProvider provider)
   {
-    if (this.provider != null && provider != null && this.provider == provider)
+    if (provider == null)
+    {
+      throw new IllegalArgumentException("Provider cannot be null");
+    }
+
+    if (this.provider == provider)
     {
       return;
     }
