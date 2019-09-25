@@ -320,9 +320,9 @@ public class AdblockWebView extends WebView
         AdblockWebView.this.provider = provider;
         if (provider != null)
         {
-          provider.retain(true); // asynchronously
           synchronized (provider.getEngineLock())
           {
+            provider.retain(true); // asynchronously
             if (provider.getEngine() != null)
             {
               adblockEnabled = new AtomicBoolean(provider.getEngine().isEnabled());
