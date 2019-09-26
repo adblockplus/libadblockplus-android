@@ -327,7 +327,7 @@ Use `setDebugMode(boolean debugMode)` to turn debug log output (Android log and 
 
 Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start render webpage after 'DOMContentLoaded' event is fired.
 
-Use `setProvider(AdblockEngineProvider provider)` to use external adblock engine provider.
+Use `setProvider(@NotNull AdblockEngineProvider provider)` to use external adblock engine provider.
 The simplest solution is to use `AdblockHelper` from `-settings` as external adblock engine provider:
 
     webView.setProvider(AdblockHelper.get().getProvider());
