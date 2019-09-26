@@ -107,7 +107,7 @@ public class AdblockWebView extends WebView
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private boolean debugMode;
-  private AtomicReference<AdblockEngineProvider> providerRef = new AtomicReference<>();
+  private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference();
   private Integer loadError;
   private WebChromeClient extWebChromeClient;
   private WebViewClient extWebViewClient;
@@ -242,6 +242,11 @@ public class AdblockWebView extends WebView
     intWebViewClient = new AdblockWebViewClient();
   }
 
+  private AdblockEngineProvider getProvider()
+  {
+    return providerReference.get();
+  }
+
   public boolean isDebugMode()
   {
     return debugMode;
@@ -313,7 +318,7 @@ public class AdblockWebView extends WebView
       throw new IllegalArgumentException("Provider cannot be null");
     }
 
-    if (this.providerRef.get() == provider)
+    if (this.getProvider() == provider)
     {
       return;
     }
@@ -323,27 +328,29 @@ public class AdblockWebView extends WebView
       @Override
       public void run()
       {
-        AdblockWebView.this.providerRef.set(provider);
-        synchronized (providerRef.get().getEngineLock())
+        AdblockWebView.this.providerReference.set(provider);
+        synchronized (getProvider().getEngineLock())
         {
-          providerRef.get().retain(true); // asynchronously
-          if (providerRef.get().getEngine() != null)
+          // Note that if retain() needs to create a FilterEngine it will wait (in bg thread)
+          // until we finish this synchronized block and release the engine lock.
+          getProvider().retain(true); // asynchronously
+          if (getProvider().getEngine() != null)
           {
-            adblockEnabled = new AtomicBoolean( providerRef.get().getEngine().isEnabled());
+            adblockEnabled = new AtomicBoolean(getProvider().getEngine().isEnabled());
             Log.d(TAG, "Filter Engine already created, enable status is " + adblockEnabled);
             applyClients();
-            providerRef.get().getEngine().addSettingsChangedListener(engineSettingsChangedCb);
+            getProvider().getEngine().addSettingsChangedListener(engineSettingsChangedCb);
           }
           else
           {
-            providerRef.get().addEngineCreatedListener(engineCreatedCb);
-            providerRef.get().addEngineDisposedListener(engineDisposedCb);
+            getProvider().addEngineCreatedListener(engineCreatedCb);
+            getProvider().addEngineDisposedListener(engineDisposedCb);
           }
         }
       }
     };
 
-    if (this.providerRef.get() != null)
+    if (this.getProvider() != null)
     {
       // as adblockEngine can be busy with elemhide thread we need to use callback
       this.dispose(setRunnable);
@@ -892,10 +899,10 @@ public class AdblockWebView extends WebView
       final String requestMethod, final String referrer,
       final Map<String, String> requestHeadersMap)
     {
-      synchronized (providerRef.get().getEngineLock())
+      synchronized (getProvider().getEngineLock())
       {
         // if dispose() was invoke, but the page is still loading then just let it go
-        if (providerRef.get().getCounter() == 0)
+        if (getProvider().getCounter() == 0)
         {
           e("FilterEngine already disposed, allow loading");
 
@@ -904,7 +911,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          providerRef.get().waitForReady();
+          getProvider().waitForReady();
         }
 
         if (adblockEnabled == null)
@@ -915,7 +922,7 @@ public class AdblockWebView extends WebView
         {
           // check the real enable status and update adblockEnabled flag which is used
           // later on to check if we should execute element hiding JS
-          adblockEnabled.set(providerRef.get().getEngine().isEnabled());
+          adblockEnabled.set(getProvider().getEngine().isEnabled());
           if (!adblockEnabled.get())
           {
             return null;
@@ -967,11 +974,11 @@ public class AdblockWebView extends WebView
             : null);
 
           // whitelisted
-          if (providerRef.get().getEngine().isDomainWhitelisted(url, referrerChain))
+          if (getProvider().getEngine().isDomainWhitelisted(url, referrerChain))
           {
             w(url + " domain is whitelisted, allow loading");
           }
-          else if (providerRef.get().getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
+          else if (getProvider().getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
           {
             w(url + " document is whitelisted, allow loading");
           }
@@ -1008,7 +1015,7 @@ public class AdblockWebView extends WebView
             {
               final String parentUrl = referrerChain.get(0);
               final List<String> referrerChainForGenericblock = referrerChain.subList(1, referrerChain.size());
-              specificOnly = providerRef.get().getEngine().isGenericblockWhitelisted(parentUrl,
+              specificOnly = getProvider().getEngine().isGenericblockWhitelisted(parentUrl,
                       referrerChainForGenericblock, siteKey);
               if (specificOnly)
               {
@@ -1016,7 +1023,7 @@ public class AdblockWebView extends WebView
               }
             }
             // check if we should block
-            if (providerRef.get().getEngine().matches(url, FilterEngine.ContentType.maskOf(contentType),
+            if (getProvider().getEngine().matches(url, FilterEngine.ContentType.maskOf(contentType),
                     referrerChain, siteKey, specificOnly))
             {
               w("Blocked loading " + url);
@@ -1265,11 +1272,11 @@ public class AdblockWebView extends WebView
     @Override
     public void run()
     {
-      synchronized (providerRef.get().getEngineLock())
+      synchronized (getProvider().getEngineLock())
       {
         try
         {
-          if (providerRef.get().getCounter() == 0)
+          if (getProvider().getCounter() == 0)
           {
             w("FilterEngine already disposed");
             selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
@@ -1277,7 +1284,7 @@ public class AdblockWebView extends WebView
           }
           else
           {
-            providerRef.get().waitForReady();
+            getProvider().waitForReady();
             List<String> referrerChain = new ArrayList<String>(1);
             referrerChain.add(url);
             String parentUrl = url;
@@ -1291,7 +1298,7 @@ public class AdblockWebView extends WebView
               referrerChain.add(0, parentUrl);
             }
 
-            final FilterEngine filterEngine = providerRef.get().getEngine().getFilterEngine();
+            final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
 
             List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
 
@@ -1342,7 +1349,7 @@ public class AdblockWebView extends WebView
                 d("elemhide - specificOnly selectors");
               }
 
-              List<String> selectors = providerRef.get()
+              List<String> selectors = getProvider()
                 .getEngine()
                 .getElementHidingSelectors(url, domain, referrerChain, siteKey, specificOnly);
 
@@ -1351,7 +1358,7 @@ public class AdblockWebView extends WebView
 
               // elemhideemu
               d("Requesting elemhideemu selectors from AdblockEngine for " + url + " in " + this);
-              List<FilterEngine.EmulationSelector> emuSelectors = providerRef.get()
+              List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
                 .getEngine()
                 .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
 
@@ -1448,7 +1455,7 @@ public class AdblockWebView extends WebView
   {
     // if AdblockWebView works as drop-in replacement for WebView 'provider' is not set.
     // Thus AdblockWebView is using SingleInstanceEngineProvider instance
-    if (providerRef.get() == null)
+    if (getProvider() == null)
     {
       setProvider(new SingleInstanceEngineProvider(
         getContext(), AdblockEngine.BASE_PATH_DIRECTORY, debugMode));
@@ -1666,7 +1673,7 @@ public class AdblockWebView extends WebView
   private void doDispose()
   {
     w("Disposing AdblockEngine");
-    providerRef.get().release();
+    getProvider().release();
   }
 
   private class DisposeRunnable implements Runnable
@@ -1700,21 +1707,21 @@ public class AdblockWebView extends WebView
   {
     d("Dispose invoked");
 
-    if (providerRef.get() == null)
+    if (getProvider() == null)
     {
       d("No internal AdblockEngineProvider created");
       return;
     }
 
-    synchronized (providerRef.get().getEngineLock())
+    synchronized (getProvider().getEngineLock())
     {
-      AdblockEngine engine = providerRef.get().getEngine();
+      AdblockEngine engine = getProvider().getEngine();
       if (engine != null)
       {
         engine.removeSettingsChangedListener(engineSettingsChangedCb);
       }
-      providerRef.get().removeEngineCreatedListener(engineCreatedCb);
-      providerRef.get().removeEngineDisposedListener(engineDisposedCb);
+      getProvider().removeEngineCreatedListener(engineCreatedCb);
+      getProvider().removeEngineDisposedListener(engineDisposedCb);
     }
 
     stopLoading();
