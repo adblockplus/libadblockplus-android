@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides single instance of AdblockEngine shared between registered clients
@@ -39,11 +41,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private Context context;
   private String basePath;
   private boolean developmentBuild;
-  private String preloadedPreferenceName;
-  private Map<String, Integer> urlToResourceIdMap;
+  private AtomicReference<String> preloadedPreferenceName = new AtomicReference();
+  private AtomicReference<Map<String, Integer>> urlToResourceIdMap = new AtomicReference();
   private AdblockEngine engine;
   private CountDownLatch engineCreated;
-  private Long v8IsolateProviderPtr;
+  private AtomicLong v8IsolateProviderPtr = new AtomicLong(0);
   private List<EngineCreatedListener> engineCreatedListeners =
     new LinkedList<EngineCreatedListener>();
   private List<EngineDisposedListener> engineDisposedListeners =
@@ -84,14 +86,14 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   public SingleInstanceEngineProvider preloadSubscriptions(String preferenceName,
                                                            Map<String, Integer> urlToResourceIdMap)
   {
-    this.preloadedPreferenceName = preferenceName;
-    this.urlToResourceIdMap = urlToResourceIdMap;
+    this.preloadedPreferenceName.set(preferenceName);
+    this.urlToResourceIdMap.set(urlToResourceIdMap);
     return this;
   }
 
   public SingleInstanceEngineProvider useV8IsolateProvider(long ptr)
   {
-    this.v8IsolateProviderPtr = ptr;
+    this.v8IsolateProviderPtr.set(ptr);
     return this;
   }
 
@@ -151,20 +153,23 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
         .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
         .enableElementHiding(true);
 
-      if (v8IsolateProviderPtr != null)
+      long v8IsolateProviderPtrLocal = v8IsolateProviderPtr.get();
+      if (v8IsolateProviderPtrLocal != 0)
       {
-        builder.useV8IsolateProvider(v8IsolateProviderPtr);
+        builder.useV8IsolateProvider(v8IsolateProviderPtrLocal);
       }
 
+      String preloadedPreferenceNameLocal = preloadedPreferenceName.get();
+      Map<String, Integer> urlToResourceIdMapLocal = urlToResourceIdMap.get();
       // if preloaded subscriptions provided
-      if (preloadedPreferenceName != null)
+      if (preloadedPreferenceNameLocal != null)
       {
         SharedPreferences preloadedSubscriptionsPrefs = context.getSharedPreferences(
-          preloadedPreferenceName,
+          preloadedPreferenceNameLocal,
           Context.MODE_PRIVATE);
         builder.preloadSubscriptions(
           context,
-          urlToResourceIdMap,
+          urlToResourceIdMapLocal,
           new AndroidHttpClientResourceWrapper.SharedPrefsStorage(preloadedSubscriptionsPrefs));
       }
 
