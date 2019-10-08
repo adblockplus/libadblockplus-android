@@ -11,7 +11,7 @@
     <string name="fragment_adblock_settings_wl_summary">Füge Websites, auf denen du Werbung sehen möchtest, zu dieser Liste hinzu</string>
     <string name="fragment_adblock_settings_add_domain">Domain hinzufügen</string>
     <string name="fragment_adblock_settings_wl_domains">Domains auf der Whitelist</string>
-    <string name="fragment_adblock_settings_allowed_connection_type">Automatische Updates konfigurierens</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">Automatische Updates konfigurieren</string>
     <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Nicht gebührenpflichtige Wi-Fi-Netzwerke</string>
     <string name="fragment_adblock_settings_allowed_connection_type_wifi">Alle Wi-Fi-Netzwerke</string>
     <string name="fragment_adblock_settings_allowed_connection_type_all">Immer</string>
