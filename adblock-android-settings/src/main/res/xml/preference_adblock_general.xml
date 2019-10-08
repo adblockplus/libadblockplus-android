@@ -12,6 +12,8 @@
 
     <!-- Filter lists -->
     <android.support.v14.preference.MultiSelectListPreference
+        android:positiveButtonText="@android:string/ok"
+        android:negativeButtonText="@android:string/cancel"
         android:key="adblock_filter_lists"
         android:title="@string/fragment_adblock_settings_filter_lists_title"
         app:iconSpaceReserved="false"
