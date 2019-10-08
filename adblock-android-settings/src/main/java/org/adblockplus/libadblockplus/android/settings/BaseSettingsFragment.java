@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.preference.PreferenceFragment;
+import android.support.v7.preference.PreferenceFragmentCompat;
 import android.util.Log;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
@@ -27,7 +27,7 @@ import org.adblockplus.libadblockplus.android.Utils;
 
 public abstract class BaseSettingsFragment
   <ListenerClass extends BaseSettingsFragment.Listener>
-  extends PreferenceFragment
+  extends PreferenceFragmentCompat
 {
   protected final String TAG = Utils.getTag(this.getClass());
   protected AdblockSettings settings;

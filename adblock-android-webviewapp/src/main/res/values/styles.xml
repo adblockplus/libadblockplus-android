@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Preferences theme -->
+    <style name="AppPreferenceTheme" parent="@style/PreferenceThemeOverlay.v14.Material">
+        <!-- Customize your Preferences theme here -->
+    </style>
+
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.AppCompat">
+        <!-- Customize your base application theme here -->
+        <item name="preferenceTheme">@style/AppPreferenceTheme</item>
+    </style>
+</resources>
