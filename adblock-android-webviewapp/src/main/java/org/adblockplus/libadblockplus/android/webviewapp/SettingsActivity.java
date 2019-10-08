@@ -22,6 +22,7 @@ import android.preference.PreferenceActivity;
 import android.util.Log;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.SubscriptionsManager;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.GeneralSettingsFragment;
@@ -38,6 +39,7 @@ public class SettingsActivity
     WhitelistedDomainsSettingsFragment.Listener
 {
   private static final String TAG = Utils.getTag(SettingsActivity.class);
+  private SubscriptionsManager subscriptionsManager;
 
   @Override
   protected void onCreate(Bundle savedInstanceState)
@@ -48,6 +50,10 @@ public class SettingsActivity
     super.onCreate(savedInstanceState);
 
     insertGeneralFragment();
+
+    // helps to configure subscriptions in runtime using Intents during the testing.
+    // warning: DO NOT DO IT IN PRODUCTION CODE.
+    subscriptionsManager = new SubscriptionsManager(this);
   }
 
   private void insertGeneralFragment()
@@ -114,6 +120,7 @@ public class SettingsActivity
   protected void onDestroy()
   {
     super.onDestroy();
+    subscriptionsManager.dispose();
     AdblockHelper.get().getProvider().release();
   }
 }
