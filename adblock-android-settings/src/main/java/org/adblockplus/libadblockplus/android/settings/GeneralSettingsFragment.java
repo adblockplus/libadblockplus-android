@@ -19,10 +19,10 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.MultiSelectListPreference;
-import android.preference.Preference;
-import android.preference.SwitchPreference;
+import android.support.v7.preference.ListPreference;
+import android.support.v14.preference.MultiSelectListPreference;
+import android.support.v7.preference.Preference;
+import android.support.v7.preference.SwitchPreferenceCompat;
 import android.util.Log;
 
 import org.adblockplus.libadblockplus.android.ConnectionType;
@@ -48,9 +48,9 @@ public class GeneralSettingsFragment
   private String SETTINGS_WL_DOMAINS_KEY;
   private String SETTINGS_ALLOWED_CONNECTION_TYPE_KEY;
 
-  private SwitchPreference adblockEnabled;
+  private SwitchPreferenceCompat adblockEnabled;
   private MultiSelectListPreference filterLists;
-  private SwitchPreference acceptableAdsEnabled;
+  private SwitchPreferenceCompat acceptableAdsEnabled;
   private Preference whitelistedDomains;
   private ListPreference allowedConnectionType;
 
@@ -85,13 +85,8 @@ public class GeneralSettingsFragment
   }
 
   @Override
-  public void onCreate(Bundle savedInstanceState)
-  {
+  public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    readKeys();
-
-    addPreferencesFromResource(R.xml.preference_adblock_general);
-    bindPreferences();
     // Issue DP-212: In case GeneralSettingsFragment was destroyed and recreated
     // (app minimized and restored scenario) and some of it's child views were
     // displayed before app was minimized, app can crash after restoring because
@@ -100,6 +95,14 @@ public class GeneralSettingsFragment
     // So we call also here initPreferences() to fix that allowing to be called
     // twice when  GeneralSettingsFragment is created.
     initPreferences();
+  }
+
+  @Override
+  public void onCreatePreferences(Bundle bundle, String key)
+  {
+    readKeys();
+    addPreferencesFromResource(R.xml.preference_adblock_general);
+    bindPreferences();
   }
 
   @Override
@@ -120,9 +123,9 @@ public class GeneralSettingsFragment
 
   private void bindPreferences()
   {
-    adblockEnabled = (SwitchPreference) findPreference(SETTINGS_ENABLED_KEY);
+    adblockEnabled = (SwitchPreferenceCompat) findPreference(SETTINGS_ENABLED_KEY);
     filterLists = (MultiSelectListPreference) findPreference(SETTINGS_FILTER_LISTS_KEY);
-    acceptableAdsEnabled = (SwitchPreference) findPreference(SETTINGS_AA_ENABLED_KEY);
+    acceptableAdsEnabled = (SwitchPreferenceCompat) findPreference(SETTINGS_AA_ENABLED_KEY);
     whitelistedDomains = findPreference(SETTINGS_WL_DOMAINS_KEY);
     allowedConnectionType = (ListPreference) findPreference(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY);
   }

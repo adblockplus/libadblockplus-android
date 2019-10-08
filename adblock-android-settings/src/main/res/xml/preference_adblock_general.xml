@@ -1,34 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<android.support.v7.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- Adblock: enabled/disabled -->
-    <SwitchPreference
+    <android.support.v7.preference.SwitchPreferenceCompat
         android:key="@string/fragment_adblock_settings_enabled_key"
         android:title="@string/fragment_adblock_settings_enabled_title"
+        app:iconSpaceReserved="false"
         android:summary="@string/fragment_adblock_settings_enabled_summary" />
 
     <!-- Filter lists -->
-    <MultiSelectListPreference
+    <android.support.v14.preference.MultiSelectListPreference
         android:key="adblock_filter_lists"
         android:title="@string/fragment_adblock_settings_filter_lists_title"
+        app:iconSpaceReserved="false"
         android:summary="@string/fragment_adblock_settings_filter_lists_summary" />
 
     <!-- Acceptable Ads: enabled/disabled -->
-    <SwitchPreference
+    <android.support.v7.preference.SwitchPreferenceCompat
         android:key="@string/fragment_adblock_settings_aa_enabled_key"
         android:title="@string/fragment_adblock_settings_aa_enabled_title"
+        app:iconSpaceReserved="false"
         android:summary="@string/fragment_adblock_settings_aa_enabled_summary" />
 
     <!-- Whitelisted domains -->
-    <Preference
+    <android.support.v7.preference.Preference
         android:key="@string/fragment_adblock_settings_wl_key"
         android:title="@string/fragment_adblock_settings_wl_title"
+        app:iconSpaceReserved="false"
         android:summary="@string/fragment_adblock_settings_wl_summary" />
 
     <!-- Allowed connection type for updates -->
-    <ListPreference
+    <android.support.v7.preference.ListPreference
         android:key="@string/fragment_adblock_settings_allowed_connection_type_key"
         android:title="@string/fragment_adblock_settings_allowed_connection_type"
+        app:iconSpaceReserved="false"
         android:summary="%s"/>
 
-</PreferenceScreen>
+</android.support.v7.preference.PreferenceScreen>

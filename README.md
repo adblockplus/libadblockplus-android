@@ -279,6 +279,11 @@ Release Adblock instance in activity `onDestroy`:
 
 Insert `GeneralSettingsFragment` fragment instance in runtime to start showing settings UI.
 
+### Theme
+
+Make sure to set application theme with `PreferenceThemeOverlay.v14.Material` parent theme
+(see `AndroidManifest.xml` and `styles.xml` in `adblock-android-webviewapp` as an example).
+
 ### Building
 
 In the project root directory run:

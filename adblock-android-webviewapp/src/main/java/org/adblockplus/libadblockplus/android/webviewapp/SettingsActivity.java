@@ -18,7 +18,7 @@
 package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
@@ -32,7 +32,7 @@ import org.adblockplus.libadblockplus.android.settings.AdblockSettingsStorage;
 import org.adblockplus.libadblockplus.android.settings.WhitelistedDomainsSettingsFragment;
 
 public class SettingsActivity
-  extends PreferenceActivity
+  extends AppCompatActivity
   implements
     BaseSettingsFragment.Provider,
     GeneralSettingsFragment.Listener,
@@ -58,7 +58,7 @@ public class SettingsActivity
 
   private void insertGeneralFragment()
   {
-    getFragmentManager()
+    getSupportFragmentManager()
       .beginTransaction()
       .replace(
         android.R.id.content,
@@ -68,7 +68,7 @@ public class SettingsActivity
 
   private void insertWhitelistedFragment()
   {
-    getFragmentManager()
+    getSupportFragmentManager()
       .beginTransaction()
       .replace(
         android.R.id.content,

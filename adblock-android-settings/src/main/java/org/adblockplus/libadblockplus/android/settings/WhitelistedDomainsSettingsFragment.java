@@ -94,6 +94,12 @@ public class WhitelistedDomainsSettingsFragment
   }
 
   @Override
+  public void onCreatePreferences(Bundle bundle, String key)
+  {
+    // nothing
+  }
+
+  @Override
   public void onResume()
   {
     super.onResume();
