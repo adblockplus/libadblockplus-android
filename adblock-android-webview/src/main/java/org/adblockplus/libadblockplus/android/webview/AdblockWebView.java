@@ -85,6 +85,7 @@ public class AdblockWebView extends WebView
   protected static final String HEADER_REFERRER = "Referer";
   protected static final String HEADER_REQUESTED_WITH = "X-Requested-With";
   protected static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
+  protected static final String HEADER_REQUESTED_RANGE = "Range";
   protected static final String HEADER_LOCATION = "Location";
   protected static final String HEADER_SET_COOKIE = "Set-Cookie";
   protected static final String HEADER_COOKIE = "Cookie";
@@ -1035,6 +1036,12 @@ public class AdblockWebView extends WebView
           }
         }
       } // end of provider.getEngineLock()
+
+      if (requestHeadersMap.containsKey(HEADER_REQUESTED_RANGE))
+      {
+        Log.d(TAG, "Skipping site key check for the request with a Range header");
+        return null;
+      }
 
       return fetchUrlAndCheckSiteKey(isMainFrame ? webview : null, url, requestHeadersMap, requestMethod);
     }
