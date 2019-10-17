@@ -64,11 +64,9 @@ public class HttpClientTest extends BaseFilterEngineTest
   {
     jsEngine.evaluate(
         "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
-    assertTrue(mockHttpClient.called);
-    assertNotNull(mockHttpClient.getLastRequest());
-    assertNotNull(mockHttpClient.getLastRequest().getUrl());
-    assertEquals("http://example.com/", mockHttpClient.getLastRequest().getUrl());
-    assertEquals(HttpClient.REQUEST_METHOD_GET, mockHttpClient.getLastRequest().getMethod());
+    waitForDefined("foo");
+    assertTrue(mockHttpClient.called.get());
+    assertNotNull(mockHttpClient.getSpecificRequest("http://example.com/", HttpClient.REQUEST_METHOD_GET));
     assertFalse(jsEngine.evaluate("foo").isUndefined());
     assertEquals(
         ServerResponse.NsStatus.OK.getStatusCode(),
@@ -85,15 +83,13 @@ public class HttpClientTest extends BaseFilterEngineTest
   @Test
   public void testRequestException()
   {
-    mockHttpClient.exception = true;
+    mockHttpClient.exception.set(true);
 
     jsEngine.evaluate(
         "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
-    assertTrue(mockHttpClient.called);
-    assertNotNull(mockHttpClient.getLastRequest());
-    assertNotNull(mockHttpClient.getLastRequest().getUrl());
-    assertEquals("http://example.com/", mockHttpClient.getLastRequest().getUrl());
-    assertEquals(HttpClient.REQUEST_METHOD_GET, mockHttpClient.getLastRequest().getMethod());
+    waitForDefined("foo");
+    assertTrue(mockHttpClient.called.get());
+    assertNotNull(mockHttpClient.getSpecificRequest("http://example.com/", HttpClient.REQUEST_METHOD_GET));
     assertFalse(jsEngine.evaluate("foo").isUndefined());
     assertEquals(
         ServerResponse.NsStatus.ERROR_FAILURE.getStatusCode(),

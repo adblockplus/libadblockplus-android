@@ -17,11 +17,15 @@
 
 package org.adblockplus.libadblockplus.test;
 
+import android.os.SystemClock;
+
 import org.adblockplus.libadblockplus.FilterEngine;
 
 public abstract class BaseFilterEngineTest extends BaseJsEngineTest
 {
   protected FilterEngine filterEngine;
+  protected static final int SLEEP_STEP_MS = 50; // 50 ms
+  protected static final int SLEEP_MAX_TIME_MS = 1 * 60 * 1000; // 1 minute
 
   private void setUpFilterEngine()
   {
@@ -45,5 +49,20 @@ public abstract class BaseFilterEngineTest extends BaseJsEngineTest
   {
     tearDownFilterEngine();
     super.tearDown();
+  }
+
+  protected void waitForDefined(final String property)
+  {
+    int sleptMs = 0;
+    do
+    {
+      SystemClock.sleep(SLEEP_STEP_MS);
+      sleptMs += SLEEP_STEP_MS;
+      if (sleptMs > SLEEP_MAX_TIME_MS)
+      {
+        throw new RuntimeException("WebRequest max sleep time exceeded");
+      }
+    }
+    while (jsEngine.evaluate(property).isUndefined());
   }
 }
