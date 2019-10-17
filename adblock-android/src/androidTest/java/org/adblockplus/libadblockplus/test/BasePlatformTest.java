@@ -64,7 +64,7 @@ public abstract class BasePlatformTest extends BaseTest
   public static HttpClient buildThrowingHttpClient()
   {
     MockHttpClient throwingHttpClient = new MockHttpClient();
-    throwingHttpClient.exception = true;
+    throwingHttpClient.exception.set(true);
     return throwingHttpClient;
   }
 

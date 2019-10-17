@@ -17,8 +17,6 @@
 
 package org.adblockplus.libadblockplus.test;
 
-import android.os.SystemClock;
-
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.JsValue;
@@ -42,8 +40,6 @@ import static org.junit.Assert.assertTrue;
 // The test requires active internet connection and actually downloads files from the internet
 public class AndroidHttpClientTest extends BaseFilterEngineTest
 {
-  protected static final int SLEEP_STEP_MS = 50; // 50 ms
-  protected static final int SLEEP_MAX_TIME_MS = 1 * 60 * 1000; // 1 minute
   protected static final Charset charset = Charset.forName("UTF-8");
   protected ServerResponse serverResponse = null;
 
@@ -54,21 +50,6 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   {
     setUpHttpClient(androidHttpClient);
     super.setUp();
-  }
-
-  protected void waitForDefined(String property)
-  {
-    int sleptMs = 0;
-    do
-    {
-      SystemClock.sleep(SLEEP_STEP_MS);
-      sleptMs += SLEEP_STEP_MS;
-      if (sleptMs > SLEEP_MAX_TIME_MS)
-      {
-        throw new RuntimeException("WebRequest max sleep time exceeded");
-      }
-    }
-    while (jsEngine.evaluate(property).isUndefined());
   }
 
   @Test

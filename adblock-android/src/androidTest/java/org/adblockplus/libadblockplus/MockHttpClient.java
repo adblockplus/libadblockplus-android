@@ -19,26 +19,37 @@ package org.adblockplus.libadblockplus;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MockHttpClient extends HttpClient
 {
-  public boolean exception;
+  public AtomicBoolean exception = new AtomicBoolean(false);
   public List<HttpRequest> requests = new LinkedList<HttpRequest>();
   public ServerResponse response;
-  public boolean called = false;
+  public AtomicBoolean called = new AtomicBoolean(false);
 
-  public HttpRequest getLastRequest()
+  public synchronized HttpRequest getSpecificRequest(final String url, final String method)
   {
-    return (requests.size() > 0 ? requests.get(requests.size() - 1) : null);
+    for (final HttpRequest request : requests)
+    {
+      if (request.getUrl().equals(url) && request.getMethod().equalsIgnoreCase(method))
+      {
+        return request;
+      }
+    }
+    return null;
   }
 
   @Override
   public void request(final HttpRequest request, final Callback callback)
   {
-    this.called = true;
-    this.requests.add(request);
+    this.called.set(true);
+    synchronized (this)
+    {
+      this.requests.add(request);
+    }
 
-    if (exception)
+    if (exception.get())
     {
       throw new RuntimeException("Exception simulation while downloading " + request.getUrl());
     }

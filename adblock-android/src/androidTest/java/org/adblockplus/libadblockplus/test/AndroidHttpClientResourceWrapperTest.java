@@ -93,7 +93,7 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
   public void setUp()
   {
     request = new MockHttpClient();
-    request.exception = true;
+    request.exception.set(true);
     preloadMap = new HashMap<String, Integer>();
     storage = new TestStorage();
     wrapper = new AndroidHttpClientResourceWrapper(
