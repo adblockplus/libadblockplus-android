@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/fragment_tab_url"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:maxLines="1"/>
+
+        <Button
+            android:id="@+id/fragment_tab_ok"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:text="@string/main_ok"/>
+
+        <Button
+            android:id="@+id/fragment_tab_back"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:text="@string/main_prev"/>
+
+        <Button
+            android:id="@+id/fragment_tab_forward"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:text="@string/main_next"/>
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/fragment_tab_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:indeterminate="false"
+        android:indeterminateOnly="false"
+        android:max="100"/>
+
+    <org.adblockplus.libadblockplus.android.webview.AdblockWebView
+        android:id="@+id/fragment_tab_webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</LinearLayout>
