@@ -62,6 +62,7 @@ import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -116,6 +117,7 @@ public class AdblockWebView extends WebView
   private Map<String, String> url2Referrer = Collections.synchronizedMap(new HashMap<String, String>());
   private String url;
   private String injectJs;
+  private String elemhideBlockedJs;
   private CountDownLatch elemHideLatch;
   private AtomicBoolean adblockEnabled;
   private String elemHideSelectorsString;
@@ -1029,6 +1031,11 @@ public class AdblockWebView extends WebView
             {
               w("Blocked loading " + url);
 
+              if (isVisibleResource(contentType))
+              {
+                elemhideBlockedResource(url);
+              }
+
               // if we should block, return empty response which results in 'errorLoading' callback
               return new WebResourceResponse("text/plain", "UTF-8", null);
             }
@@ -1249,6 +1256,59 @@ public class AdblockWebView extends WebView
               request.getRequestHeaders().get(HEADER_REFERRER),
               request.getRequestHeaders());
     }
+  }
+
+  private boolean isVisibleResource(final FilterEngine.ContentType contentType)
+  {
+    return
+        contentType == FilterEngine.ContentType.IMAGE ||
+        contentType == FilterEngine.ContentType.MEDIA ||
+        contentType == FilterEngine.ContentType.OBJECT ||
+        contentType == FilterEngine.ContentType.SUBDOCUMENT;
+  }
+
+  private void elemhideBlockedResource(final String url)
+  {
+    d("Trying to elemhide visible blocked resource with url: " + url);
+    final String filenameWithQuery;
+    try
+    {
+      filenameWithQuery = Utils.extractPathWithQuery(url);
+    }
+    catch (final MalformedURLException e)
+    {
+      e("Failed to parse URI for blocked resource:" + url + ". Skipping element hiding");
+      return;
+    }
+
+    /*
+    It finds all the elements with source URLs ending with ... and then compare full paths.
+    We do this trick because the paths in JS (code) can be relative and in DOM tree they are absolute.
+     */
+    final StringBuilder selectorBuilder = new StringBuilder();
+    selectorBuilder.append("[src$='");
+    selectorBuilder.append(filenameWithQuery);
+    selectorBuilder.append("'], [srcset$='");
+    selectorBuilder.append(filenameWithQuery);
+    selectorBuilder.append("']");
+
+    // all UI views including AdblockWebView can be touched from UI thread only
+    post(new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        final StringBuilder scriptBuilder = new StringBuilder(elemhideBlockedJs);
+        scriptBuilder.append("\n\n");
+        scriptBuilder.append("elemhideForSelector(\"");
+        scriptBuilder.append(url); // 1st argument
+        scriptBuilder.append("\", \"");
+        scriptBuilder.append(Utils.escapeJavaScriptString(selectorBuilder.toString())); // 2nd argument
+        scriptBuilder.append("\", 0)"); // attempt #0
+
+        AdblockWebView.this.evaluateJavascript(scriptBuilder.toString(), null);
+      }
+    });
   }
 
   private String getReasonPhrase(ServerResponse.NsStatus status)
@@ -1504,6 +1564,11 @@ public class AdblockWebView extends WebView
         sb.append(readScriptFile("inject.js").replace(HIDE_TOKEN, readScriptFile("css.js")));
         sb.append(readEmuScriptFile("elemhideemu.jst"));
         injectJs = sb.toString();
+      }
+
+      if (elemhideBlockedJs == null)
+      {
+        elemhideBlockedJs = readScriptFile("elemhideblocked.js");
       }
     }
     catch (final IOException e)
