@@ -342,6 +342,9 @@ If adblock engine provider is not set, it's created by AdblockWebView instance a
 Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
 This is optional but highly suggested. See `MainActivity.java` on usage example. 
 
+Use `setEventsListener()` to subscribe and unsubscribe to ad blocking events, eg. "resource loading blocked" event that can be used for stats. For the latter there is a convenience class `WebViewCounters` which can be bound to `EventsListener` and notify your View about new values. See an example of usage in WebView Application.
+
+
 Use `dispose(Runnable disposeFinished)` to release resources (**required**).
 Note it can be invoked from background thread.
 

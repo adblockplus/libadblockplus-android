@@ -127,6 +127,54 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
+
+  /**
+   * Listener for ad blocking related events.
+   * However, this interface may not be in use if Adblock Plus is disabled.
+   */
+  public interface EventsListener
+  {
+    /**
+     * Immutable data-class containing an auxiliary information about blocked resource.
+     */
+    final class BlockedResourceInfo
+    {
+      public final String requestUrl;
+      public final FilterEngine.ContentType contentType;
+      /**
+       * Don't modify the List.
+       */
+      public final List<String> parentFrameUrls;
+
+      BlockedResourceInfo(final String requestUrl,
+                          final FilterEngine.ContentType contentType,
+                          final List<String> parentFrameUrls)
+      {
+        this.requestUrl = requestUrl;
+        this.contentType = contentType;
+        this.parentFrameUrls = parentFrameUrls;
+      }
+    }
+    /**
+     * "Navigation" event.
+     *
+     * This method is called when the current instance of WebView begins loading of a new page.
+     * It corresponds to `onPageStarted` of `WebViewClient` and is called on the UI thread.
+     */
+    void onNavigation();
+
+    /**
+     * "Resource loading blocked" event.
+     *
+     * This method can be called on a background thread.
+     * It should not block the thread for too long as it slows down resource loading.
+     * @param info contains auxiliary information about a blocked resource.
+     */
+    void onResourceLoadingBlocked(final BlockedResourceInfo info);
+  }
+
+  private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<EventsListener>();
+
   private SiteKeysConfiguration siteKeysConfiguration;
   private AdblockEngine.SettingsChangedListener engineSettingsChangedCb = new AdblockEngine.SettingsChangedListener()
   {
@@ -223,6 +271,16 @@ public class AdblockWebView extends WebView
             intWebChromeClient : extWebChromeClient);
     super.setWebViewClient(adblockEnabled.get() || extWebViewClient == null ?
             intWebViewClient : extWebViewClient);
+  }
+
+  /**
+   * Sets an implementation of EventsListener which will receive ad blocking related events.
+   *
+   * @param eventsListener an implementation of EventsListener.
+   */
+  public void setEventsListener(final EventsListener eventsListener)
+  {
+    this.eventsListenerAtomicReference.set(eventsListener);
   }
 
   @Override
@@ -729,6 +787,12 @@ public class AdblockWebView extends WebView
 
       startAbpLoading(url);
 
+      final EventsListener eventsListener = eventsListenerAtomicReference.get();
+      if (eventsListener != null)
+      {
+        eventsListener.onNavigation();
+      }
+
       if (extWebViewClient != null)
       {
         extWebViewClient.onPageStarted(view, url, favicon);
@@ -1045,6 +1109,13 @@ public class AdblockWebView extends WebView
               if (isVisibleResource(contentType))
               {
                 elemhideBlockedResource(url);
+              }
+
+              final EventsListener eventsListener = eventsListenerAtomicReference.get();
+              if (eventsListener != null)
+              {
+                eventsListener.onResourceLoadingBlocked(new EventsListener.BlockedResourceInfo(url,
+                        contentType, referrerChain));
               }
 
               // if we should block, return empty response which results in 'errorLoading' callback
