@@ -30,6 +30,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Provides single instance of AdblockEngine shared between registered clients
@@ -50,7 +52,9 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     new LinkedList<EngineCreatedListener>();
   private List<EngineDisposedListener> engineDisposedListeners =
     new LinkedList<EngineDisposedListener>();
-  private final Object engineLock = new Object();
+  private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
+  private final Lock readLock = engineLock.readLock();
+  private final Lock writeLock = engineLock.readLock();
 
   /*
     Simple ARC management for AdblockEngine
@@ -138,7 +142,9 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private void createAdblock()
   {
     Log.w(TAG, "Waiting for lock");
-    synchronized (getEngineLock())
+    writeLock.lock();
+
+    try
     {
       Log.d(TAG, "Creating adblock engine ...");
       ConnectivityManager connectivityManager =
@@ -183,6 +189,10 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
         listener.onAdblockEngineCreated(engine);
       }
     }
+    finally
+    {
+      writeLock.unlock();
+    }
   }
 
   @Override
@@ -208,12 +218,17 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
           @Override
           public void run()
           {
-            synchronized (getEngineLock())
+            writeLock.lock();
+            try
             {
-              createAdblock();
+              createAdblock(); // happens in context of writeLock too
 
               // unlock waiting client thread
               engineCreated.countDown();
+            }
+            finally
+            {
+              writeLock.unlock();
             }
           }
         }).start();
@@ -278,7 +293,8 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private void disposeAdblock()
   {
     Log.w(TAG, "Waiting for lock");
-    synchronized (getEngineLock())
+    writeLock.lock();
+    try
     {
       Log.w(TAG, "Disposing adblock engine");
 
@@ -292,6 +308,10 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
         listener.onAdblockEngineDisposed();
       }
     }
+    finally
+    {
+      writeLock.unlock();
+    }
   }
 
   @Override
@@ -301,9 +321,9 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   }
 
   @Override
-  public Object getEngineLock()
+  public Lock getReadEngineLock()
   {
-    Log.d(TAG, "getEngineLock() called from " + Thread.currentThread());
-    return engineLock;
+    Log.d(TAG, "getReadEngineLock() called from " + Thread.currentThread());
+    return readLock;
   }
 }

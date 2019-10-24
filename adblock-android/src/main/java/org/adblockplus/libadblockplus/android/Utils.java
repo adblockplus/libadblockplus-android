@@ -336,4 +336,63 @@ public final class Utils
   {
     return new URL(new URL(baseUrl), relativeUrl).toExternalForm();
   }
+
+  /**
+   * Extract path with query from URL
+   * @param urlString URL
+   * @return path with optional query part
+   * @throws URISyntaxException
+   */
+  public static String extractPathWithQuery(final String urlString) throws MalformedURLException
+  {
+    final URL url = new URL(urlString);
+    final StringBuilder sb = new StringBuilder(url.getPath());
+    if (url.getQuery() != null)
+    {
+      sb.append("?");
+      sb.append(url.getQuery());
+    }
+    return sb.toString();
+  }
+
+  private static String U2028 = new String(new byte[]{ (byte)0xE2, (byte)0x80, (byte)0xA8 });
+  private static String U2029 = new String(new byte[]{ (byte)0xE2, (byte)0x80, (byte)0xA9 });
+
+  /**
+   * Escape JavaString string
+   * @param line unescaped string
+   * @return escaped string
+   */
+  public static String escapeJavaScriptString(final String line)
+  {
+    final StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < line.length(); i++)
+    {
+      char c = line.charAt(i);
+      switch (c)
+      {
+        case '"':
+        case '\'':
+        case '\\':
+          sb.append('\\');
+          sb.append(c);
+          break;
+
+        case '\n':
+          sb.append("\\n");
+          break;
+
+        case '\r':
+          sb.append("\\r");
+          break;
+
+        default:
+          sb.append(c);
+      }
+    }
+
+    return sb.toString()
+        .replace(U2028, "\u2028")
+        .replace(U2029, "\u2029");
+  }
 }
