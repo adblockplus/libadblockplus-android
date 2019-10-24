@@ -72,6 +72,7 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
 
 import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
 import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
@@ -332,7 +333,10 @@ public class AdblockWebView extends WebView
       public void run()
       {
         AdblockWebView.this.providerReference.set(provider);
-        synchronized (getProvider().getEngineLock())
+        final Lock lock = provider.getReadEngineLock();
+        lock.lock();
+
+        try
         {
           // Note that if retain() needs to create a FilterEngine it will wait (in bg thread)
           // until we finish this synchronized block and release the engine lock.
@@ -349,6 +353,10 @@ public class AdblockWebView extends WebView
             getProvider().addEngineCreatedListener(engineCreatedCb);
             getProvider().addEngineDisposedListener(engineDisposedCb);
           }
+        }
+        finally
+        {
+          lock.unlock();
         }
       }
     };
@@ -902,7 +910,10 @@ public class AdblockWebView extends WebView
       final String requestMethod, final String referrer,
       final Map<String, String> requestHeadersMap)
     {
-      synchronized (getProvider().getEngineLock())
+      final Lock lock = getProvider().getReadEngineLock();
+      lock.lock();
+
+      try
       {
         // if dispose() was invoke, but the page is still loading then just let it go
         if (getProvider().getCounter() == 0)
@@ -1042,7 +1053,11 @@ public class AdblockWebView extends WebView
             d("Allowed loading " + url);
           }
         }
-      } // end of provider.getEngineLock()
+      }
+      finally
+      {
+        lock.unlock();
+      }
 
       if (requestHeadersMap.containsKey(HEADER_REQUESTED_RANGE))
       {
@@ -1339,113 +1354,115 @@ public class AdblockWebView extends WebView
     @Override
     public void run()
     {
-      synchronized (getProvider().getEngineLock())
+      final Lock lock = getProvider().getReadEngineLock();
+      lock.lock();
+
+      try
       {
-        try
+        if (getProvider().getCounter() == 0)
         {
-          if (getProvider().getCounter() == 0)
+          w("FilterEngine already disposed");
+          selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+          emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+        }
+        else
+        {
+          getProvider().waitForReady();
+          List<String> referrerChain = new ArrayList<String>(1);
+          referrerChain.add(url);
+          String parentUrl = url;
+          while ((parentUrl = url2Referrer.get(parentUrl)) != null)
           {
-            w("FilterEngine already disposed");
+            if (referrerChain.contains(parentUrl))
+            {
+              w("Detected referrer loop, finished creating referrers list");
+              break;
+            }
+            referrerChain.add(0, parentUrl);
+          }
+
+          final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
+
+          List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
+
+          try
+          {
+            d("Listed subscriptions: " + subscriptions.size());
+            if (debugMode)
+            {
+              for (Subscription eachSubscription : subscriptions)
+              {
+                d("Subscribed to "
+                  + (eachSubscription.isDisabled() ? "disabled" : "enabled")
+                  + " " + eachSubscription);
+              }
+            }
+          }
+          finally
+          {
+            for (Subscription eachSubscription : subscriptions)
+            {
+              eachSubscription.dispose();
+            }
+          }
+
+          final String domain = filterEngine.getHostFromURL(url);
+          if (domain == null)
+          {
+            e("Failed to extract domain from " + url);
             selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
             emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
           }
           else
           {
-            getProvider().waitForReady();
-            List<String> referrerChain = new ArrayList<String>(1);
-            referrerChain.add(url);
-            String parentUrl = url;
-            while ((parentUrl = url2Referrer.get(parentUrl)) != null)
+            // elemhide
+            d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
+
+            final String siteKey = (siteKeysConfiguration != null
+              ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+                .getAny(referrerChain, ""))
+              : null);
+
+            final boolean specificOnly = filterEngine.matches(url,
+              FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
+              Collections.<String>emptyList(), null) != null;
+
+            if (specificOnly)
             {
-              if (referrerChain.contains(parentUrl))
-              {
-                w("Detected referrer loop, finished creating referrers list");
-                break;
-              }
-              referrerChain.add(0, parentUrl);
+              d("elemhide - specificOnly selectors");
             }
 
-            final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
+            List<String> selectors = getProvider()
+              .getEngine()
+              .getElementHidingSelectors(url, domain, referrerChain, siteKey, specificOnly);
 
-            List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
+            d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
+            selectorsString = Utils.stringListToJsonArray(selectors);
 
-            try
-            {
-              d("Listed subscriptions: " + subscriptions.size());
-              if (debugMode)
-              {
-                for (Subscription eachSubscription : subscriptions)
-                {
-                  d("Subscribed to "
-                    + (eachSubscription.isDisabled() ? "disabled" : "enabled")
-                    + " " + eachSubscription);
-                }
-              }
-            }
-            finally
-            {
-              for (Subscription eachSubscription : subscriptions)
-              {
-                eachSubscription.dispose();
-              }
-            }
+            // elemhideemu
+            d("Requesting elemhideemu selectors from AdblockEngine for " + url + " in " + this);
+            List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
+              .getEngine()
+              .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
 
-            final String domain = filterEngine.getHostFromURL(url);
-            if (domain == null)
-            {
-              e("Failed to extract domain from " + url);
-              selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
-              emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
-            }
-            else
-            {
-              // elemhide
-              d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
-
-              final String siteKey = (siteKeysConfiguration != null
-                ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-                  .getAny(referrerChain, ""))
-                : null);
-
-              final boolean specificOnly = filterEngine.matches(url,
-                FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
-                Collections.<String>emptyList(), null) != null;
-
-              if (specificOnly)
-              {
-                d("elemhide - specificOnly selectors");
-              }
-
-              List<String> selectors = getProvider()
-                .getEngine()
-                .getElementHidingSelectors(url, domain, referrerChain, siteKey, specificOnly);
-
-              d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
-              selectorsString = Utils.stringListToJsonArray(selectors);
-
-              // elemhideemu
-              d("Requesting elemhideemu selectors from AdblockEngine for " + url + " in " + this);
-              List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
-                .getEngine()
-                .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
-
-              d("Finished requesting elemhideemu selectors, got " + emuSelectors.size() + " in " + this);
-              emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
-            }
-          }
-        }
-        finally
-        {
-          if (isCancelled.get())
-          {
-            w("This thread is cancelled, exiting silently " + this);
-          }
-          else
-          {
-            finish(selectorsString, emuSelectorsString);
+            d("Finished requesting elemhideemu selectors, got " + emuSelectors.size() + " in " + this);
+            emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
           }
         }
       }
+      finally
+      {
+        lock.unlock();
+        if (isCancelled.get())
+        {
+          w("This thread is cancelled, exiting silently " + this);
+        }
+        else
+        {
+          finish(selectorsString, emuSelectorsString);
+        }
+      }
+
     }
 
     private void onFinished()
@@ -1785,7 +1802,10 @@ public class AdblockWebView extends WebView
       return;
     }
 
-    synchronized (getProvider().getEngineLock())
+    final Lock lock = getProvider().getReadEngineLock();
+    lock.lock();
+
+    try
     {
       AdblockEngine engine = getProvider().getEngine();
       if (engine != null)
@@ -1794,6 +1814,10 @@ public class AdblockWebView extends WebView
       }
       getProvider().removeEngineCreatedListener(engineCreatedCb);
       getProvider().removeEngineDisposedListener(engineDisposedCb);
+    }
+    finally
+    {
+      lock.unlock();
     }
 
     stopLoading();
