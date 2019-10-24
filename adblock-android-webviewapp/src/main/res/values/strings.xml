@@ -11,4 +11,6 @@
     <string name="main_settings">Settings</string>
     <string name="main_add_tab">Add tab</string>
     <string name="main_tab_title">Tab #%d</string>
+
+    <string name="fragment_tab_blocked_counter_unset">Load a page</string>
 </resources>
