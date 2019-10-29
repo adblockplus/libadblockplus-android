@@ -301,6 +301,8 @@ public class AdblockWebView extends WebView
   {
     addJavascriptInterface(this, BRIDGE);
     initRandom();
+    buildInjectJs();
+    getSettings().setJavaScriptEnabled(true);
     intWebViewClient = new AdblockWebViewClient();
   }
 
@@ -1599,13 +1601,6 @@ public class AdblockWebView extends WebView
     }
   };
 
-  private void initAbpLoading()
-  {
-    getSettings().setJavaScriptEnabled(true);
-    buildInjectJs();
-    ensureProvider();
-  }
-
   private void ensureProvider()
   {
     // if AdblockWebView works as drop-in replacement for WebView 'provider' is not set.
@@ -1690,7 +1685,7 @@ public class AdblockWebView extends WebView
   @Override
   public void reload()
   {
-    initAbpLoading();
+    ensureProvider();
 
     if (loading)
     {
@@ -1703,7 +1698,7 @@ public class AdblockWebView extends WebView
   @Override
   public void loadUrl(String url)
   {
-    initAbpLoading();
+    ensureProvider();
 
     if (loading)
     {
@@ -1716,7 +1711,7 @@ public class AdblockWebView extends WebView
   @Override
   public void loadUrl(String url, Map<String, String> additionalHttpHeaders)
   {
-    initAbpLoading();
+    ensureProvider();
 
     if (loading)
     {
@@ -1729,7 +1724,7 @@ public class AdblockWebView extends WebView
   @Override
   public void loadData(String data, String mimeType, String encoding)
   {
-    initAbpLoading();
+    ensureProvider();
 
     if (loading)
     {
@@ -1743,7 +1738,7 @@ public class AdblockWebView extends WebView
   public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding,
                                   String historyUrl)
   {
-    initAbpLoading();
+    ensureProvider();
 
     if (loading)
     {
