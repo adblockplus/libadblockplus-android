@@ -28,6 +28,7 @@ import java.lang.ref.WeakReference;
 final public class WebViewCounters
 {
   private int blockedCounter = 0;
+  private int whitelistedCounter = 0;
   private EventsListener eventsListener;
 
   // In order to synchronously change counter value and to emit events in the UI thread we schedule
@@ -35,8 +36,14 @@ final public class WebViewCounters
   // implementations of Runnable makes it memory heap friendly by reducing the number of allocations
   // and objects collected by GC.
   private View view; // for `View.post`
-  private Runnable uiThreadResetDelegate;
-  private Runnable uiThreadIncrementDelegate;
+  private final Runnable blockedResetRunnable =
+      new WeakRunnable(this, new ResetBlockedOperation());
+  private final Runnable blockedIncrementRunnable =
+      new WeakRunnable(this, new IncrementBlockedOperation());
+  private final Runnable whitelistedResetRunnable =
+      new WeakRunnable(this, new ResetWhitelistedOperation());
+  private final Runnable whitelistedIncrementRunnable =
+      new WeakRunnable(this, new IncrementWhitelistedOperation());
 
   /**
    * A helper method for creation of AdblockWebView.EventsListener and binding it with
@@ -58,12 +65,19 @@ final public class WebViewCounters
       public void onNavigation()
       {
         counters.resetBlocked();
+        counters.resetWhitelisted();
       }
 
       @Override
       public void onResourceLoadingBlocked(final BlockedResourceInfo info)
       {
         counters.incrementBlocked();
+      }
+
+      @Override
+      public void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info)
+      {
+        counters.incrementWhitelisted();
       }
     };
   }
@@ -80,6 +94,14 @@ final public class WebViewCounters
      * @param newValue A new value of blocked resources.
      */
     void onBlockedChanged(final int newValue);
+
+    /**
+     * An event signalling about changing of the counter of whitelisted resources. This event
+     * is emitted from a user interface thread (via constructor's `view.post`).
+     *
+     * @param newValue A new value of whitelisted resources.
+     */
+    void onWhitelistedChanged(final int newValue);
   }
 
   /**
@@ -92,8 +114,6 @@ final public class WebViewCounters
   {
     this.view = view;
     this.eventsListener = eventsListener;
-    uiThreadResetDelegate = new UIThreadDelegate(this, new ResetBlocked_UiOperation());
-    uiThreadIncrementDelegate = new UIThreadDelegate(this, new IncrementBlocked_UiOperation());
   }
 
   /**
@@ -101,16 +121,15 @@ final public class WebViewCounters
    */
   public void resetBlocked()
   {
-    view.post(uiThreadResetDelegate);
+    view.post(blockedResetRunnable);
   }
 
-  private void resetBlockedUiThreadImpl()
+  /**
+   * Thread safe resetting of the whitelisted counter.
+   */
+  public void resetWhitelisted()
   {
-    blockedCounter = 0;
-    if (eventsListener != null)
-    {
-      eventsListener.onBlockedChanged(blockedCounter);
-    }
+    view.post(whitelistedResetRunnable);
   }
 
   /**
@@ -118,15 +137,30 @@ final public class WebViewCounters
    */
   public void incrementBlocked()
   {
-    view.post(uiThreadIncrementDelegate);
+    view.post(blockedIncrementRunnable);
   }
 
-  private void incrementBlockedUiThreadImpl()
+  /**
+   * Thread safe incrementation of the whitelisted counter.
+   */
+  public void incrementWhitelisted()
   {
-    ++blockedCounter;
+    view.post(whitelistedIncrementRunnable);
+  }
+
+  private void notifyBlockedChanged()
+  {
     if (eventsListener != null)
     {
       eventsListener.onBlockedChanged(blockedCounter);
+    }
+  }
+
+  private void notifyWhitelistedChanged()
+  {
+    if (eventsListener != null)
+    {
+      eventsListener.onWhitelistedChanged(whitelistedCounter);
     }
   }
 
@@ -140,7 +174,7 @@ final public class WebViewCounters
    * which normally holds a strong reference to some View, which finally holds a strong reference to
    * an activity).
    */
-  private final static class UIThreadDelegate implements Runnable
+  private final static class WeakRunnable implements Runnable
   {
     private WeakReference<WebViewCounters> weakCounters;
     private Operation operation;
@@ -150,7 +184,7 @@ final public class WebViewCounters
       void run(final WebViewCounters counters);
     }
 
-    UIThreadDelegate(final WebViewCounters counters, final Operation operation)
+    WeakRunnable(final WebViewCounters counters, final Operation operation)
     {
       weakCounters = new WeakReference<WebViewCounters>(counters);
       this.operation = operation;
@@ -167,21 +201,43 @@ final public class WebViewCounters
     }
   }
 
-  private static class ResetBlocked_UiOperation implements UIThreadDelegate.Operation
+  private static class ResetBlockedOperation implements WeakRunnable.Operation
   {
     @Override
     public void run(final WebViewCounters counters)
     {
-      counters.resetBlockedUiThreadImpl();
+      counters.blockedCounter = 0;
+      counters.notifyBlockedChanged();
     }
   }
 
-  private static class IncrementBlocked_UiOperation implements UIThreadDelegate.Operation
+  private static class ResetWhitelistedOperation implements WeakRunnable.Operation
   {
     @Override
     public void run(final WebViewCounters counters)
     {
-      counters.incrementBlockedUiThreadImpl();
+      counters.whitelistedCounter = 0;
+      counters.notifyWhitelistedChanged();
+    }
+  }
+
+  private static class IncrementBlockedOperation implements WeakRunnable.Operation
+  {
+    @Override
+    public void run(final WebViewCounters counters)
+    {
+      ++counters.blockedCounter;
+      counters.notifyBlockedChanged();
+    }
+  }
+
+  private static class IncrementWhitelistedOperation implements WeakRunnable.Operation
+  {
+    @Override
+    public void run(final WebViewCounters counters)
+    {
+      ++counters.whitelistedCounter;
+      counters.notifyWhitelistedChanged();
     }
   }
 }

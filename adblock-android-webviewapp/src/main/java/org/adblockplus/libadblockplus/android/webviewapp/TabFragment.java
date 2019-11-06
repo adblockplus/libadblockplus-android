@@ -24,7 +24,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -36,8 +35,6 @@ import android.widget.TextView;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
 import org.adblockplus.libadblockplus.android.webview.WebViewCounters;
-
-import static android.content.Context.INPUT_METHOD_SERVICE;
 
 public class TabFragment extends Fragment
 {
@@ -54,7 +51,8 @@ public class TabFragment extends Fragment
   private Button ok;
   private Button back;
   private Button forward;
-  private TextView counter;
+  private TextView blockedCounter;
+  private TextView whitelistedCounter;
   private AdblockWebView webView;
 
   /**
@@ -108,7 +106,8 @@ public class TabFragment extends Fragment
     back = rootView.findViewById(R.id.fragment_tab_back);
     forward = rootView.findViewById(R.id.fragment_tab_forward);
     progress = rootView.findViewById(R.id.fragment_tab_progress);
-    counter = rootView.findViewById(R.id.fragment_tab_counter);
+    blockedCounter = rootView.findViewById(R.id.fragment_tab_blocked_counter);
+    whitelistedCounter = rootView.findViewById(R.id.fragment_tab_wl_counter);
     webView = rootView.findViewById(R.id.fragment_tab_webview);
   }
 
@@ -203,13 +202,21 @@ public class TabFragment extends Fragment
 
     initAdblockWebView();
 
-    final AdblockWebView.EventsListener eventsListener = WebViewCounters.bindAdblockWebView(counter,
-            new WebViewCounters.EventsListener() {
-              @Override
-              public void onBlockedChanged(int newValue) {
-                counter.setText(String.valueOf(newValue));
-              }
-            });
+    final AdblockWebView.EventsListener eventsListener = WebViewCounters.bindAdblockWebView(webView,
+      new WebViewCounters.EventsListener()
+      {
+        @Override
+        public void onBlockedChanged(final int newValue)
+        {
+          blockedCounter.setText(String.valueOf(newValue));
+        }
+
+        @Override
+        public void onWhitelistedChanged(final int newValue)
+        {
+          whitelistedCounter.setText(String.valueOf(newValue));
+        }
+      });
     webView.setEventsListener(eventsListener);
 
     setProgressVisible(false);
