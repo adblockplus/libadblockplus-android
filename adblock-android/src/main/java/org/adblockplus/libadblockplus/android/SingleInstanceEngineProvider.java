@@ -54,7 +54,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     new LinkedList<EngineDisposedListener>();
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
   private final Lock readLock = engineLock.readLock();
-  private final Lock writeLock = engineLock.readLock();
+  private final Lock writeLock = engineLock.writeLock();
 
   /*
     Simple ARC management for AdblockEngine
