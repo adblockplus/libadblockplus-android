@@ -17,7 +17,8 @@
 
 package org.adblockplus.libadblockplus.android.webview;
 
-import android.view.View;
+import android.os.Handler;
+import android.os.Looper;
 import java.lang.ref.WeakReference;
 
 /**
@@ -35,7 +36,7 @@ final public class WebViewCounters
   // the corresponding operations to be only executed in the UI thread. The following couple of
   // implementations of Runnable makes it memory heap friendly by reducing the number of allocations
   // and objects collected by GC.
-  private View view; // for `View.post`
+  private final Handler handler = new Handler(Looper.getMainLooper());
   private final Runnable blockedResetRunnable =
       new WeakRunnable(this, new ResetBlockedOperation());
   private final Runnable blockedIncrementRunnable =
@@ -49,16 +50,12 @@ final public class WebViewCounters
    * A helper method for creation of AdblockWebView.EventsListener and binding it with
    * Counters.EventsListener.
    *
-   * @param view for scheduling calls of EventListener in the UI thread as well as for internal
-   *             thread safety. Pass e.g. a component which renders the counters and which is
-   *             notified by `eventListener` parameter.
    * @param eventsListener which should be bound to the newly created implementation of AdblockWebView.EventsListener.
    * @return a newly created implementation of AdblockWebView.EventsListener.
    */
-  public static AdblockWebView.EventsListener bindAdblockWebView(final View view,
-                                                                 final EventsListener eventsListener)
+  public static AdblockWebView.EventsListener bindAdblockWebView(final EventsListener eventsListener)
   {
-    final WebViewCounters counters = new WebViewCounters(view, eventsListener);
+    final WebViewCounters counters = new WebViewCounters(eventsListener);
     return new AdblockWebView.EventsListener()
     {
       @Override
@@ -107,12 +104,10 @@ final public class WebViewCounters
   /**
    * Constructs an instance of Counters class.
    *
-   * @param view This parameter is merely used to schedule the events within a corresponding UI thread.
    * @param eventsListener A reference to an implementation of EventsListener.
    */
-  public WebViewCounters(final View view, final EventsListener eventsListener)
+  public WebViewCounters(final EventsListener eventsListener)
   {
-    this.view = view;
     this.eventsListener = eventsListener;
   }
 
@@ -121,7 +116,7 @@ final public class WebViewCounters
    */
   public void resetBlocked()
   {
-    view.post(blockedResetRunnable);
+    handler.post(blockedResetRunnable);
   }
 
   /**
@@ -129,7 +124,7 @@ final public class WebViewCounters
    */
   public void resetWhitelisted()
   {
-    view.post(whitelistedResetRunnable);
+    handler.post(whitelistedResetRunnable);
   }
 
   /**
@@ -137,7 +132,7 @@ final public class WebViewCounters
    */
   public void incrementBlocked()
   {
-    view.post(blockedIncrementRunnable);
+    handler.post(blockedIncrementRunnable);
   }
 
   /**
@@ -145,7 +140,7 @@ final public class WebViewCounters
    */
   public void incrementWhitelisted()
   {
-    view.post(whitelistedIncrementRunnable);
+    handler.post(whitelistedIncrementRunnable);
   }
 
   private void notifyBlockedChanged()
