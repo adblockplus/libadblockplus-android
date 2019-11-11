@@ -23,9 +23,9 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.util.Log;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,12 +49,12 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private CountDownLatch engineCreated;
   private AtomicLong v8IsolateProviderPtr = new AtomicLong(0);
   private List<EngineCreatedListener> engineCreatedListeners =
-    new LinkedList<EngineCreatedListener>();
+    new CopyOnWriteArrayList<EngineCreatedListener>();
   private List<EngineDisposedListener> engineDisposedListeners =
-    new LinkedList<EngineDisposedListener>();
+    new CopyOnWriteArrayList<EngineDisposedListener>();
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
   private final Lock readLock = engineLock.readLock();
-  private final Lock writeLock = engineLock.readLock();
+  private final Lock writeLock = engineLock.writeLock();
 
   /*
     Simple ARC management for AdblockEngine

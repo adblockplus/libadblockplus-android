@@ -53,6 +53,32 @@ public final class AdblockEngine
     void onEnableStateChanged(boolean enabled);
   }
 
+  /**
+   * The result of `matches()` call
+   */
+  public enum MatchesResult
+  {
+    /**
+     * Not EXCEPTION filter is found
+     */
+    NOT_WHITELISTED,
+
+    /**
+     * Exception filter is found
+     */
+    WHITELISTED,
+
+    /**
+     * No filter is found
+     */
+    NOT_FOUND,
+
+    /**
+     * Ad blocking is disabled
+     */
+    NOT_ENABLED
+  }
+
   // default base path to store subscription files in android app
   public static final String BASE_PATH_DIRECTORY = "adblock";
 
@@ -517,13 +543,13 @@ public final class AdblockEngine
     }
   }
 
-  public boolean matches(final String fullUrl, final Set<ContentType> contentTypes,
-                         final List<String> referrerChain, final String siteKey,
-                         final boolean specificOnly)
+  public MatchesResult matches(final String fullUrl, final Set<ContentType> contentTypes,
+                               final List<String> referrerChain, final String siteKey,
+                               final boolean specificOnly)
   {
     if (!enabled)
     {
-      return false;
+      return MatchesResult.NOT_ENABLED;
     }
 
     final Filter filter = this.filterEngine.matches(fullUrl, contentTypes, referrerChain,
@@ -531,7 +557,7 @@ public final class AdblockEngine
 
     if (filter == null)
     {
-      return false;
+      return MatchesResult.NOT_FOUND;
     }
 
     try
@@ -546,7 +572,7 @@ public final class AdblockEngine
         {
           if (referrerChain.isEmpty() && (jsText.toString()).contains("||"))
           {
-            return false;
+            return MatchesResult.NOT_FOUND;
           }
         }
         finally
@@ -558,7 +584,9 @@ public final class AdblockEngine
       {
       }
 
-      return filter.getType() != Filter.Type.EXCEPTION;
+      return filter.getType() != Filter.Type.EXCEPTION
+          ? MatchesResult.NOT_WHITELISTED
+          : MatchesResult.WHITELISTED;
     }
     finally
     {

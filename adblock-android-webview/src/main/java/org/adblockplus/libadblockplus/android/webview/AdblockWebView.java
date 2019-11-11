@@ -74,8 +74,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 
-import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
 import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
+import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
 
 /**
  * WebView with ad blocking
@@ -127,6 +127,129 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
+
+  /**
+   * Listener for ad blocking related events.
+   * However, this interface may not be in use if Adblock Plus is disabled.
+   */
+  public interface EventsListener
+  {
+    /**
+     * Immutable data-class containing an auxiliary information about resource event.
+     */
+    class ResourceInfo
+    {
+      private final String requestUrl;
+      private final List<String> parentFrameUrls;
+
+      ResourceInfo(final String requestUrl, final List<String> parentFrameUrls)
+      {
+        this.requestUrl = requestUrl;
+        this.parentFrameUrls = new ArrayList<>(parentFrameUrls);
+      }
+
+      public String getRequestUrl()
+      {
+        return requestUrl;
+      }
+
+      public List<String> getParentFrameUrls()
+      {
+        return parentFrameUrls;
+      }
+    }
+
+    /**
+     * Immutable data-class containing an auxiliary information about blocked resource.
+     */
+    final class BlockedResourceInfo extends ResourceInfo
+    {
+      private final FilterEngine.ContentType contentType;
+
+      BlockedResourceInfo(final String requestUrl,
+                          final List<String> parentFrameUrls,
+                          final FilterEngine.ContentType contentType)
+      {
+        super(requestUrl, parentFrameUrls);
+        this.contentType = contentType;
+      }
+
+      public FilterEngine.ContentType getContentType()
+      {
+        return contentType;
+      }
+    }
+
+    /**
+     * Whitelisting reason:
+     */
+    enum WhitelistReason
+    {
+      /**
+       * Document is whitelisted
+       */
+      DOCUMENT,
+
+      /**
+       * Domain is whitelisted by user
+       */
+      DOMAIN,
+
+      /**
+       * Exception filter
+       */
+      FILTER
+    }
+
+    /**
+     * Immutable data-class containing an auxiliary information about whitelisted resource.
+     */
+    final class WhitelistedResourceInfo extends ResourceInfo
+    {
+      private WhitelistReason reason;
+
+      public WhitelistedResourceInfo(final String requestUrl,
+                                     final List<String> parentFrameUrls,
+                                     final WhitelistReason reasons)
+      {
+        super(requestUrl, parentFrameUrls);
+        this.reason = reasons;
+      }
+
+      public WhitelistReason getReason()
+      {
+        return reason;
+      }
+    }
+
+    /**
+     * "Navigation" event.
+     *
+     * This method is called when the current instance of WebView begins loading of a new page.
+     * It corresponds to `onPageStarted` of `WebViewClient` and is called on the UI thread.
+     */
+    void onNavigation();
+
+    /**
+     * "Resource loading blocked" event.
+     *
+     * This method can be called on a background thread.
+     * It should not block the thread for too long as it slows down resource loading.
+     * @param info contains auxiliary information about a blocked resource.
+     */
+    void onResourceLoadingBlocked(final BlockedResourceInfo info);
+
+    /**
+     * "Resource loading whitelisted" event.
+     *
+     * This method can be called on a background thread.
+     * It should not block the thread for too long as it slows down resource loading.
+     * @param info contains auxiliary information about a blocked resource.
+     */
+    void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info);
+  }
+
+  private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<EventsListener>();
   private SiteKeysConfiguration siteKeysConfiguration;
   private AdblockEngine.SettingsChangedListener engineSettingsChangedCb = new AdblockEngine.SettingsChangedListener()
   {
@@ -203,6 +326,11 @@ public class AdblockWebView extends WebView
     ServerResponse response;
   }
 
+  private EventsListener getEventsListener()
+  {
+    return eventsListenerAtomicReference.get();
+  }
+
   public SiteKeysConfiguration getSiteKeysConfiguration()
   {
     return siteKeysConfiguration;
@@ -223,6 +351,16 @@ public class AdblockWebView extends WebView
             intWebChromeClient : extWebChromeClient);
     super.setWebViewClient(adblockEnabled.get() || extWebViewClient == null ?
             intWebViewClient : extWebViewClient);
+  }
+
+  /**
+   * Sets an implementation of EventsListener which will receive ad blocking related events.
+   *
+   * @param eventsListener an implementation of EventsListener.
+   */
+  public void setEventsListener(final EventsListener eventsListener)
+  {
+    this.eventsListenerAtomicReference.set(eventsListener);
   }
 
   @Override
@@ -731,6 +869,8 @@ public class AdblockWebView extends WebView
 
       startAbpLoading(url);
 
+      notifyNavigation();
+
       if (extWebViewClient != null)
       {
         extWebViewClient.onPageStarted(view, url, favicon);
@@ -993,10 +1133,14 @@ public class AdblockWebView extends WebView
           if (getProvider().getEngine().isDomainWhitelisted(url, referrerChain))
           {
             w(url + " domain is whitelisted, allow loading");
+            notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
+                url, referrerChain, EventsListener.WhitelistReason.DOMAIN));
           }
           else if (getProvider().getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
           {
             w(url + " document is whitelisted, allow loading");
+            notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
+                url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
           }
           else
           {
@@ -1038,9 +1182,13 @@ public class AdblockWebView extends WebView
                 w("Found genericblock filter for url " + url + " which parent is " + parentUrl);
               }
             }
+
             // check if we should block
-            if (getProvider().getEngine().matches(url, FilterEngine.ContentType.maskOf(contentType),
-                    referrerChain, siteKey, specificOnly))
+            final AdblockEngine.MatchesResult result = getProvider().getEngine().matches(
+                url, FilterEngine.ContentType.maskOf(contentType),
+                referrerChain, siteKey, specificOnly);
+
+            if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
             {
               w("Blocked loading " + url);
 
@@ -1049,8 +1197,17 @@ public class AdblockWebView extends WebView
                 elemhideBlockedResource(url);
               }
 
+              notifyResourceBlocked(new EventsListener.BlockedResourceInfo(
+                  url, referrerChain, contentType));
+
               // if we should block, return empty response which results in 'errorLoading' callback
               return new WebResourceResponse("text/plain", "UTF-8", null);
+            }
+            else if (result == AdblockEngine.MatchesResult.WHITELISTED)
+            {
+              w(url + " is whitelisted in matches()");
+              notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
+                  url, referrerChain, EventsListener.WhitelistReason.FILTER));
             }
             d("Allowed loading " + url);
           }
@@ -1272,6 +1429,33 @@ public class AdblockWebView extends WebView
               isXmlHttpRequest, request.getMethod(),
               request.getRequestHeaders().get(HEADER_REFERRER),
               request.getRequestHeaders());
+    }
+  }
+
+  private void notifyNavigation()
+  {
+    final EventsListener eventsListener = getEventsListener();
+    if (eventsListener != null)
+    {
+      eventsListener.onNavigation();
+    }
+  }
+
+  private void notifyResourceBlocked(final EventsListener.BlockedResourceInfo info)
+  {
+    final EventsListener eventsListener = getEventsListener();
+    if (eventsListener != null)
+    {
+      eventsListener.onResourceLoadingBlocked(info);
+    }
+  }
+
+  private void notifyResourceWhitelisted(final EventsListener.WhitelistedResourceInfo info)
+  {
+    final EventsListener eventsListener = getEventsListener();
+    if (eventsListener != null)
+    {
+      eventsListener.onResourceLoadingWhitelisted(info);
     }
   }
 
