@@ -202,7 +202,7 @@ public class TabFragment extends Fragment
 
     initAdblockWebView();
 
-    final AdblockWebView.EventsListener eventsListener = WebViewCounters.bindAdblockWebView(webView,
+    final AdblockWebView.EventsListener eventsListener = WebViewCounters.bindAdblockWebView(
       new WebViewCounters.EventsListener()
       {
         @Override
