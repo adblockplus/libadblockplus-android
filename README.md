@@ -326,8 +326,19 @@ In java source code:
 
     AdblockWebView webView = (AdblockWebView) findViewById(R.id.main_webview);
 
-Use `setAdblockEnabled(boolean adblockEnabled)` to enable/disable adblocking.
-
+Use `AdblockEngine.setEnabled(boolean enabled)` to enable/disable adblocking for AdblockEngine.
+Make sure you update the settings model if you want the new value to be applied after application restart, eg:
+```
+AdblockSettingsStorage storage = AdblockHelper.get().getStorage();
+AdblockSettings settings = storage.load();
+if (settings == null) // not yet saved
+{
+  settings = AdblockSettingsStorage.getDefaultSettings(...); // default
+}
+...
+settings.setAdblockEnabled(newValue);
+storage.save(settings);
+```
 Use `setDebugMode(boolean debugMode)` to turn debug log output (Android log and JS console) on/off.
 
 Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start render webpage after 'DOMContentLoaded' event is fired.
@@ -347,9 +358,10 @@ Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and whitel
 For the latter there is a convenience class `WebViewCounters` which can be bound to `EventsListener`
 and notify your View about new values. See an example of usage in WebView Application.
 
-
 Use `dispose(Runnable disposeFinished)` to release resources (**required**).
 Note it can be invoked from background thread.
+
+Enabling/disabling of ad blocking per AdblockWebView is not supported.
 
 ### Building
 
