@@ -24,6 +24,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -155,6 +156,14 @@ public class TabFragment extends Fragment
     {
       progress.setProgress(newProgress);
     }
+
+    @Override
+    public void onPermissionRequest(PermissionRequest request)
+    {
+      // A very rough example to enable playing DRM video content
+      final String[] perms = {PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID};
+      request.grant(perms);
+    }
   };
 
   private void initControls()
@@ -230,6 +239,9 @@ public class TabFragment extends Fragment
 
     // to show that external WebChromeClient is still working
     webView.setWebChromeClient(webChromeClient);
+
+    // to enable local storage for HTML5
+    webView.getSettings().setDomStorageEnabled(true);
   }
 
   private void initAdblockWebView()

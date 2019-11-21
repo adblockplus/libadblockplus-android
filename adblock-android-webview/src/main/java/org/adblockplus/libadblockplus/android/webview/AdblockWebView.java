@@ -35,6 +35,7 @@ import android.webkit.HttpAuthHandler;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
+import android.webkit.PermissionRequest;
 import android.webkit.SslErrorHandler;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -514,6 +515,24 @@ public class AdblockWebView extends WebView
 
   private WebChromeClient intWebChromeClient = new WebChromeClient()
   {
+    @Override
+    public void onPermissionRequest(PermissionRequest request)
+    {
+      if (extWebChromeClient != null)
+      {
+        extWebChromeClient.onPermissionRequest(request);
+      }
+    }
+
+    @Override
+    public void onPermissionRequestCanceled(PermissionRequest request)
+    {
+      if (extWebChromeClient != null)
+      {
+        extWebChromeClient.onPermissionRequestCanceled(request);
+      }
+    }
+
     @Override
     public void onReceivedTitle(WebView view, String title)
     {
