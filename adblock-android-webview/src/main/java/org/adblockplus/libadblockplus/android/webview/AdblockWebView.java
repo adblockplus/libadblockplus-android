@@ -28,6 +28,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.ClientCertRequest;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
@@ -36,9 +37,12 @@ import android.webkit.JavascriptInterface;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
+import android.webkit.RenderProcessGoneDetail;
+import android.webkit.SafeBrowsingResponse;
 import android.webkit.SslErrorHandler;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;  // makes android min version to be 21
 import android.webkit.WebResourceResponse;
 import android.webkit.WebStorage;
@@ -270,7 +274,6 @@ public class AdblockWebView extends WebView
           @Override
           public void run()
           {
-            applyClients();
             clearCache(true);
           }
         });
@@ -284,14 +287,6 @@ public class AdblockWebView extends WebView
     {
       adblockEnabled = new AtomicBoolean(engine.isEnabled());
       Log.d(TAG, "Filter Engine created, enable status is " + adblockEnabled.get());
-      AdblockWebView.this.post(new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          applyClients();
-        }
-      });
       engine.addSettingsChangedListener(engineSettingsChangedCb);
     }
   };
@@ -342,18 +337,6 @@ public class AdblockWebView extends WebView
     this.siteKeysConfiguration = siteKeysConfiguration;
   }
 
-  private void applyClients()
-  {
-    if (adblockEnabled == null)
-    {
-      return;
-    }
-    super.setWebChromeClient(adblockEnabled.get() || extWebChromeClient == null ?
-            intWebChromeClient : extWebChromeClient);
-    super.setWebViewClient(adblockEnabled.get() || extWebViewClient == null ?
-            intWebViewClient : extWebViewClient);
-  }
-
   /**
    * Sets an implementation of EventsListener which will receive ad blocking related events.
    *
@@ -368,14 +351,12 @@ public class AdblockWebView extends WebView
   public void setWebChromeClient(final WebChromeClient client)
   {
     extWebChromeClient = client;
-    applyClients();
   }
 
   @Override
   public void setWebViewClient(final WebViewClient client)
   {
     extWebViewClient = client;
-    applyClients();
   }
 
   private void initAbp()
@@ -385,6 +366,8 @@ public class AdblockWebView extends WebView
     buildInjectJs();
     getSettings().setJavaScriptEnabled(true);
     intWebViewClient = new AdblockWebViewClient();
+    super.setWebChromeClient(intWebChromeClient);
+    super.setWebViewClient(intWebViewClient);
   }
 
   private AdblockEngineProvider getProvider()
@@ -486,7 +469,6 @@ public class AdblockWebView extends WebView
           {
             adblockEnabled = new AtomicBoolean(getProvider().getEngine().isEnabled());
             Log.d(TAG, "Filter Engine already created, enable status is " + adblockEnabled);
-            applyClients();
             getProvider().getEngine().addSettingsChangedListener(engineSettingsChangedCb);
           }
           else
@@ -522,6 +504,10 @@ public class AdblockWebView extends WebView
       {
         extWebChromeClient.onPermissionRequest(request);
       }
+      else
+      {
+        super.onPermissionRequest(request);
+      }
     }
 
     @Override
@@ -530,6 +516,10 @@ public class AdblockWebView extends WebView
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onPermissionRequestCanceled(request);
+      }
+      else
+      {
+        super.onPermissionRequestCanceled(request);
       }
     }
 
@@ -540,6 +530,10 @@ public class AdblockWebView extends WebView
       {
         extWebChromeClient.onReceivedTitle(view, title);
       }
+      else
+      {
+        super.onReceivedTitle(view, title);
+      }
     }
 
     @Override
@@ -548,6 +542,10 @@ public class AdblockWebView extends WebView
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onReceivedIcon(view, icon);
+      }
+      else
+      {
+        super.onReceivedIcon(view, icon);
       }
     }
 
@@ -558,6 +556,10 @@ public class AdblockWebView extends WebView
       {
         extWebChromeClient.onReceivedTouchIconUrl(view, url, precomposed);
       }
+      else
+      {
+        super.onReceivedTouchIconUrl(view, url, precomposed);
+      }
     }
 
     @Override
@@ -566,6 +568,10 @@ public class AdblockWebView extends WebView
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onShowCustomView(view, callback);
+      }
+      else
+      {
+        super.onShowCustomView(view, callback);
       }
     }
 
@@ -576,6 +582,10 @@ public class AdblockWebView extends WebView
       {
         extWebChromeClient.onShowCustomView(view, requestedOrientation, callback);
       }
+      else
+      {
+        super.onShowCustomView(view, requestedOrientation, callback);
+      }
     }
 
     @Override
@@ -584,6 +594,10 @@ public class AdblockWebView extends WebView
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onHideCustomView();
+      }
+      else
+      {
+        super.onHideCustomView();
       }
     }
 
@@ -608,6 +622,10 @@ public class AdblockWebView extends WebView
       {
         extWebChromeClient.onRequestFocus(view);
       }
+      else
+      {
+        super.onRequestFocus(view);
+      }
     }
 
     @Override
@@ -616,6 +634,10 @@ public class AdblockWebView extends WebView
       if (extWebChromeClient != null)
       {
         extWebChromeClient.onCloseWindow(window);
+      }
+      else
+      {
+        super.onCloseWindow(window);
       }
     }
 
@@ -823,6 +845,10 @@ public class AdblockWebView extends WebView
       {
         extWebChromeClient.onProgressChanged(view, newProgress);
       }
+      else
+      {
+        super.onProgressChanged(view, newProgress);
+      }
     }
 
     @Override
@@ -865,6 +891,20 @@ public class AdblockWebView extends WebView
    */
   private class AdblockWebViewClient extends WebViewClient
   {
+    @TargetApi(Build.VERSION_CODES.N)
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request)
+    {
+      if (extWebViewClient != null)
+      {
+        return extWebViewClient.shouldOverrideUrlLoading(view, request);
+      }
+      else
+      {
+        return super.shouldOverrideUrlLoading(view, request);
+      }
+    }
+
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url)
     {
@@ -881,6 +921,7 @@ public class AdblockWebView extends WebView
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon)
     {
+      d("onPageStarted called for url " + url);
       if (loading)
       {
         stopAbpLoading();
@@ -927,6 +968,61 @@ public class AdblockWebView extends WebView
       }
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onPageCommitVisible(WebView view, String url)
+    {
+      if (extWebViewClient != null)
+      {
+        extWebViewClient.onPageCommitVisible(view, url);
+      }
+      else
+      {
+        super.onPageCommitVisible(view, url);
+      }
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    @Override
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail)
+    {
+      if (extWebViewClient != null)
+      {
+        return extWebViewClient.onRenderProcessGone(view, detail);
+      }
+      else
+      {
+        return super.onRenderProcessGone(view, detail);
+      }
+    }
+
+    @TargetApi(Build.VERSION_CODES.O_MR1)
+    @Override
+    public void onSafeBrowsingHit(WebView view, WebResourceRequest request,
+                                  int threatType, SafeBrowsingResponse callback)
+    {
+      if (extWebViewClient != null)
+      {
+        extWebViewClient.onSafeBrowsingHit(view, request, threatType, callback);
+      }
+      else
+      {
+        super.onSafeBrowsingHit(view, request, threatType, callback);
+      }
+    }
+
+    public void onReceivedClientCertRequest(WebView view, ClientCertRequest request)
+    {
+      if (extWebViewClient != null)
+      {
+        extWebViewClient.onReceivedClientCertRequest(view, request);
+      }
+      else
+      {
+        super.onReceivedClientCertRequest(view, request);
+      }
+    }
+
     @Override
     public void onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg)
     {
@@ -958,6 +1054,27 @@ public class AdblockWebView extends WebView
       else
       {
         super.onReceivedError(view, errorCode, description, failingUrl);
+      }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error)
+    {
+      e("Load error:" +
+              " code=" + error.getErrorCode() +
+              " with description=" + error.getDescription() +
+              " for url=" + request.getUrl());
+
+      stopAbpLoading();
+
+      if (extWebViewClient != null)
+      {
+        extWebViewClient.onReceivedError(view, request, error);
+      }
+      else
+      {
+        super.onReceivedError(view, request, error);
       }
     }
 
@@ -1010,6 +1127,21 @@ public class AdblockWebView extends WebView
       else
       {
         super.onReceivedHttpAuthRequest(view, handler, host, realm);
+      }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    public void onReceivedHttpError(WebView view, WebResourceRequest request,
+                                    WebResourceResponse errorResponse)
+    {
+      if (extWebViewClient != null)
+      {
+        extWebViewClient.onReceivedHttpError(view, request, errorResponse);
+      }
+      else
+      {
+        super.onReceivedHttpError(view, request, errorResponse);
       }
     }
 
