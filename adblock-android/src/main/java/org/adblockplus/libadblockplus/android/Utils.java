@@ -341,7 +341,7 @@ public final class Utils
    * Extract path with query from URL
    * @param urlString URL
    * @return path with optional query part
-   * @throws URISyntaxException
+   * @throws MalformedURLException
    */
   public static String extractPathWithQuery(final String urlString) throws MalformedURLException
   {
