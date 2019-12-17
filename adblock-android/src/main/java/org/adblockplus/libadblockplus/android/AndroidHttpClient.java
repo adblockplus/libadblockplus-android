@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android;
 
 import android.util.Log;
+import android.net.TrafficStats;
 
 import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.HeaderEntry;
@@ -44,6 +45,8 @@ public class AndroidHttpClient extends HttpClient
 
   protected static final String ENCODING_GZIP = "gzip";
   protected static final String ENCODING_IDENTITY = "identity";
+
+  protected static final int SOCKET_TAG = 1;
 
   private final boolean compressedStream;
   private final String charsetName;
@@ -74,6 +77,11 @@ public class AndroidHttpClient extends HttpClient
     }
 
     final ServerResponse response = new ServerResponse();
+
+    final int oldTag = TrafficStats.getThreadStatsTag();
+    TrafficStats.setThreadStatsTag(SOCKET_TAG);
+    Log.d(TAG, "Socket TAG set to: " + SOCKET_TAG);
+
     try
     {
       final URL url = new URL(request.getUrl());
@@ -89,10 +97,15 @@ public class AndroidHttpClient extends HttpClient
       connection.setRequestProperty("Accept-Encoding",
         (compressedStream ? ENCODING_GZIP : ENCODING_IDENTITY));
       connection.setInstanceFollowRedirects(request.getFollowRedirect());
+
+      Log.d(TAG, "Connecting...");
       connection.connect();
+      Log.d(TAG, "Connected");
 
       if (connection.getHeaderFields().size() > 0)
       {
+        Log.d(TAG, "Received header fields");
+
         List<HeaderEntry> responseHeaders = new LinkedList<>();
         for (Map.Entry<String, List<String>> eachEntry : connection.getHeaderFields().entrySet())
         {
@@ -109,20 +122,38 @@ public class AndroidHttpClient extends HttpClient
       InputStream inputStream = null;
       try
       {
-        int responseStatus = connection.getResponseCode();
+        final int responseStatus = connection.getResponseCode();
         response.setResponseStatus(responseStatus);
         response.setStatus(!isSuccessCode(responseStatus) ? NsStatus.ERROR_FAILURE : NsStatus.OK);
+
+        Log.d(TAG, "responseStatus: " + responseStatus);
 
         inputStream = isSuccessCode(responseStatus) ?
           connection.getInputStream() : connection.getErrorStream();
 
+        if (isSuccessCode(responseStatus))
+        {
+          Log.d(TAG, "Success responseStatus");
+        }
+        else
+        {
+          Log.d(TAG, "inputStream is set to Error stream");
+        }
+
+        if (inputStream == null)
+        {
+          Log.w(TAG, "inputStream is null");
+        }
+
         if (inputStream != null && compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()))
         {
+          Log.d(TAG, "Setting inputStream to GZIPInputStream");
           inputStream = new GZIPInputStream(inputStream);
         }
 
         if (inputStream != null)
         {
+          Log.d(TAG, "readFromInputStream(inputStream)");
           response.setResponse(readFromInputStream(inputStream));
         }
 
@@ -161,6 +192,11 @@ public class AndroidHttpClient extends HttpClient
     {
       Log.e(TAG, "WebRequest failed", t);
       throw new AdblockPlusException("WebRequest failed", t);
+    }
+    finally
+    {
+      TrafficStats.setThreadStatsTag(oldTag);
+      Log.d(TAG, "Socket TAG reverted to: " + oldTag);
     }
   }
 
