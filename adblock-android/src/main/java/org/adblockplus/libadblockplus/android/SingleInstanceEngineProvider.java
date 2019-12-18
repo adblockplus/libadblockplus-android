@@ -53,8 +53,8 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private List<EngineDisposedListener> engineDisposedListeners =
     new CopyOnWriteArrayList<EngineDisposedListener>();
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
-  private final Lock readLock = engineLock.readLock();
-  private final Lock writeLock = engineLock.writeLock();
+  private final ReentrantReadWriteLock.ReadLock readLock = engineLock.readLock();
+  private final ReentrantReadWriteLock.WriteLock writeLock = engineLock.writeLock();
 
   /*
     Simple ARC management for AdblockEngine
@@ -321,7 +321,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   }
 
   @Override
-  public Lock getReadEngineLock()
+  public ReentrantReadWriteLock.ReadLock getReadEngineLock()
   {
     Log.d(TAG, "getReadEngineLock() called from " + Thread.currentThread());
     return readLock;
