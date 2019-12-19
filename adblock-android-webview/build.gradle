@@ -17,6 +17,10 @@ dependencies {
   testImplementation 'junit:junit:4.12'
 }
 
+tasks.withType(Javadoc).all {
+    enabled = false
+}
+
 publish {
   userOrg = rootProject.ext.bintrayUserOrg
   groupId = rootProject.ext.bintrayGroupId
