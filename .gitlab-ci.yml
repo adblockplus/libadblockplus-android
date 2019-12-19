@@ -90,6 +90,8 @@ build_libadblockplus-android:without-jni:
 
 publish_to_bintray:
   stage: publish
+  dependencies: 
+    - build_libadblockplus-android:all
   script:
     - |
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
