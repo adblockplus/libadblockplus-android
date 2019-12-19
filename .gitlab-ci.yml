@@ -95,6 +95,6 @@ publish_to_bintray:
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
         echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to bintray'
       fi
-    - echo ./gradlew bintrayUpload -PbintrayUser=${BINTRAY_USERNAME} -PbintrayKey=${BINTRAY_KEY} -PdryRun=${DRY_RUN:-true}
+    - ./gradlew bintrayUpload -PbintrayUser=${BINTRAY_USERNAME} -PbintrayKey=${BINTRAY_KEY} -PdryRun=${DRY_RUN:-true}
   only:
     - tags
