@@ -1049,8 +1049,6 @@ public class AdblockWebView extends WebView
         " for url=" + failingUrl);
       loadError = errorCode;
 
-      stopAbpLoading();
-
       if (extWebViewClient != null)
       {
         extWebViewClient.onReceivedError(view, errorCode, description, failingUrl);
@@ -1069,8 +1067,6 @@ public class AdblockWebView extends WebView
               " code=" + error.getErrorCode() +
               " with description=" + error.getDescription() +
               " for url=" + request.getUrl());
-
-      stopAbpLoading();
 
       if (extWebViewClient != null)
       {
