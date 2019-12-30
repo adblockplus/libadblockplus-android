@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android;
 
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public interface AdblockEngineProvider
 {
@@ -58,7 +59,7 @@ public interface AdblockEngineProvider
    * Get lock object to prevent AdblockEngine reference from being changed
    * @return read lock object
    */
-  Lock getReadEngineLock();
+  ReentrantReadWriteLock.ReadLock getReadEngineLock();
 
   interface EngineCreatedListener
   {

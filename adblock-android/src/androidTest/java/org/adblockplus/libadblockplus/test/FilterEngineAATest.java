@@ -24,6 +24,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -36,6 +37,18 @@ public class FilterEngineAATest extends BaseFilterEngineTest
         .setLocale("zh")
         .build());
     super.setUp();
+  }
+
+  private Subscription findAASubscription(final List<Subscription> subscriptions)
+  {
+    for (final Subscription subscription : subscriptions)
+    {
+      if (subscription.isAcceptableAds())
+      {
+        return subscription;
+      }
+    }
+    return null;
   }
 
   @Test
@@ -62,5 +75,32 @@ public class FilterEngineAATest extends BaseFilterEngineTest
     assertNotNull(langSubscription);
     assertEquals(langSubscriptionUrl, langSubscription.getProperty("url").asString());
     assertTrue(filterEngine.isAcceptableAdsEnabled());
+  }
+
+  @Test
+  public void testAcceptableAdsEnabledDisabled()
+  {
+    // AA enabled
+    filterEngine.setAcceptableAdsEnabled(true);
+    assertTrue(filterEngine.isAcceptableAdsEnabled());
+    final List<Subscription> enabledSubscriptions = filterEngine.getListedSubscriptions();
+    assertNotNull(enabledSubscriptions);
+    assertEquals(2, enabledSubscriptions.size());
+
+    final Subscription enabledAaSubscription = findAASubscription(enabledSubscriptions);
+    assertNotNull(enabledAaSubscription);
+    assertFalse(enabledAaSubscription.isDisabled());
+
+    // AA disabled
+    filterEngine.setAcceptableAdsEnabled(false);
+    assertFalse(filterEngine.isAcceptableAdsEnabled());
+
+    final List<Subscription> disabledSubscriptions = filterEngine.getListedSubscriptions();
+    assertNotNull(disabledSubscriptions);
+    assertEquals(2, disabledSubscriptions.size()); // AA subscriptions listed ...
+
+    final Subscription disabledAaSubscription = findAASubscription(disabledSubscriptions);
+    assertNotNull(disabledAaSubscription);
+    assertTrue(disabledAaSubscription.isDisabled()); // ... but Disabled
   }
 }

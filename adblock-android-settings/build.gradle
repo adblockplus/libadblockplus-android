@@ -29,11 +29,19 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'
 }
 
+// Add "android.jar" to javadoc plugin classpath (See DP-612)
+afterEvaluate {
+    def androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+    tasks.withType(Javadoc).all {
+        classpath += project.files(androidJar)
+    }
+}
+
 publish {
     userOrg = rootProject.ext.bintrayUserOrg
     groupId = rootProject.ext.bintrayGroupId
     artifactId = 'adblock-android-settings'
-    publishVersion = '3.9.2'
+    publishVersion = rootProject.ext.moduleVersion
     licences = rootProject.ext.bintrayLicences
     desc = 'An Android library that provides a configuration interface for Adblock Plus.'
     website = rootProject.ext.bintrayWebsite

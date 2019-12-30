@@ -78,6 +78,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
 import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
@@ -457,15 +458,15 @@ public class AdblockWebView extends WebView
       public void run()
       {
         AdblockWebView.this.providerReference.set(provider);
-        final Lock lock = provider.getReadEngineLock();
-        lock.lock();
+        final ReentrantReadWriteLock.ReadLock lock = provider.getReadEngineLock();
+        final boolean locked = lock.tryLock();
 
         try
         {
           // Note that if retain() needs to create a FilterEngine it will wait (in bg thread)
           // until we finish this synchronized block and release the engine lock.
           getProvider().retain(true); // asynchronously
-          if (getProvider().getEngine() != null)
+          if (locked && getProvider().getEngine() != null)
           {
             adblockEnabled = new AtomicBoolean(getProvider().getEngine().isEnabled());
             Log.d(TAG, "Filter Engine already created, enable status is " + adblockEnabled);
@@ -479,7 +480,10 @@ public class AdblockWebView extends WebView
         }
         finally
         {
-          lock.unlock();
+          if (locked)
+          {
+            lock.unlock();
+          }
         }
       }
     };
@@ -1045,8 +1049,6 @@ public class AdblockWebView extends WebView
         " for url=" + failingUrl);
       loadError = errorCode;
 
-      stopAbpLoading();
-
       if (extWebViewClient != null)
       {
         extWebViewClient.onReceivedError(view, errorCode, description, failingUrl);
@@ -1065,8 +1067,6 @@ public class AdblockWebView extends WebView
               " code=" + error.getErrorCode() +
               " with description=" + error.getDescription() +
               " for url=" + request.getUrl());
-
-      stopAbpLoading();
 
       if (extWebViewClient != null)
       {
