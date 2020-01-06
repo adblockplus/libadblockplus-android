@@ -112,7 +112,6 @@ public class AdblockWebView extends WebView
   private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
   private static final String BRIDGE = "jsBridge";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
-  private static final String ELEMHIDEEMU_ARRAY_DEF_TOKEN = "[{{elemHidingEmulatedPatternsDef}}]";
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private boolean debugMode;
@@ -424,13 +423,6 @@ public class AdblockWebView extends WebView
       .replace(BRIDGE_TOKEN, BRIDGE)
       .replace(DEBUG_TOKEN, (debugMode ? "" : "//"))
       .replace(HIDDEN_TOKEN, elementsHiddenFlag);
-  }
-
-  private String readEmuScriptFile(String filename) throws IOException
-  {
-    return Utils
-      .readAssetAsString(getContext(), filename, ASSETS_CHARSET_NAME)
-      .replace(ELEMHIDEEMU_ARRAY_DEF_TOKEN, "JSON.parse(jsBridge.getElemhideEmulationSelectors())");
   }
 
   private void runScript(String script)
@@ -1909,7 +1901,7 @@ public class AdblockWebView extends WebView
       {
         StringBuffer sb = new StringBuffer();
         sb.append(readScriptFile("inject.js").replace(HIDE_TOKEN, readScriptFile("css.js")));
-        sb.append(readEmuScriptFile("elemhideemu.jst"));
+        sb.append(readScriptFile("elemhideemu.js"));
         injectJs = sb.toString();
       }
 
