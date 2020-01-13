@@ -1,5 +1,21 @@
 stages:
   - build
+  - publish
+
+.job_template: &common_build_all
+  before_script:
+    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
+    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
+    - mkdir -p .git/info
+    - ./ensure_dependencies.py
+    - cd ./libadblockplus
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
+    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
+    - cd ..
 
 build_libadblockplus-android:arm:
   stage: build
@@ -44,20 +60,8 @@ build_libadblockplus-android:x86:
     - ./gradlew clean assembleAbi_x86
 
 build_libadblockplus-android:all:
+  <<: *common_build_all
   stage: build
-  before_script:
-    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
-    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
-    - mkdir -p .git/info
-    - ./ensure_dependencies.py
-    - cd ./libadblockplus
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
-    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
-    - cd ..
   script:
     - ./gradlew clean assemble
   artifacts:
@@ -86,3 +90,16 @@ build_libadblockplus-android:without-jni:
   # If the parameter is working correctly then the building should succeed without libadblockplus.
   script:
     - SKIP_JNI_COMPILATION=true ./gradlew clean assemble
+
+publish_to_bintray:
+  <<: *common_build_all
+  stage: publish
+  only:
+    - tags
+  script:
+    - |
+      if [[ ${DRY_RUN:-true} == "true" ]] ; then
+        echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to bintray'
+      fi
+    - ./gradlew bintrayUpload -PbintrayUser=${BINTRAY_USERNAME:-unset} -PbintrayKey=${BINTRAY_KEY:-unset} -PdryRun=${DRY_RUN:-true}
+
