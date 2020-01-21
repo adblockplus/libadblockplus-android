@@ -132,6 +132,7 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
+  private AtomicReference<String> gRedirectedUrl = new AtomicReference("");
 
   /**
    * Listener for ad blocking related events.
@@ -834,7 +835,17 @@ public class AdblockWebView extends WebView
     @Override
     public void onProgressChanged(WebView view, int newProgress)
     {
-      d("Loading progress=" + newProgress + "%");
+      // Note that we cannot use here view.getUrl() method as documentation says:
+      // This is not always the same as the URL passed to WebViewClient.onPageStarted because
+      // although the load for that URL has begun, the current page may not have changed.
+      if (url != null && url.equals(gRedirectedUrl.get()))
+      {
+        d("Skipping loading progress=" + newProgress + "%" + " for url: " + url +
+                ", gRedirectedUrl=" + gRedirectedUrl.get());
+        super.onProgressChanged(view, newProgress);
+        return;
+      }
+      d("Loading progress=" + newProgress + "%" + " for url: " + url);
       tryInjectJs();
 
       if (extWebChromeClient != null)
@@ -918,6 +929,7 @@ public class AdblockWebView extends WebView
     public void onPageStarted(WebView view, String url, Bitmap favicon)
     {
       d("onPageStarted called for url " + url);
+      gRedirectedUrl.set("");
       if (loading)
       {
         stopAbpLoading();
@@ -940,6 +952,7 @@ public class AdblockWebView extends WebView
     @Override
     public void onPageFinished(WebView view, String url)
     {
+      d("onPageFinished called for url " + url);
       loading = false;
       if (extWebViewClient != null)
       {
@@ -1548,6 +1561,7 @@ public class AdblockWebView extends WebView
           @Override
           public void run()
           {
+            gRedirectedUrl.set(url);
             webview.stopLoading();
             webview.loadUrl(finalUrl);
           }
