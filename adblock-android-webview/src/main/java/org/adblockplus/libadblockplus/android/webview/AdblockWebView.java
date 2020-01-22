@@ -1447,6 +1447,9 @@ public class AdblockWebView extends WebView
         if (webview != null)
         {
           reloadWebViewUrl(webview, url, responseHolder);
+          // Here, to guarantee correct order of onPageStarted, onPageFinished and onProgressChanged
+          // we can't return null as it makes system webview to proceed which may cause some racing.
+          return new WebResourceResponse("text/plain", "UTF-8", null);
         }
         return null;
       }
