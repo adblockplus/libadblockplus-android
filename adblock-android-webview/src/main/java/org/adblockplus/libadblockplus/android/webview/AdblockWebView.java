@@ -133,6 +133,7 @@ public class AdblockWebView extends WebView
   private boolean loading;
   private String elementsHiddenFlag;
   private boolean redirectInProgress = false;
+  private WebResourceResponse blockedWebResponse = new WebResourceResponse("text/plain", "UTF-8", null);
 
   /**
    * Listener for ad blocking related events.
@@ -1359,7 +1360,7 @@ public class AdblockWebView extends WebView
                   url, referrerChain, contentType));
 
               // if we should block, return empty response which results in 'errorLoading' callback
-              return new WebResourceResponse("text/plain", "UTF-8", null);
+              return blockedWebResponse;
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
@@ -1449,7 +1450,7 @@ public class AdblockWebView extends WebView
           reloadWebViewUrl(webview, url, responseHolder);
           // Here, to guarantee correct order of onPageStarted, onPageFinished and onProgressChanged
           // we can't return null as it makes system webview to proceed which may cause some racing.
-          return new WebResourceResponse("text/plain", "UTF-8", null);
+          return blockedWebResponse;
         }
         return null;
       }
