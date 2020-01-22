@@ -132,7 +132,7 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
-  private AtomicBoolean redirectInProgress = new AtomicBoolean(false);
+  private boolean redirectInProgress = false;
 
   /**
    * Listener for ad blocking related events.
@@ -835,7 +835,7 @@ public class AdblockWebView extends WebView
     @Override
     public void onProgressChanged(WebView view, int newProgress)
     {
-      if (redirectInProgress.get())
+      if (redirectInProgress)
       {
         d("Skipping loading progress=" + newProgress + "%" + " for url: " + view.getUrl());
         super.onProgressChanged(view, newProgress);
@@ -925,7 +925,7 @@ public class AdblockWebView extends WebView
     public void onPageStarted(WebView view, String url, Bitmap favicon)
     {
       d("onPageStarted called for url " + url);
-      redirectInProgress.set(false);
+      redirectInProgress = false;
       if (loading)
       {
         stopAbpLoading();
@@ -948,7 +948,7 @@ public class AdblockWebView extends WebView
     @Override
     public void onPageFinished(WebView view, String url)
     {
-      if (redirectInProgress.get())
+      if (redirectInProgress)
       {
         d("Skipping onPageFinished for url: " + url);
         super.onPageFinished(view, url);
@@ -1563,7 +1563,7 @@ public class AdblockWebView extends WebView
           @Override
           public void run()
           {
-            redirectInProgress.set(true);
+            redirectInProgress = true;
             webview.stopLoading();
             webview.loadUrl(finalUrl);
           }
