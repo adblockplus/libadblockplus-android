@@ -112,7 +112,6 @@ public class AdblockWebView extends WebView
   private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
   private static final String BRIDGE = "jsBridge";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
-  private static final String ELEMHIDEEMU_ARRAY_DEF_TOKEN = "[{{elemHidingEmulatedPatternsDef}}]";
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private boolean debugMode;
@@ -133,6 +132,8 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
+  private boolean redirectInProgress = false;
+  private WebResourceResponse blockedWebResponse = new WebResourceResponse("text/plain", "UTF-8", null);
 
   /**
    * Listener for ad blocking related events.
@@ -424,13 +425,6 @@ public class AdblockWebView extends WebView
       .replace(BRIDGE_TOKEN, BRIDGE)
       .replace(DEBUG_TOKEN, (debugMode ? "" : "//"))
       .replace(HIDDEN_TOKEN, elementsHiddenFlag);
-  }
-
-  private String readEmuScriptFile(String filename) throws IOException
-  {
-    return Utils
-      .readAssetAsString(getContext(), filename, ASSETS_CHARSET_NAME)
-      .replace(ELEMHIDEEMU_ARRAY_DEF_TOKEN, "JSON.parse(jsBridge.getElemhideEmulationSelectors())");
   }
 
   private void runScript(String script)
@@ -842,7 +836,13 @@ public class AdblockWebView extends WebView
     @Override
     public void onProgressChanged(WebView view, int newProgress)
     {
-      d("Loading progress=" + newProgress + "%");
+      if (redirectInProgress)
+      {
+        d("Skipping loading progress=" + newProgress + "%" + " for url: " + view.getUrl());
+        super.onProgressChanged(view, newProgress);
+        return;
+      }
+      d("Loading progress=" + newProgress + "%" + " for url: " + view.getUrl());
       tryInjectJs();
 
       if (extWebChromeClient != null)
@@ -926,6 +926,7 @@ public class AdblockWebView extends WebView
     public void onPageStarted(WebView view, String url, Bitmap favicon)
     {
       d("onPageStarted called for url " + url);
+      redirectInProgress = false;
       if (loading)
       {
         stopAbpLoading();
@@ -948,6 +949,13 @@ public class AdblockWebView extends WebView
     @Override
     public void onPageFinished(WebView view, String url)
     {
+      if (redirectInProgress)
+      {
+        d("Skipping onPageFinished for url: " + url);
+        super.onPageFinished(view, url);
+        return;
+      }
+      d("onPageFinished called for url " + url);
       loading = false;
       if (extWebViewClient != null)
       {
@@ -1352,7 +1360,7 @@ public class AdblockWebView extends WebView
                   url, referrerChain, contentType));
 
               // if we should block, return empty response which results in 'errorLoading' callback
-              return new WebResourceResponse("text/plain", "UTF-8", null);
+              return blockedWebResponse;
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
@@ -1440,6 +1448,9 @@ public class AdblockWebView extends WebView
         if (webview != null)
         {
           reloadWebViewUrl(webview, url, responseHolder);
+          // Here, to guarantee correct order of onPageStarted, onPageFinished and onProgressChanged
+          // we can't return null as it makes system webview to proceed which may cause some racing.
+          return blockedWebResponse;
         }
         return null;
       }
@@ -1556,6 +1567,7 @@ public class AdblockWebView extends WebView
           @Override
           public void run()
           {
+            redirectInProgress = true;
             webview.stopLoading();
             webview.loadUrl(finalUrl);
           }
@@ -1909,7 +1921,7 @@ public class AdblockWebView extends WebView
       {
         StringBuffer sb = new StringBuffer();
         sb.append(readScriptFile("inject.js").replace(HIDE_TOKEN, readScriptFile("css.js")));
-        sb.append(readEmuScriptFile("elemhideemu.jst"));
+        sb.append(readScriptFile("elemhideemu.js"));
         injectJs = sb.toString();
       }
 

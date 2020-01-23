@@ -27,6 +27,7 @@ import static org.junit.Assert.fail;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 
 public class UtilsTest
 {
@@ -148,9 +149,10 @@ public class UtilsTest
     assertEquals("name\\r123", Utils.escapeJavaScriptString("name\r123"));  // \r
     assertEquals("123", Utils.escapeJavaScriptString(new String(new byte[]
         { '1', '2', '3' })));
+    final Charset utf8 = Charset.forName("UTF-8");
     assertEquals("123\u202845", Utils.escapeJavaScriptString(new String(new byte[] //\u2028
-        { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA8, '4', '5' })));
+        { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA8, '4', '5' }, utf8)));
     assertEquals("123\u202945", Utils.escapeJavaScriptString(new String(new byte[] //\u2029
-        { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA9, '4', '5' })));
+        { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA9, '4', '5' }, utf8)));
   }
 }

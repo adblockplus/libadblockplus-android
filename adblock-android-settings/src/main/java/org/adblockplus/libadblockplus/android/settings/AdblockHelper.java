@@ -165,7 +165,7 @@ public class AdblockHelper
   {
     if (isInitialized)
     {
-      new IllegalStateException("Usage exception: already initialized. Check `isInit()`");
+      throw new IllegalStateException("Usage exception: already initialized. Check `isInit()`");
     }
 
     initProvider(context, basePath, developmentBuild);
