@@ -113,6 +113,11 @@ public class AdblockWebView extends WebView
   private static final String BRIDGE = "jsBridge";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
+  // decisions
+  private final static WebResourceResponse blockWebResponse =
+      new WebResourceResponse("text/plain", "UTF-8", null);
+  private final static WebResourceResponse allowLoadWebResponse = null;
+
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private boolean debugMode;
   private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference();
@@ -133,7 +138,6 @@ public class AdblockWebView extends WebView
   private boolean loading;
   private String elementsHiddenFlag;
   private boolean redirectInProgress = false;
-  private WebResourceResponse blockedWebResponse = new WebResourceResponse("text/plain", "UTF-8", null);
 
   /**
    * Listener for ad blocking related events.
@@ -1220,9 +1224,7 @@ public class AdblockWebView extends WebView
         if (getProvider().getCounter() == 0)
         {
           e("FilterEngine already disposed, allow loading");
-
-          // allow loading by returning null
-          return null;
+          return allowLoadWebResponse;
         }
         else
         {
@@ -1231,7 +1233,7 @@ public class AdblockWebView extends WebView
 
         if (adblockEnabled == null)
         {
-          return null;
+          return allowLoadWebResponse;
         }
         else
         {
@@ -1240,7 +1242,7 @@ public class AdblockWebView extends WebView
           adblockEnabled.set(getProvider().getEngine().isEnabled());
           if (!adblockEnabled.get())
           {
-            return null;
+            return allowLoadWebResponse;
           }
         }
 
@@ -1358,9 +1360,7 @@ public class AdblockWebView extends WebView
 
               notifyResourceBlocked(new EventsListener.BlockedResourceInfo(
                   url, referrerChain, contentType));
-
-              // if we should block, return empty response which results in 'errorLoading' callback
-              return blockedWebResponse;
+              return blockWebResponse;
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
@@ -1380,7 +1380,7 @@ public class AdblockWebView extends WebView
       if (requestHeadersMap.containsKey(HEADER_REQUESTED_RANGE))
       {
         Log.d(TAG, "Skipping site key check for the request with a Range header");
-        return null;
+        return allowLoadWebResponse;
       }
 
       return fetchUrlAndCheckSiteKey(isMainFrame ? webview : null, url, requestHeadersMap, requestMethod);
@@ -1394,7 +1394,7 @@ public class AdblockWebView extends WebView
           !requestMethod.equalsIgnoreCase(HttpClient.REQUEST_METHOD_GET))
       {
         // for now we handle site key only for GET requests
-        return null;
+        return allowLoadWebResponse;
       }
 
       Log.d(TAG, "fetchUrlAndCheckSiteKey() called from Thread " + Thread.currentThread().getId());
@@ -1426,7 +1426,7 @@ public class AdblockWebView extends WebView
       {
         Log.e(TAG, "WebRequest failed", e);
         // allow WebView to continue, repeating the request and handling the response
-        return null;
+        return allowLoadWebResponse;
       }
 
       try
@@ -1436,7 +1436,7 @@ public class AdblockWebView extends WebView
       catch (final InterruptedException e)
       {
         // error waiting for the response, continue by returning null
-        return null;
+        return allowLoadWebResponse;
       }
 
       final ServerResponse response = responseHolder.response;
@@ -1450,9 +1450,9 @@ public class AdblockWebView extends WebView
           reloadWebViewUrl(webview, url, responseHolder);
           // Here, to guarantee correct order of onPageStarted, onPageFinished and onProgressChanged
           // we can't return null as it makes system webview to proceed which may cause some racing.
-          return blockedWebResponse;
+          return blockWebResponse;
         }
-        return null;
+        return allowLoadWebResponse;
       }
 
       if (response.getFinalUrl() != null)
@@ -1522,7 +1522,7 @@ public class AdblockWebView extends WebView
                 statusCode, getReasonPhrase(status),
                 responseHeadersMap, byteBufferInputStream);
       }
-      return null;
+      return allowLoadWebResponse;
     }
 
     private void reloadWebViewUrl(final WebView webview,
