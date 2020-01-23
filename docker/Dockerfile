@@ -41,6 +41,8 @@ RUN adduser --gecos "" --disabled-password ci_user && \
     mkdir /opt/ci && \
     chown -R ci_user:ci_user /opt/ci
 
+ADD https://s3.amazonaws.com/saucelabs-runner/v1.8/runner.jar /opt/ci/
+RUN chmod 644 /opt/ci/runner.jar
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["gitlab-runner", "run", "--working-directory", "/opt/ci", "--user", "ci_user"]
