@@ -119,7 +119,7 @@ public class AdblockWebView extends WebView
   private final static WebResourceResponse allowLoadWebResponse = null;
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
-  private boolean debugMode;
+  private boolean debugMode = true;
   private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference();
   private Integer loadError;
   private WebChromeClient extWebChromeClient;
@@ -137,7 +137,7 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
-  private boolean redirectInProgress = false;
+  private AtomicBoolean redirectInProgress = new AtomicBoolean(false);
 
   /**
    * Listener for ad blocking related events.
@@ -840,13 +840,12 @@ public class AdblockWebView extends WebView
     @Override
     public void onProgressChanged(WebView view, int newProgress)
     {
-      if (redirectInProgress)
+      if (redirectInProgress.get())
       {
-        d("Skipping loading progress=" + newProgress + "%" + " for url: " + view.getUrl());
-        super.onProgressChanged(view, newProgress);
+        d("Skipping onProgressChanged to " + newProgress + "%" + " for url: " + view.getUrl());
         return;
       }
-      d("Loading progress=" + newProgress + "%" + " for url: " + view.getUrl());
+      d("onProgressChanged to " + newProgress + "%" + " for url: " + view.getUrl());
       tryInjectJs();
 
       if (extWebChromeClient != null)
@@ -930,7 +929,6 @@ public class AdblockWebView extends WebView
     public void onPageStarted(WebView view, String url, Bitmap favicon)
     {
       d("onPageStarted called for url " + url);
-      redirectInProgress = false;
       if (loading)
       {
         stopAbpLoading();
@@ -953,10 +951,10 @@ public class AdblockWebView extends WebView
     @Override
     public void onPageFinished(WebView view, String url)
     {
-      if (redirectInProgress)
+      if (redirectInProgress.get())
       {
         d("Skipping onPageFinished for url: " + url);
-        super.onPageFinished(view, url);
+        redirectInProgress.set(false);
         return;
       }
       d("onPageFinished called for url " + url);
@@ -1055,11 +1053,18 @@ public class AdblockWebView extends WebView
     @Override
     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
     {
-      e("Load error:" +
+      e("onReceivedError:" +
         " code=" + errorCode +
         " with description=" + description +
-        " for url=" + failingUrl);
+        " for url=" + failingUrl +
+        " redirectInProgress.get()=" + redirectInProgress.get());
       loadError = errorCode;
+
+      if (redirectInProgress.get())
+      {
+        d("Skipping onReceivedError for redirection");
+        return;
+      }
 
       if (extWebViewClient != null)
       {
@@ -1075,10 +1080,18 @@ public class AdblockWebView extends WebView
     @Override
     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error)
     {
-      e("Load error:" +
-              " code=" + error.getErrorCode() +
-              " with description=" + error.getDescription() +
-              " for url=" + request.getUrl());
+      e("onReceivedError:" +
+        " code=" + error.getErrorCode() +
+        " with description=" + error.getDescription() +
+        " for url=" + request.getUrl() +
+        " redirectInProgress.get()=" + redirectInProgress.get() +
+        " request.isForMainFrame()=" + request.isForMainFrame());
+
+      if (redirectInProgress.get() && request.isForMainFrame())
+      {
+        d("Skipping onReceivedError for redirection");
+        return;
+      }
 
       if (extWebViewClient != null)
       {
@@ -1447,10 +1460,7 @@ public class AdblockWebView extends WebView
       {
         if (webview != null)
         {
-          reloadWebViewUrl(webview, url, responseHolder);
-          // Here, to guarantee correct order of onPageStarted, onPageFinished and onProgressChanged
-          // we can't return null as it makes system webview to proceed which may cause some racing.
-          return blockWebResponse;
+          return reloadWebViewUrl(url, responseHolder);
         }
         return allowLoadWebResponse;
       }
@@ -1525,9 +1535,8 @@ public class AdblockWebView extends WebView
       return allowLoadWebResponse;
     }
 
-    private void reloadWebViewUrl(final WebView webview,
-                                  final String url,
-                                  final ResponseHolder responseHolder)
+    private WebResourceResponse reloadWebViewUrl(final String url,
+                                                 final ResponseHolder responseHolder)
     {
       String redirectedUrl = null;
       for (final HeaderEntry header : responseHolder.response.getResponseHeaders())
@@ -1559,20 +1568,14 @@ public class AdblockWebView extends WebView
 
       if (redirectedUrl != null)
       {
-        Log.d(TAG, "redirecting webview from " + url + " to " + redirectedUrl);
-        final String finalUrl = redirectedUrl;
+        Log.d(TAG, "redirecting a webview from " + url + " to " + redirectedUrl);
         // we need to reload webview url to make it aware of new new url after redirection
-        webview.post(new Runnable()
-        {
-          @Override
-          public void run()
-          {
-            redirectInProgress = true;
-            webview.stopLoading();
-            webview.loadUrl(finalUrl);
-          }
-        });
+        redirectInProgress.set(true);
+        final Map<String, String> responseHeaders = Collections.singletonMap("Refresh", "0; url=" + redirectedUrl);
+        return new WebResourceResponse("text/plain", "UTF-8", 200,
+                "OK", responseHeaders, new ByteArrayInputStream(new byte[] {}));
       }
+      return allowLoadWebResponse;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
