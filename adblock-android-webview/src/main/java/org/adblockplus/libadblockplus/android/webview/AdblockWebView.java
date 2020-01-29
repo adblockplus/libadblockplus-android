@@ -80,6 +80,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.adblockplus.libadblockplus.HttpClient.STATUS_CODE_OK;
 import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
 import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
 
@@ -99,6 +100,7 @@ public class AdblockWebView extends WebView
   protected static final String HEADER_COOKIE = "Cookie";
   protected static final String HEADER_USER_AGENT = "User-Agent";
   protected static final String HEADER_ACCEPT = "Accept";
+  protected static final String HEADER_REFRESH = "Refresh";
 
   // use low-case strings as in WebResponse all header keys are lowered-case
   protected static final String HEADER_SITEKEY = "x-adblock-key";
@@ -114,9 +116,11 @@ public class AdblockWebView extends WebView
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
   // decisions
-  private static final WebResourceResponse blockWebResponse =
-      new WebResourceResponse("text/plain", "UTF-8", null);
-  private static final WebResourceResponse allowLoadWebResponse = null;
+  private final static String RESPONSE_CHARSET_NAME = "UTF-8";
+  private final static String RESPONSE_MIME_TYPE = "text/plain";
+  private final static WebResourceResponse blockWebResponse =
+      new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, null);
+  private final static WebResourceResponse allowLoadWebResponse = null;
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private boolean debugMode = true;
@@ -1571,8 +1575,8 @@ public class AdblockWebView extends WebView
         Log.d(TAG, "redirecting a webview from " + url + " to " + redirectedUrl);
         // we need to reload webview url to make it aware of new new url after redirection
         redirectInProgress.set(true);
-        final Map<String, String> responseHeaders = Collections.singletonMap("Refresh", "0; url=" + redirectedUrl);
-        return new WebResourceResponse("text/plain", "UTF-8", 200,
+        final Map<String, String> responseHeaders = Collections.singletonMap(HEADER_REFRESH, "0; url=" + redirectedUrl);
+        return new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, STATUS_CODE_OK,
                 "OK", responseHeaders, new ByteArrayInputStream(new byte[] {}));
       }
       return allowLoadWebResponse;

@@ -165,7 +165,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     try
     {
       response.setResponse(readResourceContent(resourceId));
-      response.setResponseStatus(200);
+      response.setResponseStatus(HttpClient.STATUS_CODE_OK);
       response.setStatus(ServerResponse.NsStatus.OK);
     }
     catch (IOException e)
