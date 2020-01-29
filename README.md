@@ -339,7 +339,7 @@ if (settings == null) // not yet saved
 settings.setAdblockEnabled(newValue);
 storage.save(settings);
 ```
-Use `setDebugMode(boolean debugMode)` to turn debug log output (Android log and JS console) on/off.
+Call `setDebugMode(false)` to turn off debug log output (Android log and JS console) which is enabled by default.
 
 Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start render webpage after 'DOMContentLoaded' event is fired.
 
