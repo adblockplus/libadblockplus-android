@@ -179,7 +179,8 @@ public class AdblockHelper
    * Check if it is already initialized
    * @return
    */
-  public boolean isInit() {
+  public boolean isInit()
+  {
     return isInitialized;
   }
 

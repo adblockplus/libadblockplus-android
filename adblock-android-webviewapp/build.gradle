@@ -1,29 +1,29 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+  compileSdkVersion 28
+  buildToolsVersion "28.0.3"
 
-    defaultConfig {
-        applicationId "org.adblockplus.libadblockplus.android.webviewapp"
-        minSdkVersion 21
-        targetSdkVersion 28
-        versionCode 30
-        versionName = rootProject.ext.moduleVersion
-        missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
-    }
+  defaultConfig {
+    applicationId "org.adblockplus.libadblockplus.android.webviewapp"
+    minSdkVersion 21
+    targetSdkVersion 28
+    versionCode 30
+    versionName = rootProject.ext.moduleVersion
+    missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
+  }
 
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
+  buildTypes {
+    release {
+      minifyEnabled true
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
+  }
 }
 
 dependencies {
-    implementation project(':adblock-android-settings')
-    implementation project(':adblock-android-webview')
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation "com.android.support:design:28.0.0"
+  implementation project(':adblock-android-settings')
+  implementation project(':adblock-android-webview')
+  implementation 'com.android.support:appcompat-v7:28.0.0'
+  implementation "com.android.support:design:28.0.0"
 }

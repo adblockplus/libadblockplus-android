@@ -114,9 +114,9 @@ public class AdblockWebView extends WebView
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
   // decisions
-  private final static WebResourceResponse blockWebResponse =
+  private static final WebResourceResponse blockWebResponse =
       new WebResourceResponse("text/plain", "UTF-8", null);
-  private final static WebResourceResponse allowLoadWebResponse = null;
+  private static final WebResourceResponse allowLoadWebResponse = null;
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private boolean debugMode = true;
