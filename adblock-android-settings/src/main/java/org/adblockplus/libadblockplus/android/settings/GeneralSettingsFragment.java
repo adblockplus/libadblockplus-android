@@ -85,7 +85,8 @@ public class GeneralSettingsFragment
   }
 
   @Override
-  public void onCreate(Bundle savedInstanceState) {
+  public void onCreate(Bundle savedInstanceState)
+  {
     super.onCreate(savedInstanceState);
     // Issue DP-212: In case GeneralSettingsFragment was destroyed and recreated
     // (app minimized and restored scenario) and some of it's child views were

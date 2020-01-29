@@ -94,7 +94,8 @@ public abstract class BasePlatformTest extends BaseTest
   }
 
   @Override
-  public void setUp() {
+  public void setUp()
+  {
     super.setUp();
     setUpPlatform();
   }
