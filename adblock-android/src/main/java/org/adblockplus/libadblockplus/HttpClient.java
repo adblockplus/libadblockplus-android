@@ -25,16 +25,18 @@ public abstract class HttpClient
     registerNatives();
   }
 
+  public static final int STATUS_CODE_OK = 200;
+
   /**
    * Possible values for request method argument (see `request(..)` method)
    */
-  public static String REQUEST_METHOD_GET = "GET";
-  public static String REQUEST_METHOD_POST = "POST";
-  public static String REQUEST_METHOD_HEAD = "HEAD";
-  public static String REQUEST_METHOD_OPTIONS = "OPTIONS";
-  public static String REQUEST_METHOD_PUT = "PUT";
-  public static String REQUEST_METHOD_DELETE = "DELETE";
-  public static String REQUEST_METHOD_TRACE = "TRACE";
+  public static final String REQUEST_METHOD_GET = "GET";
+  public static final String REQUEST_METHOD_POST = "POST";
+  public static final String REQUEST_METHOD_HEAD = "HEAD";
+  public static final String REQUEST_METHOD_OPTIONS = "OPTIONS";
+  public static final String REQUEST_METHOD_PUT = "PUT";
+  public static final String REQUEST_METHOD_DELETE = "DELETE";
+  public static final String REQUEST_METHOD_TRACE = "TRACE";
 
   /**
    * Checks if HTTP status code is a redirection.
@@ -53,7 +55,7 @@ public abstract class HttpClient
    */
   public static boolean isSuccessCode(int httpStatusCode)
   {
-    return httpStatusCode >= 200 && httpStatusCode <= 299;
+    return httpStatusCode >= STATUS_CODE_OK && httpStatusCode <= 299;
   }
 
   /**

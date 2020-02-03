@@ -280,7 +280,8 @@ public final class FilterEngine
    * Get FilterEngine pointer
    * @return C++ FilterEngine instance pointer (AdblockPlus::FilterEngine*)
    */
-  public long getNativePtr() {
+  public long getNativePtr()
+  {
     return getNativePtr(this.ptr);
   }
 

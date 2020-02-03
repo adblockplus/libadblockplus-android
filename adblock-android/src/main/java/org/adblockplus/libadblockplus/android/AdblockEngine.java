@@ -21,7 +21,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build.VERSION;
-import android.util.Log;
+import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FileSystem;
@@ -81,8 +81,6 @@ public final class AdblockEngine
 
   // default base path to store subscription files in android app
   public static final String BASE_PATH_DIRECTORY = "adblock";
-
-  private static final String TAG = Utils.getTag(AdblockEngine.class);
 
   /*
    * The fields below are volatile because:
@@ -250,7 +248,7 @@ public final class AdblockEngine
           @Override
           public void onIntercepted(String url, int resourceId)
           {
-            Log.d(TAG, "Force subscription update for intercepted URL " + url);
+            Timber.d("Force subscription update for intercepted URL " + url);
             if (engine.filterEngine != null)
             {
               engine.filterEngine.updateFiltersAsync(url);
@@ -289,7 +287,7 @@ public final class AdblockEngine
 
     private void createEngines()
     {
-      engine.logSystem = new AndroidLogSystem();
+      engine.logSystem = new TimberLogSystem();
       engine.fileSystem = null; // using default
       engine.platform = new Platform(engine.logSystem, engine.fileSystem, engine.httpClient, basePath);
       if (v8IsolateProviderPtr != null)
@@ -312,7 +310,7 @@ public final class AdblockEngine
 
   public void dispose()
   {
-    Log.w(TAG, "Dispose");
+    Timber.w("Dispose");
 
     // engines first
     if (this.filterEngine != null)

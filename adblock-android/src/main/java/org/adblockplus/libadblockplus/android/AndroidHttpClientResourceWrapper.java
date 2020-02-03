@@ -18,7 +18,7 @@ package org.adblockplus.libadblockplus.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
+import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
@@ -37,8 +37,6 @@ import java.util.Set;
  */
 public class AndroidHttpClientResourceWrapper extends HttpClient
 {
-  private static final String TAG = Utils.getTag(AndroidHttpClientResourceWrapper.class);
-
   public static final String EASYLIST =
     "https://easylist-downloads.adblockplus.org/easylist.txt";
   public static final String EASYLIST_INDONESIAN =
@@ -117,7 +115,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     {
       if (!storage.contains(urlWithoutParams))
       {
-        Log.w(TAG, "Intercepting request for " + request.getUrl() + " with resource #" + resourceId.intValue());
+        Timber.w("Intercepting request for " + request.getUrl() + " with resource #" + resourceId.intValue());
         ServerResponse response = buildResourceContentResponse(resourceId);
         storage.put(urlWithoutParams);
 
@@ -131,7 +129,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
       }
       else
       {
-        Log.d(TAG, "Skip intercepting");
+        Timber.d("Skip intercepting");
       }
     }
 
@@ -141,7 +139,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
 
   protected ByteBuffer readResourceContent(int resourceId) throws IOException
   {
-    Log.d(TAG, "Reading from resource ...");
+    Timber.d("Reading from resource ...");
 
     InputStream is = null;
 
@@ -165,12 +163,12 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     try
     {
       response.setResponse(readResourceContent(resourceId));
-      response.setResponseStatus(200);
+      response.setResponseStatus(HttpClient.STATUS_CODE_OK);
       response.setStatus(ServerResponse.NsStatus.OK);
     }
     catch (IOException e)
     {
-      Log.e(TAG, "Error injecting response", e);
+      Timber.e(e, "Error injecting response");
       response.setStatus(ServerResponse.NsStatus.ERROR_FAILURE);
     }
 
