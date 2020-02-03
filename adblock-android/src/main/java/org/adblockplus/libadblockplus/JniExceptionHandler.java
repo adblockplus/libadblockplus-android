@@ -18,10 +18,9 @@
 package org.adblockplus.libadblockplus;
 
 import java.util.concurrent.LinkedBlockingQueue;
-
 import org.adblockplus.libadblockplus.android.Utils;
-
 import android.util.Log;
+import timber.log.Timber;
 
 public final class JniExceptionHandler
 {
@@ -60,6 +59,7 @@ public final class JniExceptionHandler
         {
           final Throwable t = this.exceptionQueue.take();
           Log.e(TAG, "Exception from JNI", t);
+          Timber.e(t, "Exception from JNI");
         }
         catch (final InterruptedException ie)
         {

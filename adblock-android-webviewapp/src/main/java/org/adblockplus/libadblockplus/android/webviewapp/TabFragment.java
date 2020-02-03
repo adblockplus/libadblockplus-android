@@ -231,9 +231,6 @@ public class TabFragment extends Fragment
     setProgressVisible(false);
     updateButtons();
 
-    // to get debug/warning log output
-    webView.setDebugMode(DEVELOPMENT_BUILD);
-
     // to show that external WebViewClient is still working
     webView.setWebViewClient(webViewClient);
 

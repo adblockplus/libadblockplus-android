@@ -20,16 +20,14 @@ package org.adblockplus.libadblockplus.android.settings;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.preference.PreferenceFragmentCompat;
-import android.util.Log;
+import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.Utils;
 
 public abstract class BaseSettingsFragment
   <ListenerClass extends BaseSettingsFragment.Listener>
   extends PreferenceFragmentCompat
 {
-  protected final String TAG = Utils.getTag(this.getClass());
   protected AdblockSettings settings;
   protected Provider provider;
   protected ListenerClass listener;
@@ -67,7 +65,7 @@ public abstract class BaseSettingsFragment
         + clazz.getSimpleName()
         + " interface";
 
-      Log.e(TAG, message);
+      Timber.e(message);
       throw new RuntimeException(message);
     }
 
@@ -79,7 +77,7 @@ public abstract class BaseSettingsFragment
     settings = provider.getAdblockSettingsStorage().load();
     if (settings == null)
     {
-      Log.w(TAG, "No adblock settings, yet. Using defdault ones from adblock engine");
+      Timber.w("No adblock settings, yet. Using defdault ones from adblock engine");
 
       // null because it was not saved yet
       settings = AdblockSettingsStorage.getDefaultSettings(provider.getAdblockEngine());

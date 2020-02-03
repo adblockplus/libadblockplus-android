@@ -339,7 +339,24 @@ if (settings == null) // not yet saved
 settings.setAdblockEnabled(newValue);
 storage.save(settings);
 ```
-Call `setDebugMode(false)` to turn off debug log output (Android log and JS console) which is enabled by default.
+
+Android SDK logging system is based on Timber library.
+
+If you are configuring your project using Maven dependencies to consume our Android SDK
+then Timber dependency is automatically installed.
+If you are just copying AAR files to your project workspace then you need to add this line to your dependencies:
+
+`implementation 'com.jakewharton.timber:timber:4.7.1'`.
+
+To enable desired log output level configure Timber logger in your application code.
+
+For example this code enables all debug logs in DEBUG mode:
+```
+if (BuildConfig.DEBUG) {
+    Timber.plant(new Timber.DebugTree());
+}
+```
+Please refer to https://github.com/JakeWharton/timber for more information about Timber.
 
 Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start render webpage after 'DOMContentLoaded' event is fired.
 

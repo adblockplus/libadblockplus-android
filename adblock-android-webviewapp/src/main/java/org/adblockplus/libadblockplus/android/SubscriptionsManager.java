@@ -21,7 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
-import android.util.Log;
+import timber.log.Timber;
 
 import java.util.List;
 
@@ -31,8 +31,6 @@ import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 public class SubscriptionsManager
 {
-  private static final String TAG = SubscriptionsManager.class.getSimpleName();
-
   private static final String ACTION_PREFIX =
       "org.adblockplus.libadblockplus.android.intent.action.SUBSCRIPTION_";
   private static final String ACTION_LIST = ACTION_PREFIX + "LIST";
@@ -49,14 +47,14 @@ public class SubscriptionsManager
   public SubscriptionsManager(final Context context)
   {
     this.context = context;
-    Log.v(TAG, "Initializing subscription management");
+    Timber.v("Initializing subscription management");
 
     receiver = new BroadcastReceiver()
     {
       @Override
       public void onReceive(final Context context, final Intent intent)
       {
-        Log.v(TAG, "Received intent " + intent);
+        Timber.v("Received intent " + intent);
 
         AdblockHelper.get().getProvider().waitForReady();
         if (intent.getAction().equals(ACTION_LIST))
@@ -66,7 +64,7 @@ public class SubscriptionsManager
         else
         {
           final String url = intent.getStringExtra(EXTRA_URL);
-          Log.d(TAG, "Subscription = " + url);
+          Timber.d("Subscription = " + url);
           final FilterEngine filterEngine =
               AdblockHelper.get().getProvider().getEngine().getFilterEngine();
           final Subscription subscription = filterEngine.getSubscription(url);
@@ -109,7 +107,7 @@ public class SubscriptionsManager
         }
 
         subscription.removeFromList();
-        Log.d(TAG, "Removed subscription");
+        Timber.d("Removed subscription");
       }
 
       private void update(final Subscription subscription)
@@ -125,7 +123,7 @@ public class SubscriptionsManager
         }
 
         subscription.updateFilters();
-        Log.d(TAG, "Forced subscription update");
+        Timber.d("Forced subscription update");
       }
 
       private void enable(final Subscription subscription)
@@ -137,12 +135,12 @@ public class SubscriptionsManager
 
         if (!subscription.isDisabled())
         {
-          Log.e(TAG, "Subscription is already enabled");
+          Timber.e("Subscription is already enabled");
           return;
         }
 
         subscription.setDisabled(false);
-        Log.d(TAG, "Enabled subscription");
+        Timber.d("Enabled subscription");
       }
 
       private void disable(final Subscription subscription)
@@ -158,7 +156,7 @@ public class SubscriptionsManager
         }
 
         subscription.setDisabled(true);
-        Log.d(TAG, "Disabled subscription");
+        Timber.d("Disabled subscription");
       }
 
       private void add(final Subscription subscription)
@@ -168,17 +166,17 @@ public class SubscriptionsManager
           if (subscription.isDisabled())
           {
             subscription.setDisabled(false);
-            Log.d(TAG, "Enabled subscription");
+            Timber.d("Enabled subscription");
           }
           else
           {
-            Log.e(TAG, "Already listed and enabled subscription");
+            Timber.e("Already listed and enabled subscription");
           }
         }
         else
         {
           subscription.addToList();
-          Log.d(TAG, "Added subscription");
+          Timber.d("Added subscription");
         }
       }
 
@@ -191,7 +189,7 @@ public class SubscriptionsManager
         {
           try
           {
-            Log.d(TAG, subscription.toString() + " is " +
+            Timber.d(subscription.toString() + " is " +
                 (subscription.isDisabled() ? "disabled" : "enabled"));
           }
           finally
@@ -205,7 +203,7 @@ public class SubscriptionsManager
       {
         if (!subscription.isListed())
         {
-          Log.e(TAG, "Subscription is not listed");
+          Timber.e("Subscription is not listed");
           return false;
         }
         return true;
@@ -215,7 +213,7 @@ public class SubscriptionsManager
       {
         if (subscription.isDisabled())
         {
-          Log.e(TAG, "Subscription is disabled");
+          Timber.e("Subscription is disabled");
           return false;
         }
         return true;

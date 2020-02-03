@@ -23,7 +23,7 @@ import android.support.v7.preference.ListPreference;
 import android.support.v14.preference.MultiSelectListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.SwitchPreferenceCompat;
-import android.util.Log;
+import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.android.ConnectionType;
 import org.adblockplus.libadblockplus.android.Subscription;
@@ -215,7 +215,7 @@ public class GeneralSettingsFragment
   @Override
   public boolean onPreferenceChange(Preference preference, Object newValue)
   {
-    Log.d(TAG, "\"" + preference.getTitle() + "\" new value is " + newValue);
+    Timber.d("\"" + preference.getTitle() + "\" new value is " + newValue);
 
     if (preference.getKey().equals(SETTINGS_ENABLED_KEY))
     {

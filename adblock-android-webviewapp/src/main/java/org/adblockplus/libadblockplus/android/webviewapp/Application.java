@@ -27,6 +27,8 @@ import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import java.util.HashMap;
 import java.util.Map;
 
+import timber.log.Timber;
+
 public class Application extends android.app.Application
 {
   private final SingleInstanceEngineProvider.EngineCreatedListener engineCreatedListener =
@@ -53,6 +55,11 @@ public class Application extends android.app.Application
   public void onCreate()
   {
     super.onCreate();
+
+    if (BuildConfig.DEBUG)
+    {
+      Timber.plant(new Timber.DebugTree());
+    }
 
     // it's not initialized here but we check it just to show API usage
     if (!AdblockHelper.get().isInit())

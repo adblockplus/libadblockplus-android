@@ -17,7 +17,7 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import android.util.Log;
+import timber.log.Timber;
 import android.net.TrafficStats;
 
 import org.adblockplus.libadblockplus.AdblockPlusException;
@@ -41,8 +41,6 @@ import static org.adblockplus.libadblockplus.android.Utils.readFromInputStream;
 
 public class AndroidHttpClient extends HttpClient
 {
-  public final static String TAG = Utils.getTag(HttpClient.class);
-
   protected static final String ENCODING_GZIP = "gzip";
   protected static final String ENCODING_IDENTITY = "identity";
 
@@ -80,12 +78,12 @@ public class AndroidHttpClient extends HttpClient
 
     final int oldTag = TrafficStats.getThreadStatsTag();
     TrafficStats.setThreadStatsTag(SOCKET_TAG);
-    Log.d(TAG, "Socket TAG set to: " + SOCKET_TAG);
+    Timber.d("Socket TAG set to: " + SOCKET_TAG);
 
     try
     {
       final URL url = new URL(request.getUrl());
-      Log.d(TAG, "Downloading from: " + url);
+      Timber.d("Downloading from: " + url);
 
       final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod(request.getMethod());
@@ -98,13 +96,13 @@ public class AndroidHttpClient extends HttpClient
         (compressedStream ? ENCODING_GZIP : ENCODING_IDENTITY));
       connection.setInstanceFollowRedirects(request.getFollowRedirect());
 
-      Log.d(TAG, "Connecting...");
+      Timber.d("Connecting...");
       connection.connect();
-      Log.d(TAG, "Connected");
+      Timber.d("Connected");
 
       if (connection.getHeaderFields().size() > 0)
       {
-        Log.d(TAG, "Received header fields");
+        Timber.d("Received header fields");
 
         List<HeaderEntry> responseHeaders = new LinkedList<>();
         for (Map.Entry<String, List<String>> eachEntry : connection.getHeaderFields().entrySet())
@@ -126,40 +124,40 @@ public class AndroidHttpClient extends HttpClient
         response.setResponseStatus(responseStatus);
         response.setStatus(!isSuccessCode(responseStatus) ? NsStatus.ERROR_FAILURE : NsStatus.OK);
 
-        Log.d(TAG, "responseStatus: " + responseStatus);
+        Timber.d("responseStatus: " + responseStatus);
 
         inputStream = isSuccessCode(responseStatus) ?
           connection.getInputStream() : connection.getErrorStream();
 
         if (isSuccessCode(responseStatus))
         {
-          Log.d(TAG, "Success responseStatus");
+          Timber.d("Success responseStatus");
         }
         else
         {
-          Log.d(TAG, "inputStream is set to Error stream");
+          Timber.d("inputStream is set to Error stream");
         }
 
         if (inputStream == null)
         {
-          Log.w(TAG, "inputStream is null");
+          Timber.w("inputStream is null");
         }
 
         if (inputStream != null && compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()))
         {
-          Log.d(TAG, "Setting inputStream to GZIPInputStream");
+          Timber.d("Setting inputStream to GZIPInputStream");
           inputStream = new GZIPInputStream(inputStream);
         }
 
         if (inputStream != null)
         {
-          Log.d(TAG, "readFromInputStream(inputStream)");
+          Timber.d("readFromInputStream(inputStream)");
           response.setResponse(readFromInputStream(inputStream));
         }
 
         if (!url.equals(connection.getURL()))
         {
-          Log.d(TAG, "Url was redirected, from: " + url + ", to: " + connection.getURL());
+          Timber.d("Url was redirected, from: " + url + ", to: " + connection.getURL());
           response.setFinalUrl(connection.getURL().toString());
         }
       }
@@ -171,32 +169,32 @@ public class AndroidHttpClient extends HttpClient
         }
         connection.disconnect();
       }
-      Log.d(TAG, "Downloading finished");
+      Timber.d("Downloading finished");
       callback.onFinished(response);
     }
     catch (final MalformedURLException e)
     {
       // MalformedURLException can be caused by wrong user input so we should not (re)throw it
-      Log.e(TAG, "WebRequest failed", e);
+      Timber.e(e, "WebRequest failed");
       response.setStatus(NsStatus.ERROR_MALFORMED_URI);
       callback.onFinished(response);
     }
     catch (final UnknownHostException e)
     {
       // UnknownHostException can be caused by wrong user input so we should not (re)throw it
-      Log.e(TAG, "WebRequest failed", e);
+      Timber.e(e, "WebRequest failed");
       response.setStatus(NsStatus.ERROR_UNKNOWN_HOST);
       callback.onFinished(response);
     }
     catch (final Throwable t)
     {
-      Log.e(TAG, "WebRequest failed", t);
+      Timber.e(t, "WebRequest failed");
       throw new AdblockPlusException("WebRequest failed", t);
     }
     finally
     {
       TrafficStats.setThreadStatsTag(oldTag);
-      Log.d(TAG, "Socket TAG reverted to: " + oldTag);
+      Timber.d("Socket TAG reverted to: " + oldTag);
     }
   }
 

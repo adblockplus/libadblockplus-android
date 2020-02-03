@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
+import timber.log.Timber;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,8 +28,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import org.adblockplus.libadblockplus.android.Utils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -42,8 +40,6 @@ import java.util.List;
 public class WhitelistedDomainsSettingsFragment
   extends BaseSettingsFragment<WhitelistedDomainsSettingsFragment.Listener>
 {
-  private static final String TAG = Utils.getTag(WhitelistedDomainsSettingsFragment.class);
-
   private EditText domain;
   private ImageView addDomainButton;
   private ListView listView;
@@ -133,7 +129,7 @@ public class WhitelistedDomainsSettingsFragment
       // update and save settings
       int position = ((Integer) v.getTag()).intValue();
       String removeDomain = settings.getWhitelistedDomains().get(position);
-      Log.w(TAG, "Removing domain: " + removeDomain);
+      Timber.w("Removing domain: " + removeDomain);
       settings.getWhitelistedDomains().remove(position);
       provider.getAdblockSettingsStorage().save(settings);
 
@@ -212,7 +208,7 @@ public class WhitelistedDomainsSettingsFragment
         }
         else
         {
-          Log.w(TAG, "Domain " + preparedDomain + " is not valid");
+          Timber.w("Domain " + preparedDomain + " is not valid");
         }
       }
     });
@@ -228,7 +224,7 @@ public class WhitelistedDomainsSettingsFragment
 
   public void addDomain(String newDomain)
   {
-    Log.d(TAG, "New domain added: " + newDomain);
+    Timber.d("New domain added: " + newDomain);
 
     List<String> whitelistedDomains = settings.getWhitelistedDomains();
     if (whitelistedDomains == null)
