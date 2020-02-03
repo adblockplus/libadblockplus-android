@@ -22,12 +22,15 @@ import android.content.Context;
 import org.adblockplus.libadblockplus.FileSystemUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import timber.log.Timber;
 
 public abstract class BaseTest
 {
@@ -39,6 +42,15 @@ public abstract class BaseTest
         .getDir("test" + Math.abs(new Random().nextLong()), Context.MODE_PRIVATE)
         .getAbsolutePath());
     basePath.mkdirs();
+  }
+
+  @BeforeClass
+  public static void beforeClass()
+  {
+    if (BuildConfig.DEBUG)
+    {
+      Timber.plant(new Timber.DebugTree());
+    }
   }
 
   @Before

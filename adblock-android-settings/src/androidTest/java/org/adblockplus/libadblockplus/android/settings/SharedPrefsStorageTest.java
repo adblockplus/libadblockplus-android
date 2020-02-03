@@ -24,6 +24,7 @@ import org.adblockplus.libadblockplus.android.ConnectionType;
 import org.adblockplus.libadblockplus.android.Subscription;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -31,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import timber.log.Timber;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -42,6 +45,15 @@ public class SharedPrefsStorageTest
 
   protected SharedPreferences prefs;
   protected SharedPrefsStorage storage;
+
+  @BeforeClass
+  public static void beforeClass()
+  {
+    if (BuildConfig.DEBUG)
+    {
+      Timber.plant(new Timber.DebugTree());
+    }
+  }
 
   public static AdblockSettings buildModel(int subscriptionsCount, int whitelistedDomainsCount)
   {

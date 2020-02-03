@@ -21,7 +21,7 @@ import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.util.Log;
+import timber.log.Timber;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +30,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -38,8 +37,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class SingleInstanceEngineProvider implements AdblockEngineProvider
 {
-  private static final String TAG = Utils.getTag(SingleInstanceEngineProvider.class);
-
   private Context context;
   private String basePath;
   private boolean developmentBuild;
@@ -141,12 +138,12 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
   private void createAdblock()
   {
-    Log.w(TAG, "Waiting for lock");
+    Timber.w("Waiting for lock");
     writeLock.lock();
 
     try
     {
-      Log.d(TAG, "Creating adblock engine ...");
+      Timber.d("Creating adblock engine ...");
       ConnectivityManager connectivityManager =
         (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
       IsAllowedConnectionCallback isAllowedConnectionCallback =
@@ -181,7 +178,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
       engine = builder.build();
 
-      Log.d(TAG, "AdblockHelper engine created");
+      Timber.d("AdblockHelper engine created");
 
       // sometimes we need to init AdblockEngine instance, eg. set user settings
       for (EngineCreatedListener listener : engineCreatedListeners)
@@ -247,13 +244,13 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
     try
     {
-      Log.d(TAG, "Waiting for ready in " + Thread.currentThread());
+      Timber.d("Waiting for ready in " + Thread.currentThread());
       engineCreated.await();
-      Log.d(TAG, "Ready");
+      Timber.d("Ready");
     }
     catch (InterruptedException e)
     {
-      Log.w(TAG, "Interrupted", e);
+      Timber.w("Interrupted: " + e);
     }
   }
 
@@ -292,11 +289,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
   private void disposeAdblock()
   {
-    Log.w(TAG, "Waiting for lock");
+    Timber.w("Waiting for lock");
     writeLock.lock();
     try
     {
-      Log.w(TAG, "Disposing adblock engine");
+      Timber.w("Disposing adblock engine");
 
       engine.dispose();
       engine = null;
@@ -323,7 +320,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   @Override
   public ReentrantReadWriteLock.ReadLock getReadEngineLock()
   {
-    Log.d(TAG, "getReadEngineLock() called from " + Thread.currentThread());
+    Timber.d("getReadEngineLock() called from " + Thread.currentThread());
     return readLock;
   }
 }

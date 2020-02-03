@@ -19,14 +19,12 @@ package org.adblockplus.libadblockplus.android;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Log;
+import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 
 public class IsAllowedConnectionCallbackImpl implements IsAllowedConnectionCallback
 {
-  private static final String TAG = Utils.getTag(IsAllowedConnectionCallbackImpl.class);
-
   private ConnectivityManager manager;
 
   public IsAllowedConnectionCallbackImpl(ConnectivityManager manager)
@@ -38,7 +36,7 @@ public class IsAllowedConnectionCallbackImpl implements IsAllowedConnectionCallb
   @Override
   public boolean isConnectionAllowed(String connection)
   {
-    Log.d(TAG, "Checking connection: " + connection);
+    Timber.d("Checking connection: " + connection);
 
     if (connection == null)
     {
@@ -56,13 +54,13 @@ public class IsAllowedConnectionCallbackImpl implements IsAllowedConnectionCallb
     ConnectionType connectionType = ConnectionType.findByValue(connection);
     if (connectionType == null)
     {
-      Log.e(TAG, "Unknown connection type: " + connection);
+      Timber.e("Unknown connection type: " + connection);
       return false;
     }
 
     if (!connectionType.isRequiredConnection(manager))
     {
-      Log.w(TAG, "Current connection type is not allowed for web requests");
+      Timber.w("Current connection type is not allowed for web requests");
       return false;
     }
 
