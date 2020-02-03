@@ -42,7 +42,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.util.Log;
+import timber.log.Timber;
 
 public final class Utils
 {
@@ -93,7 +93,7 @@ public final class Utils
           }
           catch (JSONException e)
           {
-            Log.e(getTag(Utils.class), "Failed to create JSON object", e);
+            Timber.e(e, "Failed to create JSON object");
           }
         }
       }

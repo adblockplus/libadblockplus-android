@@ -19,12 +19,11 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.SubscriptionsManager;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
-import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.GeneralSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.AdblockSettings;
 import org.adblockplus.libadblockplus.android.settings.BaseSettingsFragment;
@@ -38,7 +37,6 @@ public class SettingsActivity
     GeneralSettingsFragment.Listener,
     WhitelistedDomainsSettingsFragment.Listener
 {
-  private static final String TAG = Utils.getTag(SettingsActivity.class);
   private SubscriptionsManager subscriptionsManager;
 
   @Override
@@ -98,7 +96,7 @@ public class SettingsActivity
   @Override
   public void onAdblockSettingsChanged(BaseSettingsFragment fragment)
   {
-    Log.d(TAG, "AdblockHelper setting changed:\n" + fragment.getSettings().toString());
+    Timber.d("AdblockHelper setting changed:\n" + fragment.getSettings().toString());
   }
 
   @Override
