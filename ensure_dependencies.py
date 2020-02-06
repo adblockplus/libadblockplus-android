@@ -429,6 +429,9 @@ def resolve_deps(repodir, repotype, level=0, self_update=True,
 
 
 def _ensure_line_exists(path, pattern):
+    directory = os.path.dirname(path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     with open(path, 'a+') as f:
         f.seek(0, os.SEEK_SET)
         file_content = [l.strip() for l in f.readlines()]
