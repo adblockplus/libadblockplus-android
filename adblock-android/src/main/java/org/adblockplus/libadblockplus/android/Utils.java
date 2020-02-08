@@ -17,7 +17,6 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -107,24 +106,17 @@ public final class Utils
                                          final String charsetName)
       throws IOException
   {
-    BufferedReader in = null;
+    InputStream is = null;
     try
     {
-      final InputStream is = context.getAssets().open(filename);
+      is = context.getAssets().open(filename);
       return new String(toByteArray(is), charsetName);
     }
     finally
     {
-      if (in != null)
+      if (is != null)
       {
-        try
-        {
-          in.close();
-        }
-        catch (IOException e)
-        {
-          // ignored
-        }
+        is.close();
       }
     }
   }

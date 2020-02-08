@@ -142,7 +142,6 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     Timber.d("Reading from resource ...");
 
     InputStream is = null;
-
     try
     {
       is = context.getResources().openRawResource(resourceId);
