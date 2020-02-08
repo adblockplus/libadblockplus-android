@@ -803,10 +803,10 @@ public class AdblockWebView extends WebView
     {
       if (redirectInProgress.get())
       {
-        Timber.d("Skipping onProgressChanged to " + newProgress + "%" + " for url: " + view.getUrl());
+        Timber.d("Skipping onProgressChanged to " + newProgress + "%% for url: " + view.getUrl());
         return;
       }
-      Timber.d("onProgressChanged to " + newProgress + "%" + " for url: " + view.getUrl());
+      Timber.d("onProgressChanged to " + newProgress + "%% for url: " + view.getUrl());
       tryInjectJs();
 
       if (extWebChromeClient != null)
