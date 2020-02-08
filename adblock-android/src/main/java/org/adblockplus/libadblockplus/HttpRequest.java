@@ -24,7 +24,7 @@ public class HttpRequest
 {
   /**
    * @param url Request URL.
-   * @param method Request method (see REQUST_METHOD_...).
+   * @param method Request method (see REQUEST_METHOD_...).
    * @param headers Request headers.
    * @param followRedirect Enables/disables automatic redirection following
    */
