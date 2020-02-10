@@ -17,7 +17,15 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import java.io.BufferedReader;
+import android.content.Context;
+
+import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.libadblockplus.HeaderEntry;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -34,14 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.HeaderEntry;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.content.Context;
 import timber.log.Timber;
 
 public final class Utils
@@ -107,19 +107,19 @@ public final class Utils
                                          final String charsetName)
       throws IOException
   {
-    BufferedReader in = null;
+    InputStream is = null;
     try
     {
-      final InputStream is = context.getAssets().open(filename);
+      is = new BufferedInputStream(context.getAssets().open(filename));
       return new String(toByteArray(is), charsetName);
     }
     finally
     {
-      if (in != null)
+      if (is != null)
       {
         try
         {
-          in.close();
+          is.close();
         }
         catch (IOException e)
         {
