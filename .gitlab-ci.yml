@@ -120,14 +120,28 @@ testobject_tests:
     reports:
       junit: philll-adblockwebview-app-*.xml
 
-publish_to_bintray:
-  <<: *cache_readonly
+.publish_template: &publish_template
   stage: publish
-  only:
-    - tags
+  <<: *cache_readonly
   script:
     - |
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
         echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to bintray'
       fi
     - ./gradlew bintrayUpload -PbintrayUser=${BINTRAY_USERNAME:-unset} -PbintrayKey=${BINTRAY_KEY:-unset} -PdryRun=${DRY_RUN:-true}
+
+publish_rc_to_bintray:
+  <<: *publish_template
+  only:
+    variables:
+      - $RC
+  before_script:
+    - echo "Publishing release candidate ${RC}"
+    # Append '-rcX' to the version to publish
+    - sed -i -e "/moduleVersion/s/'$/-rc${RC}'/g" build.gradle
+
+publish_to_bintray:
+  <<: *publish_template
+  stage: publish
+  only:
+    - tags
