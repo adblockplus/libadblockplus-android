@@ -53,8 +53,11 @@ build_libadblockplus-android:all:
     paths:
       - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
       - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
-      # The test APK is used later in the device testing
+      # The test APKs are used later in the device testing
       - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
+      - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
+      - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
+      - adblock-android-settings/build/outputs/apk/androidTest/debug/adblock-android-settings-debug-androidTest.apk
 
 # The remaining build_* jobs are only built on rc branches
 # They are run only to test that the build works, we dont use the artefacts
@@ -111,11 +114,19 @@ testobject_tests:
     - test -f /opt/ci/runner.jar || wget https://s3.amazonaws.com/saucelabs-runner/v1.8/runner.jar -O /opt/ci/runner.jar
     # Docs for running tests on testobject:
     # https://wiki.saucelabs.com/display/DOCS/Command+Reference+for+Sauce+Runner+for+Real+Devices
-    - java -jar /opt/ci/runner.jar espresso \
-      --test ./adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk \
-      --app ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk \
-      --testname ${CI_JOB_URL} \
-      --apikey ${TESTOBJ_PROJECT_KEY} --datacenter EU
+    # Note - we start all tests concurrently and `wait` for them to finish. Non-zero exit codes are preserved.
+    - |
+      pids=""
+      for APK in $(find . -name "*androidTest.apk")
+        do echo "Testing $APK"
+        java -jar /opt/ci/runner.jar espresso \
+          --test $APK \
+          --app ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk \
+          --testname ${CI_JOB_URL} \
+          --apikey ${TESTOBJ_PROJECT_KEY} --datacenter EU &
+        pids="$pids $!"
+      done
+      wait $pids
   artifacts:
     reports:
       junit: philll-adblockwebview-app-*.xml
