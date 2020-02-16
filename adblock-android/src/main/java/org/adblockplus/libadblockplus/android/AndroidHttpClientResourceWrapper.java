@@ -115,7 +115,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     {
       if (!storage.contains(urlWithoutParams))
       {
-        Timber.w("Intercepting request for " + request.getUrl() + " with resource #" + resourceId.intValue());
+        Timber.w("Intercepting request for " + request.getUrl() + " with resource #" + resourceId);
         ServerResponse response = buildResourceContentResponse(resourceId);
         storage.put(urlWithoutParams);
 

@@ -127,7 +127,7 @@ public class WhitelistedDomainsSettingsFragment
     public void onClick(View v)
     {
       // update and save settings
-      int position = ((Integer) v.getTag()).intValue();
+      int position = (Integer) v.getTag();
       String removeDomain = settings.getWhitelistedDomains().get(position);
       Timber.w("Removing domain: " + removeDomain);
       settings.getWhitelistedDomains().remove(position);
@@ -184,7 +184,7 @@ public class WhitelistedDomainsSettingsFragment
       holder.domain.setText(domain);
 
       holder.removeButton.setOnClickListener(removeDomainClickListener);
-      holder.removeButton.setTag(Integer.valueOf(position));
+      holder.removeButton.setTag(position);
 
       return convertView;
     }
