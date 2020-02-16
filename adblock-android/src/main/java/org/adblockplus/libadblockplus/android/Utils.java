@@ -263,7 +263,7 @@ public final class Utils
    */
   public static Map<String, String> convertHeaderEntriesToMap(final List<HeaderEntry> list)
   {
-    final Map<String, String> map = new HashMap<String, String>(list.size());
+    final Map<String, String> map = new HashMap<>(list.size());
     for (final HeaderEntry header : list)
     {
       map.put(header.getKey(), header.getValue());
@@ -278,7 +278,7 @@ public final class Utils
    */
   public static List<HeaderEntry> convertMapToHeaderEntries(final Map<String, String> map)
   {
-    final List<HeaderEntry> list = new ArrayList<HeaderEntry>(map.size());
+    final List<HeaderEntry> list = new ArrayList<>(map.size());
     for (final Map.Entry<String, String> header : map.entrySet())
     {
       list.add(new HeaderEntry(header.getKey(), header.getValue()));

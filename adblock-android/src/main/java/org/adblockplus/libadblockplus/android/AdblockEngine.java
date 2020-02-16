@@ -614,7 +614,7 @@ public final class AdblockEngine
     }
 
     // using Set to remove duplicates
-    Set<String> referrersAndResourceUrls = new HashSet<String>(referrerChain);
+    Set<String> referrersAndResourceUrls = new HashSet<>(referrerChain);
     referrersAndResourceUrls.add(url);
 
     for (String eachUrl : referrersAndResourceUrls)
@@ -662,7 +662,7 @@ public final class AdblockEngine
         || this.isDocumentWhitelisted(url, referrerChain, sitekey)
         || this.isElemhideWhitelisted(url, referrerChain, sitekey))
     {
-      return new ArrayList<String>();
+      return new ArrayList<>();
     }
 
     return this.filterEngine.getElementHidingSelectors(domain, specificOnly);
@@ -680,7 +680,7 @@ public final class AdblockEngine
         || this.isDocumentWhitelisted(url, referrerChainArray, sitekey)
         || this.isElemhideWhitelisted(url, referrerChainArray, sitekey))
     {
-      return new ArrayList<FilterEngine.EmulationSelector>();
+      return new ArrayList<>();
     }
     return this.filterEngine.getElementHidingEmulationSelectors(domain);
   }

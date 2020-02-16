@@ -68,7 +68,7 @@ public class Application extends android.app.Application
       String basePath = getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
 
       // provide preloaded subscriptions
-      Map<String, Integer> map = new HashMap<String, Integer>();
+      Map<String, Integer> map = new HashMap<>();
       map.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
       map.put(AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN, R.raw.easylist);
       map.put(AndroidHttpClientResourceWrapper.EASYLIST_CHINESE, R.raw.easylist);

@@ -45,10 +45,8 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private AdblockEngine engine;
   private CountDownLatch engineCreated;
   private AtomicLong v8IsolateProviderPtr = new AtomicLong(0);
-  private List<EngineCreatedListener> engineCreatedListeners =
-    new CopyOnWriteArrayList<EngineCreatedListener>();
-  private List<EngineDisposedListener> engineDisposedListeners =
-    new CopyOnWriteArrayList<EngineDisposedListener>();
+  private List<EngineCreatedListener> engineCreatedListeners = new CopyOnWriteArrayList<>();
+  private List<EngineDisposedListener> engineDisposedListeners = new CopyOnWriteArrayList<>();
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
   private final ReentrantReadWriteLock.ReadLock readLock = engineLock.readLock();
   private final ReentrantReadWriteLock.WriteLock writeLock = engineLock.writeLock();

@@ -39,7 +39,7 @@ public final class FilterEngine
 
     public static Set<ContentType> maskOf(ContentType... contentTypes)
     {
-      final Set<ContentType> set = new HashSet<ContentType>(contentTypes.length);
+      final Set<ContentType> set = new HashSet<>(contentTypes.length);
       for (ContentType contentType : contentTypes)
       {
         set.add(contentType);
