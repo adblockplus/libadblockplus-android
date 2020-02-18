@@ -324,7 +324,7 @@ In layout XML:
 
 In java source code:
 
-    AdblockWebView webView = (AdblockWebView) findViewById(R.id.main_webview);
+    AdblockWebView webView = findViewById(R.id.main_webview);
 
 Use `AdblockEngine.setEnabled(boolean enabled)` to enable/disable ad blocking for AdblockEngine.
 Make sure you update the settings model if you want the new value to be applied after application restart, eg:
