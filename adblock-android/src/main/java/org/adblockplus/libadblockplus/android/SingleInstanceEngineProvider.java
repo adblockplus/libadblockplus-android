@@ -40,8 +40,8 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private Context context;
   private String basePath;
   private boolean developmentBuild;
-  private AtomicReference<String> preloadedPreferenceName = new AtomicReference();
-  private AtomicReference<Map<String, Integer>> urlToResourceIdMap = new AtomicReference();
+  private AtomicReference<String> preloadedPreferenceName = new AtomicReference<>();
+  private AtomicReference<Map<String, Integer>> urlToResourceIdMap = new AtomicReference<>();
   private AdblockEngine engine;
   private CountDownLatch engineCreated;
   private AtomicLong v8IsolateProviderPtr = new AtomicLong(0);
