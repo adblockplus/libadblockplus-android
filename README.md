@@ -368,7 +368,7 @@ The simplest solution is to use `AdblockHelper` from `-settings` as external adb
 If adblock engine provider is not set, it's created by AdblockWebView instance automatically.
 
 Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
-This is optional but highly suggested. See `MainActivity.java` on usage example. 
+This is optional but highly suggested. See `TabFragment.java` on usage example.
 
 Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and whitelisting events, eg.
 "resource loading blocked" or "resource loading whitelisted" event that can be used for stats.
