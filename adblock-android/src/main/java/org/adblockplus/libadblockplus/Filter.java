@@ -67,7 +67,7 @@ public final class Filter extends JsValue
     return operatorEquals(this.ptr, ((Filter)o).ptr);
   }
 
-  public static enum Type
+  public enum Type
   {
     BLOCKING, EXCEPTION, ELEMHIDE, ELEMHIDE_EXCEPTION, ELEMHIDE_EMULATION,
     COMMENT, INVALID;
