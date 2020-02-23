@@ -288,7 +288,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertEquals(2L, value.getProperty("length").asLong());
 
     JsValue thisPtr = jsEngine.evaluate("({x:2})");
-    List<JsValue> params = new LinkedList<JsValue>();
+    List<JsValue> params = new LinkedList<>();
     params.add(jsEngine.newValue(5L));
     params.add(jsEngine.newValue("xyz"));
     JsValue result = value.call(params, thisPtr);

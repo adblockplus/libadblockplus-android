@@ -50,7 +50,7 @@ public class HttpClientTest extends BaseFilterEngineTest
     response.setResponseStatus(RESPONSE_STATUS);
     response.setStatus(ServerResponse.NsStatus.OK);
     response.setResponse(Utils.stringToByteBuffer(RESPONSE, CHARSET));
-    final List<HeaderEntry> headers = new LinkedList<HeaderEntry>();
+    final List<HeaderEntry> headers = new LinkedList<>();
     headers.add(new HeaderEntry(HEADER_KEY, HEADER_VALUE));
     response.setResponseHeaders(headers);
     mockHttpClient.response = response;

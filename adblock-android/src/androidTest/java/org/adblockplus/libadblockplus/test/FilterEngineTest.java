@@ -289,10 +289,10 @@ public class FilterEngineTest extends BaseFilterEngineTest
     final String urlNotGeneric = "http://testpages.adblockplus.org/testcasefiles/genericblock/target-notgeneric.jpg";
     final String firstParent = "http://testpages.adblockplus.org/en/exceptions/genericblock/frame.html";
 
-    final List<String> documentUrls = new ArrayList<String>();
+    final List<String> documentUrls = new ArrayList<>();
     documentUrls.add("http://testpages.adblockplus.org/en/exceptions/genericblock/frame.html");
     documentUrls.add("http://testpages.adblockplus.org/en/exceptions/genericblock/");
-    final List<String> documentUrlsForGenericblock = new ArrayList<String>();
+    final List<String> documentUrlsForGenericblock = new ArrayList<>();
     documentUrlsForGenericblock.add("http://testpages.adblockplus.org/en/exceptions/genericblock/");
 
     // Go through all parent frames/refs to check if any of them has genericblock filter exception
