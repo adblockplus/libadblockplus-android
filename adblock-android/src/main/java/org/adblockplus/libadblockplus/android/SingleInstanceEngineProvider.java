@@ -47,6 +47,8 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private AtomicLong v8IsolateProviderPtr = new AtomicLong(0);
   private List<EngineCreatedListener> engineCreatedListeners =
     new CopyOnWriteArrayList<EngineCreatedListener>();
+  private List<BeforeEngineDisposedListener> beforeEngineDisposedListeners =
+    new CopyOnWriteArrayList<BeforeEngineDisposedListener>();
   private List<EngineDisposedListener> engineDisposedListeners =
     new CopyOnWriteArrayList<EngineDisposedListener>();
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
@@ -115,6 +117,25 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   public void clearEngineCreatedListeners()
   {
     this.engineCreatedListeners.clear();
+  }
+
+  @Override
+  public SingleInstanceEngineProvider addBeforeEngineDisposedListener(BeforeEngineDisposedListener listener)
+  {
+    this.beforeEngineDisposedListeners.add(listener);
+    return this;
+  }
+
+  @Override
+  public void removeBeforeEngineDisposedListener(BeforeEngineDisposedListener listener)
+  {
+    this.beforeEngineDisposedListeners.remove(listener);
+  }
+
+  @Override
+  public void clearBeforeEngineDisposedListeners()
+  {
+    this.beforeEngineDisposedListeners.clear();
   }
 
   @Override
@@ -294,6 +315,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     try
     {
       Timber.w("Disposing adblock engine");
+
+      for (BeforeEngineDisposedListener listener : beforeEngineDisposedListeners)
+      {
+        listener.onBeforeAdblockEngineDispose();
+      }
 
       engine.dispose();
       engine = null;

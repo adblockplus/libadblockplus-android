@@ -88,6 +88,17 @@ public class AdblockHelper
     }
   };
 
+  private final SingleInstanceEngineProvider.BeforeEngineDisposedListener
+    beforeEngineDisposedListener =
+      new SingleInstanceEngineProvider.BeforeEngineDisposedListener()
+  {
+    @Override
+    public void onBeforeAdblockEngineDispose()
+    {
+      Timber.d("Disposing Adblock engine");
+    }
+  };
+
   private final SingleInstanceEngineProvider.EngineDisposedListener engineDisposedListener =
     new SingleInstanceEngineProvider.EngineDisposedListener()
   {
@@ -186,6 +197,7 @@ public class AdblockHelper
   {
     provider = new SingleInstanceEngineProvider(context, basePath, developmentBuild);
     provider.addEngineCreatedListener(engineCreatedListener);
+    provider.addBeforeEngineDisposedListener(beforeEngineDisposedListener);
     provider.addEngineDisposedListener(engineDisposedListener);
   }
 
