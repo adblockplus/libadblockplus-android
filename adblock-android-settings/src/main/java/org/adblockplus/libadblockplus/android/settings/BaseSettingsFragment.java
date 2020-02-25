@@ -69,7 +69,7 @@ public abstract class BaseSettingsFragment
       throw new RuntimeException(message);
     }
 
-    return (T) activity;
+    return clazz.cast(activity);
   }
 
   public void loadSettings()
