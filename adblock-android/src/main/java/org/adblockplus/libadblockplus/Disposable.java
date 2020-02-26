@@ -19,5 +19,5 @@ package org.adblockplus.libadblockplus;
 
 public interface Disposable
 {
-  public void dispose();
+  void dispose();
 }
