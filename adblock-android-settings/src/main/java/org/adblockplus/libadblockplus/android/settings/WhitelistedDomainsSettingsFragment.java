@@ -104,9 +104,9 @@ public class WhitelistedDomainsSettingsFragment
 
   private void bindControls(View rootView)
   {
-    domain = (EditText) rootView.findViewById(R.id.fragment_adblock_wl_add_label);
-    addDomainButton = (ImageView) rootView.findViewById(R.id.fragment_adblock_wl_add_button);
-    listView = (ListView) rootView.findViewById(R.id.fragment_adblock_wl_listview);
+    domain = rootView.findViewById(R.id.fragment_adblock_wl_add_label);
+    addDomainButton = rootView.findViewById(R.id.fragment_adblock_wl_add_button);
+    listView = rootView.findViewById(R.id.fragment_adblock_wl_listview);
   }
 
   // Holder for listview items
@@ -116,8 +116,8 @@ public class WhitelistedDomainsSettingsFragment
 
     Holder(View rootView)
     {
-      domain = (TextView) rootView.findViewById(R.id.fragment_adblock_wl_item_title);
-      removeButton = (ImageView) rootView.findViewById(R.id.fragment_adblock_wl_item_remove);
+      domain = rootView.findViewById(R.id.fragment_adblock_wl_item_title);
+      removeButton = rootView.findViewById(R.id.fragment_adblock_wl_item_remove);
     }
   }
 

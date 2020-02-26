@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import org.adblockplus.libadblockplus.android.Utils;
+import android.annotation.SuppressLint;
 import android.util.Log;
 import timber.log.Timber;
 
@@ -50,6 +51,7 @@ public final class JniExceptionHandler
       this.exceptionQueue.offer(t);
     }
 
+    @SuppressLint("LogNotTimber")
     @Override
     public void run()
     {
@@ -58,8 +60,14 @@ public final class JniExceptionHandler
         try
         {
           final Throwable t = this.exceptionQueue.take();
-          Log.e(TAG, "Exception from JNI", t);
-          Timber.e(t, "Exception from JNI");
+          if (Timber.treeCount() > 0)
+          {
+            Timber.e(t, "Exception from JNI");
+          }
+          else
+          {
+            Log.e(TAG, "Exception from JNI", t);
+          }
         }
         catch (final InterruptedException ie)
         {

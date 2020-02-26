@@ -223,6 +223,7 @@ public class GeneralSettingsFragment
     }
     else if (preference.getKey().equals(SETTINGS_FILTER_LISTS_KEY))
     {
+      //noinspection unchecked
       handleFilterListsChanged((Set<String>) newValue);
     }
     else if (preference.getKey().equals(SETTINGS_AA_ENABLED_KEY))
