@@ -184,7 +184,7 @@ public class WhitelistedDomainsSettingsFragment
       holder.domain.setText(domain);
 
       holder.removeButton.setOnClickListener(removeDomainClickListener);
-      holder.removeButton.setTag(position);
+      holder.removeButton.setTag(Integer.valueOf(position));
 
       return convertView;
     }
