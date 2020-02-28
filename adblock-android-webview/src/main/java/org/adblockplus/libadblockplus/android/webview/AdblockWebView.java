@@ -1417,6 +1417,13 @@ public class AdblockWebView extends WebView
       final ServerResponse.NsStatus status = response.getStatus();
       int statusCode = response.getResponseStatus();
 
+      // in some circumstances statusCode gets > 599
+      if (!HttpClient.isStatusAllowed(statusCode)) {
+        // looks like the response is just broken
+        // let it go
+        return allowLoadWebResponse;
+      }
+
       if (HttpClient.isRedirectCode(statusCode))
       {
         if (webview != null)
