@@ -69,7 +69,7 @@ public abstract class BaseSettingsFragment
       throw new RuntimeException(message);
     }
 
-    return (T) activity;
+    return clazz.cast(activity);
   }
 
   public void loadSettings()
@@ -77,7 +77,7 @@ public abstract class BaseSettingsFragment
     settings = provider.getAdblockSettingsStorage().load();
     if (settings == null)
     {
-      Timber.w("No adblock settings, yet. Using defdault ones from adblock engine");
+      Timber.w("No adblock settings, yet. Using default ones from adblock engine");
 
       // null because it was not saved yet
       settings = AdblockSettingsStorage.getDefaultSettings(provider.getAdblockEngine());

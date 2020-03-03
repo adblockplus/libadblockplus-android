@@ -31,7 +31,7 @@ public final class FilterEngine
     registerNatives();
   }
 
-  public static enum ContentType
+  public enum ContentType
   {
     OTHER, SCRIPT, IMAGE, STYLESHEET, OBJECT, SUBDOCUMENT, DOCUMENT, WEBSOCKET,
     WEBRTC, PING, XMLHTTPREQUEST, OBJECT_SUBREQUEST, MEDIA, FONT, GENERICBLOCK,

@@ -1,14 +1,21 @@
 stages:
   - unit_test
+  - build_dependencies
   - build
   - device_tests
   - publish
 
-.job_template: &common_build_all
-  before_script:
-    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
-    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
-    - mkdir -p .git/info
+# This updates the cache with shared dependencies
+build_dependencies:
+  stage: build_dependencies
+  cache:
+    key: libadblockplus-android
+    paths:
+      - libadblockplus/
+      - buildtools/
+  variables:
+    WGET_FLAGS: "-q"
+  script:
     - ./ensure_dependencies.py
     - cd ./libadblockplus
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
@@ -18,6 +25,16 @@ stages:
     - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
     - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
     - cd ..
+
+# This is a shared read-only cache definition
+# which jobs can explicitly include to have build deps
+.cache_readonly: &cache_readonly
+  cache:
+    key: libadblockplus-android
+    paths:
+      - libadblockplus/
+      - buildtools/
+    policy: pull
 
 gradle_unit_tests:
   stage: unit_test
@@ -27,50 +44,8 @@ gradle_unit_tests:
     reports:
       junit: adblock-android/build/test-results/*/TEST-*.xml
 
-build_libadblockplus-android:arm:
-  stage: build
-  before_script:
-    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
-    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
-    - mkdir -p .git/info
-    - ./ensure_dependencies.py
-    - cd ./libadblockplus
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
-    - cd ..
-  script:
-    - ./gradlew clean assembleAbi_arm
-
-build_libadblockplus-android:arm64:
-  stage: build
-  before_script:
-    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
-    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
-    - mkdir -p .git/info
-    - ./ensure_dependencies.py
-    - cd ./libadblockplus
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
-    - cd ..
-  script:
-    - ./gradlew clean assembleAbi_arm64
-
-build_libadblockplus-android:x86:
-  stage: build
-  before_script:
-    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
-    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
-    - mkdir -p .git/info
-    - ./ensure_dependencies.py
-    - cd ./libadblockplus
-    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
-    - cd ..
-  script:
-    - ./gradlew clean assembleAbi_x86
-
 build_libadblockplus-android:all:
-  <<: *common_build_all
+  <<: *cache_readonly
   stage: build
   script:
     - ./gradlew clean assemble assembleAndroidTest
@@ -78,28 +53,57 @@ build_libadblockplus-android:all:
     paths:
       - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
       - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
-      # The test APK is used later in the device testing
+      # The test APKs are used later in the device testing
       - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
+      - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
+      - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
+      - adblock-android-settings/build/outputs/apk/androidTest/debug/adblock-android-settings-debug-androidTest.apk
 
+# The remaining build_* jobs are only built on rc branches
+# They are run only to test that the build works, we dont use the artefacts
+.onlyrcbuilds: &onlyrc
+  only:
+    - /^.*-rc[0-9]+$/
+
+build_libadblockplus-android:arm:
+  stage: build
+  <<: *cache_readonly
+  <<: *onlyrc
+  script:
+    - ./gradlew clean assembleAbi_arm
+
+build_libadblockplus-android:arm64:
+  stage: build
+  <<: *cache_readonly
+  <<: *onlyrc
+  script:
+    - ./gradlew clean assembleAbi_arm64
+
+build_libadblockplus-android:x86:
+  stage: build
+  <<: *cache_readonly
+  <<: *onlyrc
+  script:
+    - ./gradlew clean assembleAbi_x86
 
 build_libadblockplus-android:custom-jni:
   stage: build
-  before_script:
-    # It seems gitlab does not create fully-fledged .git directory but we utilize .git/info/exclude
-    # directly in ensure_dependencies.py and therefore we have to provide the directory path.
-    - mkdir -p .git/info
-    - ./ensure_dependencies.py
-    - cd ./libadblockplus
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
-    - cd ..
+  <<: *cache_readonly
+  <<: *onlyrc
   script:
     - LIBABP_SHARED_LIBRARY_NAME=adblockplus ./gradlew clean assembleAbi_arm
 
 build_libadblockplus-android:without-jni:
   stage: build
-  # Don't get dependencies because current dependencies are merely libadblockplus but we don't need it.
-  # If the parameter is working correctly then the building should succeed without libadblockplus.
+  # Custom cache definition for this job
+  cache:
+    key: libadblockplus-android
+    paths:
+      # Don't get dependencies because current dependencies are merely libadblockplus but we don't need it.
+      # If the parameter is working correctly then the building should succeed without libadblockplus.
+      - buildtools/
+    policy: pull
+  <<: *onlyrc
   script:
     - SKIP_JNI_COMPILATION=true ./gradlew clean assemble
 
@@ -110,23 +114,45 @@ testobject_tests:
     - test -f /opt/ci/runner.jar || wget https://s3.amazonaws.com/saucelabs-runner/v1.8/runner.jar -O /opt/ci/runner.jar
     # Docs for running tests on testobject:
     # https://wiki.saucelabs.com/display/DOCS/Command+Reference+for+Sauce+Runner+for+Real+Devices
-    - java -jar /opt/ci/runner.jar espresso \
-        --test ./adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk \
-        --app ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk \
-        --testname ${CI_JOB_URL} \
-        --apikey ${TESTOBJ_PROJECT_KEY} --datacenter EU
+    # Note - we start all tests concurrently and `wait` for them to finish. Non-zero exit codes are preserved.
+    - |
+      pids=""
+      for APK in $(find . -name "*androidTest.apk")
+        do echo "Testing $APK"
+        java -jar /opt/ci/runner.jar espresso \
+          --test $APK \
+          --app ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk \
+          --testname ${CI_JOB_URL} \
+          --apikey ${TESTOBJ_PROJECT_KEY} --datacenter EU &
+        pids="$pids $!"
+      done
+      wait $pids
   artifacts:
     reports:
       junit: philll-adblockwebview-app-*.xml
 
-publish_to_bintray:
-  <<: *common_build_all
+.publish_template: &publish_template
   stage: publish
-  only:
-    - tags
+  <<: *cache_readonly
   script:
     - |
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
         echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to bintray'
       fi
     - ./gradlew bintrayUpload -PbintrayUser=${BINTRAY_USERNAME:-unset} -PbintrayKey=${BINTRAY_KEY:-unset} -PdryRun=${DRY_RUN:-true}
+
+publish_rc_to_bintray:
+  <<: *publish_template
+  only:
+    variables:
+      - $RC
+  before_script:
+    - echo "Publishing release candidate ${RC}"
+    # Append '-rcX' to the version to publish
+    - sed -i -e "/moduleVersion/s/'$/-rc${RC}'/g" build.gradle
+
+publish_to_bintray:
+  <<: *publish_template
+  stage: publish
+  only:
+    - tags

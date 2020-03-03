@@ -32,7 +32,7 @@ public class Notification extends JsValue
     super(ptr);
   }
 
-  public static enum Type
+  public enum Type
   {
     INFORMATION,
     QUESTION,
