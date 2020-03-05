@@ -66,6 +66,11 @@ public interface AdblockEngineProvider
     void onAdblockEngineCreated(AdblockEngine engine);
   }
 
+  interface BeforeEngineDisposedListener
+  {
+    void onBeforeAdblockEngineDispose();
+  }
+
   interface EngineDisposedListener
   {
     void onAdblockEngineDisposed();
@@ -76,6 +81,12 @@ public interface AdblockEngineProvider
   void removeEngineCreatedListener(EngineCreatedListener listener);
 
   void clearEngineCreatedListeners();
+
+  AdblockEngineProvider addBeforeEngineDisposedListener(BeforeEngineDisposedListener listener);
+
+  void removeBeforeEngineDisposedListener(BeforeEngineDisposedListener listener);
+
+  void clearBeforeEngineDisposedListeners();
 
   AdblockEngineProvider addEngineDisposedListener(EngineDisposedListener listener);
 

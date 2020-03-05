@@ -193,7 +193,7 @@ public abstract class FileSystem
    * Reads from a file.
    * @param filename File name.
    * @param doneCallback The callback called on completion with the input data.
-   * @param errorCallback The callback called if an error occured.
+   * @param errorCallback The callback called if an error occurred.
    */
   public abstract void read(final String filename,
                             final ReadCallback doneCallback,

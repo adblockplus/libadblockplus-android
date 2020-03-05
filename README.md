@@ -218,7 +218,7 @@ Or you can use AdblockHelper:
       .get()
       .init(this, getFilesDir().getAbsolutePath(), true, AdblockHelper.PREFERENCE_NAME);
 
-      // optional - provide preloaded subscription files in app resoruces
+      // optional - provide preloaded subscription files in app resources
       .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map);
 
 Make sure you initialize it once during app launch, call `isInit()` to check it:
@@ -269,7 +269,7 @@ or in asynchronous mode (without current thread lock):
 
     AdblockHelper.get().getProvider().retain(true);
 
-Invoke `waitforReady` every time you need AdblockEngine instance if retained in asynchronous mode:
+Invoke `waitForReady` every time you need AdblockEngine instance if retained in asynchronous mode:
 
     AdblockHelper.get().getProvider().waitForReady();
 
@@ -324,9 +324,9 @@ In layout XML:
 
 In java source code:
 
-    AdblockWebView webView = (AdblockWebView) findViewById(R.id.main_webview);
+    AdblockWebView webView = findViewById(R.id.main_webview);
 
-Use `AdblockEngine.setEnabled(boolean enabled)` to enable/disable adblocking for AdblockEngine.
+Use `AdblockEngine.setEnabled(boolean enabled)` to enable/disable ad blocking for AdblockEngine.
 Make sure you update the settings model if you want the new value to be applied after application restart, eg:
 ```
 AdblockSettingsStorage storage = AdblockHelper.get().getStorage();
@@ -368,7 +368,7 @@ The simplest solution is to use `AdblockHelper` from `-settings` as external adb
 If adblock engine provider is not set, it's created by AdblockWebView instance automatically.
 
 Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
-This is optional but highly suggested. See `MainActivity.java` on usage example. 
+This is optional but highly suggested. See `TabFragment.java` on usage example.
 
 Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and whitelisting events, eg.
 "resource loading blocked" or "resource loading whitelisted" event that can be used for stats.

@@ -122,7 +122,7 @@ public class AdblockWebView extends WebView
   private final static WebResourceResponse allowLoadWebResponse = null;
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
-  private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference();
+  private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
   private Integer loadError;
   private WebChromeClient extWebChromeClient;
   private WebViewClient extWebViewClient;
@@ -1416,6 +1416,13 @@ public class AdblockWebView extends WebView
       final ServerResponse response = responseHolder.response;
       final ServerResponse.NsStatus status = response.getStatus();
       int statusCode = response.getResponseStatus();
+
+      // in some circumstances statusCode gets > 599
+      if (!HttpClient.isStatusAllowed(statusCode)) {
+        // looks like the response is just broken
+        // let it go
+        return allowLoadWebResponse;
+      }
 
       if (HttpClient.isRedirectCode(statusCode))
       {

@@ -49,6 +49,18 @@ public abstract class HttpClient
   }
 
   /**
+   * HTTP status cannot be greater that 599
+   * and less than 100
+   *
+   * @param httpStatusCode HTTP status code to check.
+   * @return True when status is allowed
+   */
+  public static boolean isStatusAllowed(int httpStatusCode)
+  {
+    return httpStatusCode >= 100 && httpStatusCode <= 599;
+  }
+
+  /**
    * Checks if HTTP status code is a success code.
    * @param httpStatusCode HTTP status code to check.
    * @return True for success status code.
