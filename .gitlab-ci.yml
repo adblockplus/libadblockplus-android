@@ -24,6 +24,8 @@ build_dependencies:
     - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
     - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
     - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
+    - make TARGET_OS=android ABP_TARGET_ARCH=x64 Configuration=release get-prebuilt-v8
+    - make TARGET_OS=android ABP_TARGET_ARCH=x64 Configuration=release
     - cd ..
 
 # This is a shared read-only cache definition
