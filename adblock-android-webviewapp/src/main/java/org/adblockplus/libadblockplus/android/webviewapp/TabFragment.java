@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -26,6 +27,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -45,8 +48,10 @@ public class TabFragment extends Fragment
   public static final boolean SITEKEYS_WHITELISTING = true;
 
   private static final String TITLE = "title";
+  private static final String CUSTOM_INTERCEPT = "custom_intercept";
 
   private String title;
+  private boolean useCustomIntercept;
   private ProgressBar progress;
   private EditText url;
   private Button ok;
@@ -59,12 +64,16 @@ public class TabFragment extends Fragment
   /**
    * Factory method
    * @param title tab title
+   * @param useCustomIntercept (used for QA) will add #TabInterceptingWebViewClient
+   *                           instead #TabWebViewClient to the WebView
+   *                           #TabInterceptingWebViewClient uses custom shouldInterceptRequest
    * @return fragment instance
    */
-  public static TabFragment newInstance(final String title)
+  public static TabFragment newInstance(final String title, final boolean useCustomIntercept)
   {
     final Bundle arguments = new Bundle();
     arguments.putString(TITLE, title);
+    arguments.putBoolean(CUSTOM_INTERCEPT, useCustomIntercept);
     final TabFragment newFragment = new TabFragment();
     newFragment.setArguments(arguments);
     return newFragment;
@@ -74,7 +83,9 @@ public class TabFragment extends Fragment
   public void onCreate(final Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
+    assert getArguments() != null;
     this.title = getArguments().getString(TITLE);
+    this.useCustomIntercept = getArguments().getBoolean(CUSTOM_INTERCEPT, false);
   }
 
   @Override
@@ -117,7 +128,7 @@ public class TabFragment extends Fragment
     progress.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
   }
 
-  private final WebViewClient webViewClient = new WebViewClient()
+  private class TabWebViewClient extends WebViewClient
   {
     @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon)
@@ -141,7 +152,25 @@ public class TabFragment extends Fragment
     {
       updateButtons();
     }
-  };
+  }
+
+  /**
+   * This one is used for QAing if custom `shouldInterceptRequest`
+   *
+   * It adds `X-Modified-Intercept` request header to a web request
+   *
+   * Might be checked
+   */
+  private class TabInterceptingWebViewClient extends TabWebViewClient
+  {
+    @Nullable
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
+    {
+      request.getRequestHeaders().put("X-Modified-Intercept", "true");
+      return super.shouldInterceptRequest(view, request);
+    }
+  }
 
   private void updateButtons()
   {
@@ -232,13 +261,23 @@ public class TabFragment extends Fragment
     updateButtons();
 
     // to show that external WebViewClient is still working
-    webView.setWebViewClient(webViewClient);
+    webView.setWebViewClient(useCustomIntercept ?
+            new TabInterceptingWebViewClient() : new TabWebViewClient());
 
     // to show that external WebChromeClient is still working
     webView.setWebChromeClient(webChromeClient);
 
     // to enable local storage for HTML5
     webView.getSettings().setDomStorageEnabled(true);
+
+    // if using custom intercept
+    // we would already navigate to the
+    // page that will show the headers in order to
+    // check if ""X-Modified-Intercept" is there
+    if (useCustomIntercept)
+    {
+      webView.loadUrl("https://request.urih.com/");
+    }
   }
 
   private void initAdblockWebView()
