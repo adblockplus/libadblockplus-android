@@ -10,6 +10,8 @@ To update those, call:
 
     ./ensure_dependencies.py
 
+Please make sure you have *python2* installed
+
 ## Library
 
 An Android library that provides the core functionality of Adblock Plus.
