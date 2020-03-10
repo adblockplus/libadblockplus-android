@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
       WebView.setWebContentsDebuggingEnabled(true);
     }
 
-    addTab();
+    addTab(false);
   }
 
   private void initControls()
@@ -64,7 +64,16 @@ public class MainActivity extends AppCompatActivity
       @Override
       public void onClick(final View v)
       {
-        addTab();
+        addTab(false);
+      }
+    });
+    addTab.setOnLongClickListener(new View.OnLongClickListener()
+    {
+      @Override
+      public boolean onLongClick(View view)
+      {
+        addTab(true);
+        return true;
       }
     });
 
@@ -81,11 +90,18 @@ public class MainActivity extends AppCompatActivity
     tabLayout.setupWithViewPager(viewPager);
   }
 
-  private void addTab()
+  /**
+   * Adds a tab
+   * @param useCustomIntercept (used for QA) will add #TabInterceptingWebViewClient
+   *                           instead #TabWebViewClient to the WebView inside the tab
+   *                           #TabInterceptingWebViewClient uses custom shouldInterceptRequest
+   */
+  private void addTab(boolean useCustomIntercept)
   {
     int newTabsCount = tabs.size() + 1;
     viewPager.setOffscreenPageLimit(newTabsCount);
-    tabs.add(TabFragment.newInstance(getString(R.string.main_tab_title, newTabsCount)));
+    tabs.add(TabFragment.newInstance(getString(R.string.main_tab_title, newTabsCount),
+            useCustomIntercept));
     viewPager.getAdapter().notifyDataSetChanged();
     tabLayout.getTabAt(tabs.size() - 1).select(); // scroll to the last tab
     tabLayout.invalidate();
