@@ -54,6 +54,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
   private final ReentrantReadWriteLock.ReadLock readLock = engineLock.readLock();
   private final ReentrantReadWriteLock.WriteLock writeLock = engineLock.writeLock();
+  private boolean enabledOnStart = true;
 
   /*
     Simple ARC management for AdblockEngine
@@ -97,6 +98,15 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   public SingleInstanceEngineProvider useV8IsolateProvider(long ptr)
   {
     this.v8IsolateProviderPtr.set(ptr);
+    return this;
+  }
+
+  /**
+   * Create filter engine in disabled state
+   */
+  public SingleInstanceEngineProvider setEnabledOnStart(boolean value)
+  {
+    this.enabledOnStart = value;
     return this;
   }
 
@@ -200,6 +210,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
       engine = builder.build();
 
       Timber.d("AdblockHelper engine created");
+      engine.setEnabled(enabledOnStart);
 
       // sometimes we need to init AdblockEngine instance, eg. set user settings
       for (EngineCreatedListener listener : engineCreatedListeners)
