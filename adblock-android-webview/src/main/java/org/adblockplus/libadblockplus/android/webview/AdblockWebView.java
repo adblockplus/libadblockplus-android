@@ -1596,6 +1596,7 @@ public class AdblockWebView extends WebView
       }
 
       final Map<String, String> requestHeaders = request.getRequestHeaders();
+      final String url = request.getUrl().toString();
 
       if (extWebViewClient != null)
       {
@@ -1603,8 +1604,6 @@ public class AdblockWebView extends WebView
         // its fine to block shouldAbpBlockRequest and wait
         final WebResourceResponse externalResponse
                 = extWebViewClient.shouldInterceptRequest(view, request);
-
-        final String url = request.getUrl().toString();
 
         // if we are having an external WebResourceResponse
         // provided by external WebViewClient
