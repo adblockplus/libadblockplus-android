@@ -175,7 +175,6 @@ public final class AdblockEngine
     private Context context;
     private Map<String, Integer> urlToResourceIdMap;
     private AndroidHttpClientResourceWrapper.Storage resourceStorage;
-    private AndroidHttpClient androidHttpClient;
     private AppInfo appInfo;
     private String basePath;
     private IsAllowedConnectionCallback isAllowedConnectionCallback;
@@ -236,8 +235,7 @@ public final class AdblockEngine
 
     private void initRequests()
     {
-      androidHttpClient = new AndroidHttpClient(true, "UTF-8");
-      engine.httpClient = androidHttpClient;
+      engine.httpClient = new AndroidHttpClient(true, "UTF-8");
 
       if (urlToResourceIdMap != null)
       {
@@ -258,6 +256,8 @@ public final class AdblockEngine
 
         engine.httpClient = wrapper;
       }
+
+      engine.httpClient = new AndroidHttpClientEngineStateWrapper(engine.httpClient, engine);
     }
 
     private void initCallbacks()
