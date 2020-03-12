@@ -43,6 +43,8 @@ public class AndroidHttpClient extends HttpClient
 {
   protected static final String ENCODING_GZIP = "gzip";
   protected static final String ENCODING_IDENTITY = "identity";
+  protected static final String HEADER_CONTENT_DISPOSITION = "content-disposition";
+  protected static final String CONTENT_ATTACHMENT = "attachment";
 
   protected static final int SOCKET_TAG = 1;
 
@@ -100,6 +102,7 @@ public class AndroidHttpClient extends HttpClient
       connection.connect();
       Timber.d("Connected");
 
+      boolean skipInputStreamParsing = false;
       if (connection.getHeaderFields().size() > 0)
       {
         Timber.d("Received header fields");
@@ -111,6 +114,12 @@ public class AndroidHttpClient extends HttpClient
           {
             if (eachEntry.getKey() != null && eachValue != null)
             {
+              if (!skipInputStreamParsing &&
+                   eachEntry.getKey().toLowerCase().equals(HEADER_CONTENT_DISPOSITION) &&
+                   eachValue.toLowerCase().startsWith(CONTENT_ATTACHMENT))
+              {
+                skipInputStreamParsing = true;
+              }
               responseHeaders.add(new HeaderEntry(eachEntry.getKey().toLowerCase(), eachValue));
             }
           }
@@ -126,9 +135,6 @@ public class AndroidHttpClient extends HttpClient
 
         Timber.d("responseStatus: " + responseStatus);
 
-        inputStream = isSuccessCode(responseStatus) ?
-          connection.getInputStream() : connection.getErrorStream();
-
         if (isSuccessCode(responseStatus))
         {
           Timber.d("Success responseStatus");
@@ -138,21 +144,31 @@ public class AndroidHttpClient extends HttpClient
           Timber.d("inputStream is set to Error stream");
         }
 
-        if (inputStream == null)
+        if (!skipInputStreamParsing)
         {
-          Timber.w("inputStream is null");
-        }
+          inputStream = isSuccessCode(responseStatus) ?
+                  connection.getInputStream() : connection.getErrorStream();
 
-        if (inputStream != null && compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()))
-        {
-          Timber.d("Setting inputStream to GZIPInputStream");
-          inputStream = new GZIPInputStream(inputStream);
-        }
+          if (inputStream == null)
+          {
+            Timber.w("inputStream is null");
+          }
 
-        if (inputStream != null)
+          if (inputStream != null && compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()))
+          {
+            Timber.d("Setting inputStream to GZIPInputStream");
+            inputStream = new GZIPInputStream(inputStream);
+          }
+
+          if (inputStream != null)
+          {
+            Timber.d("readFromInputStream(inputStream)");
+            response.setResponse(readFromInputStream(inputStream));
+          }
+        }
+        else
         {
-          Timber.d("readFromInputStream(inputStream)");
-          response.setResponse(readFromInputStream(inputStream));
+          Timber.d("Skipping " + url + " which will be handled by DownloadManager");
         }
 
         if (!url.equals(connection.getURL()))

@@ -61,7 +61,9 @@ import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl;
 import org.adblockplus.libadblockplus.sitekey.SiteKeyException;
+import org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier;
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -117,9 +119,6 @@ public class AdblockWebView extends WebView
   // decisions
   private final static String RESPONSE_CHARSET_NAME = "UTF-8";
   private final static String RESPONSE_MIME_TYPE = "text/plain";
-  private final static WebResourceResponse blockWebResponse =
-      new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, null);
-  private final static WebResourceResponse allowLoadWebResponse = null;
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
@@ -852,6 +851,13 @@ public class AdblockWebView extends WebView
     Timber.d("Clearing referrers");
     url2Referrer.clear();
   }
+  
+  private static class WebResponseResult 
+  {
+    static final WebResourceResponse ALLOW_LOAD = null;
+    static final WebResourceResponse BLOCK =
+            new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, null);
+  }
 
   /**
    * WebViewClient for API 21 and newer
@@ -1183,12 +1189,22 @@ public class AdblockWebView extends WebView
       }
     }
 
-    protected WebResourceResponse shouldInterceptRequest(
-      final WebView webview, final String url,
-      final boolean isMainFrame, final boolean isXmlHttpRequest,
-      final String requestMethod, final String referrer,
-      final Map<String, String> requestHeadersMap)
+    private WebResourceResponse shouldAbpBlockRequest(final WebResourceRequest request)
     {
+      // here we just trying to fill url -> referrer map
+      final String url = request.getUrl().toString();
+
+      final Map<String, String> requestHeadersMap = request.getRequestHeaders();
+
+      final boolean isXmlHttpRequest =
+              request.getRequestHeaders().containsKey(HEADER_REQUESTED_WITH) &&
+                      HEADER_REQUESTED_WITH_XMLHTTPREQUEST.equals(
+                              request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
+
+      final boolean isMainFrame = request.isForMainFrame();
+
+      final String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
+
       final Lock lock = getProvider().getReadEngineLock();
       lock.lock();
 
@@ -1198,7 +1214,7 @@ public class AdblockWebView extends WebView
         if (getProvider().getCounter() == 0)
         {
           Timber.e("FilterEngine already disposed, allow loading");
-          return allowLoadWebResponse;
+          return WebResponseResult.ALLOW_LOAD;
         }
         else
         {
@@ -1207,7 +1223,7 @@ public class AdblockWebView extends WebView
 
         if (adblockEnabled == null)
         {
-          return allowLoadWebResponse;
+          return WebResponseResult.ALLOW_LOAD;
         }
         else
         {
@@ -1216,7 +1232,7 @@ public class AdblockWebView extends WebView
           adblockEnabled.set(getProvider().getEngine().isEnabled());
           if (!adblockEnabled.get())
           {
-            return allowLoadWebResponse;
+            return WebResponseResult.ALLOW_LOAD;
           }
         }
 
@@ -1334,7 +1350,7 @@ public class AdblockWebView extends WebView
 
               notifyResourceBlocked(new EventsListener.BlockedResourceInfo(
                   url, referrerChain, contentType));
-              return blockWebResponse;
+              return WebResponseResult.BLOCK;
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
@@ -1354,10 +1370,14 @@ public class AdblockWebView extends WebView
       if (requestHeadersMap.containsKey(HEADER_REQUESTED_RANGE))
       {
         Timber.d("Skipping site key check for the request with a Range header");
-        return allowLoadWebResponse;
+        return WebResponseResult.ALLOW_LOAD;
       }
 
-      return fetchUrlAndCheckSiteKey(isMainFrame ? webview : null, url, requestHeadersMap, requestMethod);
+      // we rely on calling `fetchUrlAndCheckSiteKey`
+      // later in `shouldInterceptRequest`
+      // now we just reply that ist fine to load
+      // the resource
+      return WebResponseResult.ALLOW_LOAD;
     }
 
     private WebResourceResponse fetchUrlAndCheckSiteKey(final WebView webview, String url,
@@ -1368,7 +1388,7 @@ public class AdblockWebView extends WebView
           !requestMethod.equalsIgnoreCase(HttpClient.REQUEST_METHOD_GET))
       {
         // for now we handle site key only for GET requests
-        return allowLoadWebResponse;
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       Timber.d("fetchUrlAndCheckSiteKey() called from Thread " + Thread.currentThread().getId());
@@ -1400,7 +1420,7 @@ public class AdblockWebView extends WebView
       {
         Timber.e(e, "WebRequest failed");
         // allow WebView to continue, repeating the request and handling the response
-        return allowLoadWebResponse;
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       try
@@ -1410,7 +1430,7 @@ public class AdblockWebView extends WebView
       catch (final InterruptedException e)
       {
         // error waiting for the response, continue by returning null
-        return allowLoadWebResponse;
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       final ServerResponse response = responseHolder.response;
@@ -1421,7 +1441,7 @@ public class AdblockWebView extends WebView
       if (!HttpClient.isStatusAllowed(statusCode)) {
         // looks like the response is just broken
         // let it go
-        return allowLoadWebResponse;
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       if (HttpClient.isRedirectCode(statusCode))
@@ -1430,7 +1450,7 @@ public class AdblockWebView extends WebView
         {
           return reloadWebViewUrl(url, responseHolder);
         }
-        return allowLoadWebResponse;
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       if (response.getFinalUrl() != null)
@@ -1439,32 +1459,14 @@ public class AdblockWebView extends WebView
         url = response.getFinalUrl();
       }
 
-      for (HeaderEntry header : responseHolder.response.getResponseHeaders())
-      {
-        if (header.getKey().equals(HEADER_SITEKEY))
-        {
-          // verify signature and save public key to be used as sitekey for next requests
-          try
-          {
-            if (siteKeysConfiguration.getSiteKeyVerifier().verify(
-                Utils.getUrlWithoutAnchor(url), requestHeadersMap.get(HEADER_USER_AGENT), header.getValue()))
-            {
-              Timber.d("Url " + url + " public key verified successfully");
-            }
-            else
-            {
-              Timber.e("Url " + url + " public key is not verified");
-            }
-          }
-          catch (final SiteKeyException e)
-          {
-            Timber.e(e, "Failed to verify sitekey header");
-          }
-          break;
-        }
-      }
+      final List<HeaderEntry> responseHeaders = response.getResponseHeaders();
+      final Map<String, String> responseHeadersMap = convertHeaderEntriesToMap(responseHeaders);
 
-      final Map<String, String> responseHeadersMap = convertHeaderEntriesToMap(response.getResponseHeaders());
+      verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
+              url,
+              requestHeadersMap,
+              responseHeadersMap);
+
       final String responseContentType = responseHeadersMap.get(HEADER_CONTENT_TYPE);
       String responseMimeType = null;
       String responseEncoding = null;
@@ -1500,7 +1502,43 @@ public class AdblockWebView extends WebView
                 statusCode, getReasonPhrase(status),
                 responseHeadersMap, byteBufferInputStream);
       }
-      return allowLoadWebResponse;
+      return WebResponseResult.ALLOW_LOAD;
+    }
+
+    /**
+     * Goes over responseHeaders and does a sitekey verification
+     *
+     * Passing responseHeaders in Map just not to convert them
+     * to HeaderEntries back and forth
+     */
+    private void verifySiteKeysInHeaders(@NotNull SiteKeyVerifier verifier,
+                                         String url,
+                                         Map<String, String> requestHeadersMap,
+                                         Map<String, String> responseHeaders) {
+      for (Map.Entry<String, String> header : responseHeaders.entrySet())
+      {
+        if (header.getKey().equals(HEADER_SITEKEY))
+        {
+          // verify signature and save public key to be used as sitekey for next requests
+          try
+          {
+            if (verifier.verify(
+                Utils.getUrlWithoutAnchor(url), requestHeadersMap.get(HEADER_USER_AGENT), header.getValue()))
+            {
+              Timber.d("Url " + url + " public key verified successfully");
+            }
+            else
+            {
+              Timber.e("Url " + url + " public key is not verified");
+            }
+          }
+          catch (final SiteKeyException e)
+          {
+            Timber.e(e, "Failed to verify sitekey header");
+          }
+          break;
+        }
+      }
     }
 
     private WebResourceResponse reloadWebViewUrl(final String url,
@@ -1543,26 +1581,51 @@ public class AdblockWebView extends WebView
         return new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, STATUS_CODE_OK,
                 "OK", responseHeaders, new ByteArrayInputStream(new byte[] {}));
       }
-      return allowLoadWebResponse;
+      return WebResponseResult.ALLOW_LOAD;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
     {
-      // here we just trying to fill url -> referrer map
-      // blocking/allowing loading will happen in `shouldInterceptRequest(WebView,String)`
-      String url = request.getUrl().toString();
+      // if url should be blocked,
+      // we are not performing any further actions
+      if (WebResponseResult.BLOCK.equals(shouldAbpBlockRequest(request)))
+      {
+        return WebResponseResult.BLOCK;
+      }
 
-      boolean isXmlHttpRequest =
-        request.getRequestHeaders().containsKey(HEADER_REQUESTED_WITH) &&
-          HEADER_REQUESTED_WITH_XMLHTTPREQUEST.equals(
-            request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
+      final Map<String, String> requestHeaders = request.getRequestHeaders();
+      final String url = request.getUrl().toString();
 
-      return shouldInterceptRequest(view, url, request.isForMainFrame(),
-              isXmlHttpRequest, request.getMethod(),
-              request.getRequestHeaders().get(HEADER_REFERRER),
-              request.getRequestHeaders());
+      if (extWebViewClient != null)
+      {
+        // allow external WebViewClient to perform and intercept requests
+        // its fine to block shouldAbpBlockRequest and wait
+        final WebResourceResponse externalResponse
+                = extWebViewClient.shouldInterceptRequest(view, request);
+
+        // if we are having an external WebResourceResponse
+        // provided by external WebViewClient
+        // we will do the sitekey verification
+        // and just return the Response
+        if (externalResponse != null)
+        {
+          Timber.d("Verifying site keys with external shouldInterceptRequest response");
+          verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
+                  url,
+                  requestHeaders,
+                  externalResponse.getResponseHeaders());
+          Timber.d("Finished verifying, returning external response and stop");
+          return externalResponse;
+        }
+      }
+
+      return fetchUrlAndCheckSiteKey(request.isForMainFrame() ? view : null,
+              url,
+              requestHeaders,
+              request.getMethod());
+
     }
   }
 

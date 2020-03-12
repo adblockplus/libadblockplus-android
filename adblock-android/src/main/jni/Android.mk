@@ -1,4 +1,5 @@
 LOCAL_PATH := $(call my-dir)
+PROJECT_PATH := $(LOCAL_PATH)/../../..
 
 # Use cases:
 # ----------
@@ -19,7 +20,7 @@ LOCAL_PATH := $(call my-dir)
 
 # default
 ifeq ($(LIBABP_INCLUDE_DIR),)
-  LIBABP_INCLUDE_DIR := $(PWD)/../libadblockplus/include
+  LIBABP_INCLUDE_DIR := $(PROJECT_PATH)/../libadblockplus/include
   $(info [Configuration] Pass LIBABP_INCLUDE_DIR to set libadblockplus headers directory, using default value.)
 endif
 
@@ -29,7 +30,7 @@ TMP_C_INCLUDES := $(LIBABP_INCLUDE_DIR)
 # binaries
 
 ifeq ($(LIBABP_LIB_DIR),)
-  LIBABP_LIB_DIR := $(PWD)/../libadblockplus/build/local/$(TARGET_ARCH_ABI)
+  LIBABP_LIB_DIR := $(PROJECT_PATH)/../libadblockplus/build/local/$(TARGET_ARCH_ABI)
   $(info [Configuration] Pass LIBABP_LIB_DIR to set static libadblockplus library directory, using default value.)
 endif
 
@@ -49,7 +50,7 @@ TMP_LIBRARIES += libadblockplus
 
 # default
 ifeq ($(V8_INCLUDE_DIR),)
-  V8_INCLUDE_DIR := $(PWD)/../libadblockplus/third_party/prebuilt-v8/include
+  V8_INCLUDE_DIR := $(PROJECT_PATH)/../libadblockplus/third_party/prebuilt-v8/include
   $(info [Configuration] Pass V8_INCLUDE_DIR to set V8 headers directory, using default value.)
 endif
 
@@ -66,11 +67,13 @@ ifeq ($(SHARED_V8_LIB_DIR),)
       ABP_TARGET_ARCH := arm
     else ifeq ($(APP_ABI),arm64-v8a)
       ABP_TARGET_ARCH := arm64
+    else ifeq ($(APP_ABI),x86_64)
+      ABP_TARGET_ARCH := x64
     else
       ABP_TARGET_ARCH := ia32
     endif
-      
-    STATIC_V8_LIB_DIR := $(PWD)/../libadblockplus/third_party/prebuilt-v8/android-$(ABP_TARGET_ARCH)-release
+
+    STATIC_V8_LIB_DIR := $(PROJECT_PATH)/../libadblockplus/third_party/prebuilt-v8/android-$(ABP_TARGET_ARCH)-release
     $(info [Configuration] Pass STATIC_V8_LIB_DIR to set static V8 libraries directory, using default value.)
   endif
 
