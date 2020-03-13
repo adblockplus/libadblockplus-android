@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
@@ -25,16 +26,25 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import timber.log.Timber;
+
 public class MainActivity extends AppCompatActivity
 {
+  private static final String SAVED_SETTINGS = "saved_settings";
+  private static final String SAVED_RESTORE_TABS_CHECK = "saved_tabs_checkbox";
+  private static final String SAVED_RESTORE_TABS_COUNT = "saved_tabs_count";
+
   private Button addTab;
   private Button settings;
   private TabLayout tabLayout;
   private ViewPager viewPager;
+  private CheckBox restoreTabsCheckbox;
 
   private final List<TabFragment> tabs = new ArrayList<>();
 
@@ -54,7 +64,57 @@ public class MainActivity extends AppCompatActivity
       WebView.setWebContentsDebuggingEnabled(true);
     }
 
-    addTab(false);
+    final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+    boolean restoreChecked = sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false);
+    if (!restoreChecked)
+    {
+      addTab(false);
+    }
+  }
+
+  private void saveTabs()
+  {
+    final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+    boolean restoreChecked = sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false);
+    int savedTabs = 0;
+    if (restoreChecked)
+    {
+      for (final TabFragment tab : tabs)
+      {
+        Timber.d("saveTabs() saves tab " + savedTabs);
+        if (tab.saveTabState(getApplicationContext(), savedTabs))
+        {
+          ++savedTabs;
+        }
+      }
+    }
+    sharedPreferences.edit().putInt(SAVED_RESTORE_TABS_COUNT, restoreChecked ? savedTabs : 0).apply();
+  }
+
+  @Override
+  protected void onStop()
+  {
+    saveTabs();
+    super.onStop();
+  }
+
+  public int getTabId(final TabFragment tab)
+  {
+    return tabs.indexOf(tab);
+  }
+
+  public void checkResume(final TabFragment tab)
+  {
+    final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+    restoreTabsCheckbox.setChecked(sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false));
+
+    if (restoreTabsCheckbox.isChecked())
+    {
+      Timber.d("checkResume() restores tab " + getTabId(tab));
+      tab.restoreTabState(getApplicationContext(), getTabId(tab));
+      // Need to call this otherwise restored tabs have no title
+      viewPager.getAdapter().notifyDataSetChanged();
+    }
   }
 
   private void initControls()
@@ -88,6 +148,32 @@ public class MainActivity extends AppCompatActivity
 
     viewPager.setAdapter(new TabFragmentAdapter(getSupportFragmentManager(), tabs));
     tabLayout.setupWithViewPager(viewPager);
+
+    restoreTabsCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+    {
+      @Override
+      public void onCheckedChanged(CompoundButton compoundButton, boolean newValue)
+      {
+        final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+        sharedPreferences.edit().putBoolean(SAVED_RESTORE_TABS_CHECK, newValue).apply();
+        if (!newValue)
+        {
+          for (int i = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0) - 1; i >= 0; --i)
+          {
+            TabFragment.deleteTabState(getApplicationContext(), i);
+          }
+          sharedPreferences.edit().putInt(SAVED_RESTORE_TABS_COUNT, 0).apply();
+        }
+      }
+    });
+
+    final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+    int tabsCount = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0);
+    for (int i = 0; i < tabsCount; ++i)
+    {
+      Timber.d("initControls() adds tab " + i);
+      addTab(false);
+    }
   }
 
   /**
@@ -118,5 +204,6 @@ public class MainActivity extends AppCompatActivity
     settings = findViewById(R.id.main_settings);
     tabLayout = findViewById(R.id.main_tabs);
     viewPager = findViewById(R.id.main_viewpager);
+    restoreTabsCheckbox = findViewById(R.id.restore_checkbox);
   }
 }
