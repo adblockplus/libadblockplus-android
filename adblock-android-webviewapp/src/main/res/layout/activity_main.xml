@@ -24,6 +24,11 @@
             android:layout_height="wrap_content"
             android:text="@string/main_settings"/>
 
+        <CheckBox android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/main_restore_checkbox"
+            android:id="@+id/restore_checkbox"/>
+
     </LinearLayout>
 
     <android.support.design.widget.TabLayout
