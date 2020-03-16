@@ -1367,12 +1367,6 @@ public class AdblockWebView extends WebView
         lock.unlock();
       }
 
-      if (requestHeadersMap.containsKey(HEADER_REQUESTED_RANGE))
-      {
-        Timber.d("Skipping site key check for the request with a Range header");
-        return WebResponseResult.ALLOW_LOAD;
-      }
-
       // we rely on calling `fetchUrlAndCheckSiteKey`
       // later in `shouldInterceptRequest`
       // now we just reply that ist fine to load
@@ -1619,6 +1613,12 @@ public class AdblockWebView extends WebView
           Timber.d("Finished verifying, returning external response and stop");
           return externalResponse;
         }
+      }
+
+      if (requestHeaders.containsKey(HEADER_REQUESTED_RANGE))
+      {
+        Timber.d("Skipping site key check for the request with a Range header");
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       return fetchUrlAndCheckSiteKey(request.isForMainFrame() ? view : null,
