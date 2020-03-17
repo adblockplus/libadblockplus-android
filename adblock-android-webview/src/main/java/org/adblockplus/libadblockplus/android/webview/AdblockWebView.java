@@ -97,7 +97,6 @@ public class AdblockWebView extends WebView
   protected static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
   protected static final String HEADER_REQUESTED_RANGE = "Range";
   protected static final String HEADER_LOCATION = "Location";
-  protected static final String HEADER_SET_COOKIE = "Set-Cookie";
   protected static final String HEADER_COOKIE = "Cookie";
   protected static final String HEADER_USER_AGENT = "User-Agent";
   protected static final String HEADER_ACCEPT = "Accept";
@@ -1405,8 +1404,10 @@ public class AdblockWebView extends WebView
         final String cookieValue = CookieManager.getInstance().getCookie(url);
         if (cookieValue != null && !cookieValue.isEmpty())
         {
+          Timber.d("Adding %s request header for url %s", HEADER_COOKIE, url);
           headersList.add(new HeaderEntry(HEADER_COOKIE, cookieValue));
         }
+
         final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect);
         siteKeysConfiguration.getHttpClient().request(request, callback);
       }
@@ -1558,11 +1559,6 @@ public class AdblockWebView extends WebView
             Timber.e(e, "Failed to build absolute redirect URL");
             redirectedUrl = null;
           }
-        }
-        if (header.getKey().equalsIgnoreCase(HEADER_SET_COOKIE) &&
-            header.getValue() != null && !header.getValue().isEmpty())
-        {
-          CookieManager.getInstance().setCookie(url, header.getValue());
         }
       }
 
