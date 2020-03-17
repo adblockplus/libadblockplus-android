@@ -85,7 +85,7 @@ public class AndroidHttpClient extends HttpClient
     try
     {
       final URL url = new URL(request.getUrl());
-      Timber.d("Downloading from: " + url);
+      Timber.d("Downloading from: %s, request.getFollowRedirect() = %b", url, request.getFollowRedirect());
 
       final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod(request.getMethod());
@@ -133,7 +133,7 @@ public class AndroidHttpClient extends HttpClient
         response.setResponseStatus(responseStatus);
         response.setStatus(!isSuccessCode(responseStatus) ? NsStatus.ERROR_FAILURE : NsStatus.OK);
 
-        Timber.d("responseStatus: " + responseStatus);
+        Timber.d("responseStatus: %i for url %s", responseStatus, url);
 
         if (isSuccessCode(responseStatus))
         {
