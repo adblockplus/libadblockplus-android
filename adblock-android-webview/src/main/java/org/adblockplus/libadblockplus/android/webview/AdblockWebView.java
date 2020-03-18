@@ -97,6 +97,7 @@ public class AdblockWebView extends WebView
   protected static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
   protected static final String HEADER_REQUESTED_RANGE = "Range";
   protected static final String HEADER_LOCATION = "Location";
+  protected static final String HEADER_SET_COOKIE = "Set-Cookie";
   protected static final String HEADER_COOKIE = "Cookie";
   protected static final String HEADER_USER_AGENT = "User-Agent";
   protected static final String HEADER_ACCEPT = "Accept";
@@ -1433,10 +1434,21 @@ public class AdblockWebView extends WebView
       int statusCode = response.getResponseStatus();
 
       // in some circumstances statusCode gets > 599
-      if (!HttpClient.isStatusAllowed(statusCode)) {
+      if (!HttpClient.isStatusAllowed(statusCode))
+      {
         // looks like the response is just broken
         // let it go
         return WebResponseResult.ALLOW_LOAD;
+      }
+
+      final List<HeaderEntry> responseHeaders = response.getResponseHeaders();
+      for (final HeaderEntry eachEntry : responseHeaders)
+      {
+        if (HEADER_SET_COOKIE.equalsIgnoreCase(eachEntry.getKey()))
+        {
+          Timber.d("Calling setCookie() for url %s", url);
+          CookieManager.getInstance().setCookie(url, eachEntry.getValue());
+        }
       }
 
       if (HttpClient.isRedirectCode(statusCode))
@@ -1454,7 +1466,6 @@ public class AdblockWebView extends WebView
         url = response.getFinalUrl();
       }
 
-      final List<HeaderEntry> responseHeaders = response.getResponseHeaders();
       final Map<String, String> responseHeadersMap = convertHeaderEntriesToMap(responseHeaders);
 
       verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),

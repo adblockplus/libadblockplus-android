@@ -133,7 +133,7 @@ public class AndroidHttpClient extends HttpClient
         response.setResponseStatus(responseStatus);
         response.setStatus(!isSuccessCode(responseStatus) ? NsStatus.ERROR_FAILURE : NsStatus.OK);
 
-        Timber.d("responseStatus: %i for url %s", responseStatus, url);
+        Timber.d("responseStatus: %d for url %s", responseStatus, url);
 
         if (isSuccessCode(responseStatus))
         {
