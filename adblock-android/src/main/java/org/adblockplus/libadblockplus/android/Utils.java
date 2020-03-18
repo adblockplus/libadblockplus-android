@@ -266,6 +266,7 @@ public final class Utils
     final Map<String, String> map = new HashMap<String, String>(list.size());
     for (final HeaderEntry header : list)
     {
+      /* FIXME: List<HeaderEntry> can contain duplicated keys which will be overwritten here */
       map.put(header.getKey(), header.getValue());
     }
     return map;
