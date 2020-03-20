@@ -12,3 +12,4 @@ upload.py
 !.gitlab-ci.yml
 !.gitignore
 !.hgignore
+!.pre-commit-config.yaml
