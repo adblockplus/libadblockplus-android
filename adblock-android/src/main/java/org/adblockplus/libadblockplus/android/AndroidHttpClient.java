@@ -80,7 +80,7 @@ public class AndroidHttpClient extends HttpClient
 
     final int oldTag = TrafficStats.getThreadStatsTag();
     TrafficStats.setThreadStatsTag(SOCKET_TAG);
-    Timber.d("Socket TAG set to: " + SOCKET_TAG);
+    Timber.d("Socket TAG set to: %s", SOCKET_TAG);
 
     try
     {
@@ -168,12 +168,12 @@ public class AndroidHttpClient extends HttpClient
         }
         else
         {
-          Timber.d("Skipping " + url + " which will be handled by DownloadManager");
+          Timber.d("Skipping %s which will be handled by DownloadManager", url);
         }
 
         if (!url.equals(connection.getURL()))
         {
-          Timber.d("Url was redirected, from: " + url + ", to: " + connection.getURL());
+          Timber.d("Url was redirected, from: %s, to: %s", url, connection.getURL());
           response.setFinalUrl(connection.getURL().toString());
         }
       }
@@ -210,7 +210,7 @@ public class AndroidHttpClient extends HttpClient
     finally
     {
       TrafficStats.setThreadStatsTag(oldTag);
-      Timber.d("Socket TAG reverted to: " + oldTag);
+      Timber.d("Socket TAG reverted to: %d", oldTag);
     }
   }
 
