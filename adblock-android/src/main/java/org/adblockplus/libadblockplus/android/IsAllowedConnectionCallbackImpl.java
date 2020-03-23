@@ -36,7 +36,7 @@ public class IsAllowedConnectionCallbackImpl implements IsAllowedConnectionCallb
   @Override
   public boolean isConnectionAllowed(String connection)
   {
-    Timber.d("Checking connection: " + connection);
+    Timber.d("Checking connection: %s", connection);
 
     if (connection == null)
     {
@@ -54,7 +54,7 @@ public class IsAllowedConnectionCallbackImpl implements IsAllowedConnectionCallb
     ConnectionType connectionType = ConnectionType.findByValue(connection);
     if (connectionType == null)
     {
-      Timber.e("Unknown connection type: " + connection);
+      Timber.e("Unknown connection type: %s", connection);
       return false;
     }
 

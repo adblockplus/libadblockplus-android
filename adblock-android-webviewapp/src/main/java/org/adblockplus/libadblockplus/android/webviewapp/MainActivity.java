@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity
     {
       for (final TabFragment tab : tabs)
       {
-        Timber.d("saveTabs() saves tab " + savedTabs);
+        Timber.d("saveTabs() saves tab %s", savedTabs);
         if (tab.saveTabState(getApplicationContext(), savedTabs))
         {
           ++savedTabs;
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity
 
     if (restoreTabsCheckbox.isChecked())
     {
-      Timber.d("checkResume() restores tab " + getTabId(tab));
+      Timber.d("checkResume() restores tab %d", getTabId(tab));
       tab.restoreTabState(getApplicationContext(), getTabId(tab));
       // Need to call this otherwise restored tabs have no title
       viewPager.getAdapter().notifyDataSetChanged();
@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity
     int tabsCount = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0);
     for (int i = 0; i < tabsCount; ++i)
     {
-      Timber.d("initControls() adds tab " + i);
+      Timber.d("initControls() adds tab %d", i);
       addTab(false);
     }
   }
