@@ -82,6 +82,9 @@ public final class AdblockEngine
   // default base path to store subscription files in android app
   public static final String BASE_PATH_DIRECTORY = "adblock";
 
+  // force subscription update when engine will be enabled
+  private static final String FORCE_SYNC_WHEN_ENABLED_PREF = "_force_sync_when_enabled";
+
   /*
    * The fields below are volatile because:
    *
@@ -492,10 +495,78 @@ public final class AdblockEngine
     }
   }
 
+  // This method is called when SingleInstanceEngineProvider configured to have filter engine
+  // disabled by default. It will configure setting to force subscriptions to be updated
+  // when engine will be enabled first time
+  void configureDisabledByDefault()
+  {
+    final JsValue shouldSync = filterEngine.getPref(FORCE_SYNC_WHEN_ENABLED_PREF);
+    final JsValue trueValue = platform.getJsEngine().newValue(true);
+
+    try
+    {
+      setEnabled(false);
+
+      if (shouldSync.isUndefined())
+      {
+        filterEngine.setPref(FORCE_SYNC_WHEN_ENABLED_PREF, trueValue);
+      }
+    }
+    finally
+    {
+      shouldSync.dispose();
+      trueValue.dispose();
+    }
+  }
+
   public void setEnabled(final boolean enabled)
   {
     final boolean valueChanged = this.enabled != enabled;
     this.enabled = enabled;
+
+    // Filter engine can be created disabled by default. In this case initial subscription sync
+    // will fail and and once it will be enabled first synchronization will take place only
+    // when retry timeout will trigger. In order to have something when enabling it first time
+    // let us check pref forcing update.
+    // See configureDisabledByDefault method for preference setup.
+
+    if (enabled && valueChanged)
+    {
+      final JsValue shouldSync = filterEngine.getPref(FORCE_SYNC_WHEN_ENABLED_PREF);
+
+      try
+      {
+        if (shouldSync.asBoolean())
+        {
+          final List<Subscription> listed = filterEngine.getListedSubscriptions();
+          final JsValue falseValue = platform.getJsEngine().newValue(false);
+
+          try
+          {
+            for (final Subscription subscription : listed)
+            {
+              subscription.updateFilters();
+            }
+
+            filterEngine.setPref(FORCE_SYNC_WHEN_ENABLED_PREF, falseValue);
+          }
+          finally
+          {
+            for (final Subscription subscription : listed)
+            {
+              subscription.dispose();
+            }
+
+            falseValue.dispose();
+          }
+        }
+      }
+      finally
+      {
+        shouldSync.dispose();
+      }
+    }
+
     if (valueChanged)
     {
       synchronized(this)
