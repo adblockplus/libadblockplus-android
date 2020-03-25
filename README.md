@@ -284,6 +284,26 @@ Release Adblock instance in activity `onDestroy`:
 
 Insert `GeneralSettingsFragment` fragment instance in runtime to start showing settings UI.
 
+#### Background operations
+
+By default filter engine will do some background operations like subscriptions synchronizations in background shorly
+after initialized. If you want to have ad blocking as optional feature, you should consider use `setDisabledByDefault`
+
+```
+    AdblockHelper
+      .get()
+      .init(...)
+      .setDisabledByDefault()
+```
+
+In this case no background operations will be done once you will call `AdblockEngine.setEnabled(true)`. Please note that
+this method configures only default state. If user prefrence on enabled state is stored in settings, this value will be
+preferred.
+
+Other thing to take into account is synchroization time. If you have configured `setDisabledByDefault` and then enable
+engine, first synchronization will be done only after some time. You can combine configuration with
+`preloadSubscriptions` to load data from local file first time rather then from web.
+
 ### Theme
 
 Make sure to set application theme with `PreferenceThemeOverlay.v14.Material` parent theme
