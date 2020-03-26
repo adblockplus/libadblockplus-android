@@ -215,7 +215,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
       if (disabledByDefault)
       {
-        engine.configureDisabledByDefault();
+        engine.configureDisabledByDefault(context);
       }
 
       // sometimes we need to init AdblockEngine instance, eg. set user settings
