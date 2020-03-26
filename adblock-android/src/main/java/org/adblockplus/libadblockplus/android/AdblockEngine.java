@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build.VERSION;
@@ -84,6 +85,7 @@ public final class AdblockEngine
 
   // force subscription update when engine will be enabled
   private static final String FORCE_SYNC_WHEN_ENABLED_PREF = "_force_sync_when_enabled";
+  private static final String ENGINE_STORAGE_NAME = "abp-engine.pref";
 
   /*
    * The fields below are volatile because:
@@ -107,6 +109,7 @@ public final class AdblockEngine
   private volatile boolean enabled = true;
   private volatile List<String> whitelistedDomains;
   private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
+  private SharedPreferences prefs;
 
   public synchronized AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
   {
@@ -498,24 +501,19 @@ public final class AdblockEngine
   // This method is called when SingleInstanceEngineProvider configured to have filter engine
   // disabled by default. It will configure setting to force subscriptions to be updated
   // when engine will be enabled first time
-  void configureDisabledByDefault()
+  void configureDisabledByDefault(final Context context)
   {
-    final JsValue shouldSync = filterEngine.getPref(FORCE_SYNC_WHEN_ENABLED_PREF);
-    final JsValue trueValue = platform.getJsEngine().newValue(true);
+    setEnabled(false);
 
-    try
+    if (prefs == null)
     {
-      setEnabled(false);
-
-      if (shouldSync.isUndefined())
-      {
-        filterEngine.setPref(FORCE_SYNC_WHEN_ENABLED_PREF, trueValue);
-      }
+      prefs = context.getSharedPreferences(ENGINE_STORAGE_NAME,
+              Context.MODE_PRIVATE);
     }
-    finally
+
+    if (!prefs.contains(FORCE_SYNC_WHEN_ENABLED_PREF))
     {
-      shouldSync.dispose();
-      trueValue.dispose();
+      prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, true).commit();
     }
   }
 
@@ -530,40 +528,26 @@ public final class AdblockEngine
     // let us check pref forcing update.
     // See configureDisabledByDefault method for preference setup.
 
-    if (enabled && valueChanged)
+    if (enabled && valueChanged && prefs != null
+            && prefs.getBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false))
     {
-      final JsValue shouldSync = filterEngine.getPref(FORCE_SYNC_WHEN_ENABLED_PREF);
+      final List<Subscription> listed = filterEngine.getListedSubscriptions();
 
       try
       {
-        if (shouldSync.asBoolean())
+        for (final Subscription subscription : listed)
         {
-          final List<Subscription> listed = filterEngine.getListedSubscriptions();
-          final JsValue falseValue = platform.getJsEngine().newValue(false);
-
-          try
-          {
-            for (final Subscription subscription : listed)
-            {
-              subscription.updateFilters();
-            }
-
-            filterEngine.setPref(FORCE_SYNC_WHEN_ENABLED_PREF, falseValue);
-          }
-          finally
-          {
-            for (final Subscription subscription : listed)
-            {
-              subscription.dispose();
-            }
-
-            falseValue.dispose();
-          }
+          subscription.updateFilters();
         }
+
+        prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false).commit();
       }
       finally
       {
-        shouldSync.dispose();
+        for (final Subscription subscription : listed)
+        {
+          subscription.dispose();
+        }
       }
     }
 
