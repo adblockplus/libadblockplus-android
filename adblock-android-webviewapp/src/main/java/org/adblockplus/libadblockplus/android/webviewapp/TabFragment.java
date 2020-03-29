@@ -138,7 +138,7 @@ public class TabFragment extends Fragment
     @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon)
     {
-      Timber.d("onPageStarted called for url " + url);
+      Timber.d("onPageStarted called for url %s", url);
       setProgressVisible(true);
 
       // show updated URL (because of possible redirection)
@@ -148,7 +148,7 @@ public class TabFragment extends Fragment
     @Override
     public void onPageFinished(final WebView view, final String url)
     {
-      Timber.d("onPageFinished called for url " + url);
+      Timber.d("onPageFinished called for url %s", url);
       setProgressVisible(false);
       updateButtons();
     }
@@ -197,17 +197,17 @@ public class TabFragment extends Fragment
     {
       Timber.d("saveTabState() failed to obtain WebView state to save!");
     }
-    Timber.d("saveTabState() saves tab " + id);
+    Timber.d("saveTabState() saves tab %d", id);
     outState.putBundle(SAVED_WEBVIEW_STATE, currentWebViewState);
     outState.putString(SAVED_URL_STATE, webView.getUrl());
     StorageUtils.writeBundle(context, outState, SAVED_TAB_BUNDLE + id);
-    Timber.d("saveTabState() saved tab url " + webView.getUrl());
+    Timber.d("saveTabState() saved tab url %s", webView.getUrl());
     return true;
   }
 
   public static void deleteTabState(final Context context, int id)
   {
-    Timber.d("deleteTabState() deletes tab " + id);
+    Timber.d("deleteTabState() deletes tab %d", id);
     StorageUtils.deleteBundle(context, SAVED_TAB_BUNDLE + id);
   }
 
@@ -221,15 +221,15 @@ public class TabFragment extends Fragment
     }
     if (savedState.getBundle(SAVED_WEBVIEW_STATE) != null && savedState.getString(SAVED_URL_STATE) != null)
     {
-      Timber.d( "restoreTabState() restores tab " + id);
+      Timber.d( "restoreTabState() restores tab %d", id);
       webView.restoreState(savedState.getBundle(SAVED_WEBVIEW_STATE));
       final String urlStr = savedState.getString(SAVED_URL_STATE);
       url.setText(urlStr);
-      Timber.d( "restoreTabState() restored tab url " + urlStr);
+      Timber.d( "restoreTabState() restored tab url %s", urlStr);
     }
     else
     {
-      Timber.d( "restoreTabState() fails to restore tab " + id);
+      Timber.d( "restoreTabState() fails to restore tab %d", id);
     }
   }
 
@@ -244,7 +244,7 @@ public class TabFragment extends Fragment
     @Override
     public void onProgressChanged(final WebView view, final int newProgress)
     {
-      Timber.d("onProgressChanged to " + newProgress + "%" + " for url: " + view.getUrl());
+      Timber.d("onProgressChanged to %d%% for url: %s", newProgress, view.getUrl());
       progress.setProgress(newProgress);
     }
 

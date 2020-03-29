@@ -54,7 +54,7 @@ public class SubscriptionsManager
       @Override
       public void onReceive(final Context context, final Intent intent)
       {
-        Timber.v("Received intent " + intent);
+        Timber.v("Received intent %s", intent);
 
         AdblockHelper.get().getProvider().waitForReady();
         if (intent.getAction().equals(ACTION_LIST))
@@ -64,7 +64,7 @@ public class SubscriptionsManager
         else
         {
           final String url = intent.getStringExtra(EXTRA_URL);
-          Timber.d("Subscription = " + url);
+          Timber.d("Subscription = %s", url);
           final FilterEngine filterEngine =
               AdblockHelper.get().getProvider().getEngine().getFilterEngine();
           final Subscription subscription = filterEngine.getSubscription(url);
@@ -189,8 +189,8 @@ public class SubscriptionsManager
         {
           try
           {
-            Timber.d(subscription.toString() + " is " +
-                (subscription.isDisabled() ? "disabled" : "enabled"));
+            Timber.d( "%s is %s",
+                    subscription.toString(), (subscription.isDisabled() ? "disabled" : "enabled"));
           }
           finally
           {

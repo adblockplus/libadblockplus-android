@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.android.webview;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -275,7 +276,7 @@ public class AdblockWebView extends WebView
       boolean oldValue = adblockEnabled.getAndSet(enabled);
       if (oldValue != enabled)
       {
-        Timber.d("Filter Engine status changed, enable status is " + adblockEnabled.get());
+        Timber.d("Filter Engine status changed, enable status is %s", adblockEnabled.get());
         AdblockWebView.this.post(new Runnable()
         {
           @Override
@@ -293,7 +294,7 @@ public class AdblockWebView extends WebView
     public void onAdblockEngineCreated(final AdblockEngine engine)
     {
       adblockEnabled = new AtomicBoolean(engine.isEnabled());
-      Timber.d("Filter Engine created, enable status is " + adblockEnabled.get());
+      Timber.d("Filter Engine created, enable status is %s", adblockEnabled.get());
       engine.addSettingsChangedListener(engineSettingsChangedCb);
     }
   };
@@ -366,6 +367,7 @@ public class AdblockWebView extends WebView
     extWebViewClient = client;
   }
 
+  @SuppressLint("SetJavaScriptEnabled")
   private void initAbp()
   {
     addJavascriptInterface(this, BRIDGE);
@@ -427,7 +429,7 @@ public class AdblockWebView extends WebView
           if (locked && getProvider().getEngine() != null)
           {
             adblockEnabled = new AtomicBoolean(getProvider().getEngine().isEnabled());
-            Timber.d("Filter Engine already created, enable status is " + adblockEnabled);
+            Timber.d("Filter Engine already created, enable status is %s", adblockEnabled);
             getProvider().getEngine().addSettingsChangedListener(engineSettingsChangedCb);
           }
           else
@@ -743,10 +745,11 @@ public class AdblockWebView extends WebView
     @Override
     public boolean onConsoleMessage(ConsoleMessage consoleMessage)
     {
-      Timber.d("JS: level=" + consoleMessage.messageLevel()
-        + ", message=\"" + consoleMessage.message() + "\""
-        + ", sourceId=\"" + consoleMessage.sourceId() + "\""
-        + ", line=" + consoleMessage.lineNumber());
+      Timber.d("JS: level=%s, message=\"%s\", sourceId=\"%s\", line=%d",
+              consoleMessage.messageLevel(),
+              consoleMessage.message(),
+              consoleMessage.sourceId(),
+              consoleMessage.lineNumber());
 
       if (extWebChromeClient != null)
       {
@@ -802,10 +805,10 @@ public class AdblockWebView extends WebView
     {
       if (redirectInProgress.get())
       {
-        Timber.d("Skipping onProgressChanged to " + newProgress + "%" + " for url: " + view.getUrl());
+        Timber.d("Skipping onProgressChanged to %d%% for url: %s", newProgress, view.getUrl());
         return;
       }
-      Timber.d("onProgressChanged to " + newProgress + "%" + " for url: " + view.getUrl());
+      Timber.d("onProgressChanged to %d%% for url: %s", newProgress, view.getUrl());
       tryInjectJs();
 
       if (extWebChromeClient != null)
@@ -895,7 +898,7 @@ public class AdblockWebView extends WebView
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon)
     {
-      Timber.d("onPageStarted called for url " + url);
+      Timber.d("onPageStarted called for url %s", url);
       if (loading)
       {
         stopAbpLoading();
@@ -920,11 +923,11 @@ public class AdblockWebView extends WebView
     {
       if (redirectInProgress.get())
       {
-        Timber.d("Skipping onPageFinished for url: " + url);
+        Timber.d("Skipping onPageFinished for url: %s", url);
         redirectInProgress.set(false);
         return;
       }
-      Timber.d("onPageFinished called for url " + url);
+      Timber.d("onPageFinished called for url %s", url);
       loading = false;
       if (extWebViewClient != null)
       {
@@ -1021,10 +1024,11 @@ public class AdblockWebView extends WebView
     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
     {
       Timber.e("onReceivedError:" +
-        " code=" + errorCode +
-        " with description=" + description +
-        " for url=" + failingUrl +
-        " redirectInProgress.get()=" + redirectInProgress.get());
+        " code=%d" +
+        " with description=%s" +
+        " for url=%s" +
+        " redirectInProgress.get()=%s",
+        errorCode, description, failingUrl, redirectInProgress.get());
       loadError = errorCode;
 
       if (redirectInProgress.get())
@@ -1048,11 +1052,13 @@ public class AdblockWebView extends WebView
     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error)
     {
       Timber.e("onReceivedError:" +
-        " code=" + error.getErrorCode() +
-        " with description=" + error.getDescription() +
-        " for url=" + request.getUrl() +
-        " redirectInProgress.get()=" + redirectInProgress.get() +
-        " request.isForMainFrame()=" + request.isForMainFrame());
+              " code=%d" +
+              " with description=%s" +
+              " for url=%s" +
+              " redirectInProgress.get()=%s" +
+              " request.isForMainFrame()=%s",
+              error.getErrorCode(), error.getDescription(), request.getUrl(),
+              redirectInProgress.get(), request.isForMainFrame());
 
       if (redirectInProgress.get() && request.isForMainFrame())
       {
@@ -1236,7 +1242,7 @@ public class AdblockWebView extends WebView
           }
         }
 
-        Timber.d("Loading url " + url);
+        Timber.d("Loading url %s", url);
 
         if (referrer != null)
         {
@@ -1252,7 +1258,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          Timber.w("No referrer header for " + url);
+          Timber.w("No referrer header for %s", url);
         }
 
         // reconstruct frames hierarchy
@@ -1271,7 +1277,7 @@ public class AdblockWebView extends WebView
         if (isMainFrame)
         {
           // never blocking main frame requests, just subrequests
-          Timber.w(url + " is main frame, allow loading");
+          Timber.w("%s is main frame, allow loading", url);
         }
         else
         {
@@ -1283,13 +1289,13 @@ public class AdblockWebView extends WebView
           // whitelisted
           if (getProvider().getEngine().isDomainWhitelisted(url, referrerChain))
           {
-            Timber.w(url + " domain is whitelisted, allow loading");
+            Timber.w("%s domain is whitelisted, allow loading", url);
             notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                 url, referrerChain, EventsListener.WhitelistReason.DOMAIN));
           }
           else if (getProvider().getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
           {
-            Timber.w(url + " document is whitelisted, allow loading");
+            Timber.w("%s document is whitelisted, allow loading", url);
             notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                 url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
           }
@@ -1330,7 +1336,7 @@ public class AdblockWebView extends WebView
                       referrerChainForGenericblock, siteKey);
               if (specificOnly)
               {
-                Timber.w("Found genericblock filter for url " + url + " which parent is " + parentUrl);
+                Timber.w("Found genericblock filter for url %s which parent is %s", url, parentUrl);
               }
             }
 
@@ -1341,7 +1347,7 @@ public class AdblockWebView extends WebView
 
             if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
             {
-              Timber.w("Blocked loading " + url);
+              Timber.w("Blocked loading %s", url);
 
               if (isVisibleResource(contentType))
               {
@@ -1354,11 +1360,11 @@ public class AdblockWebView extends WebView
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
-              Timber.w(url + " is whitelisted in matches()");
+              Timber.w("%s is whitelisted in matches()", url);
               notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                   url, referrerChain, EventsListener.WhitelistReason.FILTER));
             }
-            Timber.d("Allowed loading " + url);
+            Timber.d("Allowed loading %s", url);
           }
         }
       }
@@ -1385,7 +1391,7 @@ public class AdblockWebView extends WebView
         return WebResponseResult.ALLOW_LOAD;
       }
 
-      Timber.d("fetchUrlAndCheckSiteKey() called from Thread " + Thread.currentThread().getId());
+      Timber.d("fetchUrlAndCheckSiteKey() called from Thread %s", Thread.currentThread().getId());
       final boolean autoFollowRedirect = webview == null;
       final ResponseHolder responseHolder = new ResponseHolder();
       final CountDownLatch latch = new CountDownLatch(1);
@@ -1462,7 +1468,7 @@ public class AdblockWebView extends WebView
 
       if (response.getFinalUrl() != null)
       {
-        Timber.d("Updating url to " + response.getFinalUrl() + ", was (" + url + ")");
+        Timber.d("Updating url to %s, was (%s)", response.getFinalUrl(), url);
         url = response.getFinalUrl();
       }
 
@@ -1531,11 +1537,11 @@ public class AdblockWebView extends WebView
             if (verifier.verify(
                 Utils.getUrlWithoutAnchor(url), requestHeadersMap.get(HEADER_USER_AGENT), header.getValue()))
             {
-              Timber.d("Url " + url + " public key verified successfully");
+              Timber.d("Url %s public key verified successfully", url);
             }
             else
             {
-              Timber.e("Url " + url + " public key is not verified");
+              Timber.e("Url %s public key is not verified", url);
             }
           }
           catch (final SiteKeyException e)
@@ -1575,7 +1581,7 @@ public class AdblockWebView extends WebView
 
       if (redirectedUrl != null)
       {
-        Timber.d("redirecting a webview from " + url + " to " + redirectedUrl);
+        Timber.d("redirecting a webview from %s to %s", url, redirectedUrl);
         // we need to reload webview url to make it aware of new new url after redirection
         redirectInProgress.set(true);
         final Map<String, String> responseHeaders = Collections.singletonMap(HEADER_REFRESH, "0; url=" + redirectedUrl);
@@ -1777,7 +1783,7 @@ public class AdblockWebView extends WebView
 
           try
           {
-            Timber.d("Listed subscriptions: " + subscriptions.size());
+            Timber.d("Listed subscriptions: %d", subscriptions.size());
             if (BuildConfig.DEBUG)
             {
               for (Subscription eachSubscription : subscriptions)
@@ -1799,14 +1805,15 @@ public class AdblockWebView extends WebView
           final String domain = filterEngine.getHostFromURL(url);
           if (domain == null)
           {
-            Timber.e("Failed to extract domain from " + url);
+            Timber.e("Failed to extract domain from %s", url);
             selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
             emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
           }
           else
           {
             // elemhide
-            Timber.d("Requesting elemhide selectors from AdblockEngine for " + url + " in " + this);
+            Timber.d("Requesting elemhide selectors from AdblockEngine for %s in %s",
+                    url, this);
 
             final String siteKey = (siteKeysConfiguration != null
               ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
@@ -1826,16 +1833,19 @@ public class AdblockWebView extends WebView
               .getEngine()
               .getElementHidingSelectors(url, domain, referrerChain, siteKey, specificOnly);
 
-            Timber.d("Finished requesting elemhide selectors, got " + selectors.size() + " in " + this);
+            Timber.d("Finished requesting elemhide selectors, got %d in %s",
+                    selectors.size(), this);
             selectorsString = Utils.stringListToJsonArray(selectors);
 
             // elemhideemu
-            Timber.d("Requesting elemhideemu selectors from AdblockEngine for " + url + " in " + this);
+            Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s in %s",
+                    url, this);
             List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
               .getEngine()
               .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
 
-            Timber.d("Finished requesting elemhideemu selectors, got " + emuSelectors.size() + " in " + this);
+            Timber.d("Finished requesting elemhideemu selectors, got  got %d in %s",
+                    selectors.size(), this);
             emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
           }
         }
@@ -1845,7 +1855,7 @@ public class AdblockWebView extends WebView
         lock.unlock();
         if (isCancelled.get())
         {
-          Timber.w("This thread is cancelled, exiting silently " + this);
+          Timber.w("This thread is cancelled, exiting silently %s", this);
         }
         else
         {
@@ -1870,10 +1880,10 @@ public class AdblockWebView extends WebView
     private void finish(String selectorsString, String emuSelectorsString)
     {
       isFinished.set(true);
-      Timber.d("Setting elemhide string " + selectorsString.length() + " bytes");
+      Timber.d("Setting elemhide string %d bytes", selectorsString.length());
       elemHideSelectorsString = selectorsString;
 
-      Timber.d("Setting elemhideemu string " + emuSelectorsString.length() + " bytes");
+      Timber.d("Setting elemhideemu string %d bytes", emuSelectorsString.length());
       elemHideEmuSelectorsString = emuSelectorsString;
 
       onFinished();
@@ -1892,10 +1902,10 @@ public class AdblockWebView extends WebView
 
     public void cancel()
     {
-      Timber.w("Cancelling elemhide thread " + this);
+      Timber.w("Cancelling elemhide thread %s", this);
       if (isFinished.get())
       {
-        Timber.w("This thread is finished, exiting silently " + this);
+        Timber.w("This thread is finished, exiting silently %s", this);
       }
       else
       {
@@ -1931,7 +1941,7 @@ public class AdblockWebView extends WebView
 
   private void startAbpLoading(String newUrl)
   {
-    Timber.d("Start loading " + newUrl);
+    Timber.d("Start loading %s", newUrl);
 
     loading = true;
     loadError = null;
@@ -2103,7 +2113,7 @@ public class AdblockWebView extends WebView
         // elemhide selectors list getting is started in startAbpLoad() in background thread
         Timber.d("Waiting for elemhide selectors to be ready");
         elemHideLatch.await();
-        Timber.d("Elemhide selectors ready, " + elemHideSelectorsString.length() + " bytes");
+        Timber.d("Elemhide selectors ready, %d bytes", elemHideSelectorsString.length());
 
         return elemHideSelectorsString;
       }
@@ -2130,7 +2140,7 @@ public class AdblockWebView extends WebView
         // elemhideemu selectors list getting is started in startAbpLoad() in background thread
         Timber.d("Waiting for elemhideemu selectors to be ready");
         elemHideLatch.await();
-        Timber.d("Elemhideemu selectors ready, " + elemHideEmuSelectorsString.length() + " bytes");
+        Timber.d("Elemhideemu selectors ready, %d bytes", elemHideEmuSelectorsString.length() );
 
         return elemHideEmuSelectorsString;
       }

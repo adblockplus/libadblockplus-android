@@ -252,7 +252,7 @@ public final class AdblockEngine
           @Override
           public void onIntercepted(String url, int resourceId)
           {
-            Timber.d("Force subscription update for intercepted URL " + url);
+            Timber.d("Force subscription update for intercepted URL %s", url);
             if (engine.filterEngine != null)
             {
               engine.filterEngine.updateFiltersAsync(url);

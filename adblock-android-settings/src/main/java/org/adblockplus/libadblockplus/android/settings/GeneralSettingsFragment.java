@@ -215,7 +215,7 @@ public class GeneralSettingsFragment
   @Override
   public boolean onPreferenceChange(Preference preference, Object newValue)
   {
-    Timber.d("\"" + preference.getTitle() + "\" new value is " + newValue);
+    Timber.d("\"%s\" new value is %s", preference.getTitle(), newValue);
 
     if (preference.getKey().equals(SETTINGS_ENABLED_KEY))
     {

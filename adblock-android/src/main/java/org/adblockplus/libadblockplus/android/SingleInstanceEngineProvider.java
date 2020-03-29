@@ -282,13 +282,13 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
     try
     {
-      Timber.d("Waiting for ready in " + Thread.currentThread());
+      Timber.d("Waiting for ready in %s", Thread.currentThread());
       engineCreated.await();
       Timber.d("Ready");
     }
     catch (InterruptedException e)
     {
-      Timber.w("Interrupted: " + e);
+      Timber.w(e, "Interrupted ");
     }
   }
 

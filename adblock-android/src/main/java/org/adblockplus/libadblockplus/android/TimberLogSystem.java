@@ -31,16 +31,16 @@ public class TimberLogSystem implements LogSystem
       default:
       case TRACE:
       case LOG:
-        Timber.d(source + ": " + message);
+        Timber.d( "%s: %s", source, message);
         break;
       case INFO:
-        Timber.i(source + ": " + message);
+        Timber.i("%s: %s", source, message);
         break;
       case WARN:
-        Timber.w(source + ": " + message);
+        Timber.w("%s: %s", source, message);
         break;
       case ERROR:
-        Timber.e(source + ": " + message);
+        Timber.e("%s: %s", source, message);
         break;
     }
   }

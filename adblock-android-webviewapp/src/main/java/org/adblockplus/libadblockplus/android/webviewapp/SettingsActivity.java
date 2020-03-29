@@ -96,7 +96,7 @@ public class SettingsActivity
   @Override
   public void onAdblockSettingsChanged(BaseSettingsFragment fragment)
   {
-    Timber.d("AdblockHelper setting changed:\n" + fragment.getSettings().toString());
+    Timber.d("AdblockHelper setting changed:\n%s" , fragment.getSettings().toString());
   }
 
   @Override
