@@ -1217,14 +1217,26 @@ public class AdblockWebView extends WebView
       try
       {
         // if dispose() was invoke, but the page is still loading then just let it go
+        boolean isDisposed = false;
         if (getProvider().getCounter() == 0)
         {
-          Timber.e("FilterEngine already disposed, allow loading");
-          return WebResponseResult.ALLOW_LOAD;
+          isDisposed = true;
         }
         else
         {
+          lock.unlock();
           getProvider().waitForReady();
+          lock.lock();
+          if (getProvider().getCounter() == 0)
+          {
+            isDisposed = true;
+          }
+        }
+
+        if (isDisposed)
+        {
+          Timber.e("FilterEngine already disposed, allow loading");
+          return WebResponseResult.ALLOW_LOAD;
         }
 
         if (adblockEnabled == null)
@@ -1755,7 +1767,23 @@ public class AdblockWebView extends WebView
 
       try
       {
+        boolean isDisposed = false;
         if (getProvider().getCounter() == 0)
+        {
+          isDisposed = true;
+        }
+        else
+        {
+          lock.unlock();
+          getProvider().waitForReady();
+          lock.lock();
+          if (getProvider().getCounter() == 0)
+          {
+            isDisposed = true;
+          }
+        }
+
+        if (isDisposed)
         {
           Timber.w("FilterEngine already disposed");
           selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
@@ -1763,7 +1791,6 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          getProvider().waitForReady();
           List<String> referrerChain = new ArrayList<String>(1);
           referrerChain.add(url);
           String parentUrl = url;
