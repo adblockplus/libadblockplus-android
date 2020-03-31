@@ -231,6 +231,11 @@ public final class FilterEngine
     return getPref(this.ptr, pref);
   }
 
+  /**
+   * Set libadblockplus preference. Only known preferences will be stored after engine is disposed.
+   * @param pref preference name. See lib/pref.js in libadblockplus for valid names
+   * @param value preference value
+   */
   public void setPref(final String pref, final JsValue value)
   {
     setPref(this.ptr, pref, value.ptr);

@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build.VERSION;
@@ -82,6 +83,10 @@ public final class AdblockEngine
   // default base path to store subscription files in android app
   public static final String BASE_PATH_DIRECTORY = "adblock";
 
+  // force subscription update when engine will be enabled
+  private static final String FORCE_SYNC_WHEN_ENABLED_PREF = "_force_sync_when_enabled";
+  private static final String ENGINE_STORAGE_NAME = "abp-engine.pref";
+
   /*
    * The fields below are volatile because:
    *
@@ -104,6 +109,7 @@ public final class AdblockEngine
   private volatile boolean enabled = true;
   private volatile List<String> whitelistedDomains;
   private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
+  private SharedPreferences prefs;
 
   public synchronized AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
   {
@@ -175,7 +181,6 @@ public final class AdblockEngine
     private Context context;
     private Map<String, Integer> urlToResourceIdMap;
     private AndroidHttpClientResourceWrapper.Storage resourceStorage;
-    private AndroidHttpClient androidHttpClient;
     private AppInfo appInfo;
     private String basePath;
     private IsAllowedConnectionCallback isAllowedConnectionCallback;
@@ -236,8 +241,7 @@ public final class AdblockEngine
 
     private void initRequests()
     {
-      androidHttpClient = new AndroidHttpClient(true, "UTF-8");
-      engine.httpClient = androidHttpClient;
+      engine.httpClient = new AndroidHttpClient(true, "UTF-8");
 
       if (urlToResourceIdMap != null)
       {
@@ -248,7 +252,7 @@ public final class AdblockEngine
           @Override
           public void onIntercepted(String url, int resourceId)
           {
-            Timber.d("Force subscription update for intercepted URL " + url);
+            Timber.d("Force subscription update for intercepted URL %s", url);
             if (engine.filterEngine != null)
             {
               engine.filterEngine.updateFiltersAsync(url);
@@ -258,6 +262,8 @@ public final class AdblockEngine
 
         engine.httpClient = wrapper;
       }
+
+      engine.httpClient = new AndroidHttpClientEngineStateWrapper(engine.httpClient, engine);
     }
 
     private void initCallbacks()
@@ -492,10 +498,59 @@ public final class AdblockEngine
     }
   }
 
+  // This method is called when SingleInstanceEngineProvider configured to have filter engine
+  // disabled by default. It will configure setting to force subscriptions to be updated
+  // when engine will be enabled first time
+  void configureDisabledByDefault(final Context context)
+  {
+    setEnabled(false);
+
+    if (prefs == null)
+    {
+      prefs = context.getSharedPreferences(ENGINE_STORAGE_NAME,
+              Context.MODE_PRIVATE);
+    }
+
+    if (!prefs.contains(FORCE_SYNC_WHEN_ENABLED_PREF))
+    {
+      prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, true).commit();
+    }
+  }
+
   public void setEnabled(final boolean enabled)
   {
     final boolean valueChanged = this.enabled != enabled;
     this.enabled = enabled;
+
+    // Filter engine can be created disabled by default. In this case initial subscription sync
+    // will fail and and once it will be enabled first synchronization will take place only
+    // when retry timeout will trigger. In order to have something when enabling it first time
+    // let us check pref forcing update.
+    // See configureDisabledByDefault method for preference setup.
+
+    if (enabled && valueChanged && prefs != null
+            && prefs.getBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false))
+    {
+      final List<Subscription> listed = filterEngine.getListedSubscriptions();
+
+      try
+      {
+        for (final Subscription subscription : listed)
+        {
+          subscription.updateFilters();
+        }
+
+        prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false).commit();
+      }
+      finally
+      {
+        for (final Subscription subscription : listed)
+        {
+          subscription.dispose();
+        }
+      }
+    }
+
     if (valueChanged)
     {
       synchronized(this)

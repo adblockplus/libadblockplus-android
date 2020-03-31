@@ -79,7 +79,9 @@ public class Application extends android.app.Application
         .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
         .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
         .addEngineCreatedListener(engineCreatedListener)
-        .addEngineDisposedListener(engineDisposedListener);
+        .addEngineDisposedListener(engineDisposedListener)
+        //.setDisabledByDefault()
+        ;
     }
   }
 }

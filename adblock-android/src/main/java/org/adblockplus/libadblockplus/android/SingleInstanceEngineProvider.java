@@ -54,6 +54,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
   private final ReentrantReadWriteLock.ReadLock readLock = engineLock.readLock();
   private final ReentrantReadWriteLock.WriteLock writeLock = engineLock.writeLock();
+  private boolean disabledByDefault = false;
 
   /*
     Simple ARC management for AdblockEngine
@@ -97,6 +98,17 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   public SingleInstanceEngineProvider useV8IsolateProvider(long ptr)
   {
     this.v8IsolateProviderPtr.set(ptr);
+    return this;
+  }
+
+  /**
+   * Will create filter engine disabled by default. This means subscriptions will be updated only
+   * when setEnabled(true) will be called. This function configures only default engine state. If
+   * other state is stored in settings, it will be preferred.
+   */
+  public SingleInstanceEngineProvider setDisabledByDefault()
+  {
+    this.disabledByDefault = true;
     return this;
   }
 
@@ -201,6 +213,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
       Timber.d("AdblockHelper engine created");
 
+      if (disabledByDefault)
+      {
+        engine.configureDisabledByDefault(context);
+      }
+
       // sometimes we need to init AdblockEngine instance, eg. set user settings
       for (EngineCreatedListener listener : engineCreatedListeners)
       {
@@ -265,13 +282,13 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
 
     try
     {
-      Timber.d("Waiting for ready in " + Thread.currentThread());
+      Timber.d("Waiting for ready in %s", Thread.currentThread());
       engineCreated.await();
       Timber.d("Ready");
     }
     catch (InterruptedException e)
     {
-      Timber.w("Interrupted: " + e);
+      Timber.w(e, "Interrupted ");
     }
   }
 

@@ -129,7 +129,7 @@ public class WhitelistedDomainsSettingsFragment
       // update and save settings
       int position = ((Integer) v.getTag()).intValue();
       String removeDomain = settings.getWhitelistedDomains().get(position);
-      Timber.w("Removing domain: " + removeDomain);
+      Timber.w("Removing domain: %s", removeDomain);
       settings.getWhitelistedDomains().remove(position);
       provider.getAdblockSettingsStorage().save(settings);
 
