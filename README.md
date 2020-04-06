@@ -3,6 +3,12 @@ Adblock Android SDK
 
 An Android library project, tests, settings fragments and demo application for AdblockWebView.
 
+## Git commits
+
+This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventions in the repo. It should
+be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
+before making any new commits to the repo.
+
 ## Updating the dependencies
 
 Adblock Android SDK has dependencies that aren't in this repository.
