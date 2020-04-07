@@ -701,7 +701,7 @@ public final class AdblockEngine
     return this.filterEngine.isElemhideWhitelisted(url, referrerChain, sitekey);
   }
 
-  public List<String> getElementHidingSelectors(
+  public String getElementHidingStyleSheet(
       final String url,
       final String domain,
       final List<String> referrerChain,
@@ -728,10 +728,10 @@ public final class AdblockEngine
         || this.isDocumentWhitelisted(url, referrerChain, sitekey)
         || this.isElemhideWhitelisted(url, referrerChain, sitekey))
     {
-      return new ArrayList<String>();
+      return "";
     }
 
-    return this.filterEngine.getElementHidingSelectors(domain, specificOnly);
+    return this.filterEngine.getElementHidingStyleSheet(domain, specificOnly);
   }
 
   public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(

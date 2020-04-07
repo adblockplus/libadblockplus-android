@@ -204,8 +204,8 @@ static void JNICALL JniSetFilterChangeCallback(JNIEnv* env, jclass clazz,
   CATCH_AND_THROW(env)
 }
 
-static jobject JNICALL JniGetElementHidingSelectors(JNIEnv* env, jclass clazz,
-    jlong ptr, jstring jDomain, jboolean jSpecificOnly)
+static jstring JNICALL JniGetElementHidingStyleSheet(JNIEnv* env, jclass clazz,
+                                                     jlong ptr, jstring jDomain, jboolean jSpecificOnly)
 {
   AdblockPlus::FilterEngine& engine = GetFilterEngineRef(ptr);
 
@@ -213,18 +213,7 @@ static jobject JNICALL JniGetElementHidingSelectors(JNIEnv* env, jclass clazz,
 
   try
   {
-    std::vector<std::string> selectors = engine.GetElementHidingSelectors(domain, jSpecificOnly == JNI_TRUE);
-
-    jobject list = NewJniArrayList(env);
-
-    for (std::vector<std::string>::iterator it = selectors.begin(), end =
-        selectors.end(); it != end; it++)
-    {
-      JniAddObjectToList(env, list,
-          *JniLocalReference<jstring>(env, env->NewStringUTF(it->c_str())));
-    }
-
-    return list;
+    return JniStdStringToJava(env, engine.GetElementHidingStyleSheet(domain, jSpecificOnly == JNI_TRUE));
   }
   CATCH_THROW_AND_RETURN(env, 0)
 }
@@ -499,7 +488,7 @@ static JNINativeMethod methods[] =
   { (char*)"fetchAvailableSubscriptions", (char*)"(J)Ljava/util/List;", (void*)JniFetchAvailableSubscriptions },
   { (char*)"setFilterChangeCallback", (char*)"(JJ)V", (void*)JniSetFilterChangeCallback },
   { (char*)"removeFilterChangeCallback", (char*)"(J)V", (void*)JniRemoveFilterChangeCallback },
-  { (char*)"getElementHidingSelectors", (char*)"(JLjava/lang/String;Z)Ljava/util/List;", (void*)JniGetElementHidingSelectors },
+  { (char*)"getElementHidingStyleSheet", (char*)"(JLjava/lang/String;Z)Ljava/lang/String;", (void*)JniGetElementHidingStyleSheet },
   { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
   { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;Z)" TYP("Filter"), (void*)JniMatchesMany },
   { (char*)"isDocumentWhitelisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsDocumentWhitelisted },

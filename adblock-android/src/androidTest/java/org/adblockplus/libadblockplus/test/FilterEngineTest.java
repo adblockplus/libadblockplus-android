@@ -625,14 +625,14 @@ public class FilterEngineTest extends BaseFilterEngineTest
   }
 
   @Test
-  public void testElementHidingSelectorsListEmpty()
+  public void testElementHidingStyleSheetEmpty()
   {
-    final List<String> sels = filterEngine.getElementHidingSelectors("example.org");
-    assertTrue(sels.isEmpty());
+    final String sheet = filterEngine.getElementHidingStyleSheet("example.org");
+    assertTrue(sheet.isEmpty());
   }
 
   @Test
-  public void testElementHidingSelectorsList()
+  public void testElementHidingStyleSheet()
   {
     final String[] filters =
       {
@@ -657,121 +657,111 @@ public class FilterEngineTest extends BaseFilterEngineTest
       filterEngine.getFilter(filter).addToList();
     }
 
-    final List<String> sels = filterEngine.getElementHidingSelectors("example.org");
+    final String sheet = filterEngine.getElementHidingStyleSheet("example.org");
 
-    assertNotNull(sels);
-    assertEquals(6, sels.size());
-    assertEquals("#testcase-eh-id", sels.get(0));
-    assertEquals("#testcase-eh-id", sels.get(1));
-    assertEquals(".testcase-eh-class", sels.get(2));
-    assertEquals(".testcase-container > .testcase-eh-descendant", sels.get(3));
-    assertEquals("foo", sels.get(4));
-    assertEquals("testneg", sels.get(5));
+    assertNotNull(sheet);
+    assertEquals("#testcase-eh-id {display: none !important;}\n" +
+                "#testcase-eh-id, " +
+                ".testcase-eh-class, " +
+                ".testcase-container > .testcase-eh-descendant, " +
+                "foo, " +
+                "testneg {display: none !important;}\n",
+            sheet);
   }
 
   @Test
-  public void testElementHidingSelectorsListSingleGeneric()
+  public void testElementHidingStyleSheetSingleGeneric()
   {
     // element hiding selectors
     filterEngine.getFilter("###testcase-eh-id").addToList();
 
-    final List<String> sels = filterEngine.getElementHidingSelectors("");
+    final String sheet = filterEngine.getElementHidingStyleSheet("");
 
-    assertNotNull(sels);
-    assertEquals(1, sels.size());
-    assertEquals("#testcase-eh-id", sels.get(0));
+    assertNotNull(sheet);
+    assertEquals("#testcase-eh-id {display: none !important;}\n", sheet);
   }
 
   @Test
-  public void testElementHidingSelectorsListSingleDomain()
+  public void testElementHidingStyleSheetSingleDomain()
   {
     // element hiding selectors
     filterEngine.getFilter("example.org##.testcase - eh - class").addToList();
 
-    final List<String> sels = filterEngine.getElementHidingSelectors("example.org");
+    final String sheet = filterEngine.getElementHidingStyleSheet("example.org");
 
-    assertNotNull(sels);
-    assertEquals(1, sels.size());
-    assertEquals(".testcase - eh - class", sels.get(0));
+    assertNotNull(sheet);
+    assertEquals(".testcase - eh - class {display: none !important;}\n", sheet);
   }
 
   @Test
-  public void testElementHidingSelectorsListDup()
+  public void testElementHidingStyleSheetDup()
   {
     // element hiding selectors - duplicates
     filterEngine.getFilter("example.org###dup").addToList();
     filterEngine.getFilter("example.org###dup").addToList();
     filterEngine.getFilter("othersite.org###dup").addToList();
 
-    final List<String> sels = filterEngine.getElementHidingSelectors("example.org");
+    final String sheet = filterEngine.getElementHidingStyleSheet("example.org");
 
     // no dups
-    assertNotNull(sels);
-    assertEquals(1, sels.size());
-    assertEquals("#dup", sels.get(0));
+    assertNotNull(sheet);
+    assertEquals("#dup {display: none !important;}\n", sheet);
 
     // this makes duplicates
     filterEngine.getFilter("~foo.example.org,example.org###dup").addToList();
     filterEngine.getFilter("~bar.example.org,example.org###dup").addToList();
 
-    final List<String> selsDup = filterEngine.getElementHidingSelectors("example.org");
+    final String sheetDup = filterEngine.getElementHidingStyleSheet("example.org");
 
     // dups
-    assertNotNull(selsDup);
-    assertEquals(3, selsDup.size());
-    assertEquals("#dup", selsDup.get(0));
-    assertEquals("#dup", selsDup.get(1));
-    assertEquals("#dup", selsDup.get(2));
+    assertNotNull(sheetDup);
+    assertEquals("#dup, #dup, #dup {display: none !important;}\n", sheetDup);
 
-    final List<String> selsBar = filterEngine.getElementHidingSelectors("bar.example.org");
-    assertNotNull(selsBar);
-    assertEquals(2, selsBar.size());
-    assertEquals("#dup", selsBar.get(0));
-    assertEquals("#dup", selsBar.get(1));
+    final String sheetBar = filterEngine.getElementHidingStyleSheet("bar.example.org");
+    assertNotNull(sheetBar);
+    assertEquals("#dup, #dup {display: none !important;}\n", sheetBar);
   }
 
   @Test
-  public void testElementHidingSelectorsListDiff()
+  public void testElementHidingStyleSheetDiff()
   {
     filterEngine.getFilter("example1.org###testcase-eh-id").addToList();
     filterEngine.getFilter("example2.org###testcase-eh-id").addToList();
 
-    final List<String> sels1 = filterEngine.getElementHidingSelectors("example1.org");
-    assertEquals(1, sels1.size());
-    assertEquals("#testcase-eh-id", sels1.get(0));
+    final String sheet1 = filterEngine.getElementHidingStyleSheet("example1.org");
+    assertEquals("#testcase-eh-id {display: none !important;}\n", sheet1);
 
-    final List<String> sels2 = filterEngine.getElementHidingSelectors("example2.org");
-    assertEquals(1, sels2.size());
-    assertEquals("#testcase-eh-id", sels2.get(0));
+    final String sheet2 = filterEngine.getElementHidingStyleSheet("example2.org");
+    assertEquals("#testcase-eh-id {display: none !important;}\n", sheet2);
 
-    final List<String> selsGen = filterEngine.getElementHidingSelectors("");
-    assertTrue(selsGen.isEmpty());
+    final String sheet3 = filterEngine.getElementHidingStyleSheet("");
+    assertTrue(sheet3.isEmpty());
 
-    final List<String> selsNonExisting =
-      filterEngine.getElementHidingSelectors("non-existing-domain.com");
-    assertTrue(selsNonExisting.isEmpty());
+    final String sheetNonExisting =
+      filterEngine.getElementHidingStyleSheet("non-existing-domain.com");
+    assertTrue(sheetNonExisting.isEmpty());
   }
 
   @Test
-  public void testElementHidingSelectorsGenerichide()
+  public void testElementHidingStyleSheetGenerichide()
   {
-    // element hiding selectors
+    // element hiding styleSheet
     filterEngine.getFilter("##.testcase-generichide-generic").addToList();
     filterEngine.getFilter("example.org##.testcase-generichide-notgeneric").addToList();
     filterEngine.getFilter("@@||example.org$generichide").addToList();
 
-    final List<String> selectors = filterEngine.getElementHidingSelectors("example.org");
+    final String styleSheet = filterEngine.getElementHidingStyleSheet("example.org");
 
-    assertNotNull(selectors);
-    assertEquals(2, selectors.size());
-    assertEquals(".testcase-generichide-generic", selectors.get(0));
-    assertEquals(".testcase-generichide-notgeneric", selectors.get(1));
+    assertNotNull(styleSheet);
+    assertEquals(".testcase-generichide-generic {display: none !important;}\n" +
+            ".testcase-generichide-notgeneric {display: none !important;}\n", styleSheet);
 
-    final List<String> selectorsSpecificOnly = filterEngine.getElementHidingSelectors("example.org", true);
+    final String styleSheetSpecificOnly =
+            filterEngine.getElementHidingStyleSheet("example.org", true);
 
-    assertNotNull(selectorsSpecificOnly);
-    assertEquals(1, selectorsSpecificOnly.size());
-    assertEquals(".testcase-generichide-notgeneric", selectorsSpecificOnly.get(0));
+    assertNotNull(styleSheetSpecificOnly);
+    assertEquals(".testcase-generichide-notgeneric {display: none !important;}\n",
+            styleSheetSpecificOnly);
   }
 
   @Test
