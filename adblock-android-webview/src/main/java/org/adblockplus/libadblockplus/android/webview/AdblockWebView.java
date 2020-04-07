@@ -115,6 +115,7 @@ public class AdblockWebView extends WebView
   private static final String HIDE_TOKEN = "{{HIDE}}";
   private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
   private static final String BRIDGE = "jsBridge";
+  private static final String EMPTY_ELEMHIDE_STRING = "";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
   // decisions
@@ -1746,7 +1747,7 @@ public class AdblockWebView extends WebView
 
   private class ElemHideThread extends Thread
   {
-    private String selectorsString;
+    private String stylesheetString;
     private String emuSelectorsString;
     private CountDownLatch finishedLatch;
     private AtomicBoolean isFinished;
@@ -1786,7 +1787,7 @@ public class AdblockWebView extends WebView
         if (isDisposed)
         {
           Timber.w("FilterEngine already disposed");
-          selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+          stylesheetString = EMPTY_ELEMHIDE_STRING;
           emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
         }
         else
@@ -1833,7 +1834,7 @@ public class AdblockWebView extends WebView
           if (domain == null)
           {
             Timber.e("Failed to extract domain from %s", url);
-            selectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+            stylesheetString = EMPTY_ELEMHIDE_STRING;
             emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
           }
           else
@@ -1856,13 +1857,12 @@ public class AdblockWebView extends WebView
               Timber.d("elemhide - specificOnly selectors");
             }
 
-            List<String> selectors = getProvider()
+            stylesheetString = getProvider()
               .getEngine()
-              .getElementHidingSelectors(url, domain, referrerChain, siteKey, specificOnly);
+              .getElementHidingStyleSheet(url, domain, referrerChain, siteKey, specificOnly);
 
-            Timber.d("Finished requesting elemhide selectors, got %d in %s",
-                    selectors.size(), this);
-            selectorsString = Utils.stringListToJsonArray(selectors);
+            Timber.d("Finished requesting elemhide stylesheet, got %d symbols in %s",
+                    stylesheetString.length(), this);
 
             // elemhideemu
             Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s in %s",
@@ -1872,7 +1872,7 @@ public class AdblockWebView extends WebView
               .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
 
             Timber.d("Finished requesting elemhideemu selectors, got  got %d in %s",
-                    selectors.size(), this);
+                    emuSelectors.size(), this);
             emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
           }
         }
@@ -1886,7 +1886,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          finish(selectorsString, emuSelectorsString);
+          finish(stylesheetString, emuSelectorsString);
         }
       }
 
@@ -1937,7 +1937,7 @@ public class AdblockWebView extends WebView
       else
       {
         isCancelled.set(true);
-        finish(EMPTY_ELEMHIDE_ARRAY_STRING, EMPTY_ELEMHIDE_ARRAY_STRING);
+        finish(EMPTY_ELEMHIDE_STRING, EMPTY_ELEMHIDE_ARRAY_STRING);
       }
     }
   }
@@ -2127,11 +2127,11 @@ public class AdblockWebView extends WebView
 
   // warning: do not rename (used in injected JS by method name)
   @JavascriptInterface
-  public String getElemhideSelectors()
+  public String getElemhideStyleSheet()
   {
     if (elemHideLatch == null)
     {
-      return EMPTY_ELEMHIDE_ARRAY_STRING;
+      return EMPTY_ELEMHIDE_STRING;
     }
     else
     {
@@ -2147,7 +2147,7 @@ public class AdblockWebView extends WebView
       catch (final InterruptedException e)
       {
         Timber.w("Interrupted, returning empty selectors list");
-        return EMPTY_ELEMHIDE_ARRAY_STRING;
+        return EMPTY_ELEMHIDE_STRING;
       }
     }
   }

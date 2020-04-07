@@ -105,14 +105,14 @@ public final class FilterEngine
     setFilterChangeCallback(this.ptr, callback.ptr);
   }
 
-  public List<String> getElementHidingSelectors(final String domain)
+  public String getElementHidingStyleSheet(final String domain)
   {
-    return getElementHidingSelectors(domain, false);
+    return getElementHidingStyleSheet(domain, false);
   }
 
-  public List<String> getElementHidingSelectors(final String domain, final boolean specificOnly)
+  public String getElementHidingStyleSheet(final String domain, final boolean specificOnly)
   {
-    return getElementHidingSelectors(this.ptr, domain, specificOnly);
+    return getElementHidingStyleSheet(this.ptr, domain, specificOnly);
   }
 
   public List<EmulationSelector> getElementHidingEmulationSelectors(final String domain)
@@ -308,7 +308,7 @@ public final class FilterEngine
 
   private final static native void setFilterChangeCallback(long ptr, long filterPtr);
 
-  private final static native List<String> getElementHidingSelectors(long ptr, String domain, boolean specificOnly);
+  private final static native String getElementHidingStyleSheet(long ptr, String domain, boolean specificOnly);
 
   private final static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
 
