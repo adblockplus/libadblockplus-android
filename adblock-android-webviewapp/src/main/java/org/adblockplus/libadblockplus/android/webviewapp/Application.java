@@ -80,7 +80,7 @@ public class Application extends android.app.Application
         .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
         .addEngineCreatedListener(engineCreatedListener)
         .addEngineDisposedListener(engineDisposedListener)
-        //.setDisabledByDefault()
+        .setDisabledByDefault()
         ;
     }
   }
