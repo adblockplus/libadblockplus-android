@@ -1,3 +1,4 @@
+image: "registry.gitlab.com/eyeo/docker/libadblockplus-android_gitlab-runner:202004.1"
 stages:
   - unit_test
   - build_dependencies
