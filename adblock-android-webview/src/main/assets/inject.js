@@ -27,7 +27,7 @@ var hideElements = function()
 
   {{DEBUG}} console.log("Not yet hidden!")
 
-  // hide using element visibility (to be replaced with script body)
+  // hide by injecting CSS stylesheet
   {{HIDE}}
 
   document.{{HIDDEN_FLAG}} = true; // set flag not to do it again

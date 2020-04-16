@@ -181,6 +181,7 @@ public final class AdblockEngine
     private Context context;
     private Map<String, Integer> urlToResourceIdMap;
     private AndroidHttpClientResourceWrapper.Storage resourceStorage;
+    private HttpClient androidHttpClient;
     private AppInfo appInfo;
     private String basePath;
     private IsAllowedConnectionCallback isAllowedConnectionCallback;
@@ -202,6 +203,12 @@ public final class AdblockEngine
     public Builder enableElementHiding(boolean enable)
     {
       engine.elemhideEnabled = enable;
+      return this;
+    }
+
+    public Builder setHttpClient(HttpClient httpClient)
+    {
+      this.androidHttpClient = httpClient;
       return this;
     }
 
@@ -241,7 +248,11 @@ public final class AdblockEngine
 
     private void initRequests()
     {
-      engine.httpClient = new AndroidHttpClient(true, "UTF-8");
+      if (androidHttpClient == null)
+      {
+        androidHttpClient = new AndroidHttpClient(true, "UTF-8");
+      }
+      engine.httpClient = androidHttpClient;
 
       if (urlToResourceIdMap != null)
       {
@@ -690,7 +701,7 @@ public final class AdblockEngine
     return this.filterEngine.isElemhideWhitelisted(url, referrerChain, sitekey);
   }
 
-  public List<String> getElementHidingSelectors(
+  public String getElementHidingStyleSheet(
       final String url,
       final String domain,
       final List<String> referrerChain,
@@ -717,10 +728,10 @@ public final class AdblockEngine
         || this.isDocumentWhitelisted(url, referrerChain, sitekey)
         || this.isElemhideWhitelisted(url, referrerChain, sitekey))
     {
-      return new ArrayList<String>();
+      return "";
     }
 
-    return this.filterEngine.getElementHidingSelectors(domain, specificOnly);
+    return this.filterEngine.getElementHidingStyleSheet(domain, specificOnly);
   }
 
   public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(

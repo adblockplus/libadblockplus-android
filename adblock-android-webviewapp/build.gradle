@@ -8,9 +8,10 @@ android {
     applicationId "org.adblockplus.libadblockplus.android.webviewapp"
     minSdkVersion 21
     targetSdkVersion 28
-    versionCode 34
+    versionCode 35
     versionName = rootProject.ext.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
 
   buildTypes {
@@ -26,4 +27,8 @@ dependencies {
   implementation project(':adblock-android-webview')
   implementation 'com.android.support:appcompat-v7:28.0.0'
   implementation "com.android.support:design:28.0.0"
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation 'androidx.test:core:1.1.0'
+  androidTestImplementation 'androidx.test:runner:1.1.0'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.0'
 }
