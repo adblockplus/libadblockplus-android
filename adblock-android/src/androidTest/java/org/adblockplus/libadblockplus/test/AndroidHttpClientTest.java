@@ -52,7 +52,32 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   protected static final Charset charset = Charset.forName("UTF-8");
   protected ServerResponse serverResponse = null;
 
-  private HttpClient androidHttpClient = new AndroidHttpClient(true, "UTF-8");
+  private static class AndroidHttpClientWithoutSubscriptions extends AndroidHttpClient
+  {
+    public AndroidHttpClientWithoutSubscriptions(final boolean compressedStream,
+                                                 final String charsetName)
+    {
+      super(compressedStream, charsetName);
+    }
+
+    @Override
+    public void request(final HttpRequest request, final Callback callback)
+    {
+      final String url = request.getUrl();
+      if (url.contains("?addonName=libadblockplus-android"))
+      {
+        Timber.d("Connection refused for %s", url);
+        final ServerResponse response = new ServerResponse();
+        response.setResponseStatus(0);
+        response.setStatus(ServerResponse.NsStatus.ERROR_CONNECTION_REFUSED);
+        callback.onFinished(response);
+        return;
+      }
+      super.request(request, callback);
+    }
+  }
+
+  private HttpClient androidHttpClient = new AndroidHttpClientWithoutSubscriptions(true, "UTF-8");
 
   @Override
   public void setUp()
