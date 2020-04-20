@@ -68,7 +68,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1444,7 +1443,7 @@ public class AdblockWebView extends WebView
           headersList.add(new HeaderEntry(HEADER_COOKIE, cookieValue));
         }
 
-        final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect);
+        final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect, true);
         siteKeysConfiguration.getHttpClient().request(request, callback);
       }
       catch (final AdblockPlusException e)
@@ -1534,15 +1533,14 @@ public class AdblockWebView extends WebView
         responseEncoding = responseHeadersMap.get(HEADER_CONTENT_ENCODING);
       }
 
-      if (response.getResponse() != null)
+      if (response.getInputStream() != null)
       {
-        final byte[] buffer = Utils.byteBufferToByteArray(response.getResponse());
-        final InputStream byteBufferInputStream = new ByteArrayInputStream(buffer);
         return new WebResourceResponse(
                 responseMimeType, responseEncoding,
                 statusCode, getReasonPhrase(status),
-                responseHeadersMap, byteBufferInputStream);
+                responseHeadersMap, response.getInputStream());
       }
+      Timber.w("fetchUrlAndCheckSiteKey() passes control to WebView");
       return WebResponseResult.ALLOW_LOAD;
     }
 
