@@ -183,9 +183,13 @@ public class AndroidHttpClient extends HttpClient
       }
       finally
       {
-        if (!request.skipInputStreamReading())
+        if (!request.skipInputStreamReading() || (inputStream == null))
         {
-          inputStream.close();
+          if (inputStream != null)
+          {
+            inputStream.close();
+          }
+          // when inputStream == null then connection won't be used anyway
           connection.disconnect();
         }
       }
