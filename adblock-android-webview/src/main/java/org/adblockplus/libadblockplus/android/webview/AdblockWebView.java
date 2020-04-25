@@ -106,7 +106,6 @@ public class AdblockWebView extends WebView
   // use low-case strings as in WebResponse all header keys are lowered-case
   protected static final String HEADER_SITEKEY = "x-adblock-key";
   protected static final String HEADER_CONTENT_TYPE = "content-type";
-  protected static final String HEADER_CONTENT_ENCODING = "content-encoding";
 
   private static final String ASSETS_CHARSET_NAME = "UTF-8";
   private static final String BRIDGE_TOKEN = "{{BRIDGE}}";
@@ -1528,13 +1527,23 @@ public class AdblockWebView extends WebView
           responseMimeType = responseContentType;
         }
       }
-      if (responseEncoding == null)
+
+      /**
+       * Quoting https://developer.android.com/reference/android/webkit/WebResourceResponse:
+       * Do not use the value of a HTTP Content-Encoding header for encoding, as that header does not
+       * specify a character encoding. Content without a defined character encoding (for example image
+       * resources) should pass null for encoding.
+       * TODO: Include here other contentTypes also, not only "image".
+       */
+      if ((responseEncoding != null) && (responseMimeType != null) && responseMimeType.startsWith("image"))
       {
-        responseEncoding = responseHeadersMap.get(HEADER_CONTENT_ENCODING);
+        Timber.d("Setting responseEncoding to null for contentType == %s (url == %s)", responseMimeType, url);
+        responseEncoding = null;
       }
 
       if (response.getInputStream() != null)
       {
+        Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)", responseMimeType, responseEncoding, url);
         return new WebResourceResponse(
                 responseMimeType, responseEncoding,
                 statusCode, getReasonPhrase(status),
