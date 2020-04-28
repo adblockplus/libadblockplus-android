@@ -13,7 +13,7 @@ buildscript {
 ext {
   bintrayUserOrg = 'adblockplus'
   bintrayGroupId = 'org.adblockplus'
-  moduleVersion = '3.17'
+  moduleVersion = '3.18'
   bintrayLicences = ['GPL-3.0']
   bintrayWebsite = 'https://github.com/adblockplus/libadblockplus-android'
   bintrayIssueTracker = 'http://issues.adblockplus.org/'
