@@ -80,12 +80,14 @@ public class AndroidHttpClient extends HttpClient
     TrafficStats.setThreadStatsTag(SOCKET_TAG);
     Timber.d("Socket TAG set to: %s", SOCKET_TAG);
 
+    HttpURLConnection connection = null;
+    InputStream inputStream = null;
     try
     {
       final URL url = new URL(request.getUrl());
       Timber.d("Downloading from: %s, request.getFollowRedirect() = %b", url, request.getFollowRedirect());
 
-      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod(request.getMethod());
 
       if (request.getMethod().equalsIgnoreCase(REQUEST_METHOD_GET))
@@ -117,7 +119,6 @@ public class AndroidHttpClient extends HttpClient
         }
         response.setResponseHeaders(responseHeaders);
       }
-      InputStream inputStream = null;
       try
       {
         final int responseStatus = connection.getResponseCode();
@@ -183,14 +184,10 @@ public class AndroidHttpClient extends HttpClient
       }
       finally
       {
-        if (!request.skipInputStreamReading() || (inputStream == null))
+        if (!request.skipInputStreamReading() && (inputStream != null))
         {
-          if (inputStream != null)
-          {
-            inputStream.close();
-          }
-          // when inputStream == null then connection won't be used anyway
-          connection.disconnect();
+          Timber.d("Closing connection input stream");
+          inputStream.close();
         }
       }
       Timber.d("Downloading finished");
@@ -217,6 +214,15 @@ public class AndroidHttpClient extends HttpClient
     }
     finally
     {
+      // when inputStream == null then connection won't be used anyway
+      if (!request.skipInputStreamReading() || (inputStream == null))
+      {
+        if (connection != null)
+        {
+          connection.disconnect();
+          Timber.d("Disconnected");
+        }
+      }
       TrafficStats.setThreadStatsTag(oldTag);
       Timber.d("Socket TAG reverted to: %d", oldTag);
     }
