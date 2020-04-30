@@ -43,8 +43,6 @@ public class AndroidHttpClient extends HttpClient
 {
   protected static final String ENCODING_GZIP = "gzip";
   protected static final String ENCODING_IDENTITY = "identity";
-  protected static final String HEADER_CONTENT_DISPOSITION = "content-disposition";
-  protected static final String CONTENT_ATTACHMENT = "attachment";
 
   protected static final int SOCKET_TAG = 1;
 
@@ -82,12 +80,14 @@ public class AndroidHttpClient extends HttpClient
     TrafficStats.setThreadStatsTag(SOCKET_TAG);
     Timber.d("Socket TAG set to: %s", SOCKET_TAG);
 
+    HttpURLConnection connection = null;
+    InputStream inputStream = null;
     try
     {
       final URL url = new URL(request.getUrl());
       Timber.d("Downloading from: %s, request.getFollowRedirect() = %b", url, request.getFollowRedirect());
 
-      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod(request.getMethod());
 
       if (request.getMethod().equalsIgnoreCase(REQUEST_METHOD_GET))
@@ -102,7 +102,6 @@ public class AndroidHttpClient extends HttpClient
       connection.connect();
       Timber.d("Connected");
 
-      boolean skipInputStreamParsing = false;
       if (connection.getHeaderFields().size() > 0)
       {
         Timber.d("Received header fields");
@@ -114,19 +113,12 @@ public class AndroidHttpClient extends HttpClient
           {
             if (eachEntry.getKey() != null && eachValue != null)
             {
-              if (!skipInputStreamParsing &&
-                   eachEntry.getKey().toLowerCase().equals(HEADER_CONTENT_DISPOSITION) &&
-                   eachValue.toLowerCase().startsWith(CONTENT_ATTACHMENT))
-              {
-                skipInputStreamParsing = true;
-              }
               responseHeaders.add(new HeaderEntry(eachEntry.getKey().toLowerCase(), eachValue));
             }
           }
         }
         response.setResponseHeaders(responseHeaders);
       }
-      InputStream inputStream = null;
       try
       {
         final int responseStatus = connection.getResponseCode();
@@ -138,29 +130,42 @@ public class AndroidHttpClient extends HttpClient
         if (isSuccessCode(responseStatus))
         {
           Timber.d("Success responseStatus");
+          inputStream = connection.getInputStream();
         }
         else
         {
           Timber.d("inputStream is set to Error stream");
+          inputStream = connection.getErrorStream();
         }
 
-        if (!skipInputStreamParsing)
+        if (inputStream != null)
         {
-          inputStream = isSuccessCode(responseStatus) ?
-                  connection.getInputStream() : connection.getErrorStream();
-
-          if (inputStream == null)
-          {
-            Timber.w("inputStream is null");
-          }
-
-          if (inputStream != null && compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()))
+          if (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()))
           {
             Timber.d("Setting inputStream to GZIPInputStream");
             inputStream = new GZIPInputStream(inputStream);
           }
 
-          if (inputStream != null)
+          /**
+           * AndroidHttpClient is used by:
+           * 1) Lower layer (JS core->C++->JNI->Java) and lower layer code expects that complete
+           * response data is returned.
+           * 2) Upper layer from WebViewClient.shouldInterceptRequest() (Java->Java) when we can
+           * return just an InputStream allowing WebView to handle it (buffer or not).
+           * To distinguish those two cases we are using now the new boolean argument in HttpRequest
+           * constructor - `skipInputStreamReading`.
+           * Later on we could switch just to returning InputStream for both cases but that would
+           * require adaptations on lower layers (JNI/C++).
+           */
+          if (request.skipInputStreamReading())
+          {
+            Timber.d("response.setInputStream(inputStream)");
+            // We need to do such a wrapping to let AdblockInputStream to call disconnect() on
+            // connection when closing InputStream object. InputStream will be owned by WebView.
+            inputStream = new ConnectionInputStream(inputStream, connection);
+            response.setInputStream(inputStream);
+          }
+          else
           {
             Timber.d("readFromInputStream(inputStream)");
             response.setResponse(readFromInputStream(inputStream));
@@ -168,7 +173,7 @@ public class AndroidHttpClient extends HttpClient
         }
         else
         {
-          Timber.d("Skipping %s which will be handled by DownloadManager", url);
+          Timber.w("inputStream is null");
         }
 
         if (!url.equals(connection.getURL()))
@@ -179,11 +184,11 @@ public class AndroidHttpClient extends HttpClient
       }
       finally
       {
-        if (inputStream != null)
+        if (!request.skipInputStreamReading() && (inputStream != null))
         {
+          Timber.d("Closing connection input stream");
           inputStream.close();
         }
-        connection.disconnect();
       }
       Timber.d("Downloading finished");
       callback.onFinished(response);
@@ -209,6 +214,15 @@ public class AndroidHttpClient extends HttpClient
     }
     finally
     {
+      // when inputStream == null then connection won't be used anyway
+      if (!request.skipInputStreamReading() || (inputStream == null))
+      {
+        if (connection != null)
+        {
+          connection.disconnect();
+          Timber.d("Disconnected");
+        }
+      }
       TrafficStats.setThreadStatsTag(oldTag);
       Timber.d("Socket TAG reverted to: %d", oldTag);
     }

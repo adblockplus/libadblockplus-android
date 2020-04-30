@@ -27,14 +27,16 @@ public class HttpRequest
    * @param method Request method (see REQUEST_METHOD_...).
    * @param headers Request headers.
    * @param followRedirect Enables/disables automatic redirection following
+   * @param skipInputStreamReading Controls if HttpClient should read or just return input stream
    */
   public HttpRequest(final String url, final String method, final List<HeaderEntry> headers,
-                     final boolean followRedirect)
+                     final boolean followRedirect, final boolean skipInputStreamReading)
   {
     this.url = url;
     this.method = method;
     this.headers = headers;
     this.followRedirect = followRedirect;
+    this.skipInputStreamReading = skipInputStreamReading;
   }
 
   /**
@@ -43,13 +45,14 @@ public class HttpRequest
    */
   public HttpRequest(final String url)
   {
-    this(url, HttpClient.REQUEST_METHOD_GET, Collections.<HeaderEntry>emptyList(), true);
+    this(url, HttpClient.REQUEST_METHOD_GET, Collections.<HeaderEntry>emptyList(), true, false);
   }
 
   private final String url;
   private final String method;
   private final List<HeaderEntry> headers;
   private final boolean followRedirect;
+  private final boolean skipInputStreamReading;
 
   public String getUrl()
   {
@@ -69,5 +72,10 @@ public class HttpRequest
   public boolean getFollowRedirect()
   {
     return followRedirect;
+  }
+
+  public boolean skipInputStreamReading()
+  {
+    return skipInputStreamReading;
   }
 }
