@@ -1506,43 +1506,49 @@ public class AdblockWebView extends WebView
               requestHeadersMap,
               responseHeadersMap);
 
-      final String responseContentType = responseHeadersMap.get(HEADER_CONTENT_TYPE);
-      String responseMimeType = null;
-      String responseEncoding = null;
-      if (responseContentType != null)
-      {
-        final int semicolonPos = responseContentType.indexOf(";");
-        if (semicolonPos > 0)
-        {
-          responseMimeType = responseContentType.substring(0, semicolonPos);
-          final String charsetKey = "charset=";
-          final int charsetPos = responseContentType.indexOf(charsetKey);
-          if ((charsetPos >= 0) && (charsetPos < responseContentType.length() - charsetKey.length()))
-          {
-            responseEncoding = responseContentType.substring(charsetPos + charsetKey.length());
-          }
-        }
-        else if (responseContentType.indexOf("/") > 0)
-        {
-          responseMimeType = responseContentType;
-        }
-      }
-
-      /**
-       * Quoting https://developer.android.com/reference/android/webkit/WebResourceResponse:
-       * Do not use the value of a HTTP Content-Encoding header for encoding, as that header does not
-       * specify a character encoding. Content without a defined character encoding (for example image
-       * resources) should pass null for encoding.
-       * TODO: Include here other contentTypes also, not only "image".
-       */
-      if ((responseEncoding != null) && (responseMimeType != null) && responseMimeType.startsWith("image"))
-      {
-        Timber.d("Setting responseEncoding to null for contentType == %s (url == %s)", responseMimeType, url);
-        responseEncoding = null;
-      }
-
       if (response.getInputStream() != null)
       {
+        final String responseContentType = responseHeadersMap.get(HEADER_CONTENT_TYPE);
+        String responseMimeType = null;
+        String responseEncoding = null;
+        if (responseContentType != null)
+        {
+          final int semicolonPos = responseContentType.indexOf(";");
+          if (semicolonPos > 0)
+          {
+            responseMimeType = responseContentType.substring(0, semicolonPos);
+            final String charsetKey = "charset=";
+            final int charsetPos = responseContentType.indexOf(charsetKey);
+            if ((charsetPos >= 0) && (charsetPos < responseContentType.length() - charsetKey.length()))
+            {
+              responseEncoding = responseContentType.substring(charsetPos + charsetKey.length());
+            }
+          }
+          else if (responseContentType.indexOf("/") > 0)
+          {
+            responseMimeType = responseContentType;
+          }
+        }
+
+        /**
+         * Quoting https://developer.android.com/reference/android/webkit/WebResourceResponse:
+         * Do not use the value of a HTTP Content-Encoding header for encoding, as that header does not
+         * specify a character encoding. Content without a defined character encoding (for example image
+         * resources) should pass null for encoding.
+         * TODO: Include here other contentTypes also, not only "image".
+         */
+        if ((responseEncoding != null) && (responseMimeType != null) && responseMimeType.startsWith("image"))
+        {
+          Timber.d("Setting responseEncoding to null for contentType == %s (url == %s)", responseMimeType, url);
+          responseEncoding = null;
+        }
+
+        if (responseMimeType != null)
+        {
+          Timber.d("Removing %s to avoid Content-Type duplication", HEADER_CONTENT_TYPE);
+          responseHeadersMap.remove(HEADER_CONTENT_TYPE);
+        }
+
         Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)", responseMimeType, responseEncoding, url);
         return new WebResourceResponse(
                 responseMimeType, responseEncoding,
