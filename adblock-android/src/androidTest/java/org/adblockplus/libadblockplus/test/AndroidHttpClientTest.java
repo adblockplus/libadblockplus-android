@@ -17,17 +17,26 @@
 
 package org.adblockplus.libadblockplus.test;
 
+import org.adblockplus.libadblockplus.AdblockPlusException;
+import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.ServerResponse;
+import org.adblockplus.libadblockplus.android.ConnectionInputStream;
 import org.adblockplus.libadblockplus.android.AndroidHttpClient;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import timber.log.Timber;
 
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -43,13 +52,105 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   protected static final Charset charset = Charset.forName("UTF-8");
   protected ServerResponse serverResponse = null;
 
-  private HttpClient androidHttpClient = new AndroidHttpClient(true, "UTF-8");
+  private static class AndroidHttpClientWithoutSubscriptions extends AndroidHttpClient
+  {
+    public AndroidHttpClientWithoutSubscriptions(final boolean compressedStream,
+                                                 final String charsetName)
+    {
+      super(compressedStream, charsetName);
+    }
+
+    @Override
+    public void request(final HttpRequest request, final Callback callback)
+    {
+      final String url = request.getUrl();
+      if (url.contains("?addonName=libadblockplus-android"))
+      {
+        Timber.d("Connection refused for %s", url);
+        final ServerResponse response = new ServerResponse();
+        response.setResponseStatus(0);
+        response.setStatus(ServerResponse.NsStatus.ERROR_CONNECTION_REFUSED);
+        callback.onFinished(response);
+        return;
+      }
+      super.request(request, callback);
+    }
+  }
+
+  private HttpClient androidHttpClient = new AndroidHttpClientWithoutSubscriptions(true, "UTF-8");
 
   @Override
   public void setUp()
   {
     setUpHttpClient(androidHttpClient);
     super.setUp();
+  }
+
+  private static class ResponseHolder
+  {
+    ServerResponse response;
+  }
+
+  private ServerResponse makeHttpRequest(final String url)
+  {
+    final ResponseHolder responseHolder = new ResponseHolder();
+    final CountDownLatch latch = new CountDownLatch(1);
+    final HttpClient.Callback callback = new HttpClient.Callback()
+    {
+      @Override
+      public void onFinished(final ServerResponse response_)
+      {
+        responseHolder.response = response_;
+        latch.countDown();
+      }
+    };
+
+    try
+    {
+      final List<HeaderEntry> headersList = new ArrayList<>();
+      final HttpRequest request = new HttpRequest(url, HttpClient.REQUEST_METHOD_GET, headersList, true, true);
+      androidHttpClient.request(request, callback);
+    }
+    catch (final AdblockPlusException e)
+    {
+      Timber.e(e, "WebRequest failed");
+    }
+
+    try
+    {
+      latch.await();
+    }
+    catch (final InterruptedException e)
+    {
+      Timber.e(e, "WebRequest failed");
+    }
+
+    return responseHolder.response;
+  }
+
+  @Test
+  public void testAdblockWebViewHttpRequest()
+  {
+    final ServerResponse response = makeHttpRequest("https://easylist-downloads.adblockplus.org/exceptionrules.txt");
+    assertNotNull(response);
+
+    assertEquals(response.getResponseStatus(), 200);
+    assertNotNull(response.getInputStream());
+
+    final ConnectionInputStream connectionInputStream = (ConnectionInputStream)(response.getInputStream());
+
+    final Scanner scanner = new Scanner(connectionInputStream).useDelimiter("\\A");
+    final String result = scanner.hasNext() ? scanner.next() : "";
+    final String matchingString = "[Adblock Plus 2.0]";
+    assertTrue(result.substring(0, matchingString.length()).equals(matchingString));
+    try
+    {
+      connectionInputStream.close();
+    }
+    catch (final IOException e)
+    {
+      Timber.e(e, "inputStream.close() failed");
+    }
   }
 
   @Test
