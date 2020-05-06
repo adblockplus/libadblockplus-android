@@ -68,7 +68,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,7 +106,6 @@ public class AdblockWebView extends WebView
   // use low-case strings as in WebResponse all header keys are lowered-case
   protected static final String HEADER_SITEKEY = "x-adblock-key";
   protected static final String HEADER_CONTENT_TYPE = "content-type";
-  protected static final String HEADER_CONTENT_ENCODING = "content-encoding";
 
   private static final String ASSETS_CHARSET_NAME = "UTF-8";
   private static final String BRIDGE_TOKEN = "{{BRIDGE}}";
@@ -855,11 +853,25 @@ public class AdblockWebView extends WebView
     Timber.d("Clearing referrers");
     url2Referrer.clear();
   }
-  
-  private static class WebResponseResult 
+
+  private enum AbpShouldBlockResult
+  {
+    // FilterEngine is released or
+    // ABP enabled state is unknown or
+    // ABP enabled state is "disabled"
+    NOT_ENABLED,
+
+    // Allow loading (with further sitekey-related routines)
+    ALLOW_LOAD,
+
+    // Block loading
+    BLOCK_LOAD,
+  }
+
+  private static class WebResponseResult
   {
     static final WebResourceResponse ALLOW_LOAD = null;
-    static final WebResourceResponse BLOCK =
+    static final WebResourceResponse BLOCK_LOAD =
             new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, null);
   }
 
@@ -1196,7 +1208,7 @@ public class AdblockWebView extends WebView
       }
     }
 
-    private WebResourceResponse shouldAbpBlockRequest(final WebResourceRequest request)
+    private AbpShouldBlockResult shouldAbpBlockRequest(final WebResourceRequest request)
     {
       // here we just trying to fill url -> referrer map
       final String url = request.getUrl().toString();
@@ -1236,13 +1248,14 @@ public class AdblockWebView extends WebView
 
         if (isDisposed)
         {
-          Timber.e("FilterEngine already disposed, allow loading");
-          return WebResponseResult.ALLOW_LOAD;
+          Timber.e("FilterEngine already disposed");
+          return AbpShouldBlockResult.NOT_ENABLED;
         }
 
         if (adblockEnabled == null)
         {
-          return WebResponseResult.ALLOW_LOAD;
+          Timber.e("No adblockEnabled value");
+          return AbpShouldBlockResult.NOT_ENABLED;
         }
         else
         {
@@ -1251,7 +1264,8 @@ public class AdblockWebView extends WebView
           adblockEnabled.set(getProvider().getEngine().isEnabled());
           if (!adblockEnabled.get())
           {
-            return WebResponseResult.ALLOW_LOAD;
+            Timber.d("adblockEnabled = false");
+            return AbpShouldBlockResult.NOT_ENABLED;
           }
         }
 
@@ -1369,7 +1383,7 @@ public class AdblockWebView extends WebView
 
               notifyResourceBlocked(new EventsListener.BlockedResourceInfo(
                   url, referrerChain, contentType));
-              return WebResponseResult.BLOCK;
+              return AbpShouldBlockResult.BLOCK_LOAD;
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
@@ -1390,7 +1404,7 @@ public class AdblockWebView extends WebView
       // later in `shouldInterceptRequest`
       // now we just reply that ist fine to load
       // the resource
-      return WebResponseResult.ALLOW_LOAD;
+      return AbpShouldBlockResult.ALLOW_LOAD;
     }
 
     private WebResourceResponse fetchUrlAndCheckSiteKey(final WebView webview, String url,
@@ -1428,7 +1442,7 @@ public class AdblockWebView extends WebView
           headersList.add(new HeaderEntry(HEADER_COOKIE, cookieValue));
         }
 
-        final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect);
+        final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect, true);
         siteKeysConfiguration.getHttpClient().request(request, callback);
       }
       catch (final AdblockPlusException e)
@@ -1513,20 +1527,29 @@ public class AdblockWebView extends WebView
           responseMimeType = responseContentType;
         }
       }
-      if (responseEncoding == null)
+
+      /**
+       * Quoting https://developer.android.com/reference/android/webkit/WebResourceResponse:
+       * Do not use the value of a HTTP Content-Encoding header for encoding, as that header does not
+       * specify a character encoding. Content without a defined character encoding (for example image
+       * resources) should pass null for encoding.
+       * TODO: Include here other contentTypes also, not only "image".
+       */
+      if ((responseEncoding != null) && (responseMimeType != null) && responseMimeType.startsWith("image"))
       {
-        responseEncoding = responseHeadersMap.get(HEADER_CONTENT_ENCODING);
+        Timber.d("Setting responseEncoding to null for contentType == %s (url == %s)", responseMimeType, url);
+        responseEncoding = null;
       }
 
-      if (response.getResponse() != null)
+      if (response.getInputStream() != null)
       {
-        final byte[] buffer = Utils.byteBufferToByteArray(response.getResponse());
-        final InputStream byteBufferInputStream = new ByteArrayInputStream(buffer);
+        Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)", responseMimeType, responseEncoding, url);
         return new WebResourceResponse(
                 responseMimeType, responseEncoding,
                 statusCode, getReasonPhrase(status),
-                responseHeadersMap, byteBufferInputStream);
+                responseHeadersMap, response.getInputStream());
       }
+      Timber.w("fetchUrlAndCheckSiteKey() passes control to WebView");
       return WebResponseResult.ALLOW_LOAD;
     }
 
@@ -1608,11 +1631,18 @@ public class AdblockWebView extends WebView
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
     {
-      // if url should be blocked,
-      // we are not performing any further actions
-      if (WebResponseResult.BLOCK.equals(shouldAbpBlockRequest(request)))
+      final AbpShouldBlockResult abpBlockResult = shouldAbpBlockRequest(request);
+
+      // if FilterEngine is unavailable or not enabled, just let it go (and skip sitekey check)
+      if (AbpShouldBlockResult.NOT_ENABLED.equals(abpBlockResult))
       {
-        return WebResponseResult.BLOCK;
+        return WebResponseResult.ALLOW_LOAD;
+      }
+
+      // if url should be blocked, we are not performing any further actions
+      if (AbpShouldBlockResult.BLOCK_LOAD.equals(abpBlockResult))
+      {
+        return WebResponseResult.BLOCK_LOAD;
       }
 
       final Map<String, String> requestHeaders = request.getRequestHeaders();
@@ -1651,7 +1681,6 @@ public class AdblockWebView extends WebView
               url,
               requestHeaders,
               request.getMethod());
-
     }
   }
 
