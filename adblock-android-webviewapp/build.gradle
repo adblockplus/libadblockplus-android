@@ -8,7 +8,7 @@ android {
     applicationId "org.adblockplus.libadblockplus.android.webviewapp"
     minSdkVersion 21
     targetSdkVersion 28
-    versionCode 35
+    versionCode 36
     versionName = rootProject.ext.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
