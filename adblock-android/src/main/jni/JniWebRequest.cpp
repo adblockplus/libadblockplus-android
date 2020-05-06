@@ -36,7 +36,7 @@ void JniWebRequest_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
 {
   httpRequestClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("HttpRequest")));
   httpRequestClassCtor = env->GetMethodID(httpRequestClass->Get(), "<init>",
-      "(Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)V");
+      "(Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZZ)V");
 
   headerEntryClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("HeaderEntry")));
   serverResponseClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("ServerResponse")));
@@ -121,7 +121,7 @@ void JniWebRequestCallback::SyncGET(const std::string& url,
     JniLocalReference<jobject> jHttpRequest{*env, env->NewObject(
         httpRequestClass->Get(),
         httpRequestClassCtor,
-        *jUrl, *jRequestMethod, *jHeaders, true)};
+        *jUrl, *jRequestMethod, *jHeaders, true, false)};
 
     JniLocalReference<jobject> jCallback{*env, env->NewObject(
         webRequestCallbackClass->Get(),

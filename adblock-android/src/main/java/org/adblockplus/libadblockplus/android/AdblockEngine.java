@@ -488,22 +488,56 @@ public final class AdblockEngine
     }
   }
 
-  public void setSubscriptions(Collection<String> urls)
+  public void setSubscriptions(final Collection<String> urls)
   {
-    clearSubscriptions();
+    final List<Subscription> currentSubscriptions = this.filterEngine.getListedSubscriptions();
 
-    for (String eachUrl : urls)
+    // remove the removed ones
+    for (final Subscription eachCurrentSubscription : currentSubscriptions)
     {
-      final Subscription sub = this.filterEngine.getSubscription(eachUrl);
-      if (sub != null)
+      try
+      {
+        final JsValue jsUrl = eachCurrentSubscription.getProperty("url");
+        if (jsUrl != null)
+        {
+          String eachCurrentUrl;
+          try
+          {
+            eachCurrentUrl = jsUrl.asString();
+          }
+          finally
+          {
+            jsUrl.dispose();
+          }
+
+          if (!urls.contains(eachCurrentUrl))
+          {
+            eachCurrentSubscription.removeFromList();
+          }
+        }
+      }
+      finally
+      {
+        eachCurrentSubscription.dispose();
+      }
+    }
+
+    // add new subscriptions
+    for (final String eachNewUrl : urls)
+    {
+      final Subscription eachNewSubscription = this.filterEngine.getSubscription(eachNewUrl);
+      if (eachNewSubscription != null)
       {
         try
         {
-          sub.addToList();
+          if (!eachNewSubscription.isListed())
+          {
+            eachNewSubscription.addToList();
+          }
         }
         finally
         {
-          sub.dispose();
+          eachNewSubscription.dispose();
         }
       }
     }
