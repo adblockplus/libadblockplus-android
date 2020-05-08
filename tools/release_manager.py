@@ -503,12 +503,12 @@ def main(args):
             project = get_project(gl)
             if not args.debug:
                 pipeline = project.pipelines.create(
-                    {'ref': master,
+                    {'ref': version,
                      'variables': [{'key': 'DRY_RUN', 'value': 'false'}]})
             else:
                 pipeline = project.pipelines.create(
-                    {'ref': master,
-                     'variables': [{'key': 'FOO', 'value': 'bar'}]})
+                    {'ref': version,
+                     'variables': [{'key': 'DRY_RUN', 'value': 'true'}]})
 
             print "\nWait for publish to bintray job to finish"
             while (True):
@@ -524,7 +524,12 @@ def main(args):
                     raise Exception('One of bintray publish job has failed!')
 
             jira.add_comment(release_issue,
-                             "Publish BINTRAY job has finished successfully.")
+            "Publish BINTRAY job has finished successfully.\n "\
+            "Bintray links:\n" \
+            "https://bintray.com/adblockplus/maven/adblock-android/{}\n" \
+            "https://bintray.com/adblockplus/maven/adblock-android-settings/{}\n" \
+            "https://bintray.com/adblockplus/maven/adblock-android-webview/{}".
+                format(version, version, version))
             merge(release_branch, devel, args.code)
 
             print "\nRELEASED!"
