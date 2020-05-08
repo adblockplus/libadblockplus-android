@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -79,6 +80,7 @@ public final class ServerResponse
   // TODO: This (and the whole downloading) is a waste of memory, change String
   // to something more suitable
   private ByteBuffer response = null;
+  private InputStream inputStream = null;
 
   public NsStatus getStatus()
   {
@@ -108,6 +110,16 @@ public final class ServerResponse
   public void setResponse(final ByteBuffer response)
   {
     this.response = response;
+  }
+
+  public InputStream getInputStream()
+  {
+    return this.inputStream;
+  }
+
+  public void setInputStream(final InputStream inputStream)
+  {
+    this.inputStream = inputStream;
   }
 
   public List<HeaderEntry> getResponseHeaders()
