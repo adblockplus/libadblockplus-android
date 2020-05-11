@@ -1246,7 +1246,11 @@ public class AdblockWebView extends WebView
           }
         }
 
-        if (isDisposed)
+        // Apart from checking counter (getProvider().getCounter()) we also need to make sure
+        // that getProvider().getEngine() is already set.
+        // We check that under getProvider().getReadEngineLock(); so we are sure it will not be
+        // changed after this check.
+        if (isDisposed || getProvider().getEngine() == null)
         {
           Timber.e("FilterEngine already disposed");
           return AbpShouldBlockResult.NOT_ENABLED;
@@ -1819,7 +1823,11 @@ public class AdblockWebView extends WebView
           }
         }
 
-        if (isDisposed)
+        // Apart from checking counter (getProvider().getCounter()) we also need to make sure
+        // that getProvider().getEngine() is already set.
+        // We check that under getProvider().getReadEngineLock(); so we are sure it will not be
+        // changed after this check.
+        if (isDisposed || getProvider().getEngine() == null)
         {
           Timber.w("FilterEngine already disposed");
           stylesheetString = EMPTY_ELEMHIDE_STRING;

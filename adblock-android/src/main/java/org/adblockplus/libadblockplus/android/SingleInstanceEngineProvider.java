@@ -233,6 +233,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   @Override
   public synchronized boolean retain(boolean asynchronous)
   {
+    Timber.d("retain()");
     boolean firstInstance = false;
 
     if (referenceCounter.getAndIncrement() == 0)
@@ -301,6 +302,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   @Override
   public synchronized boolean release()
   {
+    Timber.d("release()");
     boolean lastInstance = false;
 
     if (referenceCounter.decrementAndGet() == 0)
