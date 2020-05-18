@@ -127,7 +127,7 @@ public class AdblockWebView extends WebView
   private WebViewClient extWebViewClient;
   private WebViewClient intWebViewClient;
   private Map<String, String> url2Referrer = Collections.synchronizedMap(new HashMap<String, String>());
-  private String url;
+  private AtomicReference<String> navigationUrl = new AtomicReference<>();
   private String injectJs;
   private String elemhideBlockedJs;
   private CountDownLatch elemHideLatch;
@@ -139,6 +139,8 @@ public class AdblockWebView extends WebView
   private boolean loading;
   private String elementsHiddenFlag;
   private AtomicBoolean redirectInProgress = new AtomicBoolean(false);
+  private AtomicBoolean acceptCookie = new AtomicBoolean(true);
+  private AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
 
   /**
    * Listener for ad blocking related events.
@@ -1411,6 +1413,23 @@ public class AdblockWebView extends WebView
       return AbpShouldBlockResult.ALLOW_LOAD;
     }
 
+    private boolean canAcceptCookie(final String documentUrl, final String requestUrl, final String cookieString)
+    {
+      if (documentUrl == null || requestUrl == null || cookieString == null)
+      {
+        return false;
+      }
+      if (!acceptCookie.get())
+      {
+        return false;
+      }
+      if (!acceptThirdPartyCookies.get())
+      {
+        return Utils.isFirstPartyCookie(documentUrl, requestUrl, cookieString);
+      }
+      return true;
+    }
+
     private WebResourceResponse fetchUrlAndCheckSiteKey(final WebView webview, String url,
                                                         final Map<String, String> requestHeadersMap,
                                                         final String requestMethod)
@@ -1483,8 +1502,15 @@ public class AdblockWebView extends WebView
       {
         if (HEADER_SET_COOKIE.equalsIgnoreCase(eachEntry.getKey()))
         {
-          Timber.d("Calling setCookie() for url %s", url);
-          CookieManager.getInstance().setCookie(url, eachEntry.getValue());
+          if (canAcceptCookie(AdblockWebView.this.navigationUrl.get(), url, eachEntry.getValue()))
+          {
+            Timber.d("Calling setCookie(%s)", url);
+            CookieManager.getInstance().setCookie(url, eachEntry.getValue());
+          }
+          else
+          {
+            Timber.d("Rejecting setCookie(%s)", url);
+          }
         }
       }
 
@@ -1836,8 +1862,8 @@ public class AdblockWebView extends WebView
         else
         {
           List<String> referrerChain = new ArrayList<String>(1);
-          referrerChain.add(url);
-          String parentUrl = url;
+          String parentUrl = navigationUrl.get();
+          referrerChain.add(parentUrl);
           while ((parentUrl = url2Referrer.get(parentUrl)) != null)
           {
             if (referrerChain.contains(parentUrl))
@@ -1873,10 +1899,11 @@ public class AdblockWebView extends WebView
             }
           }
 
-          final String domain = filterEngine.getHostFromURL(url);
+          final String navigationUrlLocalRef = navigationUrl.get();
+          final String domain = filterEngine.getHostFromURL(navigationUrlLocalRef);
           if (domain == null)
           {
-            Timber.e("Failed to extract domain from %s", url);
+            Timber.e("Failed to extract domain from %s", navigationUrlLocalRef);
             stylesheetString = EMPTY_ELEMHIDE_STRING;
             emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
           }
@@ -1884,14 +1911,14 @@ public class AdblockWebView extends WebView
           {
             // elemhide
             Timber.d("Requesting elemhide selectors from AdblockEngine for %s in %s",
-                    url, this);
+                    navigationUrlLocalRef, this);
 
             final String siteKey = (siteKeysConfiguration != null
               ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
                 .getAny(referrerChain, ""))
               : null);
 
-            final boolean specificOnly = filterEngine.matches(url,
+            final boolean specificOnly = filterEngine.matches(navigationUrlLocalRef,
               FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
               Collections.<String>emptyList(), null) != null;
 
@@ -1902,17 +1929,17 @@ public class AdblockWebView extends WebView
 
             stylesheetString = getProvider()
               .getEngine()
-              .getElementHidingStyleSheet(url, domain, referrerChain, siteKey, specificOnly);
+              .getElementHidingStyleSheet(navigationUrlLocalRef, domain, referrerChain, siteKey, specificOnly);
 
             Timber.d("Finished requesting elemhide stylesheet, got %d symbols in %s",
                     stylesheetString.length(), this);
 
             // elemhideemu
             Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s in %s",
-                    url, this);
+                    navigationUrlLocalRef, this);
             List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
               .getEngine()
-              .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
+              .getElementHidingEmulationSelectors(navigationUrlLocalRef, domain, referrerChain, siteKey);
 
             Timber.d("Finished requesting elemhideemu selectors, got  got %d in %s",
                     emuSelectors.size(), this);
@@ -2015,9 +2042,9 @@ public class AdblockWebView extends WebView
 
     loading = true;
     loadError = null;
-    url = newUrl;
+    navigationUrl.set(newUrl);
 
-    if (url != null)
+    if (newUrl != null)
     {
       // elemhide and elemhideemu
       elemHideLatch = new CountDownLatch(1);
@@ -2082,6 +2109,7 @@ public class AdblockWebView extends WebView
   @Override
   public void reload()
   {
+    checkCookieSettings();
     ensureProvider();
 
     if (loading)
@@ -2092,9 +2120,22 @@ public class AdblockWebView extends WebView
     super.reload();
   }
 
+  private void checkCookieSettings()
+  {
+    final boolean acceptCookies = CookieManager.getInstance().acceptCookie();
+    acceptCookie.set(acceptCookies);
+    // If cookies are disabled no need to check more
+    if (acceptCookies)
+    {
+      // acceptThirdPartyCookies() needs to be called from UI thread
+      acceptThirdPartyCookies.set(CookieManager.getInstance().acceptThirdPartyCookies(this));
+    }
+  }
+
   @Override
   public void loadUrl(String url)
   {
+    checkCookieSettings();
     ensureProvider();
 
     if (loading)
@@ -2108,6 +2149,7 @@ public class AdblockWebView extends WebView
   @Override
   public void loadUrl(String url, Map<String, String> additionalHttpHeaders)
   {
+    checkCookieSettings();
     ensureProvider();
 
     if (loading)
@@ -2121,6 +2163,7 @@ public class AdblockWebView extends WebView
   @Override
   public void loadData(String data, String mimeType, String encoding)
   {
+    checkCookieSettings();
     ensureProvider();
 
     if (loading)
@@ -2135,6 +2178,7 @@ public class AdblockWebView extends WebView
   public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding,
                                   String historyUrl)
   {
+    checkCookieSettings();
     ensureProvider();
 
     if (loading)
