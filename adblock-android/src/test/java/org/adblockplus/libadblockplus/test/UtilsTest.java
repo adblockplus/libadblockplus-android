@@ -28,6 +28,10 @@ import static org.junit.Assert.fail;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class UtilsTest
 {
@@ -154,5 +158,84 @@ public class UtilsTest
         { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA8, '4', '5' }, utf8)));
     assertEquals("123\u202945", Utils.escapeJavaScriptString(new String(new byte[] //\u2029
         { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA9, '4', '5' }, utf8)));
+  }
+
+  @Test
+  public void testGetDomain()
+  {
+    // Test success
+    final Map<String, String> urlToDomainMap_OK = new HashMap<String, String>() {{
+      put("http://domain.com:8080/", "domain.com");
+      put("http://spl.abcdef.com/path?someparam=somevalue", "spl.abcdef.com");
+      put("file://home/user/document.pdf", "home");
+      put("data://text/vnd-example+xyz;foo=bar;base64,R0lGODdh", "text");
+
+      put("http://spl.abcdef.com/path?someparam=somevalue", "spl.abcdef.com");
+      put("file://home/user/document.pdf", "home");
+      put("data://text/vnd-example+xyz;foo=bar;base64,R0lGODdh", "text");
+    }};
+
+    for (final Map.Entry<String, String> urlToDomainEntry : urlToDomainMap_OK.entrySet())
+    {
+      try
+      {
+        assertEquals(Utils.getDomain(urlToDomainEntry.getKey()), urlToDomainEntry.getValue());
+      }
+      catch (final URISyntaxException e)
+      {
+        fail(e.getMessage());
+      }
+    }
+
+    // Test failures
+    final List<String> wrongUrls = new ArrayList<String>() {{
+      add("http://domain with spaces.com");
+      add("www.unallowed%character.com");
+      add("file://");
+    }};
+
+    for (final String urlEntry : wrongUrls)
+    {
+      try
+      {
+        Utils.getDomain(urlEntry);
+        fail("URISyntaxException is expected to be thrown");
+      }
+      catch (final URISyntaxException e)
+      {
+        // expected
+      }
+    }
+  }
+
+  @Test
+  public void testIsFirstPartyCookie()
+  {
+    final String navigationUrl = "https://some.domain.com/";
+
+    // Test success
+    final Map<String, String> urlAndCookieMap_OK = new HashMap<String, String>() {{
+      put("https://some.domain.com/1", "somecookie=someValue; Path=/;");
+      // "Domain" cookie parameter is used instead of a request url to obtain and compare domains
+      put("https://blabla.com/2", "somecookie=someValue; Path=/; Domain=.domain.com");
+      put("https://blabla.om/3", "somecookie=someValue; Path=/; Domain=some.domain.com");
+    }};
+
+    for (Map.Entry<String, String> urlAndCookieEntry : urlAndCookieMap_OK.entrySet())
+    {
+      assertTrue(Utils.isFirstPartyCookie(navigationUrl, urlAndCookieEntry.getKey(), urlAndCookieEntry.getValue()));
+    }
+
+    // Test failures
+    final Map<String, String> urlAndCookieMap_NOK = new HashMap<String, String>() {{
+      put("https://blabla.com/1", "somecookie=someValue; Path=/;");
+      put("https://some.domain.com/2", "somecookie=someValue; Path=/; Domain=blabla.com");
+      put("https://blabla.om/3", "somecookie=someValue; Path=/; Domain=www.some.domain.com");
+    }};
+
+    for (Map.Entry<String, String> urlAndCookieEntry : urlAndCookieMap_NOK.entrySet())
+    {
+      assertFalse(Utils.isFirstPartyCookie(navigationUrl, urlAndCookieEntry.getKey(), urlAndCookieEntry.getValue()));
+    }
   }
 }
