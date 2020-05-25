@@ -143,7 +143,7 @@ output while building.
 ### Building with exposing of libadblockplus classes
 
 Set `EXPOSE_LIBABP_OBJECTS` environment variable to expose libadblockplus classes in shared library.
- 
+
 For example:
 
     EXPOSE_LIBABP_OBJECTS=y ./gradlew clean assembleAbi_arm
@@ -153,7 +153,7 @@ For example:
 In order to load custom library name pass `LIBABP_SHARED_LIBRARY_NAME` environment variable (without `lib` and `.so`):
 
     LIBABP_SHARED_LIBRARY_NAME=adblockplus ./gradlew assembleRelease
-    
+
 In order to skip compilation of JNI classes pass `SKIP_JNI_COMPILATION` environment variable:
 
     SKIP_JNI_COMPILATION=true ./gradlew assembleRelease
@@ -290,6 +290,8 @@ Release Adblock instance in activity `onDestroy`:
 
 Insert `GeneralSettingsFragment` fragment instance in runtime to start showing settings UI.
 
+
+
 #### Background operations
 
 By default filter engine will do some background operations like subscriptions synchronizations in background shorly
@@ -309,6 +311,37 @@ preferred.
 Other thing to take into account is synchroization time. If you have configured `setDisabledByDefault` and then enable
 engine, first synchronization will be done only after some time. You can combine configuration with
 `preloadSubscriptions` to load data from local file first time rather then from web.
+
+#### Preloaded subscriptions
+
+As mentioned, there is an option to set preloaded subscription. This means that at the application first boot time (and every time the user clears app data), it will load the subscription lists which are bundled with the app. It will also set async calls to update these lists at once, so that they are updated as soon as possible. Keep in mind that the adblock engine will still ping periodically for updates on the subscriptions at an hourly interval.
+
+The benefits of using this method is that it provides a better UX, since at first the app does not have to wait for the subscription list to be downloaded hence the user can have an adblocking experience right away.
+
+On the other hand this is an opt-in feature you have to set it up, it also increases the footprint of the application by bundling the subscription lists with it and you have to update them when building the apk. This is because subscription lists get outdated very fast, ideally you can set a gradle task for that, that's what we did.
+
+By running `./gradlew downloadSubscriptionLists` you update the preloaded easylist and exception list to the latest ones.
+
+To set it up in the code you have first to map the urls of the subscriptions to local files.
+
+``` java
+Map<String, Integer> map = new HashMap<String, Integer>();
+map.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
+map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
+```
+
+Beware that in this example we use the general easylist subscription. So for example if you are using subscriptions list for other locale then you have to change the url and the file with the correct one. Without this preloaded subscriptions does not have the same effect.
+
+then when using the adblockhelper for example you can set as so.
+``` java
+adblockHelper
+    .get()
+    .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+    .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
+    .addEngineCreatedListener(engineCreatedListener)
+    .addEngineDisposedListener(engineDisposedListener)
+```
+
 
 ### Theme
 
