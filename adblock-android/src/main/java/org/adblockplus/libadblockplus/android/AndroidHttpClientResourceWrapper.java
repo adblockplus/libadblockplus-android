@@ -119,12 +119,12 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
         ServerResponse response = buildResourceContentResponse(resourceId);
         storage.put(urlWithoutParams);
 
+        callback.onFinished(response);
+
         if (listener != null)
         {
           listener.onIntercepted(request.getUrl(), resourceId);
         }
-
-        callback.onFinished(response);
         return;
       }
       else
