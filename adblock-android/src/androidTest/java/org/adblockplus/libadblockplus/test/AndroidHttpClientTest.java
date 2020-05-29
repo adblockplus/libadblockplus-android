@@ -270,10 +270,6 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
 
     waitForDefined("result");
 
-    assertEquals(
-        ServerResponse.NsStatus.OK.getStatusCode(),
-        jsEngine.evaluate("request.channel.status").asLong());
-
     assertEquals(HTTP_OK, jsEngine.evaluate("request.status").asLong());
     assertEquals("[Adblock Plus ", jsEngine.evaluate("result.substr(0, 14)").asString());
     assertEquals(

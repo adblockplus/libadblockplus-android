@@ -28,6 +28,7 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpCookie;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -154,6 +155,84 @@ public final class Utils
 
     return getStringBeforeChar(urlWithAnchor, '#');
   }
+
+  public static String getDomain(final String url) throws URISyntaxException
+  {
+    if (url == null)
+    {
+      throw new IllegalArgumentException("Url can't be null");
+    }
+    return new URI(url).getHost();
+  }
+
+  public static boolean isFirstPartyCookie(final String documentUrl, final String requestUrl, final String cookieString)
+  {
+    if (documentUrl == null || requestUrl == null || cookieString == null)
+    {
+      throw new IllegalArgumentException("Arguments can't be null");
+    }
+    String documentDomain;
+    try
+    {
+      documentDomain = getDomain(documentUrl);
+      if (documentDomain == null)
+      {
+        return false;
+      }
+    }
+    catch (final URISyntaxException e)
+    {
+      Timber.e(e, "Failed to getDomain(%s)", documentUrl);
+      return false;
+    }
+
+    String cookieDomain = null;
+    // Try to find "Domain" param value inside the cookie
+    try
+    {
+      final List<HttpCookie> cookies = HttpCookie.parse(cookieString);
+      /**
+       * RFC 6265 says:
+       * "Origin servers SHOULD NOT fold multiple Set-Cookie header fields into
+       * a single header field".
+       * Here we have a list as the API supports an old Set-Cookie2 header (RFC 2965).
+       * But Set-Cookie2 is lo longer supported by browsers
+       * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie2
+       * Hence below we just check 1st entry (if present).
+       */
+      if (cookies.size() > 0)
+      {
+        cookieDomain = cookies.get(0).getDomain();
+      }
+    }
+    catch (final IllegalArgumentException e)
+    {
+      Timber.e(e, "Failed call to HttpCookie.parse()");
+      return false;
+    }
+
+    // Cookie does not specify "Domain" param, obtain the domain from url which sets the cookie
+    if (cookieDomain == null || cookieDomain.isEmpty())
+    {
+      try
+      {
+        cookieDomain = getDomain(requestUrl);
+      }
+      catch (final URISyntaxException e)
+      {
+        Timber.e(e, "Failed to getDomain(%s)", requestUrl);
+        return false;
+      }
+    }
+
+    if (cookieDomain == null || cookieDomain.isEmpty())
+    {
+      return false;
+    }
+    // Check if document domain includes cookie effective domain
+    return HttpCookie.domainMatches(cookieDomain.toLowerCase(), documentDomain.toLowerCase());
+  }
+
 
   private static final int BUFFER_SIZE = 8192;
 

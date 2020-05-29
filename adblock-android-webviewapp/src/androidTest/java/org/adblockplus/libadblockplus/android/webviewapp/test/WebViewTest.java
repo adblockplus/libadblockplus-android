@@ -18,50 +18,67 @@
 package org.adblockplus.libadblockplus.android.webviewapp.test;
 
 import android.content.Context;
-import android.os.Looper;
 
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
+import androidx.test.annotation.UiThreadTest;
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.rule.UiThreadTestRule;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import timber.log.Timber;
 
 @RunWith(AndroidJUnit4.class)
 public class WebViewTest
 {
-    private Context context = InstrumentationRegistry.getInstrumentation().getTargetContext().getApplicationContext();
-
-    @Before
-    public void setUp()
-    {
-        Looper.prepare();
-    }
+    private final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext().getApplicationContext();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public final Timeout globalTimeout = Timeout.seconds(150);
+
+    @Rule
+    public final UiThreadTestRule uiThreadTestRule = new UiThreadTestRule();
+
+    private void useAdblockWebViewThenDispose()
+    {
+        final AdblockWebView adblockWebView = new AdblockWebView(context);
+        adblockWebView.setProvider(AdblockHelper.get().getProvider());
+        adblockWebView.setSiteKeysConfiguration(AdblockHelper.get().getSiteKeysConfiguration());
+        Timber.d("Before loadUrl()");
+        adblockWebView.loadUrl("http://wp.pl");
+        Timber.d("Before dispose()");
+        adblockWebView.dispose(null);
+        Timber.d("After dispose()");
+    }
 
     @Test
-    public void createThenLoadUrlThenDispose_Test()
+    @UiThreadTest
+    public void testCreateThenLoadUrlThenDispose()
     {
-        AdblockWebView adblockWebView;
-        for(int i = 1; i <= 100; ++i)
+        for (int i = 1; i <= 100; ++i)
         {
             Timber.d("Running iteration: %d", i);
-            adblockWebView = new AdblockWebView(context);
-            adblockWebView.setProvider(AdblockHelper.get().getProvider());
-            adblockWebView.setSiteKeysConfiguration(AdblockHelper.get().getSiteKeysConfiguration());
-            Timber.d("Before loadUrl()");
-            adblockWebView.loadUrl("http://wp.pl");
-            Timber.d("Before dispose()");
-            adblockWebView.dispose(null);
-            Timber.d("After dispose()");
+            useAdblockWebViewThenDispose();
+        }
+    }
+
+    // This is the same test as createThenLoadUrlThenDispose_Test() but with extra retain()/release()
+    // at the beginning/end of each loop iteration.
+    @Test
+    @UiThreadTest
+    public void testRetainThenCreateThenLoadUrlThenDisposeThenRelease()
+    {
+        for (int i = 1; i <= 100; ++i)
+        {
+            Timber.d("Running iteration: %d", i);
+            AdblockHelper.get().getProvider().retain(true);
+            useAdblockWebViewThenDispose();
+            AdblockHelper.get().getProvider().release();
         }
     }
 }
