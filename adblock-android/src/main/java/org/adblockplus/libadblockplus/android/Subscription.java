@@ -22,9 +22,8 @@ import java.io.Serializable;
 public class Subscription implements Serializable
 {
   public String title;
-  public String specialization;
   public String url;
   public String homepage;
-  public String[] prefixes;
+  public String prefixes;
   public String author;
 }
