@@ -1,5 +1,16 @@
-apply plugin: 'com.android.application'
-
+plugins {
+  id "com.android.application"
+  id "de.undercouch.download" version "4.0.4"
+}
+// using download file task plugin more info at https://github.com/michel-kraemer/gradle-download-task
+task downloadSubscriptionLists(type: Download) {
+  src([
+          'https://easylist-downloads.adblockplus.org/exceptionrules.txt',
+          'https://easylist-downloads.adblockplus.org/easylist.txt'
+  ])
+  dest "./src/main/res/raw/"
+  overwrite true
+}
 android {
   compileSdkVersion 28
   buildToolsVersion "28.0.3"
