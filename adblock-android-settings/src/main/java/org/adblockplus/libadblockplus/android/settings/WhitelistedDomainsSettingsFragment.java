@@ -127,7 +127,7 @@ public class WhitelistedDomainsSettingsFragment
     public void onClick(View v)
     {
       // update and save settings
-      int position = ((Integer) v.getTag()).intValue();
+      int position = (Integer) v.getTag();
       String removeDomain = settings.getWhitelistedDomains().get(position);
       Timber.w("Removing domain: %s", removeDomain);
       settings.getWhitelistedDomains().remove(position);
