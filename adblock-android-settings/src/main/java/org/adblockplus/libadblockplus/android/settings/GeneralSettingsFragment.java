@@ -31,6 +31,7 @@ import org.adblockplus.libadblockplus.android.Subscription;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -182,13 +183,22 @@ public class GeneralSettingsFragment
 
   private void initFilterLists()
   {
+    final Map<String, String> localeToTitle = Utils.getLocaleToTitleMap(getContext());
+
     // all available values
     Subscription[] availableSubscriptions = provider.getAdblockEngine().getRecommendedSubscriptions();
     CharSequence[] availableSubscriptionsTitles = new CharSequence[availableSubscriptions.length];
     CharSequence[] availableSubscriptionsValues = new CharSequence[availableSubscriptions.length];
     for (int i = 0; i < availableSubscriptions.length; i++)
     {
-      availableSubscriptionsTitles[i] = availableSubscriptions[i].specialization;
+      String title = null;
+      if (availableSubscriptions[i].prefixes != null &&
+          !availableSubscriptions[i].prefixes.isEmpty())
+      {
+        final String[] separatedPrefixes = availableSubscriptions[i].prefixes.split(",");
+        title = localeToTitle.get(separatedPrefixes[0]);
+      }
+      availableSubscriptionsTitles[i] = title != null ? title : availableSubscriptions[i].title;
       availableSubscriptionsValues[i] = availableSubscriptions[i].url;
     }
     filterLists.setEntries(availableSubscriptionsTitles);

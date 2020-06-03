@@ -396,14 +396,15 @@ public final class AdblockEngine
       jsUrl.dispose();
     }
 
-    JsValue jsSpecialization = jsSubscription.getProperty("specialization");
+    JsValue jsPrefixes = jsSubscription.getProperty("prefixes");
     try
     {
-      subscription.specialization = jsSpecialization.toString();
+      if (!jsPrefixes.isUndefined() && !jsPrefixes.isNull())
+        subscription.prefixes = jsPrefixes.asString();
     }
     finally
     {
-      jsSpecialization.dispose();
+      jsPrefixes.dispose();
     }
 
     return subscription;
