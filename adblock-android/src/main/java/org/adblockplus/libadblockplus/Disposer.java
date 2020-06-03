@@ -23,8 +23,8 @@ import java.util.HashSet;
 
 public final class Disposer extends WeakReference<Disposable>
 {
-  static final ReferenceQueue<Disposable> referenceQueue = new ReferenceQueue<Disposable>();
-  private static final HashSet<Disposer> disposerSet = new HashSet<Disposer>();
+  static final ReferenceQueue<Disposable> referenceQueue = new ReferenceQueue<>();
+  private static final HashSet<Disposer> disposerSet = new HashSet<>();
   private final Disposable disposable;
   private volatile boolean disposed = false;
 

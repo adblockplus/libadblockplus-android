@@ -181,7 +181,7 @@ final public class WebViewCounters
 
     WeakRunnable(final WebViewCounters counters, final Operation operation)
     {
-      weakCounters = new WeakReference<WebViewCounters>(counters);
+      weakCounters = new WeakReference<>(counters);
       this.operation = operation;
     }
 

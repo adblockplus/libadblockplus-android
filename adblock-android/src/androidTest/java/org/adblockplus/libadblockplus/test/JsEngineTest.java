@@ -35,7 +35,7 @@ public class JsEngineTest extends BaseJsEngineTest
 {
   protected boolean isSame(final JsValue value1, final JsValue value2)
   {
-    final List<JsValue> params = new ArrayList<JsValue>();
+    final List<JsValue> params = new ArrayList<>();
     params.add(value1);
     params.add(value2);
 

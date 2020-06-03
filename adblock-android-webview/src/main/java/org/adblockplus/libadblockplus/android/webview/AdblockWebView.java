@@ -263,7 +263,7 @@ public class AdblockWebView extends WebView
     void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info);
   }
 
-  private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<EventsListener>();
+  private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<>();
   private SiteKeysConfiguration siteKeysConfiguration;
   private AdblockEngine.SettingsChangedListener engineSettingsChangedCb = new AdblockEngine.SettingsChangedListener()
   {
@@ -1861,7 +1861,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          List<String> referrerChain = new ArrayList<String>(1);
+          List<String> referrerChain = new ArrayList<>(1);
           String parentUrl = navigationUrl.get();
           referrerChain.add(parentUrl);
           while ((parentUrl = url2Referrer.get(parentUrl)) != null)

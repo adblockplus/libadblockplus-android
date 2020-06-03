@@ -195,7 +195,7 @@ public class GeneralSettingsFragment
     filterLists.setEntryValues(availableSubscriptionsValues);
 
     // selected values
-    Set<String> selectedSubscriptionValues = new HashSet<String>();
+    Set<String> selectedSubscriptionValues = new HashSet<>();
     for (Subscription eachSubscription : settings.getSubscriptions())
     {
       selectedSubscriptionValues.add(eachSubscription.url);
@@ -277,7 +277,7 @@ public class GeneralSettingsFragment
 
   private void handleFilterListsChanged(Set<String> newValue)
   {
-    List<Subscription> selectedSubscriptions = new LinkedList<Subscription>();
+    List<Subscription> selectedSubscriptions = new LinkedList<>();
 
     for (Subscription eachSubscription : provider.getAdblockEngine().getRecommendedSubscriptions())
     {

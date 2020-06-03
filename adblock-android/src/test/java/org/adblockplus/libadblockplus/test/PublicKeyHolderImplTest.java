@@ -70,7 +70,7 @@ public class PublicKeyHolderImplTest
     publicKeyHolder.put(url, publicKey);
     assertTrue(publicKeyHolder.contains(url));
 
-    final List<String> list = new ArrayList<String>();
+    final List<String> list = new ArrayList<>();
 
     assertNull(publicKeyHolder.getAny(list, null), null);
     assertEquals("", publicKeyHolder.getAny(list, ""));
@@ -105,7 +105,7 @@ public class PublicKeyHolderImplTest
     publicKeyHolder.put(url2, publicKey2);
     assertTrue(publicKeyHolder.contains(url2));
 
-    final List<String> list = new ArrayList<String>();
+    final List<String> list = new ArrayList<>();
 
     list.add(url1);
     assertEquals(publicKey1, publicKeyHolder.getAny(list, null));

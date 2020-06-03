@@ -71,7 +71,7 @@ public class TestFilterChangeCallback extends FilterChangeCallback
   public void reset()
   {
     this.called = false;
-    this.events = new ArrayList<Event>();
+    this.events = new ArrayList<>();
   }
 
   @Override

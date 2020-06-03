@@ -229,7 +229,7 @@ public class WhitelistedDomainsSettingsFragment
     List<String> whitelistedDomains = settings.getWhitelistedDomains();
     if (whitelistedDomains == null)
     {
-      whitelistedDomains = new LinkedList<String>();
+      whitelistedDomains = new LinkedList<>();
       settings.setWhitelistedDomains(whitelistedDomains);
     }
 
