@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
+apply plugin: 'kotlin-android'
 
 android {
   compileSdkVersion 28
@@ -10,11 +11,18 @@ android {
     targetSdkVersion 28
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
   }
+
+  sourceSets {
+    test.java.srcDirs += 'src/test/kotlin'
+    androidTest.java.srcDirs += 'src/androidTest/kotlin'
+  }
 }
 
 dependencies {
   api project(':adblock-android')
   testImplementation 'junit:junit:4.12'
+  testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
 publish {

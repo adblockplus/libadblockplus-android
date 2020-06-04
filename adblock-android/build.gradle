@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
+apply plugin: 'kotlin-android'
 
 private String getNativeLibraryName() {
   def libraryName = System.getenv('LIBABP_SHARED_LIBRARY_NAME')
@@ -122,6 +123,11 @@ android {
     println "[Configuration] No shared v8 libraries excluded from AAR"
   }
 
+  sourceSets {
+    test.java.srcDirs += 'src/test/kotlin'
+    androidTest.java.srcDirs += 'src/androidTest/kotlin'
+  }
+
   useLibrary 'android.test.runner'
   useLibrary 'android.test.base'
 }
@@ -129,6 +135,8 @@ android {
 dependencies {
   api 'com.jakewharton.timber:timber:4.7.1'
   testImplementation 'junit:junit:4.12'
+  testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   androidTestImplementation 'androidx.test:core:1.1.0'
   androidTestImplementation 'androidx.test:runner:1.1.0'
   androidTestImplementation 'androidx.test.ext:junit:1.1.0'
