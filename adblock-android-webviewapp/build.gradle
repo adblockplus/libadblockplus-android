@@ -1,7 +1,7 @@
-plugins {
-  id "com.android.application"
-  id "de.undercouch.download" version "4.0.4"
-}
+apply plugin: 'com.android.application'
+apply plugin: 'de.undercouch.download'
+apply plugin: 'kotlin-android'
+
 // using download file task plugin more info at https://github.com/michel-kraemer/gradle-download-task
 task downloadSubscriptionLists(type: Download) {
   src([
@@ -30,6 +30,11 @@ android {
       minifyEnabled true
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
+  }
+
+  sourceSets {
+    test.java.srcDirs += 'src/test/kotlin'
+    androidTest.java.srcDirs += 'src/androidTest/kotlin'
   }
 }
 
