@@ -106,6 +106,7 @@ public class AdblockWebView extends WebView
   // use low-case strings as in WebResponse all header keys are lowered-case
   protected static final String HEADER_SITEKEY = "x-adblock-key";
   protected static final String HEADER_CONTENT_TYPE = "content-type";
+  protected static final String HEADER_CONTENT_LENGTH = "content-length";
 
   private static final String ASSETS_CHARSET_NAME = "UTF-8";
   private static final String BRIDGE_TOKEN = "{{BRIDGE}}";
@@ -1577,6 +1578,28 @@ public class AdblockWebView extends WebView
         {
           Timber.d("Removing %s to avoid Content-Type duplication", HEADER_CONTENT_TYPE);
           responseHeadersMap.remove(HEADER_CONTENT_TYPE);
+        }
+        else if (responseHeadersMap.get(HEADER_CONTENT_LENGTH) != null)
+        {
+          // For some reason for responses which lack Content-Type header and has Content-Length==0,
+          // underlying WebView layer can trigger a DownloadListener. Applying "default" Content-Type
+          // value helps. To reduce risk we apply it only when Content-Length==0 as there is no body
+          // so there is no risk that browser will render that even when we apply a wrong Content-Type.
+          int contentLength = 0;
+          try
+          {
+            contentLength = Integer.valueOf(responseHeadersMap.get(HEADER_CONTENT_LENGTH).trim());
+          }
+          catch (final NumberFormatException e)
+          {
+            Timber.e(e, "Integer.valueOf(responseHeadersMap.get(HEADER_CONTENT_LENGTH)) failed");
+          }
+
+          if (contentLength == 0)
+          {
+            Timber.d("Setting responseMimeType to %s (url == %s)", RESPONSE_MIME_TYPE, url);
+            responseMimeType = RESPONSE_MIME_TYPE;
+          }
         }
 
         Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)", responseMimeType, responseEncoding, url);
