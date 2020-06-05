@@ -866,6 +866,9 @@ public class AdblockWebView extends WebView
     // Allow loading (with further sitekey-related routines)
     ALLOW_LOAD,
 
+    // Allow loading
+    ALLOW_LOAD_NO_SITEKEY_CHECK,
+
     // Block loading
     BLOCK_LOAD,
   }
@@ -1223,6 +1226,8 @@ public class AdblockWebView extends WebView
                               request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
 
       final boolean isMainFrame = request.isForMainFrame();
+      boolean isWhitelisted = false;
+      boolean canContainSitekey = false;
 
       final String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
 
@@ -1322,12 +1327,14 @@ public class AdblockWebView extends WebView
           // whitelisted
           if (getProvider().getEngine().isDomainWhitelisted(url, referrerChain))
           {
+            isWhitelisted = true;
             Timber.w("%s domain is whitelisted, allow loading", url);
             notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                 url, referrerChain, EventsListener.WhitelistReason.DOMAIN));
           }
           else if (getProvider().getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
           {
+            isWhitelisted = true;
             Timber.w("%s document is whitelisted, allow loading", url);
             notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                 url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
@@ -1357,6 +1364,12 @@ public class AdblockWebView extends WebView
                   Timber.w("using other content type");
                   contentType = FilterEngine.ContentType.OTHER;
                 }
+              }
+
+              if (contentType == FilterEngine.ContentType.SUBDOCUMENT ||
+                  contentType == FilterEngine.ContentType.OTHER)
+              {
+                canContainSitekey = true;
               }
             }
 
@@ -1393,6 +1406,7 @@ public class AdblockWebView extends WebView
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
+              isWhitelisted = true;
               Timber.w("%s is whitelisted in matches()", url);
               notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                   url, referrerChain, EventsListener.WhitelistReason.FILTER));
@@ -1410,7 +1424,17 @@ public class AdblockWebView extends WebView
       // later in `shouldInterceptRequest`
       // now we just reply that ist fine to load
       // the resource
-      return AbpShouldBlockResult.ALLOW_LOAD;
+      if (isMainFrame || (canContainSitekey && !isWhitelisted))
+      {
+        // if url is a main frame (whitelisted by default) or can contain by design a site key header
+        // (it content type is SUBDOCUMENT or OTHER) and it is not yet whitelisted then we need to
+        // make custom HTTP get request to try to obtain a site key header.
+        return AbpShouldBlockResult.ALLOW_LOAD;
+      }
+      else
+      {
+        return AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK;
+      }
     }
 
     private boolean canAcceptCookie(final String documentUrl, final String requestUrl, final String cookieString)
@@ -1705,6 +1729,12 @@ public class AdblockWebView extends WebView
           Timber.d("Finished verifying, returning external response and stop");
           return externalResponse;
         }
+      }
+
+      // we don't need to make a HTTP GET request to check a site key header
+      if (AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK.equals(abpBlockResult))
+      {
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       if (requestHeaders.containsKey(HEADER_REQUESTED_RANGE))
