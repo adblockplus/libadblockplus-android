@@ -10,6 +10,7 @@ android {
     minSdkVersion 21
     targetSdkVersion 28
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
 
   sourceSets {
@@ -21,6 +22,11 @@ android {
 dependencies {
   api project(':adblock-android')
   testImplementation 'junit:junit:4.12'
+  androidTestImplementation 'androidx.test:core:1.1.0'
+  androidTestImplementation 'androidx.test:runner:1.1.0'
+  androidTestImplementation 'androidx.test:rules:1.1.0'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+  androidTestImplementation project(path: ':adblock-android-settings')
   testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
