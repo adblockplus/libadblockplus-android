@@ -63,7 +63,7 @@ public abstract class AdblockSettingsStorage
 
     // we need to filter out exceptions subscription to show languages subscriptions only
     Subscription[] listedSubscriptions = adblockEngine.getListedSubscriptions();
-    List<Subscription> subscriptionsWithoutAA = new LinkedList<Subscription>();
+    List<Subscription> subscriptionsWithoutAA = new LinkedList<>();
     String acceptableAdsURL = adblockEngine.getAcceptableAdsSubscriptionURL();
 
     for (Subscription eachListedSubscription : listedSubscriptions)

@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNull;
 
 public class AsyncFileSystemTest extends BaseJsEngineTest
 {
-  protected final BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<Runnable>();
+  protected final BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<>();
   protected final ExecutorService executorService = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.SECONDS, tasks);
   protected final MockFileSystem mockFileSystem = new MockFileSystem(executorService);
 

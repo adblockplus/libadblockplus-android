@@ -1,11 +1,15 @@
 buildscript {
+  ext.kotlin_version = '1.3.72'
+
   repositories {
     google()
     jcenter()
+    mavenCentral()
   }
 
   dependencies {
     classpath 'com.android.tools.build:gradle:3.5.3'
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath 'com.novoda:bintray-release:0.9.1'
   }
 }
@@ -13,7 +17,7 @@ buildscript {
 ext {
   bintrayUserOrg = 'adblockplus'
   bintrayGroupId = 'org.adblockplus'
-  moduleVersion = '3.19'
+  moduleVersion = '3.20'
   bintrayLicences = ['GPL-3.0']
   bintrayWebsite = 'https://github.com/adblockplus/libadblockplus-android'
   bintrayIssueTracker = 'http://issues.adblockplus.org/'
@@ -32,6 +36,7 @@ subprojects {
   repositories {
     google()
     jcenter()
+    mavenCentral()
   }
   task listAllDependencies(type: DependencyReportTask) {}
 }

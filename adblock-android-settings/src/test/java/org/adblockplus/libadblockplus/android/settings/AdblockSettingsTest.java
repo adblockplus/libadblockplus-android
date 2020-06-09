@@ -43,7 +43,7 @@ public class AdblockSettingsTest
     settings.setAcceptableAdsEnabled(true);
     settings.setAllowedConnectionType(ConnectionType.WIFI);
 
-    final List<Subscription> subscriptions = new LinkedList<Subscription>();
+    final List<Subscription> subscriptions = new LinkedList<>();
     for (int i = 0; i < subscriptionsCount; i++)
     {
       final Subscription subscription = new Subscription();
@@ -53,7 +53,7 @@ public class AdblockSettingsTest
     }
     settings.setSubscriptions(subscriptions);
 
-    final List<String> domains = new LinkedList<String>();
+    final List<String> domains = new LinkedList<>();
     for (int i = 0; i < whitelistedDomainsCount; i++)
     {
       domains.add("http://www.domain" + (i + 1) + ".com");

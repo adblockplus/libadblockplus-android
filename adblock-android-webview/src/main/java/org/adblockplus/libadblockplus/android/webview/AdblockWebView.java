@@ -106,6 +106,7 @@ public class AdblockWebView extends WebView
   // use low-case strings as in WebResponse all header keys are lowered-case
   protected static final String HEADER_SITEKEY = "x-adblock-key";
   protected static final String HEADER_CONTENT_TYPE = "content-type";
+  protected static final String HEADER_CONTENT_LENGTH = "content-length";
 
   private static final String ASSETS_CHARSET_NAME = "UTF-8";
   private static final String BRIDGE_TOKEN = "{{BRIDGE}}";
@@ -263,7 +264,7 @@ public class AdblockWebView extends WebView
     void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info);
   }
 
-  private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<EventsListener>();
+  private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<>();
   private SiteKeysConfiguration siteKeysConfiguration;
   private AdblockEngine.SettingsChangedListener engineSettingsChangedCb = new AdblockEngine.SettingsChangedListener()
   {
@@ -866,6 +867,9 @@ public class AdblockWebView extends WebView
     // Allow loading (with further sitekey-related routines)
     ALLOW_LOAD,
 
+    // Allow loading
+    ALLOW_LOAD_NO_SITEKEY_CHECK,
+
     // Block loading
     BLOCK_LOAD,
   }
@@ -1223,6 +1227,8 @@ public class AdblockWebView extends WebView
                               request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
 
       final boolean isMainFrame = request.isForMainFrame();
+      boolean isWhitelisted = false;
+      boolean canContainSitekey = false;
 
       final String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
 
@@ -1322,12 +1328,14 @@ public class AdblockWebView extends WebView
           // whitelisted
           if (getProvider().getEngine().isDomainWhitelisted(url, referrerChain))
           {
+            isWhitelisted = true;
             Timber.w("%s domain is whitelisted, allow loading", url);
             notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                 url, referrerChain, EventsListener.WhitelistReason.DOMAIN));
           }
           else if (getProvider().getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
           {
+            isWhitelisted = true;
             Timber.w("%s document is whitelisted, allow loading", url);
             notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                 url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
@@ -1357,6 +1365,12 @@ public class AdblockWebView extends WebView
                   Timber.w("using other content type");
                   contentType = FilterEngine.ContentType.OTHER;
                 }
+              }
+
+              if (contentType == FilterEngine.ContentType.SUBDOCUMENT ||
+                  contentType == FilterEngine.ContentType.OTHER)
+              {
+                canContainSitekey = true;
               }
             }
 
@@ -1393,6 +1407,7 @@ public class AdblockWebView extends WebView
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
+              isWhitelisted = true;
               Timber.w("%s is whitelisted in matches()", url);
               notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                   url, referrerChain, EventsListener.WhitelistReason.FILTER));
@@ -1410,7 +1425,17 @@ public class AdblockWebView extends WebView
       // later in `shouldInterceptRequest`
       // now we just reply that ist fine to load
       // the resource
-      return AbpShouldBlockResult.ALLOW_LOAD;
+      if (isMainFrame || (canContainSitekey && !isWhitelisted))
+      {
+        // if url is a main frame (whitelisted by default) or can contain by design a site key header
+        // (it content type is SUBDOCUMENT or OTHER) and it is not yet whitelisted then we need to
+        // make custom HTTP get request to try to obtain a site key header.
+        return AbpShouldBlockResult.ALLOW_LOAD;
+      }
+      else
+      {
+        return AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK;
+      }
     }
 
     private boolean canAcceptCookie(final String documentUrl, final String requestUrl, final String cookieString)
@@ -1578,6 +1603,28 @@ public class AdblockWebView extends WebView
           Timber.d("Removing %s to avoid Content-Type duplication", HEADER_CONTENT_TYPE);
           responseHeadersMap.remove(HEADER_CONTENT_TYPE);
         }
+        else if (responseHeadersMap.get(HEADER_CONTENT_LENGTH) != null)
+        {
+          // For some reason for responses which lack Content-Type header and has Content-Length==0,
+          // underlying WebView layer can trigger a DownloadListener. Applying "default" Content-Type
+          // value helps. To reduce risk we apply it only when Content-Length==0 as there is no body
+          // so there is no risk that browser will render that even when we apply a wrong Content-Type.
+          int contentLength = 0;
+          try
+          {
+            contentLength = Integer.valueOf(responseHeadersMap.get(HEADER_CONTENT_LENGTH).trim());
+          }
+          catch (final NumberFormatException e)
+          {
+            Timber.e(e, "Integer.valueOf(responseHeadersMap.get(HEADER_CONTENT_LENGTH)) failed");
+          }
+
+          if (contentLength == 0)
+          {
+            Timber.d("Setting responseMimeType to %s (url == %s)", RESPONSE_MIME_TYPE, url);
+            responseMimeType = RESPONSE_MIME_TYPE;
+          }
+        }
 
         Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)", responseMimeType, responseEncoding, url);
         return new WebResourceResponse(
@@ -1705,6 +1752,12 @@ public class AdblockWebView extends WebView
           Timber.d("Finished verifying, returning external response and stop");
           return externalResponse;
         }
+      }
+
+      // we don't need to make a HTTP GET request to check a site key header
+      if (AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK.equals(abpBlockResult))
+      {
+        return WebResponseResult.ALLOW_LOAD;
       }
 
       if (requestHeaders.containsKey(HEADER_REQUESTED_RANGE))
@@ -1861,7 +1914,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          List<String> referrerChain = new ArrayList<String>(1);
+          List<String> referrerChain = new ArrayList<>(1);
           String parentUrl = navigationUrl.get();
           referrerChain.add(parentUrl);
           while ((parentUrl = url2Referrer.get(parentUrl)) != null)

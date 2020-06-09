@@ -93,7 +93,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       int whitelistedDomainsCount = prefs.getInt(SETTINGS_WL_DOMAINS_KEY, 0);
 
       // each domain
-      List<String> whitelistedDomains = new LinkedList<String>();
+      List<String> whitelistedDomains = new LinkedList<>();
       for (int i = 0; i < whitelistedDomainsCount; i++)
       {
         String whitelistedDomain = prefs.getString(getArrayItemKey(i, SETTINGS_WL_DOMAIN_KEY), "");
@@ -111,7 +111,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       int subscriptionsCount = prefs.getInt(SETTINGS_SUBSCRIPTIONS_KEY, 0);
 
       // each subscription
-      List<Subscription> subscriptions = new LinkedList<Subscription>();
+      List<Subscription> subscriptions = new LinkedList<>();
       for (int i = 0; i < subscriptionsCount; i++)
       {
         Subscription subscription = new Subscription();

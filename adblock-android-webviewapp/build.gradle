@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
+apply plugin: 'de.undercouch.download'
+apply plugin: 'kotlin-android'
 
+// using download file task plugin more info at https://github.com/michel-kraemer/gradle-download-task
+task downloadSubscriptionLists(type: Download) {
+  src([
+          'https://easylist-downloads.adblockplus.org/exceptionrules.txt',
+          'https://easylist-downloads.adblockplus.org/easylist.txt'
+  ])
+  dest "./src/main/res/raw/"
+  overwrite true
+}
 android {
   compileSdkVersion 28
   buildToolsVersion "28.0.3"
@@ -8,10 +19,9 @@ android {
     applicationId "org.adblockplus.libadblockplus.android.webviewapp"
     minSdkVersion 21
     targetSdkVersion 28
-    versionCode 37
+    versionCode 38
     versionName = rootProject.ext.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
 
   buildTypes {
@@ -20,6 +30,11 @@ android {
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
   }
+
+  sourceSets {
+    test.java.srcDirs += 'src/test/kotlin'
+    androidTest.java.srcDirs += 'src/androidTest/kotlin'
+  }
 }
 
 dependencies {
@@ -27,9 +42,4 @@ dependencies {
   implementation project(':adblock-android-webview')
   implementation 'com.android.support:appcompat-v7:28.0.0'
   implementation "com.android.support:design:28.0.0"
-  testImplementation 'junit:junit:4.12'
-  androidTestImplementation 'androidx.test:core:1.1.0'
-  androidTestImplementation 'androidx.test:runner:1.1.0'
-  androidTestImplementation 'androidx.test:rules:1.1.0'
-  androidTestImplementation 'androidx.test.ext:junit:1.1.0'
 }

@@ -15,12 +15,14 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.webviewapp.test;
+package org.adblockplus.libadblockplus.android.webview.test;
 
 import android.content.Context;
 
+import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -28,21 +30,32 @@ import org.junit.runner.RunWith;
 
 import androidx.test.annotation.UiThreadTest;
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.UiThreadTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import timber.log.Timber;
 
 @RunWith(AndroidJUnit4.class)
-public class WebViewTest
+public class WebViewSetupAndDisposeStressTest
 {
-    private final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext().getApplicationContext();
+    private static final Context context =
+        InstrumentationRegistry.getInstrumentation().getTargetContext().getApplicationContext();
 
     @Rule
-    public final Timeout globalTimeout = Timeout.seconds(150);
+    public final Timeout globalTimeout = Timeout.seconds(900);
 
-    @Rule
-    public final UiThreadTestRule uiThreadTestRule = new UiThreadTestRule();
+    @BeforeClass
+    public static void setUpClass()
+    {
+        Timber.plant(new Timber.DebugTree());
+        if (!AdblockHelper.get().isInit())
+        {
+            final String basePath =
+                context.getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
+            AdblockHelper
+                .get()
+                .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME);
+        }
+    }
 
     private void useAdblockWebViewThenDispose()
     {

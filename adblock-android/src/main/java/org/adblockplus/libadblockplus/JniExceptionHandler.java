@@ -44,7 +44,7 @@ public final class JniExceptionHandler
 
   private final static class LogWorker implements Runnable
   {
-    LinkedBlockingQueue<Throwable> exceptionQueue = new LinkedBlockingQueue<Throwable>();
+    LinkedBlockingQueue<Throwable> exceptionQueue = new LinkedBlockingQueue<>();
 
     private void logException(final Throwable t)
     {

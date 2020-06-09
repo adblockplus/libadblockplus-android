@@ -47,7 +47,7 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
 
   private static final class TestStorage implements AndroidHttpClientResourceWrapper.Storage
   {
-    private Set<String> interceptedUrls = new HashSet<String>();
+    private Set<String> interceptedUrls = new HashSet<>();
 
     public Set<String> getInterceptedUrls()
     {
@@ -69,7 +69,7 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
 
   private static final class TestWrapperListener implements AndroidHttpClientResourceWrapper.Listener
   {
-    private Map<String, Integer> urlsToResourceId = new HashMap<String, Integer>();
+    private Map<String, Integer> urlsToResourceId = new HashMap<>();
 
     public Map<String, Integer> getUrlsToResourceId()
     {
@@ -94,7 +94,7 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
   {
     request = new MockHttpClient();
     request.exception.set(true);
-    preloadMap = new HashMap<String, Integer>();
+    preloadMap = new HashMap<>();
     storage = new TestStorage();
     wrapper = new AndroidHttpClientResourceWrapper(
         ApplicationProvider.getApplicationContext(), request, preloadMap, storage);
@@ -107,7 +107,7 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
 
   private List<String> getUrlsListWithoutParams(Collection<HttpRequest> requestsWithParams)
   {
-    final List<String> list = new LinkedList<String>();
+    final List<String> list = new LinkedList<>();
     for (final HttpRequest eachRequest : requestsWithParams)
     {
       list.add(Utils.getUrlWithoutParams(eachRequest.getUrl()));
@@ -117,7 +117,7 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
 
   private List<String> getUrlsListWithoutParams2(Collection<String> requestsWithParams)
   {
-    final List<String> list = new LinkedList<String>();
+    final List<String> list = new LinkedList<>();
     for (final String eachUrl : requestsWithParams)
     {
       list.add(Utils.getUrlWithoutParams(eachUrl));
