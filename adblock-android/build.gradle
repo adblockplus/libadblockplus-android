@@ -143,3 +143,9 @@ dependencies {
   androidTestImplementation 'org.mockito:mockito-core:2.24.0'
   androidTestImplementation 'org.mockito:mockito-android:2.24.0'
 }
+
+afterEvaluate {
+  tasks.withType(PublishToMavenLocal) {
+    it.enabled = it.name.contains("Abi_allRelease")
+  }
+}
