@@ -314,15 +314,15 @@ engine, first synchronization will be done only after some time. You can combine
 
 #### Preloaded subscriptions
 
-As mentioned, there is an option to set preloaded subscription. This means that at the application first boot time (and every time the user clears app data), it will load the subscription lists which are bundled with the app. It will also set async calls to update these lists at once, so that they are updated as soon as possible. Keep in mind that the adblock engine will still ping periodically for updates on the subscriptions at an hourly interval.
+As mentioned, there is an option to set preloaded subscriptions. This means that at the application's first boot time, and every time the user clears the app's data, it will load the subscription lists that are bundled with the app. It will also set async calls to update these lists at once so that they are updated as soon as possible. Keep in mind that the ad-block engine will still ping periodically for updates on the subscriptions at an hourly interval.
 
-The benefits of using this method is that it provides a better UX, since at first the app does not have to wait for the subscription list to be downloaded hence the user can have an adblocking experience right away.
+The benefit of using this method is that it provides a better UX since the app does not have to wait for the subscription lists to be downloaded first, hence allowing the user to have an ad-blocking experience right away.
 
-On the other hand this is an opt-in feature you have to set it up, it also increases the footprint of the application by bundling the subscription lists with it and you have to update them when building the apk. This is because subscription lists get outdated very fast, ideally you can set a gradle task for that, that's what we did.
+On the other hand, this is an opt-in feature that you have to set up. It also increases the footprint of the app by bundling the subscription lists with it, and you have to update the lists when building the apk. This is because subscription lists become outdated very fast. Ideally, you can set a gradle task for that, which is what we did.
 
-By running `./gradlew downloadSubscriptionLists` you update the preloaded easylist and exception list to the latest ones.
+By running `./gradlew downloadSubscriptionLists`, you update the preloaded EasyList and exception list to the latest ones.
 
-To set it up in the code you have first to map the urls of the subscriptions to local files.
+To set it up in the code, you have to first map the URLs of the subscriptions to local files.
 
 ``` java
 Map<String, Integer> map = new HashMap<String, Integer>();
@@ -330,9 +330,10 @@ map.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
 map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 ```
 
-Beware that in this example we use the general easylist subscription. So for example if you are using subscriptions list for other locale then you have to change the url and the file with the correct one. Without this preloaded subscriptions does not have the same effect.
+Note that in this example we use the general EasyList subscription. So for example, if you are using subscription lists for another locale, you need to change the URL and replace the file with the correct one. The effect is not the same without these preloaded subscriptions.
 
-then when using the adblockhelper for example you can set as so.
+Then, when using the adblockhelper for example, you can set it like:
+
 ``` java
 adblockHelper
     .get()
