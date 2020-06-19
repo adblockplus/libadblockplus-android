@@ -126,6 +126,7 @@ testobject_tests:
           --test $APK \
           --app ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk \
           --testname ${CI_JOB_URL} \
+          --e notAnnotation androidx.test.filters.LargeTest \
           --apikey ${TESTOBJ_PROJECT_KEY} --datacenter EU &
         pids="$pids $!"
       done
