@@ -102,6 +102,7 @@ public class AdblockWebView extends WebView
   protected static final String HEADER_USER_AGENT = "User-Agent";
   protected static final String HEADER_ACCEPT = "Accept";
   protected static final String HEADER_REFRESH = "Refresh";
+  protected static final String HEADER_SEC_FETCH_MODE = "Sec-Fetch-Mode";
 
   // use low-case strings as in WebResponse all header keys are lowered-case
   protected static final String HEADER_SITEKEY = "x-adblock-key";
@@ -1488,6 +1489,22 @@ public class AdblockWebView extends WebView
         {
           Timber.d("Adding %s request header for url %s", HEADER_COOKIE, url);
           headersList.add(new HeaderEntry(HEADER_COOKIE, cookieValue));
+        }
+
+        // DP-1277: For a top level navigation url we need to set this meta header
+        // See:
+        // - https://www.w3.org/TR/fetch-metadata/#sec-fetch-dest-header
+        // - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Mode
+        if (webview != null)
+        {
+          // For convenience use requestHeadersMap instead of headersList to find if header is already set
+          if (!requestHeadersMap.containsKey(HEADER_SEC_FETCH_MODE))
+          {
+            final String headerValue = "navigate";
+            Timber.d("Adding %s (%s) request header for url %s", HEADER_SEC_FETCH_MODE,
+                headerValue, url);
+            headersList.add(new HeaderEntry(HEADER_SEC_FETCH_MODE, headerValue));
+          }
         }
 
         final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect, true);
