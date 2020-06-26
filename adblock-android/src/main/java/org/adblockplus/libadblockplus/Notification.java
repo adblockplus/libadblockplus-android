@@ -35,6 +35,7 @@ public class Notification extends JsValue
   public enum Type
   {
     INFORMATION,
+    NEWTAB,
     RELENTLESS,
     CRITICAL,
     INVALID
