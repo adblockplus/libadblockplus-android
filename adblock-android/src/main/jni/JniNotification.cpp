@@ -59,6 +59,9 @@ static jobject JNICALL JniGetType(JNIEnv* env, jclass clazz, jlong ptr)
   case AdblockPlus::NotificationType::NOTIFICATION_TYPE_INFORMATION:
     enumName = "INFORMATION";
     break;
+  case AdblockPlus::NotificationType::NOTIFICATION_TYPE_NEWTAB:
+    enumName = "NEWTAB";
+    break;
   case AdblockPlus::NotificationType::NOTIFICATION_TYPE_RELENTLESS:
     enumName = "RELENTLESS";
     break;
