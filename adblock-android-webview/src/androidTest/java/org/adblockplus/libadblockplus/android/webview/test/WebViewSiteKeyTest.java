@@ -117,7 +117,6 @@ public class WebViewSiteKeyTest
     final Map<String, Integer> urls = new HashMap<String, Integer>()
     {{
       put("http://cook.com", 1);
-      put("http://ww12.cablemovers.com/", 1);
       put("http://benefitssolver.com", 1);
       put("http://myhealthvet.com", 1);
       put("http://iflychina.com", 1);
