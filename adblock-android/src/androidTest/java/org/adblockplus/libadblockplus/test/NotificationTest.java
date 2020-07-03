@@ -38,16 +38,16 @@ public class NotificationTest extends BaseFilterEngineTest
     jsEngine.evaluate(
         "(function()\n" +
         "{\n" +
-        "require('notification').Notification.addNotification(" + notification + ");\n" +
+        "require('notifications').notifications.addNotification(" + notification + ");\n" +
         "})();");
   }
 
-  protected Notification peekNotification(final String url)
+  protected Notification peekNotification()
   {
     // Not using Mockito as `JniCallbackBase.javaVM` stays uninitialized causing NPE
     TestShowNotificationCallback callback = new TestShowNotificationCallback();
     filterEngine.setShowNotificationCallback(callback);
-    filterEngine.showNextNotification(url);
+    filterEngine.showNextNotification();
     filterEngine.removeShowNotificationCallback();
     return callback.getNotification();
   }
@@ -55,7 +55,7 @@ public class NotificationTest extends BaseFilterEngineTest
   @Test
   public void testNoNotifications()
   {
-    assertNull(peekNotification(""));
+    assertNull(peekNotification());
   }
 
   @Test
@@ -67,52 +67,32 @@ public class NotificationTest extends BaseFilterEngineTest
         "   title: 'testTitle',\n" +
         "   message: 'testMessage',\n" +
         "}");
-    Notification notification = peekNotification("");
+    Notification notification = peekNotification();
     assertNotNull(notification);
     assertEquals("testTitle", notification.getTitle());
     assertEquals("testMessage", notification.getMessageString());
   }
 
   @Test
-  public void testFilterByUrl()
-  {
-    addNotification("{ id:'no-filter', type:'critical' }");
-    addNotification("{ id:'www.com', type:'information', urlFilters:['||www.com$document'] }");
-    addNotification("{ id:'www.de', type:'question', urlFilters:['||www.de$document'] }");
-
-    Notification notification = peekNotification("");
-    assertNotNull(notification);
-    assertEquals(Notification.Type.CRITICAL, notification.getType());
-
-    notification = peekNotification("http://www.de");
-    assertNotNull(notification);
-    assertEquals(Notification.Type.QUESTION, notification.getType());
-
-    notification = peekNotification("http://www.com");
-    assertNotNull(notification);
-    assertEquals(Notification.Type.INFORMATION, notification.getType());
-  }
-
-  @Test
   public void testMarkAsShown()
   {
     addNotification("{ id: 'id', type: 'information' }");
-    assertNotNull(peekNotification(""));
+    assertNotNull(peekNotification());
 
-    Notification notification = peekNotification("");
+    Notification notification = peekNotification();
     assertNotNull(notification);
 
     SystemClock.sleep(NOTIFICATION_WAIT_DELAY_MS);
     notification.markAsShown();
 
-    assertNull(peekNotification(""));
+    assertNull(peekNotification());
   }
 
   @Test
   public void testNoLinks()
   {
     addNotification("{ id: 'id'}");
-    Notification notification = peekNotification("");
+    Notification notification = peekNotification();
     assertNotNull(notification);
 
     List<String> links = notification.getLinks();
@@ -124,7 +104,7 @@ public class NotificationTest extends BaseFilterEngineTest
   public void testLinks()
   {
     addNotification("{ id: 'id', links: ['link1', 'link2'] }");
-    Notification notification = peekNotification("");
+    Notification notification = peekNotification();
     assertNotNull(notification);
 
     List<String> links = notification.getLinks();

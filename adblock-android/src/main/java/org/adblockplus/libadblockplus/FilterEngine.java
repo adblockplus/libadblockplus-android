@@ -120,14 +120,9 @@ public final class FilterEngine
     return getElementHidingEmulationSelectors(this.ptr, domain);
   }
 
-  public void showNextNotification(final String url)
-  {
-    showNextNotification(this.ptr, url);
-  }
-
   public void showNextNotification()
   {
-    showNextNotification(this.ptr, null);
+    showNextNotification(this.ptr);
   }
 
   public void setShowNotificationCallback(final ShowNotificationCallback callback)
@@ -312,7 +307,7 @@ public final class FilterEngine
 
   private final static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
 
-  private final static native void showNextNotification(long ptr, String url);
+  private final static native void showNextNotification(long ptr);
 
   private final static native void setShowNotificationCallback(long ptr, long callbackPtr);
 
