@@ -1731,6 +1731,11 @@ public class AdblockWebView extends WebView
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
     {
+      if (request.isForMainFrame())
+      {
+        Timber.d("Updating navigationUrl to `%s`", request.getUrl().toString());
+        navigationUrl.set(request.getUrl().toString());
+      }
       final AbpShouldBlockResult abpBlockResult = shouldAbpBlockRequest(request);
 
       // if FilterEngine is unavailable or not enabled, just let it go (and skip sitekey check)
@@ -2112,7 +2117,6 @@ public class AdblockWebView extends WebView
 
     loading = true;
     loadError = null;
-    navigationUrl.set(newUrl);
 
     if (newUrl != null)
     {
