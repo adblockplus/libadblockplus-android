@@ -1230,6 +1230,7 @@ public class AdblockWebView extends WebView
       final boolean isMainFrame = request.isForMainFrame();
       boolean isWhitelisted = false;
       boolean canContainSitekey = false;
+      boolean isAcceptableAdsEnabled = true;
 
       final String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
 
@@ -1255,11 +1256,13 @@ public class AdblockWebView extends WebView
           }
         }
 
+        final AdblockEngine engine = getProvider().getEngine();
+
         // Apart from checking counter (getProvider().getCounter()) we also need to make sure
         // that getProvider().getEngine() is already set.
         // We check that under getProvider().getReadEngineLock(); so we are sure it will not be
         // changed after this check.
-        if (isDisposed || getProvider().getEngine() == null)
+        if (isDisposed || engine == null)
         {
           Timber.e("FilterEngine already disposed");
           return AbpShouldBlockResult.NOT_ENABLED;
@@ -1274,7 +1277,7 @@ public class AdblockWebView extends WebView
         {
           // check the real enable status and update adblockEnabled flag which is used
           // later on to check if we should execute element hiding JS
-          adblockEnabled.set(getProvider().getEngine().isEnabled());
+          adblockEnabled.set(engine.isEnabled());
           if (!adblockEnabled.get())
           {
             Timber.d("adblockEnabled = false");
@@ -1327,14 +1330,14 @@ public class AdblockWebView extends WebView
             : null);
 
           // whitelisted
-          if (getProvider().getEngine().isDomainWhitelisted(url, referrerChain))
+          if (engine.isDomainWhitelisted(url, referrerChain))
           {
             isWhitelisted = true;
             Timber.w("%s domain is whitelisted, allow loading", url);
             notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
                 url, referrerChain, EventsListener.WhitelistReason.DOMAIN));
           }
-          else if (getProvider().getEngine().isDocumentWhitelisted(url, referrerChain, siteKey))
+          else if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
           {
             isWhitelisted = true;
             Timber.w("%s document is whitelisted, allow loading", url);
@@ -1380,7 +1383,7 @@ public class AdblockWebView extends WebView
             {
               final String parentUrl = referrerChain.get(0);
               final List<String> referrerChainForGenericblock = referrerChain.subList(1, referrerChain.size());
-              specificOnly = getProvider().getEngine().isGenericblockWhitelisted(parentUrl,
+              specificOnly = engine.isGenericblockWhitelisted(parentUrl,
                       referrerChainForGenericblock, siteKey);
               if (specificOnly)
               {
@@ -1389,7 +1392,7 @@ public class AdblockWebView extends WebView
             }
 
             // check if we should block
-            final AdblockEngine.MatchesResult result = getProvider().getEngine().matches(
+            final AdblockEngine.MatchesResult result = engine.matches(
                 url, FilterEngine.ContentType.maskOf(contentType),
                 referrerChain, siteKey, specificOnly);
 
@@ -1415,28 +1418,26 @@ public class AdblockWebView extends WebView
             }
             Timber.d("Allowed loading %s", url);
           }
-        }
+        } // !MainFrame
+
+        isAcceptableAdsEnabled = engine.isAcceptableAdsEnabled();
       }
       finally
       {
         lock.unlock();
       }
 
-      // we rely on calling `fetchUrlAndCheckSiteKey`
-      // later in `shouldInterceptRequest`
-      // now we just reply that ist fine to load
-      // the resource
-      if (isMainFrame || (canContainSitekey && !isWhitelisted))
+      // we rely on calling `fetchUrlAndCheckSiteKey` later in `shouldInterceptRequest`, now we
+      // just reply that it's fine to load the resource
+      if (isAcceptableAdsEnabled && ((canContainSitekey && !isWhitelisted) || isMainFrame))
       {
         // if url is a main frame (whitelisted by default) or can contain by design a site key header
         // (it content type is SUBDOCUMENT or OTHER) and it is not yet whitelisted then we need to
         // make custom HTTP get request to try to obtain a site key header.
         return AbpShouldBlockResult.ALLOW_LOAD;
       }
-      else
-      {
-        return AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK;
-      }
+
+      return AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK;
     }
 
     private boolean canAcceptCookie(final String documentUrl, final String requestUrl, final String cookieString)
@@ -1760,18 +1761,24 @@ public class AdblockWebView extends WebView
         final WebResourceResponse externalResponse
                 = extWebViewClient.shouldInterceptRequest(view, request);
 
-        // if we are having an external WebResourceResponse
-        // provided by external WebViewClient
-        // we will do the sitekey verification
-        // and just return the Response
+        // if we are having an external WebResourceResponse provided by external WebViewClient,
+        // we will do the sitekey verification and just return the Response
         if (externalResponse != null)
         {
-          Timber.d("Verifying site keys with external shouldInterceptRequest response");
-          verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
-                  url,
-                  requestHeaders,
-                  externalResponse.getResponseHeaders());
-          Timber.d("Finished verifying, returning external response and stop");
+          if (!AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK.equals(abpBlockResult) )
+          {
+            Timber.d("Verifying site keys with external shouldInterceptRequest response");
+            verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
+                    url,
+                    requestHeaders,
+                    externalResponse.getResponseHeaders());
+            Timber.d("Finished verifying, returning external response and stop");
+          }
+          else
+          {
+            Timber.d("Skipped the verifying of the site keys" +
+                    " with external shouldInterceptRequest response");
+          }
           return externalResponse;
         }
       }
