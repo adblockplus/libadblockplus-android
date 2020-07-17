@@ -285,67 +285,67 @@ public final class FilterEngine
     return getNativePtr(this.ptr);
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native boolean isFirstRun(long ptr);
+  private static native boolean isFirstRun(long ptr);
 
-  private final static native Filter getFilter(long ptr, String text);
+  private static native Filter getFilter(long ptr, String text);
 
-  private final static native List<Filter> getListedFilters(long ptr);
+  private static native List<Filter> getListedFilters(long ptr);
 
-  private final static native Subscription getSubscription(long ptr, String url);
+  private static native Subscription getSubscription(long ptr, String url);
 
-  private final static native List<Subscription> getListedSubscriptions(long ptr);
+  private static native List<Subscription> getListedSubscriptions(long ptr);
 
-  private final static native List<Subscription> fetchAvailableSubscriptions(long ptr);
+  private static native List<Subscription> fetchAvailableSubscriptions(long ptr);
 
-  private final static native void removeFilterChangeCallback(long ptr);
+  private static native void removeFilterChangeCallback(long ptr);
 
-  private final static native void setFilterChangeCallback(long ptr, long filterPtr);
+  private static native void setFilterChangeCallback(long ptr, long filterPtr);
 
-  private final static native String getElementHidingStyleSheet(long ptr, String domain, boolean specificOnly);
+  private static native String getElementHidingStyleSheet(long ptr, String domain, boolean specificOnly);
 
-  private final static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
+  private static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
 
-  private final static native void showNextNotification(long ptr);
+  private static native void showNextNotification(long ptr);
 
-  private final static native void setShowNotificationCallback(long ptr, long callbackPtr);
+  private static native void setShowNotificationCallback(long ptr, long callbackPtr);
 
-  private final static native void removeShowNotificationCallback(long ptr);
+  private static native void removeShowNotificationCallback(long ptr);
 
-  private final static native JsValue getPref(long ptr, String pref);
+  private static native JsValue getPref(long ptr, String pref);
 
-  private final static native Filter matches(long ptr, String url, ContentType[] contentType,
+  private static native Filter matches(long ptr, String url, ContentType[] contentType,
                                              List<String> referrerChain, String siteKey,
                                              boolean specificOnly);
 
-  private final static native boolean isGenericblockWhitelisted(long ptr, String url,
+  private static native boolean isGenericblockWhitelisted(long ptr, String url,
                                                                 List<String> referrerChain,
                                                                 String siteKey);
 
-  private final static native boolean isDocumentWhitelisted(long ptr, String url,
+  private static native boolean isDocumentWhitelisted(long ptr, String url,
                                                             List<String> referrerChain,
                                                             String siteKey);
 
-  private final static native boolean isElemhideWhitelisted(long ptr, String url,
+  private static native boolean isElemhideWhitelisted(long ptr, String url,
                                                             List<String> referrerChain,
                                                             String siteKey);
 
-  private final static native void setPref(long ptr, String pref, long valuePtr);
+  private static native void setPref(long ptr, String pref, long valuePtr);
 
-  private final static native String getHostFromURL(long ptr, String url);
+  private static native String getHostFromURL(long ptr, String url);
 
-  private final static native void setAllowedConnectionType(long ptr, String value);
+  private static native void setAllowedConnectionType(long ptr, String value);
 
-  private final static native String getAllowedConnectionType(long ptr);
+  private static native String getAllowedConnectionType(long ptr);
 
-  private final static native void setAcceptableAdsEnabled(long ptr, boolean enabled);
+  private static native void setAcceptableAdsEnabled(long ptr, boolean enabled);
 
-  private final static native boolean isAcceptableAdsEnabled(long ptr);
+  private static native boolean isAcceptableAdsEnabled(long ptr);
 
-  private final static native String getAcceptableAdsSubscriptionURL(long ptr);
+  private static native String getAcceptableAdsSubscriptionURL(long ptr);
 
-  private final static native void updateFiltersAsync(long ptr, String subscriptionUrl);
+  private static native void updateFiltersAsync(long ptr, String subscriptionUrl);
 
-  private final static native long getNativePtr(long ptr);
+  private static native long getNativePtr(long ptr);
 }

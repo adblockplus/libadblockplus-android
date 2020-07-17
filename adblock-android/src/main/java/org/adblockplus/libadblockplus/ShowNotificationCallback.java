@@ -42,7 +42,7 @@ public abstract class ShowNotificationCallback implements Disposable
     this.disposer.dispose();
   }
 
-  private final static class DisposeWrapper implements Disposable
+  private static final class DisposeWrapper implements Disposable
   {
     private final long ptr;
 
@@ -58,9 +58,9 @@ public abstract class ShowNotificationCallback implements Disposable
     }
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native long ctor(Object callbackObject);
+  private static native long ctor(Object callbackObject);
 
-  private final static native void dtor(long ptr);
+  private static native void dtor(long ptr);
 }

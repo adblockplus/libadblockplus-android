@@ -155,7 +155,7 @@ public class JsValue implements Disposable
     return asString(this.ptr);
   }
 
-  private final static class DisposeWrapper implements Disposable
+  private static final class DisposeWrapper implements Disposable
   {
     private final long ptr;
 
@@ -171,43 +171,43 @@ public class JsValue implements Disposable
     }
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native boolean isUndefined(long ptr);
+  private static native boolean isUndefined(long ptr);
 
-  private final static native boolean isNull(long ptr);
+  private static native boolean isNull(long ptr);
 
-  private final static native boolean isString(long ptr);
+  private static native boolean isString(long ptr);
 
-  private final static native boolean isNumber(long ptr);
+  private static native boolean isNumber(long ptr);
 
-  private final static native boolean isBoolean(long ptr);
+  private static native boolean isBoolean(long ptr);
 
-  private final static native boolean isObject(long ptr);
+  private static native boolean isObject(long ptr);
 
-  private final static native boolean isArray(long ptr);
+  private static native boolean isArray(long ptr);
 
-  private final static native boolean isFunction(long ptr);
+  private static native boolean isFunction(long ptr);
 
-  private final static native String asString(long ptr);
+  private static native String asString(long ptr);
 
-  private final static native long asLong(long ptr);
+  private static native long asLong(long ptr);
 
-  private final static native boolean asBoolean(long ptr);
+  private static native boolean asBoolean(long ptr);
 
-  private final static native JsValue getProperty(long ptr, String name);
+  private static native JsValue getProperty(long ptr, String name);
 
-  private final static native void setProperty(long ptr, String name, long valuePtr);
+  private static native void setProperty(long ptr, String name, long valuePtr);
 
-  private final static native String getJsClass(long ptr);
+  private static native String getJsClass(long ptr);
 
-  private final static native List<String> getOwnPropertyNames(long ptr);
+  private static native List<String> getOwnPropertyNames(long ptr);
 
-  private final static native List<JsValue> asList(long ptr);
+  private static native List<JsValue> asList(long ptr);
 
-  private final static native JsValue call(long ptr, long[] paramPtrs);
+  private static native JsValue call(long ptr, long[] paramPtrs);
 
-  private final static native JsValue call(long ptr, long[] paramPtrs, long thisValuePtr);
+  private static native JsValue call(long ptr, long[] paramPtrs, long thisValuePtr);
 
-  private final static native void dtor(long ptr);
+  private static native void dtor(long ptr);
 }

@@ -25,7 +25,7 @@ import timber.log.Timber;
 
 public final class JniExceptionHandler
 {
-  private final static String TAG = Utils.getTag(JniExceptionHandler.class);
+  private static final String TAG = Utils.getTag(JniExceptionHandler.class);
 
   private static LogWorker logWorker = null;
 
@@ -42,7 +42,7 @@ public final class JniExceptionHandler
     logWorker.logException(t);
   }
 
-  private final static class LogWorker implements Runnable
+  private static final class LogWorker implements Runnable
   {
     LinkedBlockingQueue<Throwable> exceptionQueue = new LinkedBlockingQueue<>();
 

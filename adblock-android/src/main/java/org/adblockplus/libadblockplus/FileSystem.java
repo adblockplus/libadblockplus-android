@@ -66,7 +66,7 @@ public abstract class FileSystem
       this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
     }
 
-    private final static class DisposeWrapper implements Disposable
+    private static final class DisposeWrapper implements Disposable
     {
       private final long ptr;
 
@@ -111,7 +111,7 @@ public abstract class FileSystem
       this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
     }
 
-    private final static class DisposeWrapper implements Disposable
+    private static final class DisposeWrapper implements Disposable
     {
       private final long ptr;
 
@@ -157,7 +157,7 @@ public abstract class FileSystem
       this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
     }
 
-    private final static class DisposeWrapper implements Disposable
+    private static final class DisposeWrapper implements Disposable
     {
       private final long ptr;
 
@@ -235,11 +235,17 @@ public abstract class FileSystem
   public abstract void stat(final String filename,
                             final StatCallback callback);
 
-  private final static native void callbackOnFinished(long ptr, String error);
-  private final static native void callbackDtor(long ptr);
-  private final static native void readCallbackOnFinished(long ptr, ByteBuffer output);
-  private final static native void readCallbackDtor(long ptr);
-  private final static native void statCallbackOnFinished(long ptr, StatResult result, String error);
-  private final static native void statCallbackDtor(long ptr);
-  private final static native void registerNatives();
+  private static native void callbackOnFinished(long ptr, String error);
+
+  private static native void callbackDtor(long ptr);
+
+  private static native void readCallbackOnFinished(long ptr, ByteBuffer output);
+
+  private static native void readCallbackDtor(long ptr);
+
+  private static native void statCallbackOnFinished(long ptr, StatResult result, String error);
+
+  private static native void statCallbackDtor(long ptr);
+
+  private static native void registerNatives();
 }

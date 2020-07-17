@@ -95,7 +95,7 @@ public abstract class HttpClient
       this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
     }
 
-    private final static class DisposeWrapper implements Disposable
+    private static final class DisposeWrapper implements Disposable
     {
       private final long ptr;
 
@@ -134,7 +134,9 @@ public abstract class HttpClient
    */
   public abstract void request(final HttpRequest request, final Callback callback);
 
-  private final static native void callbackOnFinished(long ptr, ServerResponse response);
-  private final static native void callbackDtor(long ptr);
-  private final static native void registerNatives();
+  private static native void callbackOnFinished(long ptr, ServerResponse response);
+
+  private static native void callbackDtor(long ptr);
+
+  private static native void registerNatives();
 }

@@ -33,10 +33,11 @@ public class Platform implements Disposable
    * chosen.
    * If basePath is null then paths are not resolved to a full path, thus
    * current working directory is used.
-   * @param logSystem LogSystem concrete implementation
+   *
+   * @param logSystem  LogSystem concrete implementation
    * @param fileSystem FileSystem concrete implementation
    * @param httpClient HttpClient concrete implementation
-   * @param basePath base path for FileSystem (default C++ FileSystem implementation used)
+   * @param basePath   base path for FileSystem (default C++ FileSystem implementation used)
    */
   public Platform(final LogSystem logSystem, final FileSystem fileSystem, final HttpClient httpClient, final String basePath)
   {
@@ -85,7 +86,7 @@ public class Platform implements Disposable
     this.disposer.dispose();
   }
 
-  private final static class DisposeWrapper implements Disposable
+  private static final class DisposeWrapper implements Disposable
   {
     private final long ptr;
 
@@ -101,20 +102,20 @@ public class Platform implements Disposable
     }
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native long ctor(LogSystem logSystem,
-                                        FileSystem fileSystem,
-                                        HttpClient httpClient,
-                                        String basePath);
+  private static native long ctor(LogSystem logSystem,
+                                  FileSystem fileSystem,
+                                  HttpClient httpClient,
+                                  String basePath);
 
-  private final static native void setUpJsEngine(long ptr, AppInfo appInfo, long v8IsolateProviderPtr);
+  private static native void setUpJsEngine(long ptr, AppInfo appInfo, long v8IsolateProviderPtr);
 
-  private final static native long getJsEnginePtr(long ptr);
+  private static native long getJsEnginePtr(long ptr);
 
-  private final static native void setUpFilterEngine(long ptr, IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback);
+  private static native void setUpFilterEngine(long ptr, IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback);
 
-  private final static native void ensureFilterEngine(long ptr);
+  private static native void ensureFilterEngine(long ptr);
 
-  private final static native void dtor(long ptr);
+  private static native void dtor(long ptr);
 }

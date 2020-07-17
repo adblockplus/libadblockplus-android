@@ -73,15 +73,15 @@ public final class Filter extends JsValue
     COMMENT, INVALID;
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native Type getType(long ptr);
+  private static native Type getType(long ptr);
 
-  private final static native boolean isListed(long ptr);
+  private static native boolean isListed(long ptr);
 
-  private final static native void addToList(long ptr);
+  private static native void addToList(long ptr);
 
-  private final static native void removeFromList(long ptr);
+  private static native void removeFromList(long ptr);
 
-  private final static native boolean operatorEquals(long ptr, long other);
+  private static native boolean operatorEquals(long ptr, long other);
 }

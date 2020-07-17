@@ -33,8 +33,8 @@ import static org.junit.Assert.fail;
 
 public class JavaBase64ProcessorTest
 {
-  private final static String STRING = "Hello, world";
-  private final static byte[] INVALID_BYTES =
+  private static final String STRING = "Hello, world";
+  private static final byte[] INVALID_BYTES =
       { -93, -91, -25, 25, -87, 121, 77, -71, -67, 119, -68, 61, -4, 112, -128 };
   private final Random random = new Random();
   private final Base64Processor base64Processor = new JavaBase64Processor();

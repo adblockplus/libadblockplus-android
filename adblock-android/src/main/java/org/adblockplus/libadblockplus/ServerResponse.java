@@ -45,7 +45,7 @@ public final class ServerResponse
     ERROR_NOT_INITIALIZED(0xc1f30001L);
 
     private final long statusCode;
-    private final static HashMap<Long, NsStatus> ENUM_MAP = new HashMap<>();
+    private static final HashMap<Long, NsStatus> ENUM_MAP = new HashMap<>();
 
     static
     {

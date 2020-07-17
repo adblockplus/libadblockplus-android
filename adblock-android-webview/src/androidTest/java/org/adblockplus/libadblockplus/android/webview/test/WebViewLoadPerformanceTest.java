@@ -24,6 +24,10 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
@@ -34,10 +38,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
-
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -61,16 +61,16 @@ public class WebViewLoadPerformanceTest
 
   private static class WebViewTestSuit<T extends WebView>
   {
-    private final static int MAX_PAGE_LOAD_WAIT_TIME_SEC = 20;
+    private static final int MAX_PAGE_LOAD_WAIT_TIME_SEC = 20;
     private T webView;
     private final Map<String, Long> results = new HashMap<>();
-    private WebViewClient client = null;
+    private final WebViewClient client = null;
 
     private class WebViewWaitingClient extends  WebViewClient
     {
       private String lastPageStartedUrl = "";
       private AtomicReference<Long> startTime = new AtomicReference<>(null);
-      private CountDownLatch countDownLatch;
+      private final CountDownLatch countDownLatch;
 
       public WebViewWaitingClient(final CountDownLatch countDownLatch)
       {
@@ -115,7 +115,7 @@ public class WebViewLoadPerformanceTest
           countDownLatch.countDown();
         }
       }
-    };
+    }
 
     // Clear cookies and cache
     private void clearWebViewsState() throws InterruptedException
@@ -130,7 +130,7 @@ public class WebViewLoadPerformanceTest
           CookieManager.getInstance().removeAllCookies(new ValueCallback<Boolean>()
           {
             @Override
-            public void onReceiveValue(Boolean value)
+            public void onReceiveValue(final Boolean value)
             {
               if (!value)
               {
@@ -157,7 +157,7 @@ public class WebViewLoadPerformanceTest
           webView.loadUrl(url);
         }
       });
-      boolean hasFinished = countDownLatch.await(MAX_PAGE_LOAD_WAIT_TIME_SEC, TimeUnit.SECONDS);
+      final boolean hasFinished = countDownLatch.await(MAX_PAGE_LOAD_WAIT_TIME_SEC, TimeUnit.SECONDS);
       if (!hasFinished)
       {
         webViewClient.resetTimer();
@@ -173,8 +173,8 @@ public class WebViewLoadPerformanceTest
     }
   }
 
-  private WebViewTestSuit<AdblockWebView> adblockTestSuit = new WebViewTestSuit<>();
-  private WebViewTestSuit<WebView> systemTestSuit = new WebViewTestSuit();
+  private final WebViewTestSuit<AdblockWebView> adblockTestSuit = new WebViewTestSuit<>();
+  private final WebViewTestSuit<WebView> systemTestSuit = new WebViewTestSuit();
 
   @Rule
   public final Timeout globalTimeout = Timeout.seconds(900);
@@ -209,7 +209,7 @@ public class WebViewLoadPerformanceTest
     });
     if (testSuit.webView instanceof AdblockWebView)
     {
-      AdblockWebView adblockWebView = (AdblockWebView) testSuit.webView;
+      final AdblockWebView adblockWebView = (AdblockWebView) testSuit.webView;
       final AdblockEngineProvider adblockEngineProvider = AdblockHelper.get().getProvider();
       adblockWebView.setProvider(adblockEngineProvider);
       Timber.d("Before FE waitForReady()");
