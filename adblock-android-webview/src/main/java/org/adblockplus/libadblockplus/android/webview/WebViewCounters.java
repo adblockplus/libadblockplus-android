@@ -169,7 +169,7 @@ final public class WebViewCounters
    * which normally holds a strong reference to some View, which finally holds a strong reference to
    * an activity).
    */
-  private final static class WeakRunnable implements Runnable
+  private static final class WeakRunnable implements Runnable
   {
     private WeakReference<WebViewCounters> weakCounters;
     private Operation operation;

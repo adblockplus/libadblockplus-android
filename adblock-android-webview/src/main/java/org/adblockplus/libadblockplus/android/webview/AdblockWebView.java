@@ -119,8 +119,8 @@ public class AdblockWebView extends WebView
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
   // decisions
-  private final static String RESPONSE_CHARSET_NAME = "UTF-8";
-  private final static String RESPONSE_MIME_TYPE = "text/plain";
+  private static final String RESPONSE_CHARSET_NAME = "UTF-8";
+  private static final String RESPONSE_MIME_TYPE = "text/plain";
 
   private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
   private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
