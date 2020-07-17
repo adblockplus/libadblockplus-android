@@ -1,4 +1,4 @@
 _root = hg:https://hg.adblockplus.org/ git:https://gitlab.com/eyeo/adblockplus/
 _self = buildtools/ensure_dependencies.py
 buildtools = buildtools hg:59a519c38766 git:9342139
-libadblockplus = libadblockplus git:4621b0f83fd868837b32370695da7dd5dd7c1277
+libadblockplus = libadblockplus git:92c258681107db81c414083db7f64710642c7fec
