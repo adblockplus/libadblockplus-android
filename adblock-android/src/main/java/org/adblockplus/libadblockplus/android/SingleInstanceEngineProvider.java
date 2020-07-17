@@ -38,8 +38,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Provides single instance of AdblockEngine shared between registered clients
  */
-public class SingleInstanceEngineProvider implements AdblockEngineProvider
+public class SingleInstanceEngineProvider implements AdblockEngineProvider, AdblockEngine.Factory
 {
+  private AdblockEngine.Factory engineFactory;
   private Context context;
   private String basePath;
   private boolean developmentBuild;
@@ -92,12 +93,33 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
    *                 recommended because it can be cleared by the system.
    * @param developmentBuild debug or release?
    */
-  public SingleInstanceEngineProvider(Context context, String basePath, boolean developmentBuild)
+  public SingleInstanceEngineProvider(final Context context,
+                                      final String basePath,
+                                      final boolean developmentBuild)
+  {
+    initFactory(context, basePath, developmentBuild);
+    this.executorService = createExecutorService();
+  }
+
+  /**
+   * Init with context
+   * @param engineFactory Factory to build AdblockEngine
+   */
+  public SingleInstanceEngineProvider(final AdblockEngine.Factory engineFactory)
+  {
+    this.engineFactory = engineFactory;
+    this.executorService = createExecutorService();
+  }
+
+  private void initFactory(final Context context,
+                           final String basePath,
+                           final boolean developmentBuild)
   {
     this.context = context.getApplicationContext();
     this.basePath = basePath;
     this.developmentBuild = developmentBuild;
-    this.executorService = createExecutorService();
+
+    this.engineFactory = this;
   }
 
   protected ExecutorService createExecutorService()
@@ -195,29 +217,29 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     this.engineDisposedListeners.clear();
   }
 
-  private void createAdblock()
+  @Override
+  public AdblockEngine build()
   {
-    Timber.d("Creating adblock engine ...");
-    ConnectivityManager connectivityManager =
+    final ConnectivityManager connectivityManager =
         (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    IsAllowedConnectionCallback isAllowedConnectionCallback =
+    final IsAllowedConnectionCallback isAllowedConnectionCallback =
         new IsAllowedConnectionCallbackImpl(connectivityManager);
 
-    AdblockEngine.Builder builder = AdblockEngine
+    final AdblockEngine.Builder builder = AdblockEngine
         .builder(
             AdblockEngine.generateAppInfo(context, developmentBuild),
             basePath)
         .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
         .enableElementHiding(true);
 
-    long v8IsolateProviderPtrLocal = v8IsolateProviderPtr.get();
+    final long v8IsolateProviderPtrLocal = v8IsolateProviderPtr.get();
     if (v8IsolateProviderPtrLocal != 0)
     {
       builder.useV8IsolateProvider(v8IsolateProviderPtrLocal);
     }
 
-    String preloadedPreferenceNameLocal = preloadedPreferenceName.get();
-    Map<String, Integer> urlToResourceIdMapLocal = urlToResourceIdMap.get();
+    final String preloadedPreferenceNameLocal = preloadedPreferenceName.get();
+    final Map<String, Integer> urlToResourceIdMapLocal = urlToResourceIdMap.get();
     // if preloaded subscriptions provided
     if (preloadedPreferenceNameLocal != null)
     {
@@ -230,8 +252,14 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
           new AndroidHttpClientResourceWrapper.SharedPrefsStorage(preloadedSubscriptionsPrefs));
     }
 
-    AdblockEngine engine = builder.build();
-    Timber.d("AdblockHelper engine created");
+    return builder.build();
+  }
+
+  private void createAdblock()
+  {
+    Timber.d("Creating adblock engine ...");
+    final AdblockEngine engine = engineFactory.build();
+    Timber.d("Engine created");
 
     if (disabledByDefault)
     {
