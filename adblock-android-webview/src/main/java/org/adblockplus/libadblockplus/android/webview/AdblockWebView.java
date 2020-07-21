@@ -2127,6 +2127,8 @@ public class AdblockWebView extends WebView
 
     if (newUrl != null)
     {
+      navigationUrl.compareAndSet(null, newUrl);
+
       // elemhide and elemhideemu
       elemHideLatch = new CountDownLatch(1);
       synchronized (elemHideThreadLockObject)
