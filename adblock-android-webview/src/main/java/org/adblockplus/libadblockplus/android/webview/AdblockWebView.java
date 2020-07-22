@@ -1644,6 +1644,14 @@ public class AdblockWebView extends WebView
           }
         }
 
+        if (responseMimeType != null)
+        {
+          responseMimeType = responseMimeType.trim();
+        }
+        if (responseEncoding != null)
+        {
+          responseEncoding = responseEncoding.trim();
+        }
         Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)", responseMimeType, responseEncoding, url);
         return new WebResourceResponse(
                 responseMimeType, responseEncoding,
