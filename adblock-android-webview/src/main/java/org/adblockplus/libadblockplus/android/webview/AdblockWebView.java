@@ -2175,6 +2175,10 @@ public class AdblockWebView extends WebView
       stopAbpLoading();
     }
 
+    if (AdblockWebView.this.canGoBack())
+    {
+      navigationUrl.set(null);
+    }
     super.goBack();
   }
 
@@ -2186,6 +2190,10 @@ public class AdblockWebView extends WebView
       stopAbpLoading();
     }
 
+    if (AdblockWebView.this.canGoForward())
+    {
+      navigationUrl.set(null);
+    }
     super.goForward();
   }
 
