@@ -70,13 +70,14 @@ public class WebViewInterceptRequestTest
   // Test data with map entries: url => expected number of SiteKeyVerifier.verify() calls
   private final static Map<String, Integer> urls = new HashMap<String, Integer>()
   {{
-    put("http://cook.com", 1);
     put("http://benefitssolver.com", 1);
     put("http://myhealthvet.com", 1);
     put("http://iflychina.com", 1);
-    put("http://recipes.com", 1);
-    put("http://builders.com", 1);
-    put("http://cards.com", 1);
+    put("http://megaloft.com/", 1);
+    put("http://ww38.nextlnk1.com/", 1);
+    put("http://ww12.onoticioso.com/", 1);
+    put("http://directions.com", 1);
+    put("http://zins.de", 1);
   }};
   private static final Context context =
       InstrumentationRegistry.getInstrumentation().getTargetContext();
