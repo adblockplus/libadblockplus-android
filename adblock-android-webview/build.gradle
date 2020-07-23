@@ -26,6 +26,9 @@ dependencies {
   androidTestImplementation 'androidx.test:runner:1.1.0'
   androidTestImplementation 'androidx.test:rules:1.1.0'
   androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+  androidTestImplementation "androidx.test.espresso:espresso-web:$espresso_web_version"
+  androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_web_version"
+  androidTestImplementation 'com.github.tomakehurst:wiremock-standalone:2.25.1'
   androidTestImplementation project(path: ':adblock-android-settings')
   testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
