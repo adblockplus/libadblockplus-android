@@ -2135,6 +2135,8 @@ public class AdblockWebView extends WebView
 
     if (newUrl != null)
     {
+      navigationUrl.compareAndSet(null, newUrl);
+
       // elemhide and elemhideemu
       elemHideLatch = new CountDownLatch(1);
       synchronized (elemHideThreadLockObject)
@@ -2181,6 +2183,10 @@ public class AdblockWebView extends WebView
       stopAbpLoading();
     }
 
+    if (AdblockWebView.this.canGoBack())
+    {
+      navigationUrl.set(null);
+    }
     super.goBack();
   }
 
@@ -2192,6 +2198,10 @@ public class AdblockWebView extends WebView
       stopAbpLoading();
     }
 
+    if (AdblockWebView.this.canGoForward())
+    {
+      navigationUrl.set(null);
+    }
     super.goForward();
   }
 
