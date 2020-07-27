@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceFragmentCompat;
 import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
