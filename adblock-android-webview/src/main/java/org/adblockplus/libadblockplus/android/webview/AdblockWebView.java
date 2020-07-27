@@ -122,7 +122,7 @@ public class AdblockWebView extends WebView
   private static final String RESPONSE_CHARSET_NAME = "UTF-8";
   private static final String RESPONSE_MIME_TYPE = "text/plain";
 
-  private RegexContentTypeDetector contentTypeDetector = new RegexContentTypeDetector();
+  private UrlFileExtensionTypeDetector contentTypeDetector = new UrlFileExtensionTypeDetector();
   private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
   private Integer loadError;
   private WebChromeClient extWebChromeClient;

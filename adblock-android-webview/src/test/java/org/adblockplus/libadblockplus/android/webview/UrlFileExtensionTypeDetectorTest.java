@@ -26,9 +26,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-public class RegexContentTypeDetectorTest
+public class UrlFileExtensionTypeDetectorTest
 {
-  private final RegexContentTypeDetector detector = new RegexContentTypeDetector();
+  private final UrlFileExtensionTypeDetector detector = new UrlFileExtensionTypeDetector();
 
   private void assertUrlMatchCase(final FilterEngine.ContentType expectedContentType,
                                   final String extension)
@@ -38,10 +38,19 @@ public class RegexContentTypeDetectorTest
       "http://domain.com/file.{0}",
       "http://www.domain.com/file.{0}",
       "https://domain.com/file.{0}",
-      "https://www.domain.com/file.{0}",
+      "https://domain.com:4000/file.{0}",
+      "https://www.domain.com/file.{0}#fragment",
       "https://www.domain.com/file.{0}?",
-      "https://www.domain.com/file.{0}?name=value"
+      "https://www.domain.com/file.{0}?name=value",
+      "https://www.domain.com/file.{0}?name.asd=value.asd",
+      "https://www.domain.com/file.{0}?name=value#fragment",
+      "https://www.domain.com/file.{0}?name=value&something=else",
+      "https://www.domain.com/file.{0}?name=value;something=else#fragment",
+      "www.domain.com/file.{0}?name=value;something=else#fragment",
+      "http://username:password@domain.com/path/like/file.{0}?name=value;something=else#fragment",
+      "http://username:password@domain.com/file.random.{0}?name=value;something=else#fragment",
     };
+
     for (final String template : templates)
     {
       final String url = MessageFormat.format(template, extension);
@@ -74,12 +83,12 @@ public class RegexContentTypeDetectorTest
   public void testImage()
   {
     final FilterEngine.ContentType expectedContentType = FilterEngine.ContentType.IMAGE;
-    assertUrl(expectedContentType, "png");
-    assertUrl(expectedContentType, "gif");
-    assertUrl(expectedContentType, "jpg");
-    assertUrl(expectedContentType, "jpeg");
-    assertUrl(expectedContentType, "bmp");
-    assertUrl(expectedContentType, "ico");
+    final String[] imageExtensions = { "gif", "png", "jpg", "jpe", "jpeg", "bmp",
+      "apng", "cur", "jfif", "ico", "pjpeg", "pjp", "svg", "tif", "tiff", "webp" };
+    for (final String extension : imageExtensions)
+    {
+      assertUrl(expectedContentType, extension);
+    }
   }
 
   @Test
@@ -100,6 +109,23 @@ public class RegexContentTypeDetectorTest
   }
 
   @Test
+  public void testMedia()
+  {
+    final FilterEngine.ContentType expectedContentType = FilterEngine.ContentType.MEDIA;
+    final String[] mediaExtensions = { "webm", "mkv", "flv", "vob", "ogv", "drc", "mng", "avi",
+      "gifv", "qt", "wmv", "yuv", "rm", "rmvb", "asf", "amv", "mp4", "m4p", "mp2", "mpe", "mov",
+      "mpv", "mpg", "mpeg", "m2v", "m4v", "svi", "3gp", "3g2", "mxf", "roq", "nsv", "8svx",
+      "aa", "aac", "aax", "act", "aiff", "alac", "amr", "ape", "au", "awb", "cda", "dct",
+      "dss", "dvf", "flac", "gsm", "iklax", "ivs", "m4a", "m4b", "mmf", "mogg",
+      "mp3", "mpc", "msv", "nmf", "oga", "ogg", "opus", "ra", "raw", "rf64", "sln", "tta",
+      "voc", "vox", "wav", "wma", "wv" };
+    for (final String extension : mediaExtensions)
+    {
+      assertUrl(expectedContentType, extension);
+    }
+  }
+
+  @Test
   public void testInvalidUrl()
   {
     assertNull(detector.detect("some_invalid_url/file.unknown"));
@@ -109,5 +135,12 @@ public class RegexContentTypeDetectorTest
   public void testUnknownContentType()
   {
     assertNull(detector.detect("http://www.domain.com/file.unknown"));
+    assertNull(detector.detect("http://www.domain.com"));
+    assertNull(detector.detect("http://www.domain.com?imasd=1293&asasd=123"));
+    assertNull(detector.detect("http://www.gif.com?imasd=1293&asasd=123"));
+    assertNull(detector.detect("http://www.domain.com/file.gifrandomwords?imasd=1293&asasd=123"));
+    assertNull(detector.detect("http://username:password@domain.com/file.gifrandomwords?imasd=1293&asasd=123"));
+    assertNull(detector.detect("http://username:password@domain.com/path/like/file.gifrandomwords?imasd=1293&asasd=123"));
+    assertNull(detector.detect(null));
   }
 }
