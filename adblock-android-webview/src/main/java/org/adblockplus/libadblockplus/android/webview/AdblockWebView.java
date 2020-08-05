@@ -84,6 +84,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static org.adblockplus.libadblockplus.HttpClient.STATUS_CODE_OK;
 import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
 import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
+import static org.adblockplus.libadblockplus.android.webview.AdblockWebView.OptionalBoolean.from;
 
 import timber.log.Timber;
 
@@ -133,7 +134,8 @@ public class AdblockWebView extends WebView
   private String injectJs;
   private String elemhideBlockedJs;
   private CountDownLatch elemHideLatch;
-  private AtomicBoolean adblockEnabled;
+  private final AtomicReference<OptionalBoolean> adblockEnabled =
+      new AtomicReference<>(OptionalBoolean.UNDEFINED);
   private String elemHideSelectorsString;
   private String elemHideEmuSelectorsString;
   private Object elemHideThreadLockObject = new Object();
@@ -143,6 +145,39 @@ public class AdblockWebView extends WebView
   private AtomicBoolean redirectInProgress = new AtomicBoolean(false);
   private AtomicBoolean acceptCookie = new AtomicBoolean(true);
   private AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
+
+  /**
+   * Optional boolean value.
+   * Puts 2 dimensions (having value/no value + true/false) into 1 dimension
+   * to achieve atomic comparisons and null-safety.
+   */
+  public enum OptionalBoolean
+  {
+    /**
+     * No value (equal to "null")
+     */
+    UNDEFINED,
+
+    /**
+     * Having a value and it's True
+     */
+    TRUE,
+
+    /**
+     * Having a value and it's False
+     */
+    FALSE;
+
+    /**
+     * Convenience method to get enum value from boolean value
+     * @param value boolean value
+     * @return enum value
+     */
+    public static OptionalBoolean from(final boolean value)
+    {
+      return (value ? TRUE : FALSE);
+    }
+  }
 
   /**
    * Listener for ad blocking related events.
@@ -272,14 +307,11 @@ public class AdblockWebView extends WebView
     @Override
     public void onEnableStateChanged(final boolean enabled)
     {
-      if (adblockEnabled == null)
+      final OptionalBoolean newValue = from(enabled);
+      final OptionalBoolean oldValue = adblockEnabled.getAndSet(newValue);
+      if (oldValue != OptionalBoolean.UNDEFINED && oldValue != newValue)
       {
-        return;
-      }
-      boolean oldValue = adblockEnabled.getAndSet(enabled);
-      if (oldValue != enabled)
-      {
-        Timber.d("Filter Engine status changed, enable status is %s", adblockEnabled.get());
+        Timber.d("Filter Engine status changed, enable status is %s", newValue);
         AdblockWebView.this.post(new Runnable()
         {
           @Override
@@ -296,7 +328,7 @@ public class AdblockWebView extends WebView
     @Override
     public void onAdblockEngineCreated(final AdblockEngine engine)
     {
-      adblockEnabled = new AtomicBoolean(engine.isEnabled());
+      adblockEnabled.set(from(engine.isEnabled()));
       Timber.d("Filter Engine created, enable status is %s", adblockEnabled.get());
       engine.addSettingsChangedListener(engineSettingsChangedCb);
     }
@@ -306,7 +338,7 @@ public class AdblockWebView extends WebView
     @Override
     public void onAdblockEngineDisposed()
     {
-      adblockEnabled = null;
+      adblockEnabled.set(OptionalBoolean.UNDEFINED);
     }
   };
 
@@ -431,7 +463,7 @@ public class AdblockWebView extends WebView
           getProvider().retain(true); // asynchronously
           if (locked && getProvider().getEngine() != null)
           {
-            adblockEnabled = new AtomicBoolean(getProvider().getEngine().isEnabled());
+            adblockEnabled.set(from(getProvider().getEngine().isEnabled()));
             Timber.d("Filter Engine already created, enable status is %s", adblockEnabled);
             getProvider().getEngine().addSettingsChangedListener(engineSettingsChangedCb);
           }
@@ -841,7 +873,7 @@ public class AdblockWebView extends WebView
 
   private void tryInjectJs()
   {
-    if (adblockEnabled == null || !adblockEnabled.get())
+    if (adblockEnabled.get() != OptionalBoolean.TRUE)
     {
       return;
     }
@@ -1268,7 +1300,7 @@ public class AdblockWebView extends WebView
           return AbpShouldBlockResult.NOT_ENABLED;
         }
 
-        if (adblockEnabled == null)
+        if (adblockEnabled.get() == OptionalBoolean.UNDEFINED)
         {
           Timber.e("No adblockEnabled value");
           return AbpShouldBlockResult.NOT_ENABLED;
@@ -1277,8 +1309,9 @@ public class AdblockWebView extends WebView
         {
           // check the real enable status and update adblockEnabled flag which is used
           // later on to check if we should execute element hiding JS
-          adblockEnabled.set(engine.isEnabled());
-          if (!adblockEnabled.get())
+          final OptionalBoolean newValue = from(engine.isEnabled());
+          adblockEnabled.set(newValue);
+          if (newValue == OptionalBoolean.FALSE)
           {
             Timber.d("adblockEnabled = false");
             return AbpShouldBlockResult.NOT_ENABLED;
