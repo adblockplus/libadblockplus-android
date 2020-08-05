@@ -110,7 +110,7 @@ static void JNICALL JniSetUpFilterEngine(JNIEnv* env, jclass clazz, jlong ptr, j
 {
   try
   {
-    AdblockPlus::FilterEngine::CreationParameters creationParameters;
+    AdblockPlus::FilterEngineFactory::CreationParameters creationParameters;
     if (jIsSubscriptionDownloadAllowedCallback)
     {
       auto callback = std::make_shared<JniIsAllowedConnectionTypeCallback>(env, jIsSubscriptionDownloadAllowedCallback);
