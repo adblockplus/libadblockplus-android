@@ -31,6 +31,8 @@ import org.adblockplus.libadblockplus.android.AdblockEngine
 import org.adblockplus.libadblockplus.android.Utils
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView
+import org.adblockplus.libadblockplus.android.webview.AdblockWebView.EventsListener.BlockedResourceInfo
+import org.adblockplus.libadblockplus.android.webview.AdblockWebView.EventsListener.WhitelistedResourceInfo
 import org.adblockplus.libadblockplus.android.webview.WebViewActivity
 import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit
 import org.adblockplus.libadblockplus.android.webview.autoDispose
@@ -58,8 +60,8 @@ abstract class BaseAdblockWebViewTest {
         const val greenImage = "green.$png"
         const val redImage = "red.$png"
 
-        protected val instrumentation = InstrumentationRegistry.getInstrumentation()
-        protected val context = instrumentation.targetContext
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
 
         @BeforeClass
         @JvmStatic
@@ -114,15 +116,42 @@ abstract class BaseAdblockWebViewTest {
         Timber.d("tearDown() finished")
     }
 
-    protected fun load(filterRules: List<String>, content: String) {
+    protected fun load(filterRules: List<String>, content: String, clearSubscriptions: Boolean = true):
+        Pair<List<BlockedResourceInfo>, List<WhitelistedResourceInfo>> {
         waitForDefaultSubscriptions()
-        clearSubscriptions()
+        if (clearSubscriptions) {
+            clearSubscriptions()
+        }
         addFilterRules(filterRules)
         initHttpServer(content)
+
+        val blockedResources = mutableListOf<BlockedResourceInfo>()
+        val whitelistedResources = mutableListOf<WhitelistedResourceInfo>()
+        subscribeToAdblockWebViewEvents(blockedResources, whitelistedResources)
 
         Timber.d("Start loading...")
         testSuit.loadUrlAndWait("${wireMockRule.baseUrl()}/$indexHtml")
         Timber.d("Loaded")
+
+        return Pair(blockedResources, whitelistedResources)
+    }
+
+    private fun subscribeToAdblockWebViewEvents(
+        blockedResources: MutableList<BlockedResourceInfo>,
+        whitelistedResources: MutableList<WhitelistedResourceInfo>) {
+        testSuit.webView.setEventsListener(object : AdblockWebView.EventsListener {
+            override fun onNavigation() {
+                // nothing
+            }
+
+            override fun onResourceLoadingBlocked(info: BlockedResourceInfo) {
+                blockedResources.add(info)
+            }
+
+            override fun onResourceLoadingWhitelisted(info: WhitelistedResourceInfo) {
+                whitelistedResources.add(info)
+            }
+        })
     }
 
     private fun initHttpServer(content: String) {

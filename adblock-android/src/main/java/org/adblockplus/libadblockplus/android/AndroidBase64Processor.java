@@ -27,6 +27,10 @@ import org.adblockplus.libadblockplus.util.Base64Processor;
  */
 public class AndroidBase64Processor implements Base64Processor
 {
+  // Usually it's more convenient to work with single-line strings,
+  // also it's the default behaviour on JDK.
+  private static final int DEFAULT_FLAGS = Base64.DEFAULT | Base64.NO_WRAP;
+
   @Override
   public byte[] decode(byte[] encodedBytes) throws Base64Exception
   {
@@ -45,7 +49,7 @@ public class AndroidBase64Processor implements Base64Processor
   {
     try
     {
-      return Base64.encode(rawBytes, Base64.DEFAULT);
+      return Base64.encode(rawBytes, DEFAULT_FLAGS);
     }
     catch (Throwable cause)
     {
@@ -58,7 +62,7 @@ public class AndroidBase64Processor implements Base64Processor
   {
     try
     {
-      return Base64.encodeToString(rawBytes, Base64.DEFAULT);
+      return Base64.encodeToString(rawBytes, DEFAULT_FLAGS);
     }
     catch (Throwable cause)
     {

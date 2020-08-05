@@ -18,10 +18,19 @@
 package org.adblockplus.libadblockplus.android.webview.test
 
 import androidx.test.espresso.web.sugar.Web.onWebView
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.any
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import org.adblockplus.libadblockplus.HttpClient
+import org.adblockplus.libadblockplus.android.AndroidHttpClient
+import org.adblockplus.libadblockplus.android.webview.SiteKeyHelper
 import org.adblockplus.libadblockplus.android.webview.elementIsElemhidden
 import org.adblockplus.libadblockplus.android.webview.elementIsNotElemhidden
 import org.adblockplus.libadblockplus.android.webview.imageIsBlocked
 import org.adblockplus.libadblockplus.android.webview.imageIsNotBlocked
+import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl
+import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class AdblockWebViewTest : BaseAdblockWebViewTest() {
@@ -68,5 +77,134 @@ class AdblockWebViewTest : BaseAdblockWebViewTest() {
             .withNoTimeout() // it's already loaded
             .check(elementIsElemhidden(blockImageId))  // red image IS elemhidden (because blocked)
             .check(elementIsNotElemhidden(notBlockImageId)) // green image is NOT elemhidden
+    }
+
+    @Test
+    fun testWhitelistedSubframeResourceIsWhitelistedWithPath() {
+        val blockingRule = greenImage
+        val subFrameHtml = "subframe.html"
+
+        // whitelist with path
+        val whitelistingRule = "@@$subFrameHtml\$subdocument,document"
+
+        wireMockRule
+            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                .willReturn(aResponse()
+                    .withStatus(HttpClient.STATUS_CODE_OK)
+                    .withHeader("Content-Type", "text/html")
+                    .withBody(
+                        """
+                        |<html>
+                        |<body>
+                        |  <img src="$greenImage"/>
+                        |</body>
+                        |</html>
+                        |""".trimMargin())))
+
+        val (blockedResources, whitelistedResources) = load(
+            listOf(blockingRule, whitelistingRule),
+            """
+            |<html>
+            |<body>
+            |  <img id="$blockImageId" src="/$greenImage"/>
+            |  <iframe src="$subFrameHtml"/>
+            |</body>
+            |</html>
+            |""".trimMargin()
+            , false) // workaround for DP-1179
+
+        // main frame resource is blocked
+        assertNotNull(blockedResources.find {
+            it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
+        })
+
+        // subframe itself is whitelisted
+        assertNotNull(whitelistedResources.find {
+            it.requestUrl == "${wireMockRule.baseUrl()}/$subFrameHtml" && it.parentFrameUrls.size == 1
+        })
+
+        // subframe resource is whitelisted
+        assertNotNull(whitelistedResources.find {
+            it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
+        })
+
+        onWebView()
+            .withNoTimeout() // it's already loaded
+            .check(imageIsBlocked(blockImageId)) // green image in main frame IS blocked
+            // can't access subframe with JS so there is no [known at the moment] way
+            // to assert subframe resource visibility
+    }
+
+    @Test
+    fun testWhitelistedSubframeResourceIsWhitelistedWithSitekey() {
+        val blockingRule = greenImage
+        val subFrameHtml = "subframe.html"
+
+        val siteKeyHelper = SiteKeyHelper()
+        val subFrameUrl = "${wireMockRule.baseUrl()}/$subFrameHtml"
+        val userAgent = "someUserAgent"
+        val pair = siteKeyHelper.buildXAdblockKeyValue(subFrameUrl, userAgent)
+        val publicKey = PublicKeyHolderImpl.stripPadding(pair.first) // stripping '==' at the end
+        val sitekey = publicKey
+        val signature = pair.second
+
+        instrumentation.runOnMainSync {
+            testSuit.webView.settings.userAgentString = userAgent
+            testSuit.webView.siteKeysConfiguration = SiteKeysConfiguration(
+                siteKeyHelper.signatureVerifier,
+                siteKeyHelper.publicKeyHolder,
+                AndroidHttpClient(),
+                siteKeyHelper.siteKeyVerifier)
+        }
+
+        // whitelist with sitekey
+        val whitelistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+
+        wireMockRule
+            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                .willReturn(aResponse()
+                    .withStatus(HttpClient.STATUS_CODE_OK)
+                    .withHeader("Content-Type", "text/html")
+                    .withHeader("X-Adblock-key", signature) // sitekey
+                    .withBody(
+                        """
+                        |<html>
+                        |<body>
+                        |  <img src="$greenImage"/>
+                        |</body>
+                        |</html>
+                        |""".trimMargin())))
+
+        val (blockedResources, whitelistedResources) = load(
+            listOf(blockingRule, whitelistingRule),
+            """
+            |<html>
+            |<body>
+            |  <img id="$blockImageId" src="/$greenImage"/>
+            |  <iframe src="$subFrameHtml"/>
+            |</body>
+            |</html>
+            |""".trimMargin()
+            , false) // workaround for DP-1179
+
+        // main frame resource is blocked
+        assertNotNull(blockedResources.find {
+            it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
+        })
+
+        // subframe itself is not whitelisted with sitekey:
+        // the decision (allow/block) is made before the resource is loaded
+        // and sitekey value is passed in resource response headers/html body
+
+        // subframe resource is whitelisted
+        assertNotNull(whitelistedResources.find {
+            it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
+        })
+
+        onWebView()
+            .withNoTimeout() // it's already loaded
+            .check(imageIsBlocked(blockImageId)) // green image in main frame IS blocked
+            // can't access subframe with JS so there is no [known at the moment] way
+            // to assert subframe resource visibility
     }
 }
