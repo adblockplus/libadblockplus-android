@@ -10,7 +10,8 @@ stages:
 build_dependencies:
   stage: build_dependencies
   cache:
-    key: libadblockplus-android
+    key: $CI_COMMIT_REF_NAME
+    policy: push
     paths:
       - libadblockplus/
       - buildtools/
