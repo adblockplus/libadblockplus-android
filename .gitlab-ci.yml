@@ -34,7 +34,7 @@ build_dependencies:
 # which jobs can explicitly include to have build deps
 .cache_readonly: &cache_readonly
   cache:
-    key: libadblockplus-android
+    key: $CI_COMMIT_REF_NAME
     paths:
       - libadblockplus/
       - buildtools/
