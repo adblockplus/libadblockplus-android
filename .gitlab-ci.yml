@@ -18,6 +18,7 @@ build_dependencies:
   variables:
     WGET_FLAGS: "-q"
   script:
+    - rm -rf libadblockplus/third_party/
     - ./ensure_dependencies.py
     - cd ./libadblockplus
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8

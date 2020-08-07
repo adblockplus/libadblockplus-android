@@ -220,7 +220,7 @@ jobject NewJniNotification(JNIEnv* env, AdblockPlus::Notification&& notification
     env, std::move(notification), notificationClass->Get(), notificationCtor);
 }
 
-jobject NewJniEmulationSelector(JNIEnv* env, const AdblockPlus::FilterEngine::EmulationSelector& emulationSelector)
+jobject NewJniEmulationSelector(JNIEnv* env, const AdblockPlus::IFilterEngine::EmulationSelector& emulationSelector)
 {
   return env->NewObject(emulationSelectorClass->Get(), emulationSelectorCtor,
     JniStdStringToJava(env, emulationSelector.selector), JniStdStringToJava(env, emulationSelector.text));
