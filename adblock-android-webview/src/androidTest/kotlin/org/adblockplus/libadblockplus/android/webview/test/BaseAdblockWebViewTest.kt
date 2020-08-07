@@ -116,12 +116,10 @@ abstract class BaseAdblockWebViewTest {
         Timber.d("tearDown() finished")
     }
 
-    protected fun load(filterRules: List<String>, content: String, clearSubscriptions: Boolean = true):
+    protected fun load(filterRules: List<String>, content: String):
         Pair<List<BlockedResourceInfo>, List<WhitelistedResourceInfo>> {
         waitForDefaultSubscriptions()
-        if (clearSubscriptions) {
-            clearSubscriptions()
-        }
+        clearSubscriptions()
         addFilterRules(filterRules)
         initHttpServer(content)
 

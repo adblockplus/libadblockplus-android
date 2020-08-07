@@ -301,7 +301,8 @@ public class AdblockWebView extends WebView
   }
 
   private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<>();
-  private SiteKeysConfiguration siteKeysConfiguration;
+  private final AtomicReference<SiteKeysConfiguration> siteKeysConfiguration =
+      new AtomicReference<>();
   private AdblockEngine.SettingsChangedListener engineSettingsChangedCb = new AdblockEngine.SettingsChangedListener()
   {
     @Override
@@ -372,12 +373,12 @@ public class AdblockWebView extends WebView
 
   public SiteKeysConfiguration getSiteKeysConfiguration()
   {
-    return siteKeysConfiguration;
+    return siteKeysConfiguration.get();
   }
 
   public void setSiteKeysConfiguration(final SiteKeysConfiguration siteKeysConfiguration)
   {
-    this.siteKeysConfiguration = siteKeysConfiguration;
+    this.siteKeysConfiguration.set(siteKeysConfiguration);
   }
 
   /**
@@ -1357,6 +1358,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
+          final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
           final String siteKey = (siteKeysConfiguration != null
             ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
               .getAny(referrerChain, ""))
@@ -1462,7 +1464,18 @@ public class AdblockWebView extends WebView
 
       // we rely on calling `fetchUrlAndCheckSiteKey` later in `shouldInterceptRequest`, now we
       // just reply that it's fine to load the resource
-      if (isAcceptableAdsEnabled && ((canContainSitekey && !isWhitelisted) || isMainFrame))
+      final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
+      if ((
+            isAcceptableAdsEnabled
+            ||
+            (siteKeysConfiguration != null && siteKeysConfiguration.getForceChecks())
+          )
+          &&
+          (
+            isMainFrame
+            ||
+            (canContainSitekey && !isWhitelisted)
+          ))
       {
         // if url is a main frame (whitelisted by default) or can contain by design a site key header
         // (it content type is SUBDOCUMENT or OTHER) and it is not yet whitelisted then we need to
@@ -1494,7 +1507,7 @@ public class AdblockWebView extends WebView
                                                         final Map<String, String> requestHeadersMap,
                                                         final String requestMethod)
     {
-      if (siteKeysConfiguration == null ||
+      if (getSiteKeysConfiguration() == null ||
           !requestMethod.equalsIgnoreCase(HttpClient.REQUEST_METHOD_GET))
       {
         // for now we handle site key only for GET requests
@@ -1542,7 +1555,7 @@ public class AdblockWebView extends WebView
         }
 
         final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect, true);
-        siteKeysConfiguration.getHttpClient().request(request, callback);
+        getSiteKeysConfiguration().getHttpClient().request(request, callback);
       }
       catch (final AdblockPlusException e)
       {
@@ -1607,10 +1620,8 @@ public class AdblockWebView extends WebView
 
       final Map<String, String> responseHeadersMap = convertHeaderEntriesToMap(responseHeaders);
 
-      verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
-              url,
-              requestHeadersMap,
-              responseHeadersMap);
+      verifySiteKeysInHeaders(getSiteKeysConfiguration().getSiteKeyVerifier(),
+          url, requestHeadersMap, responseHeadersMap);
 
       if (response.getInputStream() != null)
       {
@@ -1809,7 +1820,7 @@ public class AdblockWebView extends WebView
           if (!AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK.equals(abpBlockResult) )
           {
             Timber.d("Verifying site keys with external shouldInterceptRequest response");
-            verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
+            verifySiteKeysInHeaders(getSiteKeysConfiguration().getSiteKeyVerifier(),
                     url,
                     requestHeaders,
                     externalResponse.getResponseHeaders());
@@ -2036,6 +2047,7 @@ public class AdblockWebView extends WebView
             Timber.d("Requesting elemhide selectors from AdblockEngine for %s in %s",
                     navigationUrlLocalRef, this);
 
+            final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
             final String siteKey = (siteKeysConfiguration != null
               ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
                 .getAny(referrerChain, ""))
