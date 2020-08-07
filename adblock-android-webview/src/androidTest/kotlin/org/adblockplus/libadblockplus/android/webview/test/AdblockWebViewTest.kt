@@ -110,8 +110,7 @@ class AdblockWebViewTest : BaseAdblockWebViewTest() {
             |  <iframe src="$subFrameHtml"/>
             |</body>
             |</html>
-            |""".trimMargin()
-            , false) // workaround for DP-1179
+            |""".trimMargin())
 
         // main frame resource is blocked
         assertNotNull(blockedResources.find {
@@ -155,6 +154,7 @@ class AdblockWebViewTest : BaseAdblockWebViewTest() {
                 siteKeyHelper.publicKeyHolder,
                 AndroidHttpClient(),
                 siteKeyHelper.siteKeyVerifier)
+            testSuit.webView.siteKeysConfiguration.forceChecks = true
         }
 
         // whitelist with sitekey
@@ -184,8 +184,7 @@ class AdblockWebViewTest : BaseAdblockWebViewTest() {
             |  <iframe src="$subFrameHtml"/>
             |</body>
             |</html>
-            |""".trimMargin()
-            , false) // workaround for DP-1179
+            |""".trimMargin())
 
         // main frame resource is blocked
         assertNotNull(blockedResources.find {
