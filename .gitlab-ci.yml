@@ -135,6 +135,25 @@ testobject_tests:
     reports:
       junit: philll-adblockwebview-app-*.xml
 
+memory_benchmark:
+  stage: device_tests
+  image: ubuntu:18.04
+  before_script:
+    - apt-get update
+    - apt-get -qy install adb
+    # this is libadblockplus-android dedicated emulator instance on CI, more info at https://jira.eyeo.com/browse/DP-1322
+    - adb connect 172.17.0.1:4444
+  script:
+    - chmod +r ./adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
+    - chmod +x ./tools/run_benchmark.sh
+    - ./tools/run_benchmark.sh
+
+  artifacts:
+      paths:
+        - adblock-android-webview/build/outputs/memory_benchmark/
+      reports:
+        metrics: metrics.txt
+
 .publish_template: &publish_template
   stage: publish
   <<: *cache_readonly

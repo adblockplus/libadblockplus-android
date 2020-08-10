@@ -72,15 +72,15 @@ public class Notification extends JsValue
     return this.getTitle() + " - " + this.getMessageString();
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native String getMessageString(long ptr);
+  private static native String getMessageString(long ptr);
 
-  private final static native String getTitle(long ptr);
+  private static native String getTitle(long ptr);
 
-  private final static native Type getType(long ptr);
+  private static native Type getType(long ptr);
 
-  private final static native void markAsShown(long ptr);
+  private static native void markAsShown(long ptr);
 
-  private final static native List<String> getLinks(long ptr);
+  private static native List<String> getLinks(long ptr);
 }

@@ -42,8 +42,8 @@ import static org.junit.Assert.fail;
 
 public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
 {
-  protected final static int UPDATE_SUBSCRIPTIONS_WAIT_DELAY_MS = 5 * 1000;
-  protected final static int UPDATE_SUBSCRIPTIONS_WAIT_CHUNKS = 50;
+  protected static final int UPDATE_SUBSCRIPTIONS_WAIT_DELAY_MS = 5 * 1000;
+  protected static final int UPDATE_SUBSCRIPTIONS_WAIT_CHUNKS = 50;
 
   private static final class TestStorage implements AndroidHttpClientResourceWrapper.Storage
   {

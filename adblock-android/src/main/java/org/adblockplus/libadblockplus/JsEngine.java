@@ -91,21 +91,21 @@ public final class JsEngine
     return newValue(this.ptr, value);
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native void setEventCallback(long ptr, String eventName, long callback);
+  private static native void setEventCallback(long ptr, String eventName, long callback);
 
-  private final static native void removeEventCallback(long ptr, String eventName);
+  private static native void removeEventCallback(long ptr, String eventName);
 
-  private final static native JsValue evaluate(long ptr, String source, String filename);
+  private static native JsValue evaluate(long ptr, String source, String filename);
 
-  private final static native void triggerEvent(long ptr, String eventName, long[] args);
+  private static native void triggerEvent(long ptr, String eventName, long[] args);
 
-  private final static native JsValue newValue(long ptr, long value);
+  private static native JsValue newValue(long ptr, long value);
 
-  private final static native JsValue newValue(long ptr, boolean value);
+  private static native JsValue newValue(long ptr, boolean value);
 
-  private final static native JsValue newValue(long ptr, String value);
+  private static native JsValue newValue(long ptr, String value);
 
-  private final static native void setGlobalProperty(long ptr, String property, long valuePtr);
+  private static native void setGlobalProperty(long ptr, String property, long valuePtr);
 }

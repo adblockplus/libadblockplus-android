@@ -50,12 +50,15 @@ public class TabFragment extends Fragment
 
   private static final String TITLE = "title";
   private static final String CUSTOM_INTERCEPT = "custom_intercept";
+  private static final String NAVIGATE_TO_URL = "navigate_to_url";
   private static final String SAVED_TAB_BUNDLE = "saved_tab_bundle";
   private static final String SAVED_WEBVIEW_STATE = "saved_webview_state";
   private static final String SAVED_URL_STATE = "saved_URL_state";
 
   private String title;
   private boolean useCustomIntercept;
+  private String navigateTo;
+
   private ProgressBar progress;
   private EditText url;
   private Button ok;
@@ -67,16 +70,20 @@ public class TabFragment extends Fragment
 
   /**
    * Factory method
-   * @param title tab title
+   *
+   * @param title              tab title
    * @param useCustomIntercept (used for QA) will add #TabInterceptingWebViewClient
    *                           instead #TabWebViewClient to the WebView
    *                           #TabInterceptingWebViewClient uses custom shouldInterceptRequest
    * @return fragment instance
    */
-  public static TabFragment newInstance(final String title, final boolean useCustomIntercept)
+  public static TabFragment newInstance(final String title,
+                                        final String navigateToUrl,
+                                        final boolean useCustomIntercept)
   {
     final Bundle arguments = new Bundle();
     arguments.putString(TITLE, title);
+    arguments.putString(NAVIGATE_TO_URL, navigateToUrl);
     arguments.putBoolean(CUSTOM_INTERCEPT, useCustomIntercept);
     final TabFragment newFragment = new TabFragment();
     newFragment.setArguments(arguments);
@@ -90,6 +97,7 @@ public class TabFragment extends Fragment
     assert getArguments() != null;
     this.title = getArguments().getString(TITLE);
     this.useCustomIntercept = getArguments().getBoolean(CUSTOM_INTERCEPT, false);
+    this.navigateTo = getArguments().getString(NAVIGATE_TO_URL, null);
   }
 
   @Override
@@ -172,14 +180,14 @@ public class TabFragment extends Fragment
   {
     @Nullable
     @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
+    public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request)
     {
       request.getRequestHeaders().put("X-Modified-Intercept", "true");
       return super.shouldInterceptRequest(view, request);
     }
   }
 
-  public boolean saveTabState(final Context context, int id)
+  public boolean saveTabState(final Context context, final int id)
   {
     if (url.getText() == null || url.getText().toString().isEmpty())
     {
@@ -205,31 +213,30 @@ public class TabFragment extends Fragment
     return true;
   }
 
-  public static void deleteTabState(final Context context, int id)
+  public static void deleteTabState(final Context context, final int id)
   {
     Timber.d("deleteTabState() deletes tab %d", id);
     StorageUtils.deleteBundle(context, SAVED_TAB_BUNDLE + id);
   }
 
-  public void restoreTabState(final Context context, int id)
+  public void restoreTabState(final Context context, final int id)
   {
     final Bundle savedState = StorageUtils.readBundle(context, SAVED_TAB_BUNDLE + id);
     if (savedState == null)
     {
-      Timber.d( "restoreTabState() savedState == null, exiting");
+      Timber.d("restoreTabState() savedState == null, exiting");
       return;
     }
     if (savedState.getBundle(SAVED_WEBVIEW_STATE) != null && savedState.getString(SAVED_URL_STATE) != null)
     {
-      Timber.d( "restoreTabState() restores tab %d", id);
+      Timber.d("restoreTabState() restores tab %d", id);
       webView.restoreState(savedState.getBundle(SAVED_WEBVIEW_STATE));
       final String urlStr = savedState.getString(SAVED_URL_STATE);
       url.setText(urlStr);
-      Timber.d( "restoreTabState() restored tab url %s", urlStr);
-    }
-    else
+      Timber.d("restoreTabState() restored tab url %s", urlStr);
+    } else
     {
-      Timber.d( "restoreTabState() fails to restore tab %d", id);
+      Timber.d("restoreTabState() fails to restore tab %d", id);
     }
   }
 
@@ -249,13 +256,21 @@ public class TabFragment extends Fragment
     }
 
     @Override
-    public void onPermissionRequest(PermissionRequest request)
+    public void onPermissionRequest(final PermissionRequest request)
     {
       // A very rough example to enable playing DRM video content
       final String[] perms = {PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID};
       request.grant(perms);
     }
   };
+
+  void navigate(final String url)
+  {
+    if (webView != null && url != null)
+    {
+      webView.loadUrl(url);
+    }
+  }
 
   private void initControls()
   {
@@ -351,6 +366,8 @@ public class TabFragment extends Fragment
     {
       webView.setSiteKeysConfiguration(AdblockHelper.get().getSiteKeysConfiguration());
     }
+
+    this.navigate(navigateTo);
   }
 
   private void loadPrev()

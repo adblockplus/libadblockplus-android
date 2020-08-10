@@ -87,23 +87,23 @@ public final class Subscription extends JsValue
     return operatorEquals(this.ptr, ((Subscription)o).ptr);
   }
 
-  private final static native void registerNatives();
+  private static native void registerNatives();
 
-  private final static native boolean isDisabled(long ptr);
+  private static native boolean isDisabled(long ptr);
 
-  private final static native void setDisabled(long ptr, boolean disabled);
+  private static native void setDisabled(long ptr, boolean disabled);
 
-  private final static native boolean isListed(long ptr);
+  private static native boolean isListed(long ptr);
 
-  private final static native void addToList(long ptr);
+  private static native void addToList(long ptr);
 
-  private final static native void removeFromList(long ptr);
+  private static native void removeFromList(long ptr);
 
-  private final static native void updateFilters(long ptr);
+  private static native void updateFilters(long ptr);
 
-  private final static native boolean isUpdating(long ptr);
+  private static native boolean isUpdating(long ptr);
 
-  private final static native boolean operatorEquals(long ptr, long other);
+  private static native boolean operatorEquals(long ptr, long other);
 
-  private final static native boolean isAcceptableAds(long ptr);
+  private static native boolean isAcceptableAds(long ptr);
 }

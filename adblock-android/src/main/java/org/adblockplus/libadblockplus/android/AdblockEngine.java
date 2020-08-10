@@ -176,10 +176,18 @@ public final class AdblockEngine
   /**
    * Builds Adblock engine
    */
-  public static class Builder
+  public interface Factory {
+    AdblockEngine build();
+  }
+
+  /**
+   * Builds Adblock engine piece-by-pieece
+   */
+  public static class Builder implements Factory
   {
     private Context context;
     private Map<String, Integer> urlToResourceIdMap;
+    private boolean forceUpdatePreloadedSubscriptions = true;
     private AndroidHttpClientResourceWrapper.Storage resourceStorage;
     private HttpClient androidHttpClient;
     private AppInfo appInfo;
@@ -222,6 +230,12 @@ public final class AdblockEngine
       return this;
     }
 
+    public Builder setForceUpdatePreloadedSubscriptions(boolean forceUpdate)
+    {
+      this.forceUpdatePreloadedSubscriptions = forceUpdate;
+      return this;
+    }
+
     public Builder setIsAllowedConnectionCallback(IsAllowedConnectionCallback callback)
     {
       this.isAllowedConnectionCallback = callback;
@@ -258,18 +272,22 @@ public final class AdblockEngine
       {
         AndroidHttpClientResourceWrapper wrapper = new AndroidHttpClientResourceWrapper(
           context, engine.httpClient, urlToResourceIdMap, resourceStorage);
-        wrapper.setListener(new AndroidHttpClientResourceWrapper.Listener()
+
+        if (forceUpdatePreloadedSubscriptions)
         {
-          @Override
-          public void onIntercepted(String url, int resourceId)
+          wrapper.setListener(new AndroidHttpClientResourceWrapper.Listener()
           {
-            Timber.d("Force subscription update for intercepted URL %s", url);
-            if (engine.filterEngine != null)
+            @Override
+            public void onIntercepted(String url, int resourceId)
             {
-              engine.filterEngine.updateFiltersAsync(url);
+              Timber.d("Force subscription update for intercepted URL %s", url);
+              if (engine.filterEngine != null)
+              {
+                engine.filterEngine.updateFiltersAsync(url);
+              }
             }
-          }
-        });
+          });
+        }
 
         engine.httpClient = wrapper;
       }

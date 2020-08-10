@@ -35,11 +35,11 @@ import static org.junit.Assert.assertTrue;
 
 public class HttpClientTest extends BaseFilterEngineTest
 {
-  private final static int RESPONSE_STATUS = 123;
-  private final static String HEADER_KEY = "Foo";
-  private final static String HEADER_VALUE = "Bar";
-  private final static Charset CHARSET = Charset.forName("UTF-8");
-  private final static String RESPONSE = "(responseText)";
+  private static final int RESPONSE_STATUS = 123;
+  private static final String HEADER_KEY = "Foo";
+  private static final String HEADER_VALUE = "Bar";
+  private static final Charset CHARSET = Charset.forName("UTF-8");
+  private static final String RESPONSE = "(responseText)";
 
   private MockHttpClient mockHttpClient = new MockHttpClient();
 

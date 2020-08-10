@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity
   private final List<TabFragment> tabs = new ArrayList<>();
 
   @Override
-  protected void onCreate(Bundle savedInstanceState)
+  protected void onCreate(final Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
@@ -65,17 +66,30 @@ public class MainActivity extends AppCompatActivity
     }
 
     final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
-    boolean restoreChecked = sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false);
+    final boolean restoreChecked = sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false);
     if (!restoreChecked)
     {
-      addTab(false);
+      addTab(false, getIntent().getDataString());
+    }
+    navigateIfUrlIntent(tabs.get(0), getIntent());
+  }
+
+  private static void navigateIfUrlIntent(final TabFragment tabFragment, final Intent intent)
+  {
+    if (Intent.ACTION_VIEW.equals(intent.getAction()))
+    {
+      final Uri uri = intent.getData();
+      if (uri != null)
+      {
+        tabFragment.navigate(uri.toString());
+      }
     }
   }
 
   private void saveTabs()
   {
     final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
-    boolean restoreChecked = sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false);
+    final boolean restoreChecked = sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false);
     int savedTabs = 0;
     if (restoreChecked)
     {
@@ -117,6 +131,12 @@ public class MainActivity extends AppCompatActivity
     }
   }
 
+  @Override
+  protected void onNewIntent(final Intent intent)
+  {
+    navigateIfUrlIntent(tabs.get(0), intent);
+  }
+
   private void initControls()
   {
     addTab.setOnClickListener(new View.OnClickListener()
@@ -124,15 +144,15 @@ public class MainActivity extends AppCompatActivity
       @Override
       public void onClick(final View v)
       {
-        addTab(false);
+        addTab(false, null);
       }
     });
     addTab.setOnLongClickListener(new View.OnLongClickListener()
     {
       @Override
-      public boolean onLongClick(View view)
+      public boolean onLongClick(final View view)
       {
-        addTab(true);
+        addTab(true, null);
         return true;
       }
     });
@@ -140,7 +160,7 @@ public class MainActivity extends AppCompatActivity
     settings.setOnClickListener(new View.OnClickListener()
     {
       @Override
-      public void onClick(View v)
+      public void onClick(final View v)
       {
         navigateSettings();
       }
@@ -152,7 +172,7 @@ public class MainActivity extends AppCompatActivity
     restoreTabsCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
     {
       @Override
-      public void onCheckedChanged(CompoundButton compoundButton, boolean newValue)
+      public void onCheckedChanged(final CompoundButton compoundButton, final boolean newValue)
       {
         final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
         sharedPreferences.edit().putBoolean(SAVED_RESTORE_TABS_CHECK, newValue).apply();
@@ -168,25 +188,27 @@ public class MainActivity extends AppCompatActivity
     });
 
     final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
-    int tabsCount = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0);
+    final int tabsCount = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0);
     for (int i = 0; i < tabsCount; ++i)
     {
       Timber.d("initControls() adds tab %d", i);
-      addTab(false);
+      addTab(false, null);
     }
   }
 
   /**
    * Adds a tab
+   *
    * @param useCustomIntercept (used for QA) will add #TabInterceptingWebViewClient
    *                           instead #TabWebViewClient to the WebView inside the tab
    *                           #TabInterceptingWebViewClient uses custom shouldInterceptRequest
    */
-  private void addTab(boolean useCustomIntercept)
+  private void addTab(final boolean useCustomIntercept, final String navigateToUrl)
   {
-    int newTabsCount = tabs.size() + 1;
+    final int newTabsCount = tabs.size() + 1;
     viewPager.setOffscreenPageLimit(newTabsCount);
     tabs.add(TabFragment.newInstance(getString(R.string.main_tab_title, newTabsCount),
+            navigateToUrl,
             useCustomIntercept));
     viewPager.getAdapter().notifyDataSetChanged();
     tabLayout.getTabAt(tabs.size() - 1).select(); // scroll to the last tab

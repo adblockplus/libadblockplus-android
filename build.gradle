@@ -1,5 +1,6 @@
 buildscript {
   ext.kotlin_version = '1.3.72'
+  ext.espresso_web_version = '3.2.0'
 
   repositories {
     google()
@@ -17,7 +18,7 @@ buildscript {
 ext {
   bintrayUserOrg = 'adblockplus'
   bintrayGroupId = 'org.adblockplus'
-  moduleVersion = '3.24'
+  moduleVersion = '3.25'
   bintrayLicences = ['GPL-3.0']
   bintrayWebsite = 'https://github.com/adblockplus/libadblockplus-android'
   bintrayIssueTracker = 'http://issues.adblockplus.org/'

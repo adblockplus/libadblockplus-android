@@ -58,24 +58,24 @@ public class TestFilterChangeCallback extends FilterChangeCallback
     reset();
   }
 
-  public boolean isCalled()
+  public synchronized boolean isCalled()
   {
     return called;
   }
 
-  public List<Event> getEvents()
+  public synchronized List<Event> getEvents()
   {
-    return events;
+    return new ArrayList(events);
   }
 
-  public void reset()
+  public synchronized void reset()
   {
     this.called = false;
     this.events = new ArrayList<>();
   }
 
   @Override
-  public void filterChangeCallback(final String action, final JsValue jsValue)
+  public synchronized void filterChangeCallback(final String action, final JsValue jsValue)
   {
     this.called = true;
     this.events.add(new Event(action, jsValue));
