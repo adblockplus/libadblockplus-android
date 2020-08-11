@@ -18,29 +18,23 @@
 package org.adblockplus.libadblockplus.android.webview.test
 
 import android.os.SystemClock
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.any
-import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
-import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit.WireMockRule
 import org.adblockplus.libadblockplus.HttpClient
 import org.adblockplus.libadblockplus.android.AdblockEngine
 import org.adblockplus.libadblockplus.android.Utils
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper
-import org.adblockplus.libadblockplus.android.webview.AdblockWebView
+import org.adblockplus.libadblockplus.android.webview.*
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView.EventsListener.BlockedResourceInfo
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView.EventsListener.WhitelistedResourceInfo
-import org.adblockplus.libadblockplus.android.webview.WebViewActivity
-import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit
-import org.adblockplus.libadblockplus.android.webview.autoDispose
-import org.adblockplus.libadblockplus.android.webview.escapeForRegex
+import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -78,6 +72,51 @@ abstract class BaseAdblockWebViewTest {
         }
     }
 
+    /**
+     * Because we start with clearing subscriptions, isAcceptableAdsEnabled will always return false
+     * An extractor from it's side checks if AA enabled, and ignores the request otherwise
+     *
+     * Thus, we have to mock SitekeyExtractor to always respond true to isEnabled request
+     *
+     * @param webView a webview that will be passed to basic constructor
+     * @param extractor an underlying SiteKeyExtractor that will respond to all proxy requests
+     *
+     * !NOTE! SiteKeyExtractor will be converted into an interface soon, so initializing
+     * extra SiteKeyExtractor won't be required
+     */
+    private class AlwaysEnabledSitekeyExtractorDelegate(webView: AdblockWebView,
+                                                        private val extractor: SiteKeyExtractor)
+        : SiteKeyExtractor(webView) {
+
+        override fun notifyLoadingStarted() {
+            extractor.notifyLoadingStarted()
+        }
+
+        override fun obtainAndCheckSiteKey(webView: AdblockWebView?, request: WebResourceRequest?): WebResourceResponse? {
+            return extractor.obtainAndCheckSiteKey(webView, request)
+        }
+
+        override fun isEnabled(): Boolean {
+            return true // always true
+        }
+
+        override fun getSiteKeysConfiguration(): SiteKeysConfiguration {
+            return extractor.siteKeysConfiguration
+        }
+
+        override fun setSiteKeysConfiguration(siteKeysConfiguration: SiteKeysConfiguration?) {
+            extractor.siteKeysConfiguration = siteKeysConfiguration
+        }
+
+        override fun setEnabled(enabled: Boolean) {
+            extractor.isEnabled = true // always true
+        }
+
+        override fun waitForSitekeyCheck(request: WebResourceRequest?) {
+            extractor.waitForSitekeyCheck(request)
+        }
+    }
+
     @get:Rule
     val basePathRule = TemporaryFolder()
 
@@ -104,6 +143,9 @@ abstract class BaseAdblockWebViewTest {
         testSuit = WebViewTestSuit()
         testSuit.webView = activityRule.activity.adblockWebView
         testSuit.setUp()
+        testSuit.webView.siteKeyExtractor =
+                AlwaysEnabledSitekeyExtractorDelegate(testSuit.webView,
+                        testSuit.webView.siteKeyExtractor)
     }
 
     @After
