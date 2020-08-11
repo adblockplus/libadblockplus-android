@@ -17,13 +17,17 @@
 
 package org.adblockplus.libadblockplus.android.webview;
 
+import android.webkit.WebResourceRequest;
+
 import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UrlFileExtensionTypeDetector
+public class UrlFileExtensionTypeDetector implements ContentTypeDetector
 {
   private static final String[] EXTENSIONS_JS    = { "js" };
   private static final String[] EXTENSIONS_CSS   = { "css" };
@@ -64,22 +68,20 @@ public class UrlFileExtensionTypeDetector
     mapExtensions(EXTENSIONS_HTML, FilterEngine.ContentType.SUBDOCUMENT);
     mapExtensions(EXTENSIONS_IMAGE, FilterEngine.ContentType.IMAGE);
     mapExtensions(EXTENSIONS_MEDIA, FilterEngine.ContentType.MEDIA);
-  };
+  }
 
   private static final Pattern RE_FILE_EXTENSION =
     Pattern.compile(".*/.+?(\\.(.+?))+(?:\\?.*)?(?:#.*)?$", Pattern.CASE_INSENSITIVE);
 
-  /**
-   * Detects ContentType for given URL
-   * @param url URL
-   * @return ContentType or `null` if not detected
-   */
-  public FilterEngine.ContentType detect(final String url)
+  // JavaDoc inherited from base interface
+  @Override
+  public FilterEngine.ContentType detect(final WebResourceRequest request)
   {
-    if (url == null)
+    if (request == null || request.getUrl() == null)
     {
       return null;
     }
+    final String url = request.getUrl().toString();
     final Matcher result = RE_FILE_EXTENSION.matcher(url);
     if (result.find() && result.groupCount() == 2)
     {

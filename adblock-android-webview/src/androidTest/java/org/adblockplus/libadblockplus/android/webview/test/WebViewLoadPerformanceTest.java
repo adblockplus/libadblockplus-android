@@ -50,8 +50,8 @@ public class WebViewLoadPerformanceTest
   private static final Context context =
       InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-  private WebViewTestSuit<AdblockWebView> adblockTestSuit = new WebViewTestSuit<>();
-  private WebViewTestSuit<WebView> systemTestSuit = new WebViewTestSuit();
+  private final WebViewTestSuit<AdblockWebView> adblockTestSuit = new WebViewTestSuit<>();
+  private final WebViewTestSuit<WebView> systemTestSuit = new WebViewTestSuit();
 
   @Rule
   public final Timeout globalTimeout = Timeout.seconds(900);

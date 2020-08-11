@@ -6,6 +6,8 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
@@ -16,7 +18,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import androidx.test.platform.app.InstrumentationRegistry;
 import timber.log.Timber;
 
 import static android.webkit.WebSettings.LOAD_NO_CACHE;
@@ -61,11 +62,11 @@ public class WebViewTestSuit<T extends WebView>
     }
   }
 
-  private class WebViewWaitingClient extends  WebViewClient
+  private class WebViewWaitingClient extends WebViewClient
   {
     private String lastPageStartedUrl = "";
     private AtomicReference<Long> startTime = new AtomicReference<>(null);
-    private CountDownLatch countDownLatch;
+    private final CountDownLatch countDownLatch;
 
     public WebViewWaitingClient(final CountDownLatch countDownLatch)
     {
@@ -110,7 +111,7 @@ public class WebViewTestSuit<T extends WebView>
         countDownLatch.countDown();
       }
     }
-  };
+  }
 
   // Clear cookies and cache
   private void clearWebViewsState() throws InterruptedException
@@ -125,7 +126,7 @@ public class WebViewTestSuit<T extends WebView>
         CookieManager.getInstance().removeAllCookies(new ValueCallback<Boolean>()
         {
           @Override
-          public void onReceiveValue(Boolean value)
+          public void onReceiveValue(final Boolean value)
           {
             if (!value)
             {
@@ -152,7 +153,7 @@ public class WebViewTestSuit<T extends WebView>
         webView.loadUrl(url);
       }
     });
-    boolean hasFinished = countDownLatch.await(MAX_PAGE_LOAD_WAIT_TIME_SEC, TimeUnit.SECONDS);
+    final boolean hasFinished = countDownLatch.await(MAX_PAGE_LOAD_WAIT_TIME_SEC, TimeUnit.SECONDS);
     if (!hasFinished)
     {
       webViewClient.resetTimer();

@@ -19,6 +19,22 @@ package org.adblockplus.libadblockplus;
 
 public abstract class HttpClient
 {
+  public static final String HEADER_REFERRER = "Referer";
+  public static final String HEADER_REQUESTED_WITH = "X-Requested-With";
+  public static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
+  public static final String HEADER_REQUESTED_RANGE = "Range";
+  public static final String HEADER_LOCATION = "Location";
+  public static final String HEADER_SET_COOKIE = "Set-Cookie";
+  public static final String HEADER_COOKIE = "Cookie";
+  public static final String HEADER_USER_AGENT = "User-Agent";
+  public static final String HEADER_ACCEPT = "Accept";
+  public static final String HEADER_REFRESH = "Refresh";
+  public static final String HEADER_SEC_FETCH_MODE = "Sec-Fetch-Mode";
+  // use low-case strings as in WebResponse all header keys are lowered-case
+  public static final String HEADER_SITEKEY = "x-adblock-key";
+  public static final String HEADER_CONTENT_TYPE = "content-type";
+  public static final String HEADER_CONTENT_LENGTH = "content-length";
+
   static
   {
     System.loadLibrary(BuildConfig.nativeLibraryName);
@@ -39,11 +55,16 @@ public abstract class HttpClient
   public static final String REQUEST_METHOD_TRACE = "TRACE";
 
   /**
+   * Some MIME types
+   */
+  public static final String MIME_TYPE_TEXT_HTML = "text/html";
+
+  /**
    * Checks if HTTP status code is a redirection.
    * @param httpStatusCode HTTP status code to check.
    * @return True for redirect status code.
    */
-  public static boolean isRedirectCode(int httpStatusCode)
+  public static boolean isRedirectCode(final int httpStatusCode)
   {
     return httpStatusCode >= 300 && httpStatusCode <= 399;
   }
@@ -55,7 +76,7 @@ public abstract class HttpClient
    * @param httpStatusCode HTTP status code to check.
    * @return True when status is allowed
    */
-  public static boolean isStatusAllowed(int httpStatusCode)
+  public static boolean isStatusAllowed(final int httpStatusCode)
   {
     return httpStatusCode >= 100 && httpStatusCode <= 599;
   }
@@ -65,7 +86,7 @@ public abstract class HttpClient
    * @param httpStatusCode HTTP status code to check.
    * @return True for success status code.
    */
-  public static boolean isSuccessCode(int httpStatusCode)
+  public static boolean isSuccessCode(final int httpStatusCode)
   {
     return httpStatusCode >= STATUS_CODE_OK && httpStatusCode <= 299;
   }

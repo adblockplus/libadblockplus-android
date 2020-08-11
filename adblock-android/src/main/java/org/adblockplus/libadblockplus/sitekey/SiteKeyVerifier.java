@@ -17,6 +17,8 @@
 
 package org.adblockplus.libadblockplus.sitekey;
 
+import org.adblockplus.libadblockplus.HttpClient;
+import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.security.JavaSignatureVerifier;
 import org.adblockplus.libadblockplus.security.SignatureVerificationException;
 import org.adblockplus.libadblockplus.security.SignatureVerifier;
@@ -26,13 +28,18 @@ import org.adblockplus.libadblockplus.util.Base64Processor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PublicKey;
+import java.util.Map;
+
+import timber.log.Timber;
+
+import static org.adblockplus.libadblockplus.HttpClient.HEADER_USER_AGENT;
 
 public class SiteKeyVerifier
 {
   private static final byte ZERO_BYTE = 0x0;
-  private SignatureVerifier signatureVerifier;
-  private PublicKeyHolder publicKeyHolder;
-  private Base64Processor base64Processor;
+  private final SignatureVerifier signatureVerifier;
+  private final PublicKeyHolder publicKeyHolder;
+  private final Base64Processor base64Processor;
 
   public SiteKeyVerifier(final SignatureVerifier signatureVerifier,
                          final PublicKeyHolder publicKeyHolder,
@@ -49,7 +56,7 @@ public class SiteKeyVerifier
    * @param userAgent user agent (`null` is accepted and processed as empty string)
    * @param value 'X-Adblock-Key' value
    * @return value is verified
-   * @throws SiteKeyException
+   * @throws SiteKeyException exception
    */
   public boolean verify(final String url, final String userAgent, final String value)
       throws SiteKeyException
@@ -80,9 +87,48 @@ public class SiteKeyVerifier
       }
       return false;
     }
-    catch (SignatureVerificationException e)
+    catch (final SignatureVerificationException e)
     {
       throw new SiteKeyException(e);
+    }
+  }
+
+  /**
+   * Extracts site key from headers
+   * <ol>
+   * <li>Goes over responseHeaders and searches for {@link HttpClient#HEADER_SITEKEY} header</li>
+   * <li>Does a sitekey verification</li>
+   * </ol>
+   * Passing responseHeaders in Map just not to convert them
+   * to HeaderEntries back and forth
+   */
+  public void verifyInHeaders(final String url,
+                              final Map<String, String> requestHeadersMap,
+                              final Map<String, String> responseHeaders)
+  {
+    for (final Map.Entry<String, String> header : responseHeaders.entrySet())
+    {
+      if (header.getKey().equals(HttpClient.HEADER_SITEKEY))
+      {
+        // verify signature and save public key to be used as sitekey for next requests
+        try
+        {
+          if (verify(Utils.getUrlWithoutAnchor(url),
+                  requestHeadersMap.get(HEADER_USER_AGENT), header.getValue()))
+          {
+            Timber.d("Url %s public key verified successfully", url);
+          }
+          else
+          {
+            Timber.e("Url %s public key is not verified", url);
+          }
+        }
+        catch (final SiteKeyException e)
+        {
+          Timber.e(e, "Failed to verify sitekey header");
+        }
+        break;
+      }
     }
   }
 
@@ -92,7 +138,7 @@ public class SiteKeyVerifier
     {
       return base64Processor.decode(encodedString.getBytes());
     }
-    catch (Base64Exception cause)
+    catch (final Base64Exception cause)
     {
       throw new SiteKeyException(cause);
     }
@@ -107,11 +153,11 @@ public class SiteKeyVerifier
       if (uri.getHost() == null)
         throw new URISyntaxException(url, "Can't extract host from URI");
     }
-    catch (URISyntaxException cause)
+    catch (final URISyntaxException cause)
     {
       throw new SiteKeyException(cause);
     }
-    final String path = (uri.getPath() != null && uri.getPath().length() > 0 ? uri.getPath() : "/");
+    final String path = (uri.getPath() != null && !uri.getPath().isEmpty() ? uri.getPath() : "/");
     final StringBuilder uriBuilder = new StringBuilder(path);
     if (uri.getQuery() != null)
     {
