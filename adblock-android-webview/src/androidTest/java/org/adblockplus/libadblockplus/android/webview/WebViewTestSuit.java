@@ -114,7 +114,7 @@ public class WebViewTestSuit<T extends WebView>
   }
 
   // Clear cookies and cache
-  private void clearWebViewsState() throws InterruptedException
+  public void clearWebViewsState() throws InterruptedException
   {
     final CountDownLatch countDownLatch = new CountDownLatch(1);
     InstrumentationRegistry.getInstrumentation().runOnMainSync(new Runnable()
