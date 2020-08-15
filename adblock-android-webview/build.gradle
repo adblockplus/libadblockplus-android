@@ -22,6 +22,7 @@ android {
 dependencies {
   api project(':adblock-android')
   testImplementation 'junit:junit:4.12'
+  testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   testImplementation "org.mockito:mockito-core:2.24.0"
   androidTestImplementation 'androidx.test:core:1.1.0'
   androidTestImplementation 'androidx.test:runner:1.1.0'
@@ -31,8 +32,10 @@ dependencies {
   androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_web_version"
   androidTestImplementation 'com.github.tomakehurst:wiremock-standalone:2.25.1'
   androidTestImplementation project(path: ':adblock-android-settings')
-  testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  androidTestImplementation 'org.mockito:mockito-core:2.24.0'
+  androidTestImplementation 'org.mockito:mockito-android:2.24.0'
+  androidTestImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
 }
 
 publish {
