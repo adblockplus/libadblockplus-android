@@ -18,19 +18,40 @@ package org.adblockplus.libadblockplus.android.webview
 
 import android.app.Activity
 import android.os.Bundle
+import android.view.View
 import android.webkit.WebView
+import android.widget.LinearLayout
+
 
 /**
  * An activity to host AdblockWebView
  */
 class WebViewActivity : Activity() {
 
+    companion object {
+        const val SYSTEM_WEBVIEW = "adblock"
+        const val ADBLOCK_WEBVIEW = "system"
+    }
+
+    lateinit var webView: WebView
     lateinit var adblockWebView: AdblockWebView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WebView.setWebContentsDebuggingEnabled(true) // allow devtools connection
+        val layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+        layout.layoutParams = layoutParams
+        webView = WebView(this)
+        webView.contentDescription = SYSTEM_WEBVIEW
+        layout.addView(webView)
         adblockWebView = AdblockWebView(this)
-        setContentView(adblockWebView)
+        adblockWebView.contentDescription = ADBLOCK_WEBVIEW
+        layout.addView(adblockWebView)
+        setContentView(layout)
     }
 }

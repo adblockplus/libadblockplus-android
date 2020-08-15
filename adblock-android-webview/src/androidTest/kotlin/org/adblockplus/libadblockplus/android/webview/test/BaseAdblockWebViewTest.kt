@@ -18,20 +18,24 @@
 package org.adblockplus.libadblockplus.android.webview.test
 
 import android.os.SystemClock
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
+import android.webkit.WebView
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.web.sugar.Web
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.common.Notifier
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit.WireMockRule
-import org.adblockplus.libadblockplus.HttpClient
 import org.adblockplus.libadblockplus.android.AdblockEngine
-import org.adblockplus.libadblockplus.android.Utils
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper
+import org.adblockplus.libadblockplus.android.webview.AdblockWebView
+import org.adblockplus.libadblockplus.android.webview.WebViewActivity
+import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit
+import org.adblockplus.libadblockplus.android.webview.autoDispose
 import org.adblockplus.libadblockplus.android.webview.*
-import org.adblockplus.libadblockplus.android.webview.AdblockWebView.EventsListener.BlockedResourceInfo
-import org.adblockplus.libadblockplus.android.webview.AdblockWebView.EventsListener.WhitelistedResourceInfo
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
 import org.junit.After
 import org.junit.Assert.*
@@ -41,21 +45,18 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import timber.log.Timber
 import timber.log.Timber.DebugTree
+import wiremock.org.apache.http.HttpStatus
 
 abstract class BaseAdblockWebViewTest {
 
     companion object {
         private const val sleepStepMillis = 100L
         private const val subscriptionsSleepTimeoutMillis = 5_000L
-        const val indexHtml = "index.html"
-        private const val png = "png"
-        const val blockImageId = "blockImageId"
-        const val notBlockImageId = "notBlockImageId"
-        const val greenImage = "green.$png"
-        const val redImage = "red.$png"
 
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
+
+        const val indexHtml = "index.html"
 
         @BeforeClass
         @JvmStatic
@@ -71,6 +72,14 @@ abstract class BaseAdblockWebViewTest {
                 .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
         }
     }
+
+    data class WireMockReqResData(val urlPath: String,
+                                  val responseBody: String = "",
+                                  val statusCode: Int = HttpStatus.SC_OK,
+                                  val contentType: String = "text/html") {
+    }
+
+    protected lateinit var indexPageUrl: String
 
     /**
      * Because we start with clearing subscriptions, isAcceptableAdsEnabled will always return false
@@ -121,111 +130,97 @@ abstract class BaseAdblockWebViewTest {
     val basePathRule = TemporaryFolder()
 
     @get:Rule
-    val wireMockRule = WireMockRule(wireMockConfig().dynamicPort())
+    val wireMockRule = WireMockRule(wireMockConfig().dynamicPort().notifier(object : Notifier {
+        override fun info(message: String?) {
+            Timber.i(message)
+        }
+
+        override fun error(message: String?) {
+            Timber.e(message)
+        }
+
+        override fun error(message: String?, t: Throwable?) {
+            Timber.e(t, message)
+        }
+    }))
 
     @get:Rule
     val activityRule = ActivityTestRule(WebViewActivity::class.java, false, true)
 
-    protected lateinit var testSuit: WebViewTestSuit<AdblockWebView>
+    protected lateinit var testSuitSystem: WebViewTestSuit<WebView>
+    protected lateinit var testSuitAdblock: WebViewTestSuit<AdblockWebView>
     protected lateinit var adblockEngine: AdblockEngine
 
     @Before
-    fun setUp() {
+    open fun setUp() {
         Timber.d("setUp()")
         // is required to be run NOT in @BeforeClass setUp to randomize paths
         initAdblockProvider(basePathRule.root.absolutePath)
-        initTestSuit()
+        initAdblockTestSuit()
+        initSystemTestSuit()
         adblockEngine = AdblockHelper.get().provider.engine
+        waitForDefaultSubscriptions()
+        clearSubscriptions()
+        indexPageUrl = "${wireMockRule.baseUrl()}/${indexHtml}"
         Timber.d("setUp() finished")
     }
 
-    private fun initTestSuit() {
-        testSuit = WebViewTestSuit()
-        testSuit.webView = activityRule.activity.adblockWebView
-        testSuit.setUp()
-        testSuit.webView.siteKeyExtractor =
-                AlwaysEnabledSitekeyExtractorDelegate(testSuit.webView,
-                        testSuit.webView.siteKeyExtractor)
+    protected open fun initHttpServer(reqResData: Array<WireMockReqResData>) {
+        for (entry in reqResData) {
+            // Important: This actually needs more advanced logic to handle properly other codes
+            // than HttpStatus.SC_OK, but this is not needed now.
+            wireMockRule
+                    .stubFor(WireMock.any(WireMock.urlPathEqualTo(entry.urlPath))
+                            .willReturn(WireMock.aResponse()
+                                    .withStatus(entry.statusCode)
+                                    .withBody(entry.responseBody)
+                                    .withHeader("Content-Type", entry.contentType)))
+        }
+
+        // missing fav icon
+        wireMockRule
+                .stubFor(WireMock.any(WireMock.urlMatching("/favicon.ico"))
+                        .willReturn(WireMock.aResponse()
+                                .withStatus(HttpStatus.SC_NOT_FOUND)))
+    }
+
+    protected fun getAdblockWebView() : Web.WebInteraction<Void> {
+        return Web.onWebView(ViewMatchers.withContentDescription(WebViewActivity.ADBLOCK_WEBVIEW))
+                .withNoTimeout()
+    }
+
+    protected fun getSystemWebView() : Web.WebInteraction<Void> {
+        return Web.onWebView(ViewMatchers.withContentDescription(WebViewActivity.SYSTEM_WEBVIEW))
+                .withNoTimeout()
+    }
+
+    protected fun initAdblockTestSuit() {
+        testSuitAdblock = WebViewTestSuit()
+        testSuitAdblock.webView = activityRule.activity.adblockWebView
+        testSuitAdblock.setUp()
+        testSuitAdblock.webView.siteKeyExtractor =
+                AlwaysEnabledSitekeyExtractorDelegate(testSuitAdblock.webView,
+                        testSuitAdblock.webView.siteKeyExtractor)
+    }
+
+    protected fun initSystemTestSuit() {
+        testSuitSystem = WebViewTestSuit()
+        testSuitSystem.webView = activityRule.activity.webView
+        testSuitSystem.setUp()
     }
 
     @After
     fun tearDown() {
         Timber.d("tearDown()")
         instrumentation.runOnMainSync {
-            testSuit.tearDown()
+            testSuitAdblock?.tearDown()
+            testSuitSystem?.tearDown()
         }
         AdblockHelper.deinit()
         Timber.d("tearDown() finished")
     }
 
-    protected fun load(filterRules: List<String>, content: String):
-        Pair<List<BlockedResourceInfo>, List<WhitelistedResourceInfo>> {
-        waitForDefaultSubscriptions()
-        clearSubscriptions()
-        addFilterRules(filterRules)
-        initHttpServer(content)
-
-        val blockedResources = mutableListOf<BlockedResourceInfo>()
-        val whitelistedResources = mutableListOf<WhitelistedResourceInfo>()
-        subscribeToAdblockWebViewEvents(blockedResources, whitelistedResources)
-
-        Timber.d("Start loading...")
-        testSuit.loadUrlAndWait("${wireMockRule.baseUrl()}/$indexHtml")
-        Timber.d("Loaded")
-
-        return Pair(blockedResources, whitelistedResources)
-    }
-
-    private fun subscribeToAdblockWebViewEvents(
-        blockedResources: MutableList<BlockedResourceInfo>,
-        whitelistedResources: MutableList<WhitelistedResourceInfo>) {
-        testSuit.webView.setEventsListener(object : AdblockWebView.EventsListener {
-            override fun onNavigation() {
-                // nothing
-            }
-
-            override fun onResourceLoadingBlocked(info: BlockedResourceInfo) {
-                blockedResources.add(info)
-            }
-
-            override fun onResourceLoadingWhitelisted(info: WhitelistedResourceInfo) {
-                whitelistedResources.add(info)
-            }
-        })
-    }
-
-    private fun initHttpServer(content: String) {
-        wireMockRule
-            .stubFor(any(urlPathEqualTo("/$indexHtml"))
-            .willReturn(aResponse()
-                .withStatus(HttpClient.STATUS_CODE_OK)
-                .withHeader("Content-Type", "text/html")
-                .withBody(content)))
-
-        // missing fav icon
-        wireMockRule
-            .stubFor(any(urlMatching("/favicon.ico"))
-            .willReturn(aResponse()
-                .withStatus(404)))
-
-        // green image
-        wireMockRule
-            .stubFor(any(urlMatching(""".*${greenImage.escapeForRegex()}"""))
-            .willReturn(aResponse()
-                .withStatus(HttpClient.STATUS_CODE_OK)
-                .withHeader("Content-Type", "image/png")
-                .withBody(Utils.toByteArray(context.assets.open("green.png")))))
-
-        // red image
-        wireMockRule
-            .stubFor(any(urlMatching(""".*${redImage.escapeForRegex()}"""))
-            .willReturn(aResponse()
-                .withStatus(HttpClient.STATUS_CODE_OK)
-                .withHeader( "Content-Type", "image/png")
-                .withBody(Utils.toByteArray(context.assets.open("red.png")))))
-    }
-
-    private fun addFilterRules(filterRules: List<String>) {
+    protected fun addFilterRules(filterRules: List<String>) {
         filterRules.forEach { filterText ->
             val filter = adblockEngine.filterEngine.getFilter(filterText)
             filter.autoDispose {
