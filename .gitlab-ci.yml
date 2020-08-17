@@ -101,7 +101,7 @@ build_libadblockplus-android:without-jni:
   stage: build
   # Custom cache definition for this job
   cache:
-    key: libadblockplus-android
+    key: $CI_COMMIT_REF_NAME
     paths:
       # Don't get dependencies because current dependencies are merely libadblockplus but we don't need it.
       # If the parameter is working correctly then the building should succeed without libadblockplus.

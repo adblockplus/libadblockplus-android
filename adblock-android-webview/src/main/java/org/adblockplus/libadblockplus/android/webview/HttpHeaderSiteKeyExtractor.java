@@ -46,9 +46,9 @@ import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEnt
  * Makes a custom HTTP request and then does the <i>Site Key</i> verification by calling
  * {@link org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier#verifyInHeaders(String, Map, Map)}
  */
-class HttpSiteKeyExtractor extends SiteKeyExtractor
+class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
 {
-  HttpSiteKeyExtractor(final AdblockWebView webView)
+  HttpHeaderSiteKeyExtractor(final AdblockWebView webView)
   {
     super(webView);
   }
@@ -271,6 +271,15 @@ class HttpSiteKeyExtractor extends SiteKeyExtractor
         }
       }
 
+      if (responseMimeType != null)
+      {
+        responseMimeType = responseMimeType.trim();
+      }
+      if (responseEncoding != null)
+      {
+        responseEncoding = responseEncoding.trim();
+      }
+
       Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)",
           responseMimeType, responseEncoding, url);
       return new WebResourceResponse(
@@ -280,20 +289,6 @@ class HttpSiteKeyExtractor extends SiteKeyExtractor
     }
     Timber.w("fetchUrlAndCheckSiteKey() passes control to WebView");
     return WebResponseResult.ALLOW_LOAD;
-  }
-
-  @Override
-  public void waitForSitekeyCheck(final WebResourceRequest request)
-  {
-    // no need to block the network request for this extractor
-    // this callback is used in JsSiteKeyExtractor
-  }
-
-  @Override
-  public void notifyLoadingStarted()
-  {
-    // no need to notify the extractor about loading start
-    // this callback is used in JsSiteKeyExtractor
   }
 
   private static WebResourceResponse reloadWebViewUrl(final AdblockWebView webView,

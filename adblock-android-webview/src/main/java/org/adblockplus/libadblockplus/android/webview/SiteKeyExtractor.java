@@ -23,8 +23,6 @@ import android.webkit.WebView;
 
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 
-import java.lang.ref.WeakReference;
-
 /**
  * Extracts a <i>Site Key</i> from an {@link AdblockWebView}'s internals and verifies the Site Key
  * <p/>
@@ -48,56 +46,22 @@ import java.lang.ref.WeakReference;
  * @see <a href="https://help.eyeo.com/adblockplus/how-to-write-filters#sitekey-restrictions">
  * Site Key</a>
  */
-@SuppressWarnings("WeakerAccess") // API
-public abstract class SiteKeyExtractor
+public interface SiteKeyExtractor
 {
-  private SiteKeysConfiguration siteKeysConfiguration;
-  private boolean isEnabled = true;
-  protected final WeakReference<AdblockWebView> webViewWeakReference;
-
-  protected SiteKeyExtractor(final AdblockWebView webView)
-  {
-    webViewWeakReference = new WeakReference<>(webView);
-  }
-
   /**
    * This method is called by the {@link AdblockWebView} during
    * {@link android.webkit.WebViewClient#shouldInterceptRequest(WebView, WebResourceRequest)}
    * <p/>
-   * This method must perform custom HTTP request and return one of states from
-   * {@link org.adblockplus.libadblockplus.android.webview.AdblockWebView.WebResponseResult}
+   * This method must perform custom HTTP request or return one of states from
+   * {@link AdblockWebView.WebResponseResult}
    *
    * @param webView corresponding WebView (an instance of {@link AdblockWebView}
    * @param request a request that might be used for understanding
    *                additional options (e.g. is the request intended for the main frame)
    * @return a response that will be passed to
    */
-  public abstract WebResourceResponse obtainAndCheckSiteKey(final AdblockWebView webView,
-                                                            final WebResourceRequest request);
-
-  /**
-   * Blocks the calling thread while checking the sitekey
-   * <p>
-   * Will be removed later in a favor of setting internal WebViewClient
-   * for every SiteKeyExtractor
-   *
-   * @param request from the
-   *                {@link android.webkit.WebViewClient#shouldInterceptRequest(WebView, WebResourceRequest)}
-   */
-  public abstract void waitForSitekeyCheck(final WebResourceRequest request);
-
-  public abstract void notifyLoadingStarted();
-
-  /**
-   * Returns the site key config that can be used to retrieve
-   * {@link org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier} and verify the site key
-   *
-   * @return an instance of SiteKeysConfiguration
-   */
-  public SiteKeysConfiguration getSiteKeysConfiguration()
-  {
-    return siteKeysConfiguration;
-  }
+  WebResourceResponse obtainAndCheckSiteKey(AdblockWebView webView,
+                                            WebResourceRequest request);
 
   /**
    * This method is called by the {@link AdblockWebView} during
@@ -105,18 +69,7 @@ public abstract class SiteKeyExtractor
    * <p/>
    * You can later use siteKeysConfiguration in order to verify the sitekey
    */
-  public void setSiteKeysConfiguration(final SiteKeysConfiguration siteKeysConfiguration)
-  {
-    this.siteKeysConfiguration = siteKeysConfiguration;
-  }
+  void setSiteKeysConfiguration(SiteKeysConfiguration siteKeysConfiguration);
 
-  public boolean isEnabled()
-  {
-    return isEnabled;
-  }
-
-  public void setEnabled(final boolean enabled)
-  {
-    isEnabled = enabled;
-  }
+  void setEnabled(boolean enabled);
 }

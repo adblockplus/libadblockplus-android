@@ -231,7 +231,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                     .withHeader("X-Adblock-key", signature) // sitekey
                     .withBody(
                         """
-                        |<html>
+                        |<html.data-adblockkey="$signature">
                         |<body>
                         |  <img src="$greenImage"/>
                         |</body>

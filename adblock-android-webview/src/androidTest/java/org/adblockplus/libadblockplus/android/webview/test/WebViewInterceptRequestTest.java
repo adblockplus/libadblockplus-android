@@ -91,7 +91,10 @@ public class WebViewInterceptRequestTest
   @BeforeClass
   public static void setUpClass()
   {
-    Timber.plant(new Timber.DebugTree());
+    if (Timber.treeCount() == 0)
+    {
+      Timber.plant(new Timber.DebugTree());
+    }
     if (!AdblockHelper.get().isInit())
     {
       final String basePath = context.getDir(UUID.randomUUID().toString(),

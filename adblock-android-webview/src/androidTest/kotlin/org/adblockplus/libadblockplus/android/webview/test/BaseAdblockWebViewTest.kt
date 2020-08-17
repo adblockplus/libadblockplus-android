@@ -17,6 +17,8 @@
 
 package org.adblockplus.libadblockplus.android.webview.test
 
+import android.app.Instrumentation
+import android.content.Context
 import android.os.SystemClock
 import android.webkit.WebView
 import androidx.test.espresso.matcher.ViewMatchers
@@ -47,14 +49,15 @@ import timber.log.Timber
 import timber.log.Timber.DebugTree
 import wiremock.org.apache.http.HttpStatus
 
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class BaseAdblockWebViewTest {
 
     companion object {
         private const val sleepStepMillis = 100L
         private const val subscriptionsSleepTimeoutMillis = 5_000L
 
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val context = instrumentation.targetContext
+        val instrumentation: Instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context: Context = instrumentation.targetContext
 
         const val indexHtml = "index.html"
 
@@ -68,16 +71,15 @@ abstract class BaseAdblockWebViewTest {
             AdblockHelper.deinit()
             Timber.d("Initializing with basePath=$basePath")
             AdblockHelper
-                .get()
-                .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
+                    .get()
+                    .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
         }
     }
 
     data class WireMockReqResData(val urlPath: String,
                                   val responseBody: String = "",
                                   val statusCode: Int = HttpStatus.SC_OK,
-                                  val contentType: String = "text/html") {
-    }
+                                  val contentType: String = "text/html")
 
     protected lateinit var indexPageUrl: String
 
@@ -87,42 +89,24 @@ abstract class BaseAdblockWebViewTest {
      *
      * Thus, we have to mock SitekeyExtractor to always respond true to isEnabled request
      *
-     * @param webView a webview that will be passed to basic constructor
      * @param extractor an underlying SiteKeyExtractor that will respond to all proxy requests
      *
      * !NOTE! SiteKeyExtractor will be converted into an interface soon, so initializing
      * extra SiteKeyExtractor won't be required
      */
-    private class AlwaysEnabledSitekeyExtractorDelegate(webView: AdblockWebView,
-                                                        private val extractor: SiteKeyExtractor)
-        : SiteKeyExtractor(webView) {
-
-        override fun notifyLoadingStarted() {
-            extractor.notifyLoadingStarted()
-        }
+    private class AlwaysEnabledSitekeyExtractorDelegate(private val extractor: SiteKeyExtractor)
+        : SiteKeyExtractor {
 
         override fun obtainAndCheckSiteKey(webView: AdblockWebView?, request: WebResourceRequest?): WebResourceResponse? {
             return extractor.obtainAndCheckSiteKey(webView, request)
         }
 
-        override fun isEnabled(): Boolean {
-            return true // always true
-        }
-
-        override fun getSiteKeysConfiguration(): SiteKeysConfiguration {
-            return extractor.siteKeysConfiguration
-        }
-
         override fun setSiteKeysConfiguration(siteKeysConfiguration: SiteKeysConfiguration?) {
-            extractor.siteKeysConfiguration = siteKeysConfiguration
+            extractor.setSiteKeysConfiguration(siteKeysConfiguration)
         }
 
         override fun setEnabled(enabled: Boolean) {
-            extractor.isEnabled = true // always true
-        }
-
-        override fun waitForSitekeyCheck(request: WebResourceRequest?) {
-            extractor.waitForSitekeyCheck(request)
+            extractor.setEnabled(true) // always true
         }
     }
 
@@ -189,18 +173,12 @@ abstract class BaseAdblockWebViewTest {
                 .withNoTimeout()
     }
 
-    protected fun getSystemWebView() : Web.WebInteraction<Void> {
-        return Web.onWebView(ViewMatchers.withContentDescription(WebViewActivity.SYSTEM_WEBVIEW))
-                .withNoTimeout()
-    }
-
     protected fun initAdblockTestSuit() {
         testSuitAdblock = WebViewTestSuit()
         testSuitAdblock.webView = activityRule.activity.adblockWebView
         testSuitAdblock.setUp()
         testSuitAdblock.webView.siteKeyExtractor =
-                AlwaysEnabledSitekeyExtractorDelegate(testSuitAdblock.webView,
-                        testSuitAdblock.webView.siteKeyExtractor)
+                AlwaysEnabledSitekeyExtractorDelegate(testSuitAdblock.webView.siteKeyExtractor)
     }
 
     protected fun initSystemTestSuit() {
@@ -213,8 +191,8 @@ abstract class BaseAdblockWebViewTest {
     fun tearDown() {
         Timber.d("tearDown()")
         instrumentation.runOnMainSync {
-            testSuitAdblock?.tearDown()
-            testSuitSystem?.tearDown()
+            testSuitAdblock.tearDown()
+            testSuitSystem.tearDown()
         }
         AdblockHelper.deinit()
         Timber.d("tearDown() finished")

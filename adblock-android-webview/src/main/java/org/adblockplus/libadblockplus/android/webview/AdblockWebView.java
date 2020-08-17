@@ -75,6 +75,7 @@ public class AdblockWebView extends WebView
   private static final String DEBUG_TOKEN = "{{DEBUG}}";
   private static final String HIDE_TOKEN = "{{HIDE}}";
   private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
+  private static final String SITEKEY_EXTRACTED_TOKEN = "{{SITEKEY_EXTRACTED_FLAG}}";
   private static final String BRIDGE = "jsBridge";
   private static final String EMPTY_ELEMHIDE_STRING = "";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
@@ -98,6 +99,7 @@ public class AdblockWebView extends WebView
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
+  private String sitekeyExtractedFlag;
   private final AtomicBoolean redirectInProgress = new AtomicBoolean(false);
   private SiteKeyExtractor siteKeyExtractor;
   private final AtomicBoolean acceptCookie = new AtomicBoolean(true);
@@ -385,7 +387,7 @@ public class AdblockWebView extends WebView
     buildInjectJs();
     getSettings().setJavaScriptEnabled(true);
 
-    siteKeyExtractor = new HttpSiteKeyExtractor(this);
+    siteKeyExtractor = new CombinedSiteKeyExtractor(this);
     intWebChromeClient = new AdblockWebWebChromeClient(null);
     intWebViewClient = new AdblockWebViewClient(null);
 
@@ -404,7 +406,8 @@ public class AdblockWebView extends WebView
       .readAssetAsString(getContext(), filename, ASSETS_CHARSET_NAME)
       .replace(BRIDGE_TOKEN, BRIDGE)
       .replace(DEBUG_TOKEN, (BuildConfig.DEBUG ? "" : "//"))
-      .replace(HIDDEN_TOKEN, elementsHiddenFlag);
+      .replace(HIDDEN_TOKEN, elementsHiddenFlag)
+      .replace(SITEKEY_EXTRACTED_TOKEN, sitekeyExtractedFlag);
   }
 
   private void runScript(final String script)
@@ -569,7 +572,6 @@ public class AdblockWebView extends WebView
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon)
     {
       Timber.d("onPageStarted called for url %s", url);
-      siteKeyExtractor.notifyLoadingStarted();
       if (loading)
       {
         stopAbpLoading();
@@ -858,8 +860,6 @@ public class AdblockWebView extends WebView
     @Override
     public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request)
     {
-      siteKeyExtractor.waitForSitekeyCheck(request);
-
       if (request.isForMainFrame())
       {
         Timber.d("Updating navigationUrl to `%s`", request.getUrl().toString());
@@ -1043,7 +1043,9 @@ public class AdblockWebView extends WebView
 
   private void initRandom()
   {
-    elementsHiddenFlag = "abp" + Math.abs(new Random().nextLong());
+    final Random random = new Random();
+    elementsHiddenFlag = "abp" + Math.abs(random.nextLong());
+    sitekeyExtractedFlag = "abp" + Math.abs(random.nextLong());
   }
 
   private class ElemHideThread extends Thread
