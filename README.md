@@ -294,7 +294,7 @@ Insert `GeneralSettingsFragment` fragment instance in runtime to start showing s
 
 #### Background operations
 
-By default filter engine will do some background operations like subscriptions synchronizations in background shorly
+By default filter engine will do some background operations like subscriptions synchronizations in background shortly
 after initialized. If you want to have ad blocking as optional feature, you should consider use `setDisabledByDefault`
 
 ```
@@ -305,10 +305,10 @@ after initialized. If you want to have ad blocking as optional feature, you shou
 ```
 
 In this case no background operations will be done once you will call `AdblockEngine.setEnabled(true)`. Please note that
-this method configures only default state. If user prefrence on enabled state is stored in settings, this value will be
+this method configures only default state. If user preference on enabled state is stored in settings, this value will be
 preferred.
 
-Other thing to take into account is synchroization time. If you have configured `setDisabledByDefault` and then enable
+Other thing to take into account is synchronization time. If you have configured `setDisabledByDefault` and then enable
 engine, first synchronization will be done only after some time. You can combine configuration with
 `preloadSubscriptions` to load data from local file first time rather then from web.
 
@@ -423,7 +423,7 @@ if (BuildConfig.DEBUG) {
 ```
 Please refer to https://github.com/JakeWharton/timber for more information about Timber.
 
-Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start render webpage after 'DOMContentLoaded' event is fired.
+Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start rendering a web page after 'DOMContentLoaded' event is fired.
 
 Use `setProvider(@NotNull AdblockEngineProvider provider)` to use external adblock engine provider.
 The simplest solution is to use `AdblockHelper` from `-settings` as external adblock engine provider:
@@ -444,6 +444,9 @@ Use `dispose(Runnable disposeFinished)` to release resources (**required**).
 Note it can be invoked from background thread.
 
 Enabling/disabling of ad blocking per AdblockWebView is not supported.
+
+Ad blocking requires JavaScript to be enabled and every AdblockWebView instance enables JavaScript
+during the initialization. 
 
 ### Building
 
