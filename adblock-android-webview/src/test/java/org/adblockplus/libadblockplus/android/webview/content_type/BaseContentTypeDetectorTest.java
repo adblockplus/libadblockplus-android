@@ -22,6 +22,8 @@ import android.webkit.WebResourceRequest;
 
 import org.mockito.Mockito;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 @SuppressWarnings("WeakerAccess") // Base method
@@ -45,8 +47,15 @@ abstract class BaseContentTypeDetectorTest
    */
   protected static Uri parseUri(final String url)
   {
-    return Mockito.when(Mockito.mock(Uri.class).toString())
-        .thenReturn(url)
-        .getMock();
+    final Uri uri = Mockito.mock(Uri.class);
+    String uriPath = null;
+    try
+    {
+      uriPath = new URI(url).getPath();
+    }
+    catch (final URISyntaxException e){}
+    Mockito.when(uri.toString()).thenReturn(url);
+    Mockito.when(uri.getPath()).thenReturn(uriPath);
+    return uri;
   }
 }

@@ -24,8 +24,6 @@ import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDe
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class UrlFileExtensionTypeDetector implements ContentTypeDetector
 {
@@ -70,9 +68,6 @@ public class UrlFileExtensionTypeDetector implements ContentTypeDetector
     mapExtensions(EXTENSIONS_MEDIA, FilterEngine.ContentType.MEDIA);
   }
 
-  private static final Pattern RE_FILE_EXTENSION =
-    Pattern.compile(".*/.+?(\\.(.+?))+(?:\\?.*)?(?:#.*)?$", Pattern.CASE_INSENSITIVE);
-
   // JavaDoc inherited from base interface
   @Override
   public FilterEngine.ContentType detect(final WebResourceRequest request)
@@ -81,12 +76,20 @@ public class UrlFileExtensionTypeDetector implements ContentTypeDetector
     {
       return null;
     }
-    final String url = request.getUrl().toString();
-    final Matcher result = RE_FILE_EXTENSION.matcher(url);
-    if (result.find() && result.groupCount() == 2)
+    final String path = request.getUrl().getPath();
+    if (path == null)
     {
-      final String fileExtension = result.group(2).toLowerCase();
-      return extensionTypeMap.get(fileExtension);
+      return null;
+    }
+    final int lastIndexOfDot = path.lastIndexOf('.');
+    if (lastIndexOfDot == -1)
+    {
+      return null;
+    }
+    final String fileExtension = path.substring(lastIndexOfDot + 1);
+    if (fileExtension != null)
+    {
+      return extensionTypeMap.get(fileExtension.toLowerCase());
     }
     return null;
   }
