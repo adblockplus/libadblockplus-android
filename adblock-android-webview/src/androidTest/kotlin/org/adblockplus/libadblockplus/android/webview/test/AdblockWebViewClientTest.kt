@@ -3,7 +3,7 @@ package org.adblockplus.libadblockplus.android.webview.test
 import android.webkit.WebViewClient
 import com.nhaarman.mockitokotlin2.anyOrNull
 import org.mockito.Mockito.verify
-import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import com.nhaarman.mockitokotlin2.eq
 import org.junit.Before
@@ -61,18 +61,23 @@ class AdblockWebViewClientTest : BaseAdblockWebViewTest() {
             |""".trimMargin()
 
         initHttpServer(arrayOf(WireMockReqResData("/${indexHtml}", redirectingPage),
-                WireMockReqResData("/${indexRedirectedHtml}", redirectedPage)))
+            WireMockReqResData("/${indexRedirectedHtml}", redirectedPage)))
 
-        Timber.d("Start loading...")
-        Assert.assertTrue("${indexPageUrl} exceeded loading timeout", testSuitSystem.loadUrlAndWait(indexPageUrl))
-        Assert.assertTrue("${indexPageUrl} exceeded loading timeout", testSuitAdblock.loadUrlAndWait(indexPageUrl))
-        Timber.d("Loaded")
+        arrayOf(Pair(extWebViewClientSystem, testSuitSystem),
+            Pair(extWebViewClientAdblock, testSuitAdblock)).forEach {
 
-        arrayOf(Pair(extWebViewClientSystem, testSuitSystem), Pair(extWebViewClientAdblock, testSuitAdblock)).forEach {
-            verify(it.first, times(1)).onPageStarted(eq(it.second.webView), eq(indexPageUrl), anyOrNull())
-            verify(it.first, times(1)).onPageStarted(eq(it.second.webView), eq(indexRedirectedPageUrl), anyOrNull())
-            verify(it.first, times(0)).onPageFinished(eq(it.second.webView), eq(indexPageUrl))
-            verify(it.first, times(1)).onPageFinished(eq(it.second.webView), eq(indexRedirectedPageUrl))
+            Timber.d("Start loading...")
+            assertTrue("${indexPageUrl} exceeded loading timeout",
+                it.second.loadUrlAndWait(indexPageUrl))
+
+            verify(it.first, times(1))
+                .onPageStarted(eq(it.second.webView), eq(indexPageUrl), anyOrNull())
+            verify(it.first, times(1))
+                .onPageStarted(eq(it.second.webView), eq(indexRedirectedPageUrl), anyOrNull())
+            verify(it.first, times(0))
+                .onPageFinished(eq(it.second.webView), eq(indexPageUrl))
+            verify(it.first, times(1))
+                .onPageFinished(eq(it.second.webView), eq(indexRedirectedPageUrl))
         }
     }
 }
