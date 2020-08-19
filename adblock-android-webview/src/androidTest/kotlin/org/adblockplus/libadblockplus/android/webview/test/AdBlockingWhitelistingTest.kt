@@ -17,13 +17,19 @@
 
 package org.adblockplus.libadblockplus.android.webview.test
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.any
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.adblockplus.libadblockplus.android.AndroidHttpClient
 import org.adblockplus.libadblockplus.android.Utils
-import org.adblockplus.libadblockplus.android.webview.*
+import org.adblockplus.libadblockplus.android.webview.AdblockWebView
+import org.adblockplus.libadblockplus.android.webview.SiteKeyHelper
+import org.adblockplus.libadblockplus.android.webview.imageIsBlocked
+import org.adblockplus.libadblockplus.android.webview.imageIsNotBlocked
+import org.adblockplus.libadblockplus.android.webview.escapeForRegex
+import org.adblockplus.libadblockplus.android.webview.elementIsElemhidden
+import org.adblockplus.libadblockplus.android.webview.elementIsNotElemhidden
 import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
 import org.junit.Assert
@@ -36,15 +42,21 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
 
     companion object {
         private const val png = "png"
-        const val blockImageId = "blockImageId"
-        const val notBlockImageId = "notBlockImageId"
+        const val blockedImageWithSlashId = "blockedImageWithSlashId"
+        const val blockedImageWithoutSlashId = "blockedImageWithoutSlashId"
+        const val blockedImageWithAbsolutePathId = "blockedImageWithAbsolutePathId"
+        const val notBlockedImageWithOverlappingPathId = "notBlockedImageWithOverlappingPathId"
+        const val notBlockedImageId = "notBlockedImageId"
         const val greenImage = "green.$png"
         const val redImage = "red.$png"
+        const val blockingPathPrefix = "blocking/"
+        const val notMatchingBlockingPathPrefix = "not${blockingPathPrefix}"
+        const val blockingPathFilter = "^blocking^"
     }
 
     private fun load(filterRules: List<String>, content: String):
-            Pair<List<AdblockWebView.EventsListener.BlockedResourceInfo>,
-                    List<AdblockWebView.EventsListener.WhitelistedResourceInfo>> {
+        Pair<List<AdblockWebView.EventsListener.BlockedResourceInfo>,
+            List<AdblockWebView.EventsListener.WhitelistedResourceInfo>> {
 
         addFilterRules(filterRules)
         initHttpServer(arrayOf(WireMockReqResData("/${indexHtml}", content)))
@@ -62,8 +74,9 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     }
 
     private fun subscribeToAdblockWebViewEvents(
-            blockedResources: MutableList<AdblockWebView.EventsListener.BlockedResourceInfo>,
-            whitelistedResources: MutableList<AdblockWebView.EventsListener.WhitelistedResourceInfo>) {
+        blockedResources: MutableList<AdblockWebView.EventsListener.BlockedResourceInfo>,
+        whitelistedResources: MutableList<AdblockWebView.EventsListener.WhitelistedResourceInfo>) {
+
         testSuitAdblock.webView.setEventsListener(object : AdblockWebView.EventsListener {
             override fun onNavigation() {
                 // nothing
@@ -86,61 +99,77 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
 
         // green image
         wireMockRule
-                .stubFor(any(WireMock.urlMatching(""".*${greenImage.escapeForRegex()}"""))
-                        .willReturn(aResponse()
-                                .withStatus(HttpStatus.SC_OK)
-                                .withHeader("Content-Type", "image/png")
-                                .withBody(Utils.toByteArray(context.assets.open("green.png")))))
+            .stubFor(any(urlMatching(""".*${greenImage.escapeForRegex()}"""))
+                .willReturn(aResponse()
+                    .withStatus(HttpStatus.SC_OK)
+                    .withHeader("Content-Type", "image/png")
+                    .withBody(Utils.toByteArray(context.assets.open("green.png")))))
 
         // red image
         wireMockRule
-                .stubFor(any(WireMock.urlMatching(""".*${redImage.escapeForRegex()}"""))
-                        .willReturn(aResponse()
-                                .withStatus(HttpStatus.SC_OK)
-                                .withHeader( "Content-Type", "image/png")
-                                .withBody(Utils.toByteArray(context.assets.open("red.png")))))
+            .stubFor(any(urlMatching(""".*${redImage.escapeForRegex()}"""))
+                .willReturn(aResponse()
+                    .withStatus(HttpStatus.SC_OK)
+                    .withHeader( "Content-Type", "image/png")
+                    .withBody(Utils.toByteArray(context.assets.open("red.png")))))
     }
 
     @Test
     fun testResourceLoading_imageIsBlocked() {
-        val blockingPathPrefix = "/blocking/"
-
         load(
-            listOf(blockingPathPrefix),
+            listOf(blockingPathFilter),
             """
             |<html>
             |<body>
-            |  <img id="$blockImageId" src="${blockingPathPrefix}$redImage"/>
-            |  <img id="$notBlockImageId" src="$greenImage"/>
+            |  <img id="$notBlockedImageWithOverlappingPathId"
+            |    src="${notMatchingBlockingPathPrefix}$redImage"/>
+            |  <img id="$blockedImageWithSlashId"
+            |    src="/${blockingPathPrefix}$redImage"/>
+            |  <img id="$blockedImageWithoutSlashId"
+            |    src="${blockingPathPrefix}$redImage"/>
+            |  <img id="$blockedImageWithAbsolutePathId"
+            |    src="${wireMockRule.baseUrl()}/${blockingPathPrefix}$redImage"/>
+            |  <img id="$notBlockedImageId" src="$greenImage"/>
             |</body>
             |</html>
             |""".trimMargin()
         )
 
-        getAdblockWebView()
-            .check(imageIsBlocked(blockImageId))       // red image IS blocked
-            .check(imageIsNotBlocked(notBlockImageId)) // green image is NOT blocked
+        onAdblockWebView()
+            .check(imageIsNotBlocked(notBlockedImageWithOverlappingPathId))
+            .check(imageIsBlocked(blockedImageWithoutSlashId))
+            .check(imageIsBlocked(blockedImageWithSlashId))
+            .check(imageIsBlocked(blockedImageWithAbsolutePathId))
+            .check(imageIsNotBlocked(notBlockedImageId))
     }
 
     @Test
     fun testElementHiding_blockedImageIsElementHidden() {
-        val blockingPathPrefix = "/blocking/"
-
         load(
-            listOf(blockingPathPrefix),
+            listOf(blockingPathFilter),
             """
             |<html>
             |<body>
-            |  <img id="$blockImageId" src="${blockingPathPrefix}$redImage"/>
-            |  <img id="$notBlockImageId" src="$greenImage"/>
+            |  <img id="$notBlockedImageWithOverlappingPathId"
+            |    src="${notMatchingBlockingPathPrefix}$redImage"/>
+            |  <img id="$blockedImageWithSlashId" src="/${blockingPathPrefix}$redImage"/>
+            |  <img id="$blockedImageWithoutSlashId" src="${blockingPathPrefix}$redImage"/>
+            |  <img id="$blockedImageWithAbsolutePathId"
+            |    src="${wireMockRule.baseUrl()}/${blockingPathPrefix}$redImage"/>
             |</body>
             |</html>
             |""".trimMargin()
         )
 
-        getAdblockWebView()
-            .check(elementIsElemhidden(blockImageId))  // red image IS elemhidden (because blocked)
-            .check(elementIsNotElemhidden(notBlockImageId)) // green image is NOT elemhidden
+        onAdblockWebView()
+            .check(imageIsNotBlocked(notBlockedImageWithOverlappingPathId))
+            .check(imageIsBlocked(blockedImageWithoutSlashId))
+            .check(imageIsBlocked(blockedImageWithSlashId))
+            .check(imageIsBlocked(blockedImageWithAbsolutePathId))
+            .check(elementIsNotElemhidden(notBlockedImageWithOverlappingPathId))
+            .check(elementIsElemhidden(blockedImageWithoutSlashId))
+            .check(elementIsElemhidden(blockedImageWithSlashId))
+            .check(elementIsElemhidden(blockedImageWithAbsolutePathId))
     }
 
     @Test
@@ -170,7 +199,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             """
             |<html>
             |<body>
-            |  <img id="$blockImageId" src="/$greenImage"/>
+            |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
             |  <iframe src="$subFrameHtml"/>
             |</body>
             |</html>
@@ -191,8 +220,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
         })
 
-        getAdblockWebView()
-            .check(imageIsBlocked(blockImageId)) // green image in main frame IS blocked
+        onAdblockWebView()
+            .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
             // can't access subframe with JS so there is no [known at the moment] way
             // to assert subframe resource visibility
     }
@@ -243,7 +272,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             """
             |<html>
             |<body>
-            |  <img id="$blockImageId" src="/$greenImage"/>
+            |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
             |  <iframe src="$subFrameHtml"/>
             |</body>
             |</html>
@@ -263,8 +292,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
         })
 
-        getAdblockWebView()
-            .check(imageIsBlocked(blockImageId)) // green image in main frame IS blocked
+        onAdblockWebView()
+            .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
             // can't access subframe with JS so there is no [known at the moment] way
             // to assert subframe resource visibility
     }

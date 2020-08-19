@@ -40,7 +40,9 @@ import org.adblockplus.libadblockplus.android.webview.autoDispose
 import org.adblockplus.libadblockplus.android.webview.*
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -71,8 +73,8 @@ abstract class BaseAdblockWebViewTest {
             AdblockHelper.deinit()
             Timber.d("Initializing with basePath=$basePath")
             AdblockHelper
-                    .get()
-                    .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
+                .get()
+                .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
         }
     }
 
@@ -154,23 +156,22 @@ abstract class BaseAdblockWebViewTest {
             // Important: This actually needs more advanced logic to handle properly other codes
             // than HttpStatus.SC_OK, but this is not needed now.
             wireMockRule
-                    .stubFor(WireMock.any(WireMock.urlPathEqualTo(entry.urlPath))
-                            .willReturn(WireMock.aResponse()
-                                    .withStatus(entry.statusCode)
-                                    .withBody(entry.responseBody)
-                                    .withHeader("Content-Type", entry.contentType)))
+                .stubFor(WireMock.any(WireMock.urlPathEqualTo(entry.urlPath))
+                    .willReturn(WireMock.aResponse()
+                        .withStatus(entry.statusCode)
+                        .withBody(entry.responseBody)
+                        .withHeader("Content-Type", entry.contentType)))
         }
 
         // missing fav icon
         wireMockRule
-                .stubFor(WireMock.any(WireMock.urlMatching("/favicon.ico"))
-                        .willReturn(WireMock.aResponse()
-                                .withStatus(HttpStatus.SC_NOT_FOUND)))
+            .stubFor(WireMock.any(WireMock.urlMatching("/favicon.ico"))
+                .willReturn(WireMock.aResponse().withStatus(HttpStatus.SC_NOT_FOUND)))
     }
 
-    protected fun getAdblockWebView() : Web.WebInteraction<Void> {
+    protected fun onAdblockWebView() : Web.WebInteraction<Void> {
         return Web.onWebView(ViewMatchers.withContentDescription(WebViewActivity.ADBLOCK_WEBVIEW))
-                .withNoTimeout()
+            .withNoTimeout()
     }
 
     protected fun initAdblockTestSuit() {
@@ -178,7 +179,7 @@ abstract class BaseAdblockWebViewTest {
         testSuitAdblock.webView = activityRule.activity.adblockWebView
         testSuitAdblock.setUp()
         testSuitAdblock.webView.siteKeyExtractor =
-                AlwaysEnabledSitekeyExtractorDelegate(testSuitAdblock.webView.siteKeyExtractor)
+            AlwaysEnabledSitekeyExtractorDelegate(testSuitAdblock.webView.siteKeyExtractor)
     }
 
     protected fun initSystemTestSuit() {

@@ -116,9 +116,13 @@ public class WebViewTestSuit<T extends WebView>
           WebViewTestSuit.this.results.put(Utils.getUrlWithoutParams(url), timeDelta);
         }
         resetTimer();
+        if (extWebViewClient != null)
+        {
+          extWebViewClient.onPageFinished(view, url);
+        }
         countDownLatch.countDown();
       }
-      if (extWebViewClient != null)
+      else if (extWebViewClient != null)
       {
         extWebViewClient.onPageFinished(view, url);
       }

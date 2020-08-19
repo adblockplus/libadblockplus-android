@@ -999,17 +999,22 @@ public class AdblockWebView extends WebView
 
   private void elemhideBlockedResource(final String url)
   {
-    Timber.d("Trying to elemhide visible blocked resource with url: " + url);
-    final String filenameWithQuery;
+    String filenameWithQuery;
     try
     {
       filenameWithQuery = Utils.extractPathWithQuery(url);
+      if (filenameWithQuery.startsWith("/"))
+      {
+        filenameWithQuery = filenameWithQuery.substring(1);
+      }
     }
     catch (final MalformedURLException e)
     {
       Timber.e("Failed to parse URI for blocked resource:" + url + ". Skipping element hiding");
       return;
     }
+    Timber.d("Trying to elemhide visible blocked resource with url `%s` and path `%s`",
+        url, filenameWithQuery);
 
     /*
     It finds all the elements with source URLs ending with ... and then compare full paths.
