@@ -59,24 +59,24 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
     // downloaded this way any of the subscription list download results in the injection of
     // our subscription list test file.
     val resourcesList = mapOf(
-            // locale-specific
-            AndroidHttpClientResourceWrapper.EASYLIST to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_DUTCH to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_GERMAN to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_FRENCH to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN to subscriptionListResourceID,
-            AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN to subscriptionListResourceID,
+        // locale-specific
+        AndroidHttpClientResourceWrapper.EASYLIST to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_DUTCH to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_GERMAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_FRENCH to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN to subscriptionListResourceID,
 
-            // AA
-            AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS to exceptionListResourceID
+        // AA
+        AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS to exceptionListResourceID
     )
 
     init {
@@ -100,17 +100,17 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         // for more information please read.
         // https://developer.android.com/reference/android/os/Debug.MemoryInfo
         val totalAccountedInAndroidStudio =
-                memInfoVar.totalPss -
-                        memInfoVar.getMemoryStat("summary.private-other").toDouble() -
-                        memInfoVar.getMemoryStat("summary.system").toDouble()
+            memInfoVar.totalPss -
+                memInfoVar.getMemoryStat("summary.private-other").toDouble() -
+                memInfoVar.getMemoryStat("summary.system").toDouble()
 
         return mutableMapOf("TOTAL PSS (KB)" to memInfoVar.totalPss.toString(),
-                "TOTAL_ANDROID_STUDIO (KB) " to totalAccountedInAndroidStudio.toString(),
-                "CODE (KB) " to memInfoVar.getMemoryStat("summary.code"),
-                "STACK (KB) " to memInfoVar.getMemoryStat("summary.stack"),
-                "GRAPHICS (KB) " to memInfoVar.getMemoryStat("summary.graphics"),
-                "JAVA-HEAP(KB) " to memInfoVar.getMemoryStat("summary.java-heap"),
-                "NATIVE-HEAP(KB) " to memInfoVar.getMemoryStat("summary.native-heap"))
+            "TOTAL_ANDROID_STUDIO (KB) " to totalAccountedInAndroidStudio.toString(),
+            "CODE (KB) " to memInfoVar.getMemoryStat("summary.code"),
+            "STACK (KB) " to memInfoVar.getMemoryStat("summary.stack"),
+            "GRAPHICS (KB) " to memInfoVar.getMemoryStat("summary.graphics"),
+            "JAVA-HEAP(KB) " to memInfoVar.getMemoryStat("summary.java-heap"),
+            "NATIVE-HEAP(KB) " to memInfoVar.getMemoryStat("summary.native-heap"))
     }
 
     /**
@@ -123,8 +123,8 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
      * Fifth stamps after a cool off period of 5 seconds
      */
     private fun benchmarkFilterList(
-            localResources: Map<String, Int>,
-            folder: String) : Map<String, Map<String, String>> {
+        localResources: Map<String, Int>,
+        folder: String): Map<String, Map<String, String>> {
 
         var output = mutableMapOf<String, MutableMap<String, String>>()
         output["INIT STAGE"] = stampMemory()
@@ -132,9 +132,9 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
 
         val engineFactory = AdblockEngine
-                .builder(AppInfo.builder().build(), folder)
-                .preloadSubscriptions(context, localResources, MockStorage())
-                .setForceUpdatePreloadedSubscriptions(false)
+            .builder(AppInfo.builder().build(), folder)
+            .preloadSubscriptions(context, localResources, MockStorage())
+            .setForceUpdatePreloadedSubscriptions(false)
         val customEngineProvider = SingleInstanceEngineProvider(engineFactory)
 
         assertTrue(customEngineProvider.retain(false))
@@ -143,14 +143,14 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
 
         // wait for all subscriptions to be loaded
         while (!customEngineProvider.engine.filterEngine.listedSubscriptions.all {
-                    it.getProperty("downloadStatus")?.asString() == "synchronize_ok"
-                }) {
+                it.getProperty("downloadStatus")?.asString() == "synchronize_ok"
+            }) {
             SystemClock.sleep(SLEEP_TIME_MILLI)
         }
 
         output["FILTER LOADED"] = stampMemory()
         val latch = CountDownLatch(1)
-        InstrumentationRegistry.getInstrumentation().runOnMainSync{
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
             val webview = AdblockWebView(context)
             webview.setProvider(customEngineProvider)
 
@@ -218,21 +218,27 @@ class MemoryBenchmark_50_full_AA : BenchMarkMemory(R.raw.easy_50, R.raw.exceptio
 
 @Ignore
 class MemoryBenchmark_50_min_AA :
-        BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules_min)
+    BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules_min)
+
 @Ignore
 class MemoryBenchmark_80_full_AA :
-        BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules)
+    BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules)
+
 @Ignore
 class MemoryBenchmark_80_min_AA :
-        BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules_min)
+    BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules_min)
+
 @Ignore
 class MemoryBenchmark_full_easy_full_AA :
-        BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules)
+    BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules)
+
 @Ignore
 class MemoryBenchmark_full_easy_min_AA :
-        BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules_min)
+    BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules_min)
+
 @Ignore
 class MemoryBenchmark_minDist_full_AA :
-        BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules)
+    BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules)
+
 class MemoryBenchmark_minDist_min_AA :
-        BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min)
+    BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min)

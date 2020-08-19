@@ -169,7 +169,7 @@ abstract class BaseAdblockWebViewTest {
                 .willReturn(WireMock.aResponse().withStatus(HttpStatus.SC_NOT_FOUND)))
     }
 
-    protected fun onAdblockWebView() : Web.WebInteraction<Void> {
+    protected fun onAdblockWebView(): Web.WebInteraction<Void> {
         return Web.onWebView(ViewMatchers.withContentDescription(WebViewActivity.ADBLOCK_WEBVIEW))
             .withNoTimeout()
     }
