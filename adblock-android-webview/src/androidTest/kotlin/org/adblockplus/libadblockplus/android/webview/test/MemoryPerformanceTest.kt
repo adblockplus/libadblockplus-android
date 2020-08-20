@@ -80,7 +80,9 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
     )
 
     init {
-        Timber.plant(DebugTree())
+        if (Timber.treeCount() == 0) {
+            Timber.plant(DebugTree())
+        }
     }
 
     @Test
