@@ -66,7 +66,9 @@ abstract class BaseAdblockWebViewTest {
         @BeforeClass
         @JvmStatic
         fun setUpClass() {
-            Timber.plant(DebugTree())
+            if (Timber.treeCount() == 0) {
+                Timber.plant(DebugTree())
+            }
         }
 
         private fun initAdblockProvider(basePath: String) {

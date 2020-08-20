@@ -46,7 +46,10 @@ public class WebViewSetupAndDisposeStressTest
   @BeforeClass
   public static void setUpClass()
   {
-    Timber.plant(new Timber.DebugTree());
+    if (Timber.treeCount() == 0)
+    {
+      Timber.plant(new Timber.DebugTree());
+    }
     if (!AdblockHelper.get().isInit())
     {
       final String basePath =
