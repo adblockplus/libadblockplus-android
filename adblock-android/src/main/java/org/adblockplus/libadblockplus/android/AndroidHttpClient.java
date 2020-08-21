@@ -123,11 +123,12 @@ public class AndroidHttpClient extends HttpClient
       {
         final int responseStatus = connection.getResponseCode();
         response.setResponseStatus(responseStatus);
-        response.setStatus(!isSuccessCode(responseStatus) ? NsStatus.ERROR_FAILURE : NsStatus.OK);
+        response.setStatus(isSuccessCode(responseStatus) || isRedirectCode(responseStatus) ?
+            NsStatus.OK : NsStatus.ERROR_FAILURE);
 
         Timber.d("responseStatus: %d for url %s", responseStatus, url);
 
-        if (isSuccessCode(responseStatus))
+        if (isSuccessCode(responseStatus) || isRedirectCode(responseStatus))
         {
           Timber.d("Success responseStatus");
           inputStream = connection.getInputStream();
