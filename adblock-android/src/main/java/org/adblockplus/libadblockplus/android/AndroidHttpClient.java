@@ -47,23 +47,19 @@ public class AndroidHttpClient extends HttpClient
   protected static final int SOCKET_TAG = 1;
 
   private final boolean compressedStream;
-  private final String charsetName;
 
   /**
    * Ctor
    * @param compressedStream Request for gzip compressed stream from the server
-   * @param charsetName Optional charset name for sending POST data
    */
-  public AndroidHttpClient(final boolean compressedStream,
-                           final String charsetName)
+  public AndroidHttpClient(final boolean compressedStream)
   {
     this.compressedStream = compressedStream;
-    this.charsetName = charsetName;
   }
 
   public AndroidHttpClient()
   {
-    this(true, "UTF-8");
+    this(true);
   }
 
   @Override

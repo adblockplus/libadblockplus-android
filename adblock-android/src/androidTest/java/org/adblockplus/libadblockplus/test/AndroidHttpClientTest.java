@@ -54,10 +54,9 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
 
   private static class AndroidHttpClientWithoutSubscriptions extends AndroidHttpClient
   {
-    public AndroidHttpClientWithoutSubscriptions(final boolean compressedStream,
-                                                 final String charsetName)
+    public AndroidHttpClientWithoutSubscriptions(final boolean compressedStream)
     {
-      super(compressedStream, charsetName);
+      super(compressedStream);
     }
 
     @Override
@@ -77,7 +76,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     }
   }
 
-  private HttpClient androidHttpClient = new AndroidHttpClientWithoutSubscriptions(true, "UTF-8");
+  private HttpClient androidHttpClient = new AndroidHttpClientWithoutSubscriptions(true);
 
   @Override
   public void setUp()

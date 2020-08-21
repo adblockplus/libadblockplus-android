@@ -264,7 +264,7 @@ public final class AdblockEngine
     {
       if (androidHttpClient == null)
       {
-        androidHttpClient = new AndroidHttpClient(true, "UTF-8");
+        androidHttpClient = new AndroidHttpClient(true);
       }
       engine.httpClient = androidHttpClient;
 
