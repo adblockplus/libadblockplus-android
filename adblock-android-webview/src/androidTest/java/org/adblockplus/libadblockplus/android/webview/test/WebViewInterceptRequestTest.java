@@ -74,7 +74,6 @@ public class WebViewInterceptRequestTest
     put("http://myhealthvet.com", 1);
     put("http://iflychina.com", 1);
     put("http://megaloft.com/", 1);
-    put("http://ww38.nextlnk1.com/", 1);
     put("http://ww12.onoticioso.com/", 1);
     put("http://directions.com", 1);
     put("http://zins.de", 1);
@@ -134,6 +133,7 @@ public class WebViewInterceptRequestTest
       {
         // When redirection happens there are several notifications
         // so we need to check if url matches
+        Timber.d("onPageFinished called for url %s", url);
         if (Utils.getUrlWithoutParams(url).startsWith(
             Utils.getUrlWithoutParams(lastPageStartedUrl)))
         {
@@ -235,7 +235,7 @@ public class WebViewInterceptRequestTest
     // Setup site key configuration
     final SignatureVerifier signatureVerifier = new JavaSignatureVerifier();
     final PublicKeyHolder publicKeyHolder = new PublicKeyHolderImpl();
-    final HttpClient httpClient = new AndroidHttpClient(true, "UTF-8");
+    final HttpClient httpClient = new AndroidHttpClient(true);
     final Base64Processor base64Processor = new AndroidBase64Processor();
     final TestSiteKeyVerifier siteKeyVerifier =
         new TestSiteKeyVerifier(signatureVerifier, publicKeyHolder, base64Processor);

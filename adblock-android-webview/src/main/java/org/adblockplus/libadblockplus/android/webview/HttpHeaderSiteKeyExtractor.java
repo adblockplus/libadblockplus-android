@@ -76,7 +76,7 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
       return WebResponseResult.ALLOW_LOAD;
     }
 
-    Timber.d("fetchUrlAndCheckSiteKey() called from Thread %s",
+    Timber.d("obtainAndCheckSiteKey() called from Thread %s",
         Thread.currentThread().getId());
     final ResponseHolder responseHolder = new ResponseHolder();
     final CountDownLatch latch = new CountDownLatch(1);

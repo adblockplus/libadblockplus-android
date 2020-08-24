@@ -215,7 +215,7 @@ public class AdblockHelper
   {
     final SignatureVerifier signatureVerifier = new JavaSignatureVerifier();
     final PublicKeyHolder publicKeyHolder = new PublicKeyHolderImpl();
-    final HttpClient httpClient = new AndroidHttpClient(true, "UTF-8");
+    final HttpClient httpClient = new AndroidHttpClient(true);
     final Base64Processor base64Processor = new AndroidBase64Processor();
     final SiteKeyVerifier siteKeyVerifier =
         new SiteKeyVerifier(signatureVerifier, publicKeyHolder, base64Processor);
