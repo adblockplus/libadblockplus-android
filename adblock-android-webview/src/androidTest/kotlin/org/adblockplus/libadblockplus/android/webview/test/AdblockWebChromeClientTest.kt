@@ -23,10 +23,10 @@ class AdblockWebChromeClientTest : BaseAdblockWebViewTest() {
         arrayOf(extWebChromeClientSystem, extWebChromeClientAdblock).forEach {
             whenever(
                 it.onJsAlert(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenAnswer {
-                    Timber.i("onJsAlert() fired in extWebChromeClient")
-                    it.getArgument<JsResult>(3)?.confirm()
-                    true // the client handles alert itself (confirm called)
-              }
+                Timber.i("onJsAlert() fired in extWebChromeClient")
+                it.getArgument<JsResult>(3)?.confirm()
+                true // the client handles alert itself (confirm called)
+            }
         }
 
         instrumentation.runOnMainSync {
@@ -36,7 +36,7 @@ class AdblockWebChromeClientTest : BaseAdblockWebViewTest() {
 
         val message = "Hello, world"
         val alertPage =
-             """
+            """
              |<html>
              |<body>
              |  <script type="text/javascript">alert("$message");</script>
@@ -55,6 +55,6 @@ class AdblockWebChromeClientTest : BaseAdblockWebViewTest() {
 
             verify(it.first, times(1)).onJsAlert(
                 eq(it.second.webView), eq(indexPageUrl), eq(message), anyOrNull())
-          }
+        }
     }
 }

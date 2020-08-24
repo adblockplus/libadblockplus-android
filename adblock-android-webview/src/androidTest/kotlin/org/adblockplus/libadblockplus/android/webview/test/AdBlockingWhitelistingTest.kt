@@ -67,7 +67,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
 
         Timber.d("Start loading...")
         Assert.assertTrue("$indexPageUrl exceeded loading timeout",
-                testSuitAdblock.loadUrlAndWait(indexPageUrl))
+            testSuitAdblock.loadUrlAndWait(indexPageUrl))
         Timber.d("Loaded")
 
         return Pair(blockedResources, whitelistedResources)
@@ -83,12 +83,12 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             }
 
             override fun onResourceLoadingBlocked(
-                    info:AdblockWebView.EventsListener.BlockedResourceInfo) {
+                info: AdblockWebView.EventsListener.BlockedResourceInfo) {
                 blockedResources.add(info)
             }
 
             override fun onResourceLoadingWhitelisted(
-                    info: AdblockWebView.EventsListener.WhitelistedResourceInfo) {
+                info: AdblockWebView.EventsListener.WhitelistedResourceInfo) {
                 whitelistedResources.add(info)
             }
         })
@@ -110,7 +110,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             .stubFor(any(urlMatching(""".*${redImage.escapeForRegex()}"""))
                 .willReturn(aResponse()
                     .withStatus(HttpStatus.SC_OK)
-                    .withHeader( "Content-Type", "image/png")
+                    .withHeader("Content-Type", "image/png")
                     .withBody(Utils.toByteArray(context.assets.open("red.png")))))
     }
 

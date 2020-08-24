@@ -40,8 +40,8 @@ class WebViewActivity : Activity() {
         super.onCreate(savedInstanceState)
         WebView.setWebContentsDebuggingEnabled(true) // allow devtools connection
         val layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
         )
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
