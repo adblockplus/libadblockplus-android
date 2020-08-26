@@ -24,6 +24,9 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.AndroidBase64Processor;
@@ -47,9 +50,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
-
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -91,7 +91,10 @@ public class WebViewInterceptRequestTest
   @BeforeClass
   public static void setUpClass()
   {
-    Timber.plant(new Timber.DebugTree());
+    if (Timber.treeCount() == 0)
+    {
+      Timber.plant(new Timber.DebugTree());
+    }
     if (!AdblockHelper.get().isInit())
     {
       final String basePath = context.getDir(UUID.randomUUID().toString(),
@@ -151,7 +154,7 @@ public class WebViewInterceptRequestTest
           CookieManager.getInstance().removeAllCookies(new ValueCallback<Boolean>()
           {
             @Override
-            public void onReceiveValue(Boolean value)
+            public void onReceiveValue(final Boolean value)
             {
               if (!value)
               {

@@ -82,6 +82,11 @@ public class Application extends android.app.Application
         .addEngineDisposedListener(engineDisposedListener)
         //.setDisabledByDefault()
         ;
+
+      AdblockHelper
+          .get()
+          .getSiteKeysConfiguration()
+          .setForceChecks(true);
     }
   }
 }

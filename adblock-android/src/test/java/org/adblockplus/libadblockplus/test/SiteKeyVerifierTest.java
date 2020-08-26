@@ -91,17 +91,17 @@ public class SiteKeyVerifierTest
     keyGen.initialize(KEY_LENGTH_BITS, random);
     final KeyPair keyPair = keyGen.generateKeyPair();
 
-    // sign and decode Base64 data
+    // sign and encode to Base64
     final Signature signature = Signature.getInstance(JavaSignatureVerifier.SIGNATURE_ALGORITHM);
     signature.initSign(keyPair.getPrivate());
     signature.update(data);
     final byte[] signatureBytes = signature.sign();
-    final String decodedSignature = base64Processor.encodeToString(signatureBytes);
+    final String encodedSignature = base64Processor.encodeToString(signatureBytes);
 
-    // decode to Base64 public key
+    // encode public key to Base64
     final byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
-    final String decodedPublicKey = base64Processor.encodeToString(publicKeyBytes);
-    return decodedPublicKey + "_" + decodedSignature;
+    final String encodedPublicKey = base64Processor.encodeToString(publicKeyBytes);
+    return encodedPublicKey + "_" + encodedSignature;
   }
 
   protected void signAndAssertVerified(final String signatureUrl, final String verifyUrl,

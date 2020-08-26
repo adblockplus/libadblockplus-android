@@ -19,7 +19,7 @@ android {
     applicationId "org.adblockplus.libadblockplus.android.webviewapp"
     minSdkVersion 21
     targetSdkVersion 28
-    versionCode 43
+    versionCode 44
     versionName = rootProject.ext.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
   }
@@ -34,6 +34,10 @@ android {
   sourceSets {
     test.java.srcDirs += 'src/test/kotlin'
     androidTest.java.srcDirs += 'src/androidTest/kotlin'
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
   }
 }
 

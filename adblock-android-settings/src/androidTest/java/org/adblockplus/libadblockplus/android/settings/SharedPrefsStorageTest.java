@@ -51,7 +51,10 @@ public class SharedPrefsStorageTest
   {
     if (BuildConfig.DEBUG)
     {
-      Timber.plant(new Timber.DebugTree());
+      if (Timber.treeCount() == 0)
+      {
+        Timber.plant(new Timber.DebugTree());
+      }
     }
   }
 

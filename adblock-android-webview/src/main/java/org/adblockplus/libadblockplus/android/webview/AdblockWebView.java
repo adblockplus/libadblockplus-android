@@ -21,52 +21,32 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.net.http.SslError;
 import android.os.Build;
-import android.os.Message;
 import android.util.AttributeSet;
-import android.view.KeyEvent;
-import android.view.View;
-import android.webkit.ClientCertRequest;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
-import android.webkit.GeolocationPermissions;
-import android.webkit.HttpAuthHandler;
 import android.webkit.JavascriptInterface;
-import android.webkit.JsPromptResult;
-import android.webkit.JsResult;
-import android.webkit.PermissionRequest;
-import android.webkit.RenderProcessGoneDetail;
-import android.webkit.SafeBrowsingResponse;
-import android.webkit.SslErrorHandler;
-import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;  // makes android min version to be 21
+import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
-import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
-import org.adblockplus.libadblockplus.HttpRequest;
-import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
+import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
+import org.adblockplus.libadblockplus.android.webview.content_type.HeadersContentTypeDetector;
+import org.adblockplus.libadblockplus.android.webview.content_type.OrderedContentTypeDetector;
 import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl;
-import org.adblockplus.libadblockplus.sitekey.SiteKeyException;
-import org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier;
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -81,68 +61,82 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static org.adblockplus.libadblockplus.HttpClient.STATUS_CODE_OK;
-import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
-import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
-
 import timber.log.Timber;
+
+import static org.adblockplus.libadblockplus.android.webview.AdblockWebView.OptionalBoolean.from;
 
 /**
  * WebView with ad blocking
  */
 public class AdblockWebView extends WebView
 {
-  protected static final String HEADER_REFERRER = "Referer";
-  protected static final String HEADER_REQUESTED_WITH = "X-Requested-With";
-  protected static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
-  protected static final String HEADER_REQUESTED_RANGE = "Range";
-  protected static final String HEADER_LOCATION = "Location";
-  protected static final String HEADER_SET_COOKIE = "Set-Cookie";
-  protected static final String HEADER_COOKIE = "Cookie";
-  protected static final String HEADER_USER_AGENT = "User-Agent";
-  protected static final String HEADER_ACCEPT = "Accept";
-  protected static final String HEADER_REFRESH = "Refresh";
-  protected static final String HEADER_SEC_FETCH_MODE = "Sec-Fetch-Mode";
-
-  // use low-case strings as in WebResponse all header keys are lowered-case
-  protected static final String HEADER_SITEKEY = "x-adblock-key";
-  protected static final String HEADER_CONTENT_TYPE = "content-type";
-  protected static final String HEADER_CONTENT_LENGTH = "content-length";
-
   private static final String ASSETS_CHARSET_NAME = "UTF-8";
   private static final String BRIDGE_TOKEN = "{{BRIDGE}}";
   private static final String DEBUG_TOKEN = "{{DEBUG}}";
   private static final String HIDE_TOKEN = "{{HIDE}}";
   private static final String HIDDEN_TOKEN = "{{HIDDEN_FLAG}}";
+  private static final String SITEKEY_EXTRACTED_TOKEN = "{{SITEKEY_EXTRACTED_FLAG}}";
   private static final String BRIDGE = "jsBridge";
   private static final String EMPTY_ELEMHIDE_STRING = "";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
 
-  // decisions
-  private static final String RESPONSE_CHARSET_NAME = "UTF-8";
-  private static final String RESPONSE_MIME_TYPE = "text/plain";
-
-  private UrlFileExtensionTypeDetector contentTypeDetector = new UrlFileExtensionTypeDetector();
-  private AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
+  private OrderedContentTypeDetector contentTypeDetector;
+  private final AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
   private Integer loadError;
-  private WebChromeClient extWebChromeClient;
-  private WebViewClient extWebViewClient;
-  private WebViewClient intWebViewClient;
-  private Map<String, String> url2Referrer = Collections.synchronizedMap(new HashMap<String, String>());
-  private AtomicReference<String> navigationUrl = new AtomicReference<>();
+  private ProxyWebChromeClient intWebChromeClient;
+  private ProxyWebViewClient intWebViewClient;
+  private final Map<String, String> url2Referrer
+          = Collections.synchronizedMap(new HashMap<String, String>());
+  private final AtomicReference<String> navigationUrl = new AtomicReference<>();
   private String injectJs;
   private String elemhideBlockedJs;
   private CountDownLatch elemHideLatch;
-  private AtomicBoolean adblockEnabled;
+  private final AtomicReference<OptionalBoolean> adblockEnabled =
+      new AtomicReference<>(OptionalBoolean.UNDEFINED);
   private String elemHideSelectorsString;
   private String elemHideEmuSelectorsString;
-  private Object elemHideThreadLockObject = new Object();
+  private final Object elemHideThreadLockObject = new Object();
   private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
-  private AtomicBoolean redirectInProgress = new AtomicBoolean(false);
-  private AtomicBoolean acceptCookie = new AtomicBoolean(true);
-  private AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
+  private String sitekeyExtractedFlag;
+  private final AtomicBoolean redirectInProgress = new AtomicBoolean(false);
+  private SiteKeyExtractor siteKeyExtractor;
+  private final AtomicBoolean acceptCookie = new AtomicBoolean(true);
+  private final AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
+
+  /**
+   * Optional boolean value.
+   * Puts 2 dimensions (having value/no value + true/false) into 1 dimension
+   * to achieve atomic comparisons and null-safety.
+   */
+  public enum OptionalBoolean
+  {
+    /**
+     * No value (equal to "null")
+     */
+    UNDEFINED,
+
+    /**
+     * Having a value and it's True
+     */
+    TRUE,
+
+    /**
+     * Having a value and it's False
+     */
+    FALSE;
+
+    /**
+     * Convenience method to get enum value from boolean value
+     * @param value boolean value
+     * @return enum value
+     */
+    public static OptionalBoolean from(final boolean value)
+    {
+      return (value ? TRUE : FALSE);
+    }
+  }
 
   /**
    * Listener for ad blocking related events.
@@ -222,7 +216,7 @@ public class AdblockWebView extends WebView
      */
     final class WhitelistedResourceInfo extends ResourceInfo
     {
-      private WhitelistReason reason;
+      private final WhitelistReason reason;
 
       public WhitelistedResourceInfo(final String requestUrl,
                                      final List<String> parentFrameUrls,
@@ -265,21 +259,26 @@ public class AdblockWebView extends WebView
     void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info);
   }
 
-  private AtomicReference<EventsListener> eventsListenerAtomicReference = new AtomicReference<>();
-  private SiteKeysConfiguration siteKeysConfiguration;
-  private AdblockEngine.SettingsChangedListener engineSettingsChangedCb = new AdblockEngine.SettingsChangedListener()
+  public void setRedirectInProgress(final boolean redirectInProgress)
+  {
+    this.redirectInProgress.set(redirectInProgress);
+  }
+
+  private final AtomicReference<EventsListener> eventsListenerAtomicReference
+          = new AtomicReference<>();
+  private final AtomicReference<SiteKeysConfiguration> siteKeysConfiguration =
+      new AtomicReference<>();
+  private final AdblockEngine.SettingsChangedListener engineSettingsChangedCb =
+      new AdblockEngine.SettingsChangedListener()
   {
     @Override
     public void onEnableStateChanged(final boolean enabled)
     {
-      if (adblockEnabled == null)
+      final OptionalBoolean newValue = from(enabled);
+      final OptionalBoolean oldValue = adblockEnabled.getAndSet(newValue);
+      if (oldValue != OptionalBoolean.UNDEFINED && oldValue != newValue)
       {
-        return;
-      }
-      boolean oldValue = adblockEnabled.getAndSet(enabled);
-      if (oldValue != enabled)
-      {
-        Timber.d("Filter Engine status changed, enable status is %s", adblockEnabled.get());
+        Timber.d("Filter Engine status changed, enable status is %s", newValue);
         AdblockWebView.this.post(new Runnable()
         {
           @Override
@@ -291,46 +290,42 @@ public class AdblockWebView extends WebView
       }
     }
   };
-  private AdblockEngineProvider.EngineCreatedListener engineCreatedCb = new AdblockEngineProvider.EngineCreatedListener()
+  private final AdblockEngineProvider.EngineCreatedListener engineCreatedCb = new AdblockEngineProvider.EngineCreatedListener()
   {
     @Override
     public void onAdblockEngineCreated(final AdblockEngine engine)
     {
-      adblockEnabled = new AtomicBoolean(engine.isEnabled());
+      adblockEnabled.set(from(engine.isEnabled()));
       Timber.d("Filter Engine created, enable status is %s", adblockEnabled.get());
       engine.addSettingsChangedListener(engineSettingsChangedCb);
     }
   };
-  private AdblockEngineProvider.EngineDisposedListener engineDisposedCb = new AdblockEngineProvider.EngineDisposedListener()
+  private final AdblockEngineProvider.EngineDisposedListener engineDisposedCb
+          = new AdblockEngineProvider.EngineDisposedListener()
   {
     @Override
     public void onAdblockEngineDisposed()
     {
-      adblockEnabled = null;
+      adblockEnabled.set(OptionalBoolean.UNDEFINED);
     }
   };
 
-  public AdblockWebView(Context context)
+  public AdblockWebView(final Context context)
   {
     super(context);
     initAbp();
   }
 
-  public AdblockWebView(Context context, AttributeSet attrs)
+  public AdblockWebView(final Context context, final AttributeSet attrs)
   {
     super(context, attrs);
     initAbp();
   }
 
-  public AdblockWebView(Context context, AttributeSet attrs, int defStyle)
+  public AdblockWebView(final Context context, final AttributeSet attrs, final int defStyle)
   {
     super(context, attrs, defStyle);
     initAbp();
-  }
-
-  private static class ResponseHolder
-  {
-    ServerResponse response;
   }
 
   private EventsListener getEventsListener()
@@ -338,14 +333,16 @@ public class AdblockWebView extends WebView
     return eventsListenerAtomicReference.get();
   }
 
-  public SiteKeysConfiguration getSiteKeysConfiguration()
-  {
-    return siteKeysConfiguration;
-  }
-
   public void setSiteKeysConfiguration(final SiteKeysConfiguration siteKeysConfiguration)
   {
-    this.siteKeysConfiguration = siteKeysConfiguration;
+    this.siteKeysConfiguration.set(siteKeysConfiguration);
+    siteKeyExtractor.setSiteKeysConfiguration(siteKeysConfiguration);
+  }
+
+  @TestOnly
+  public SiteKeysConfiguration getSiteKeysConfiguration()
+  {
+    return siteKeysConfiguration.get();
   }
 
   /**
@@ -361,13 +358,25 @@ public class AdblockWebView extends WebView
   @Override
   public void setWebChromeClient(final WebChromeClient client)
   {
-    extWebChromeClient = client;
+    intWebChromeClient.setExtWebChromeClient(client);
   }
 
   @Override
   public void setWebViewClient(final WebViewClient client)
   {
-    extWebViewClient = client;
+    intWebViewClient.setExtWebViewClient(client);
+  }
+
+  @TestOnly
+  public SiteKeyExtractor getSiteKeyExtractor()
+  {
+    return this.siteKeyExtractor;
+  }
+
+  @TestOnly
+  public void setSiteKeyExtractor(final SiteKeyExtractor extractor)
+  {
+    this.siteKeyExtractor = extractor;
   }
 
   @SuppressLint("SetJavaScriptEnabled")
@@ -377,7 +386,11 @@ public class AdblockWebView extends WebView
     initRandom();
     buildInjectJs();
     getSettings().setJavaScriptEnabled(true);
-    intWebViewClient = new AdblockWebViewClient();
+
+    siteKeyExtractor = new CombinedSiteKeyExtractor(this);
+    intWebChromeClient = new AdblockWebWebChromeClient(null);
+    intWebViewClient = new AdblockWebViewClient(null);
+
     super.setWebChromeClient(intWebChromeClient);
     super.setWebViewClient(intWebViewClient);
   }
@@ -387,16 +400,17 @@ public class AdblockWebView extends WebView
     return providerReference.get();
   }
 
-  private String readScriptFile(String filename) throws IOException
+  private String readScriptFile(final String filename) throws IOException
   {
     return Utils
       .readAssetAsString(getContext(), filename, ASSETS_CHARSET_NAME)
       .replace(BRIDGE_TOKEN, BRIDGE)
       .replace(DEBUG_TOKEN, (BuildConfig.DEBUG ? "" : "//"))
-      .replace(HIDDEN_TOKEN, elementsHiddenFlag);
+      .replace(HIDDEN_TOKEN, elementsHiddenFlag)
+      .replace(SITEKEY_EXTRACTED_TOKEN, sitekeyExtractedFlag);
   }
 
-  private void runScript(String script)
+  private void runScript(final String script)
   {
     Timber.d("runScript started");
     evaluateJavascript(script, null);
@@ -431,7 +445,7 @@ public class AdblockWebView extends WebView
           getProvider().retain(true); // asynchronously
           if (locked && getProvider().getEngine() != null)
           {
-            adblockEnabled = new AtomicBoolean(getProvider().getEngine().isEnabled());
+            adblockEnabled.set(from(getProvider().getEngine().isEnabled()));
             Timber.d("Filter Engine already created, enable status is %s", adblockEnabled);
             getProvider().getEngine().addSettingsChangedListener(engineSettingsChangedCb);
           }
@@ -462,291 +476,15 @@ public class AdblockWebView extends WebView
     }
   }
 
-  private WebChromeClient intWebChromeClient = new WebChromeClient()
+  private class AdblockWebWebChromeClient extends ProxyWebChromeClient
   {
-    @Override
-    public void onPermissionRequest(PermissionRequest request)
+    AdblockWebWebChromeClient(final WebChromeClient extWebChromeClient)
     {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onPermissionRequest(request);
-      }
-      else
-      {
-        super.onPermissionRequest(request);
-      }
+      super(extWebChromeClient);
     }
 
     @Override
-    public void onPermissionRequestCanceled(PermissionRequest request)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onPermissionRequestCanceled(request);
-      }
-      else
-      {
-        super.onPermissionRequestCanceled(request);
-      }
-    }
-
-    @Override
-    public void onReceivedTitle(WebView view, String title)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onReceivedTitle(view, title);
-      }
-      else
-      {
-        super.onReceivedTitle(view, title);
-      }
-    }
-
-    @Override
-    public void onReceivedIcon(WebView view, Bitmap icon)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onReceivedIcon(view, icon);
-      }
-      else
-      {
-        super.onReceivedIcon(view, icon);
-      }
-    }
-
-    @Override
-    public void onReceivedTouchIconUrl(WebView view, String url, boolean precomposed)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onReceivedTouchIconUrl(view, url, precomposed);
-      }
-      else
-      {
-        super.onReceivedTouchIconUrl(view, url, precomposed);
-      }
-    }
-
-    @Override
-    public void onShowCustomView(View view, CustomViewCallback callback)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onShowCustomView(view, callback);
-      }
-      else
-      {
-        super.onShowCustomView(view, callback);
-      }
-    }
-
-    @Override
-    public void onShowCustomView(View view, int requestedOrientation, CustomViewCallback callback)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onShowCustomView(view, requestedOrientation, callback);
-      }
-      else
-      {
-        super.onShowCustomView(view, requestedOrientation, callback);
-      }
-    }
-
-    @Override
-    public void onHideCustomView()
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onHideCustomView();
-      }
-      else
-      {
-        super.onHideCustomView();
-      }
-    }
-
-    @Override
-    public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture,
-                                  Message resultMsg)
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onCreateWindow(view, isDialog, isUserGesture, resultMsg);
-      }
-      else
-      {
-        return super.onCreateWindow(view, isDialog, isUserGesture, resultMsg);
-      }
-    }
-
-    @Override
-    public void onRequestFocus(WebView view)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onRequestFocus(view);
-      }
-      else
-      {
-        super.onRequestFocus(view);
-      }
-    }
-
-    @Override
-    public void onCloseWindow(WebView window)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onCloseWindow(window);
-      }
-      else
-      {
-        super.onCloseWindow(window);
-      }
-    }
-
-    @Override
-    public boolean onJsAlert(WebView view, String url, String message, JsResult result)
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onJsAlert(view, url, message, result);
-      }
-      else
-      {
-        return super.onJsAlert(view, url, message, result);
-      }
-    }
-
-    @Override
-    public boolean onJsConfirm(WebView view, String url, String message, JsResult result)
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onJsConfirm(view, url, message, result);
-      }
-      else
-      {
-        return super.onJsConfirm(view, url, message, result);
-      }
-    }
-
-    @Override
-    public boolean onJsPrompt(WebView view, String url, String message, String defaultValue,
-                              JsPromptResult result)
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onJsPrompt(view, url, message, defaultValue, result);
-      }
-      else
-      {
-        return super.onJsPrompt(view, url, message, defaultValue, result);
-      }
-    }
-
-    @Override
-    public boolean onJsBeforeUnload(WebView view, String url, String message, JsResult result)
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onJsBeforeUnload(view, url, message, result);
-      }
-      else
-      {
-        return super.onJsBeforeUnload(view, url, message, result);
-      }
-    }
-
-    @Override
-    public void onExceededDatabaseQuota(String url, String databaseIdentifier, long quota,
-                                        long estimatedDatabaseSize, long totalQuota,
-                                        WebStorage.QuotaUpdater quotaUpdater)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onExceededDatabaseQuota(url, databaseIdentifier, quota,
-          estimatedDatabaseSize, totalQuota, quotaUpdater);
-      }
-      else
-      {
-        super.onExceededDatabaseQuota(url, databaseIdentifier, quota,
-          estimatedDatabaseSize, totalQuota, quotaUpdater);
-      }
-    }
-
-    @Override
-    public void onReachedMaxAppCacheSize(long requiredStorage, long quota,
-                                         WebStorage.QuotaUpdater quotaUpdater)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
-      }
-      else
-      {
-        super.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
-      }
-    }
-
-    @Override
-    public void onGeolocationPermissionsShowPrompt(String origin,
-                                                   GeolocationPermissions.Callback callback)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onGeolocationPermissionsShowPrompt(origin, callback);
-      }
-      else
-      {
-        super.onGeolocationPermissionsShowPrompt(origin, callback);
-      }
-    }
-
-    @Override
-    public void onGeolocationPermissionsHidePrompt()
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onGeolocationPermissionsHidePrompt();
-      }
-      else
-      {
-        super.onGeolocationPermissionsHidePrompt();
-      }
-    }
-
-    @Override
-    public boolean onJsTimeout()
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onJsTimeout();
-      }
-      else
-      {
-        return super.onJsTimeout();
-      }
-    }
-
-    @Override
-    public void onConsoleMessage(String message, int lineNumber, String sourceID)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onConsoleMessage(message, lineNumber, sourceID);
-      }
-      else
-      {
-        super.onConsoleMessage(message, lineNumber, sourceID);
-      }
-    }
-
-    @Override
-    public boolean onConsoleMessage(ConsoleMessage consoleMessage)
+    public boolean onConsoleMessage(final ConsoleMessage consoleMessage)
     {
       Timber.d("JS: level=%s, message=\"%s\", sourceId=\"%s\", line=%d",
               consoleMessage.messageLevel(),
@@ -754,57 +492,11 @@ public class AdblockWebView extends WebView
               consoleMessage.sourceId(),
               consoleMessage.lineNumber());
 
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onConsoleMessage(consoleMessage);
-      }
-      else
-      {
-        return super.onConsoleMessage(consoleMessage);
-      }
+      return super.onConsoleMessage(consoleMessage);
     }
 
     @Override
-    public Bitmap getDefaultVideoPoster()
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.getDefaultVideoPoster();
-      }
-      else
-      {
-        return super.getDefaultVideoPoster();
-      }
-    }
-
-    @Override
-    public View getVideoLoadingProgressView()
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.getVideoLoadingProgressView();
-      }
-      else
-      {
-        return super.getVideoLoadingProgressView();
-      }
-    }
-
-    @Override
-    public void getVisitedHistory(ValueCallback<String[]> callback)
-    {
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.getVisitedHistory(callback);
-      }
-      else
-      {
-        super.getVisitedHistory(callback);
-      }
-    }
-
-    @Override
-    public void onProgressChanged(WebView view, int newProgress)
+    public void onProgressChanged(final WebView view, final int newProgress)
     {
       if (redirectInProgress.get())
       {
@@ -814,34 +506,13 @@ public class AdblockWebView extends WebView
       Timber.d("onProgressChanged to %d%% for url: %s", newProgress, view.getUrl());
       tryInjectJs();
 
-      if (extWebChromeClient != null)
-      {
-        extWebChromeClient.onProgressChanged(view, newProgress);
-      }
-      else
-      {
-        super.onProgressChanged(view, newProgress);
-      }
+      super.onProgressChanged(view, newProgress);
     }
-
-    @Override
-    public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
-                                     FileChooserParams fileChooserParams)
-    {
-      if (extWebChromeClient != null)
-      {
-        return extWebChromeClient.onShowFileChooser(webView, filePathCallback, fileChooserParams);
-      }
-      else
-      {
-        return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
-      }
-    }
-  };
+  }
 
   private void tryInjectJs()
   {
-    if (adblockEnabled == null || !adblockEnabled.get())
+    if (adblockEnabled.get() != OptionalBoolean.TRUE)
     {
       return;
     }
@@ -875,10 +546,14 @@ public class AdblockWebView extends WebView
     BLOCK_LOAD,
   }
 
-  private static class WebResponseResult
+  static class WebResponseResult
   {
-    static final WebResourceResponse ALLOW_LOAD = null;
-    static final WebResourceResponse BLOCK_LOAD =
+    // decisions
+    static String RESPONSE_CHARSET_NAME = "UTF-8";
+    static String RESPONSE_MIME_TYPE = "text/plain";
+
+    static WebResourceResponse ALLOW_LOAD = null;
+    static WebResourceResponse BLOCK_LOAD =
             new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, null);
   }
 
@@ -886,37 +561,15 @@ public class AdblockWebView extends WebView
    * WebViewClient for API 21 and newer
    * (has Referrer since it overrides `shouldInterceptRequest(..., request)` with referrer)
    */
-  private class AdblockWebViewClient extends WebViewClient
+  private class AdblockWebViewClient extends ProxyWebViewClient
   {
-    @TargetApi(Build.VERSION_CODES.N)
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request)
+    AdblockWebViewClient(final WebViewClient extWebViewClient)
     {
-      if (extWebViewClient != null)
-      {
-        return extWebViewClient.shouldOverrideUrlLoading(view, request);
-      }
-      else
-      {
-        return super.shouldOverrideUrlLoading(view, request);
-      }
+      super(extWebViewClient);
     }
 
     @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url)
-    {
-      if (extWebViewClient != null)
-      {
-        return extWebViewClient.shouldOverrideUrlLoading(view, url);
-      }
-      else
-      {
-        return super.shouldOverrideUrlLoading(view, url);
-      }
-    }
-
-    @Override
-    public void onPageStarted(WebView view, String url, Bitmap favicon)
+    public void onPageStarted(final WebView view, final String url, final Bitmap favicon)
     {
       Timber.d("onPageStarted called for url %s", url);
       if (loading)
@@ -928,18 +581,11 @@ public class AdblockWebView extends WebView
 
       notifyNavigation();
 
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onPageStarted(view, url, favicon);
-      }
-      else
-      {
-        super.onPageStarted(view, url, favicon);
-      }
+      super.onPageStarted(view, url, favicon);
     }
 
     @Override
-    public void onPageFinished(WebView view, String url)
+    public void onPageFinished(final WebView view, final String url)
     {
       if (redirectInProgress.get())
       {
@@ -949,99 +595,12 @@ public class AdblockWebView extends WebView
       }
       Timber.d("onPageFinished called for url %s", url);
       loading = false;
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onPageFinished(view, url);
-      }
-      else
-      {
-        super.onPageFinished(view, url);
-      }
+
+      super.onPageFinished(view, url);
     }
 
     @Override
-    public void onLoadResource(WebView view, String url)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onLoadResource(view, url);
-      }
-      else
-      {
-        super.onLoadResource(view, url);
-      }
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
-    @Override
-    public void onPageCommitVisible(WebView view, String url)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onPageCommitVisible(view, url);
-      }
-      else
-      {
-        super.onPageCommitVisible(view, url);
-      }
-    }
-
-    @TargetApi(Build.VERSION_CODES.O)
-    @Override
-    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail)
-    {
-      if (extWebViewClient != null)
-      {
-        return extWebViewClient.onRenderProcessGone(view, detail);
-      }
-      else
-      {
-        return super.onRenderProcessGone(view, detail);
-      }
-    }
-
-    @TargetApi(Build.VERSION_CODES.O_MR1)
-    @Override
-    public void onSafeBrowsingHit(WebView view, WebResourceRequest request,
-                                  int threatType, SafeBrowsingResponse callback)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onSafeBrowsingHit(view, request, threatType, callback);
-      }
-      else
-      {
-        super.onSafeBrowsingHit(view, request, threatType, callback);
-      }
-    }
-
-    public void onReceivedClientCertRequest(WebView view, ClientCertRequest request)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onReceivedClientCertRequest(view, request);
-      }
-      else
-      {
-        super.onReceivedClientCertRequest(view, request);
-      }
-    }
-
-    @Override
-    public void onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onTooManyRedirects(view, cancelMsg, continueMsg);
-      }
-      else
-      {
-        super.onTooManyRedirects(view, cancelMsg, continueMsg);
-      }
-    }
-
-    @Override
-    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
+    public void onReceivedError(final WebView view, final int errorCode, final String description, final String failingUrl)
     {
       Timber.e("onReceivedError:" +
         " code=%d" +
@@ -1057,19 +616,12 @@ public class AdblockWebView extends WebView
         return;
       }
 
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onReceivedError(view, errorCode, description, failingUrl);
-      }
-      else
-      {
-        super.onReceivedError(view, errorCode, description, failingUrl);
-      }
+      super.onReceivedError(view, errorCode, description, failingUrl);
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
-    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error)
+    public void onReceivedError(final WebView view, final WebResourceRequest request, final WebResourceError error)
     {
       Timber.e("onReceivedError:" +
               " code=%d" +
@@ -1086,133 +638,7 @@ public class AdblockWebView extends WebView
         return;
       }
 
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onReceivedError(view, request, error);
-      }
-      else
-      {
-        super.onReceivedError(view, request, error);
-      }
-    }
-
-    @Override
-    public void onFormResubmission(WebView view, Message dontResend, Message resend)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onFormResubmission(view, dontResend, resend);
-      }
-      else
-      {
-        super.onFormResubmission(view, dontResend, resend);
-      }
-    }
-
-    @Override
-    public void doUpdateVisitedHistory(WebView view, String url, boolean isReload)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.doUpdateVisitedHistory(view, url, isReload);
-      }
-      else
-      {
-        super.doUpdateVisitedHistory(view, url, isReload);
-      }
-    }
-
-    @Override
-    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onReceivedSslError(view, handler, error);
-      }
-      else
-      {
-        super.onReceivedSslError(view, handler, error);
-      }
-    }
-
-    @Override
-    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onReceivedHttpAuthRequest(view, handler, host, realm);
-      }
-      else
-      {
-        super.onReceivedHttpAuthRequest(view, handler, host, realm);
-      }
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
-    @Override
-    public void onReceivedHttpError(WebView view, WebResourceRequest request,
-                                    WebResourceResponse errorResponse)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onReceivedHttpError(view, request, errorResponse);
-      }
-      else
-      {
-        super.onReceivedHttpError(view, request, errorResponse);
-      }
-    }
-
-    @Override
-    public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event)
-    {
-      if (extWebViewClient != null)
-      {
-        return extWebViewClient.shouldOverrideKeyEvent(view, event);
-      }
-      else
-      {
-        return super.shouldOverrideKeyEvent(view, event);
-      }
-    }
-
-    @Override
-    public void onUnhandledKeyEvent(WebView view, KeyEvent event)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onUnhandledKeyEvent(view, event);
-      }
-      else
-      {
-        super.onUnhandledKeyEvent(view, event);
-      }
-    }
-
-    @Override
-    public void onScaleChanged(WebView view, float oldScale, float newScale)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onScaleChanged(view, oldScale, newScale);
-      }
-      else
-      {
-        super.onScaleChanged(view, oldScale, newScale);
-      }
-    }
-
-    @Override
-    public void onReceivedLoginRequest(WebView view, String realm, String account, String args)
-    {
-      if (extWebViewClient != null)
-      {
-        extWebViewClient.onReceivedLoginRequest(view, realm, account, args);
-      }
-      else
-      {
-        super.onReceivedLoginRequest(view, realm, account, args);
-      }
+      super.onReceivedError(view, request, error);
     }
 
     private AbpShouldBlockResult shouldAbpBlockRequest(final WebResourceRequest request)
@@ -1220,19 +646,12 @@ public class AdblockWebView extends WebView
       // here we just trying to fill url -> referrer map
       final String url = request.getUrl().toString();
 
-      final Map<String, String> requestHeadersMap = request.getRequestHeaders();
-
-      final boolean isXmlHttpRequest =
-              request.getRequestHeaders().containsKey(HEADER_REQUESTED_WITH) &&
-                      HEADER_REQUESTED_WITH_XMLHTTPREQUEST.equals(
-                              request.getRequestHeaders().get(HEADER_REQUESTED_WITH));
-
       final boolean isMainFrame = request.isForMainFrame();
       boolean isWhitelisted = false;
       boolean canContainSitekey = false;
       boolean isAcceptableAdsEnabled = true;
 
-      final String referrer = request.getRequestHeaders().get(HEADER_REFERRER);
+      final String referrer = request.getRequestHeaders().get(HttpClient.HEADER_REFERRER);
 
       final Lock lock = getProvider().getReadEngineLock();
       lock.lock();
@@ -1268,7 +687,7 @@ public class AdblockWebView extends WebView
           return AbpShouldBlockResult.NOT_ENABLED;
         }
 
-        if (adblockEnabled == null)
+        if (adblockEnabled.get() == OptionalBoolean.UNDEFINED)
         {
           Timber.e("No adblockEnabled value");
           return AbpShouldBlockResult.NOT_ENABLED;
@@ -1277,8 +696,9 @@ public class AdblockWebView extends WebView
         {
           // check the real enable status and update adblockEnabled flag which is used
           // later on to check if we should execute element hiding JS
-          adblockEnabled.set(engine.isEnabled());
-          if (!adblockEnabled.get())
+          final OptionalBoolean newValue = from(engine.isEnabled());
+          adblockEnabled.set(newValue);
+          if (newValue == OptionalBoolean.FALSE)
           {
             Timber.d("adblockEnabled = false");
             return AbpShouldBlockResult.NOT_ENABLED;
@@ -1305,7 +725,7 @@ public class AdblockWebView extends WebView
         }
 
         // reconstruct frames hierarchy
-        List<String> referrerChain = new ArrayList<>();
+        final List<String> referrerChain = new ArrayList<>();
         String parent = url;
         while ((parent = url2Referrer.get(parent)) != null)
         {
@@ -1317,13 +737,17 @@ public class AdblockWebView extends WebView
           referrerChain.add(0, parent);
         }
 
+        isAcceptableAdsEnabled = engine.isAcceptableAdsEnabled();
         if (isMainFrame)
         {
           // never blocking main frame requests, just subrequests
           Timber.w("%s is main frame, allow loading", url);
+
+          siteKeyExtractor.setEnabled(isAcceptableAdsEnabled);
         }
         else
         {
+          final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
           final String siteKey = (siteKeysConfiguration != null
             ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
               .getAny(referrerChain, ""))
@@ -1347,35 +771,18 @@ public class AdblockWebView extends WebView
           else
           {
             // determine the content
-            FilterEngine.ContentType contentType;
-            if (isXmlHttpRequest)
+            FilterEngine.ContentType contentType =
+                    ensureContentTypeDetectorCreatedAndGet().detect(request);
+            if (contentType == null)
             {
-              contentType = FilterEngine.ContentType.XMLHTTPREQUEST;
+              Timber.w("contentTypeDetector didn't recognize content type");
+              contentType = FilterEngine.ContentType.OTHER;
             }
-            else
-            {
-              contentType = contentTypeDetector.detect(url);
-              if (contentType == null)
-              {
-                Timber.w("contentTypeDetector didn't recognize content type");
-                final String acceptType = requestHeadersMap.get(HEADER_ACCEPT);
-                if (acceptType != null && acceptType.contains("text/html"))
-                {
-                  Timber.w("using subdocument content type");
-                  contentType = FilterEngine.ContentType.SUBDOCUMENT;
-                }
-                else
-                {
-                  Timber.w("using other content type");
-                  contentType = FilterEngine.ContentType.OTHER;
-                }
-              }
 
-              if (contentType == FilterEngine.ContentType.SUBDOCUMENT ||
-                  contentType == FilterEngine.ContentType.OTHER)
-              {
-                canContainSitekey = true;
-              }
+            if (contentType == FilterEngine.ContentType.SUBDOCUMENT ||
+                contentType == FilterEngine.ContentType.OTHER)
+            {
+              canContainSitekey = true;
             }
 
             boolean specificOnly = false;
@@ -1419,8 +826,6 @@ public class AdblockWebView extends WebView
             Timber.d("Allowed loading %s", url);
           }
         } // !MainFrame
-
-        isAcceptableAdsEnabled = engine.isAcceptableAdsEnabled();
       }
       finally
       {
@@ -1429,7 +834,18 @@ public class AdblockWebView extends WebView
 
       // we rely on calling `fetchUrlAndCheckSiteKey` later in `shouldInterceptRequest`, now we
       // just reply that it's fine to load the resource
-      if (isAcceptableAdsEnabled && ((canContainSitekey && !isWhitelisted) || isMainFrame))
+      final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
+      if ((
+            isAcceptableAdsEnabled
+            ||
+            (siteKeysConfiguration != null && siteKeysConfiguration.getForceChecks())
+          )
+          &&
+          (
+            isMainFrame
+            ||
+            (canContainSitekey && !isWhitelisted)
+          ))
       {
         // if url is a main frame (whitelisted by default) or can contain by design a site key header
         // (it content type is SUBDOCUMENT or OTHER) and it is not yet whitelisted then we need to
@@ -1440,305 +856,9 @@ public class AdblockWebView extends WebView
       return AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK;
     }
 
-    private boolean canAcceptCookie(final String documentUrl, final String requestUrl, final String cookieString)
-    {
-      if (documentUrl == null || requestUrl == null || cookieString == null)
-      {
-        return false;
-      }
-      if (!acceptCookie.get())
-      {
-        return false;
-      }
-      if (!acceptThirdPartyCookies.get())
-      {
-        return Utils.isFirstPartyCookie(documentUrl, requestUrl, cookieString);
-      }
-      return true;
-    }
-
-    private WebResourceResponse fetchUrlAndCheckSiteKey(final WebView webview, String url,
-                                                        final Map<String, String> requestHeadersMap,
-                                                        final String requestMethod)
-    {
-      if (siteKeysConfiguration == null ||
-          !requestMethod.equalsIgnoreCase(HttpClient.REQUEST_METHOD_GET))
-      {
-        // for now we handle site key only for GET requests
-        return WebResponseResult.ALLOW_LOAD;
-      }
-
-      Timber.d("fetchUrlAndCheckSiteKey() called from Thread %s", Thread.currentThread().getId());
-      final boolean autoFollowRedirect = webview == null;
-      final ResponseHolder responseHolder = new ResponseHolder();
-      final CountDownLatch latch = new CountDownLatch(1);
-      final HttpClient.Callback callback = new HttpClient.Callback()
-      {
-        @Override
-        public void onFinished(final ServerResponse response_)
-        {
-          responseHolder.response = response_;
-          latch.countDown();
-        }
-      };
-
-      try
-      {
-        final List<HeaderEntry> headersList = convertMapToHeaderEntries(requestHeadersMap);
-        final String cookieValue = CookieManager.getInstance().getCookie(url);
-        if (cookieValue != null && !cookieValue.isEmpty())
-        {
-          Timber.d("Adding %s request header for url %s", HEADER_COOKIE, url);
-          headersList.add(new HeaderEntry(HEADER_COOKIE, cookieValue));
-        }
-
-        // DP-1277: For a top level navigation url we need to set this meta header
-        // See:
-        // - https://www.w3.org/TR/fetch-metadata/#sec-fetch-dest-header
-        // - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Mode
-        if (webview != null)
-        {
-          // For convenience use requestHeadersMap instead of headersList to find if header is already set
-          if (!requestHeadersMap.containsKey(HEADER_SEC_FETCH_MODE))
-          {
-            final String headerValue = "navigate";
-            Timber.d("Adding %s (%s) request header for url %s", HEADER_SEC_FETCH_MODE,
-                headerValue, url);
-            headersList.add(new HeaderEntry(HEADER_SEC_FETCH_MODE, headerValue));
-          }
-        }
-
-        final HttpRequest request = new HttpRequest(url, requestMethod, headersList, autoFollowRedirect, true);
-        siteKeysConfiguration.getHttpClient().request(request, callback);
-      }
-      catch (final AdblockPlusException e)
-      {
-        Timber.e(e, "WebRequest failed");
-        // allow WebView to continue, repeating the request and handling the response
-        return WebResponseResult.ALLOW_LOAD;
-      }
-
-      try
-      {
-        latch.await();
-      }
-      catch (final InterruptedException e)
-      {
-        // error waiting for the response, continue by returning null
-        return WebResponseResult.ALLOW_LOAD;
-      }
-
-      final ServerResponse response = responseHolder.response;
-      final ServerResponse.NsStatus status = response.getStatus();
-      int statusCode = response.getResponseStatus();
-
-      // in some circumstances statusCode gets > 599
-      if (!HttpClient.isStatusAllowed(statusCode))
-      {
-        // looks like the response is just broken
-        // let it go
-        return WebResponseResult.ALLOW_LOAD;
-      }
-
-      final List<HeaderEntry> responseHeaders = response.getResponseHeaders();
-      for (final HeaderEntry eachEntry : responseHeaders)
-      {
-        if (HEADER_SET_COOKIE.equalsIgnoreCase(eachEntry.getKey()))
-        {
-          if (canAcceptCookie(AdblockWebView.this.navigationUrl.get(), url, eachEntry.getValue()))
-          {
-            Timber.d("Calling setCookie(%s)", url);
-            CookieManager.getInstance().setCookie(url, eachEntry.getValue());
-          }
-          else
-          {
-            Timber.d("Rejecting setCookie(%s)", url);
-          }
-        }
-      }
-
-      if (HttpClient.isRedirectCode(statusCode))
-      {
-        if (webview != null)
-        {
-          return reloadWebViewUrl(url, responseHolder);
-        }
-        return WebResponseResult.ALLOW_LOAD;
-      }
-
-      if (response.getFinalUrl() != null)
-      {
-        Timber.d("Updating url to %s, was (%s)", response.getFinalUrl(), url);
-        url = response.getFinalUrl();
-      }
-
-      final Map<String, String> responseHeadersMap = convertHeaderEntriesToMap(responseHeaders);
-
-      verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
-              url,
-              requestHeadersMap,
-              responseHeadersMap);
-
-      if (response.getInputStream() != null)
-      {
-        final String responseContentType = responseHeadersMap.get(HEADER_CONTENT_TYPE);
-        String responseMimeType = null;
-        String responseEncoding = null;
-        if (responseContentType != null)
-        {
-          final int semicolonPos = responseContentType.indexOf(";");
-          if (semicolonPos > 0)
-          {
-            responseMimeType = responseContentType.substring(0, semicolonPos);
-            final String charsetKey = "charset=";
-            final int charsetPos = responseContentType.indexOf(charsetKey);
-            if ((charsetPos >= 0) && (charsetPos < responseContentType.length() - charsetKey.length()))
-            {
-              responseEncoding = responseContentType.substring(charsetPos + charsetKey.length());
-            }
-          }
-          else if (responseContentType.indexOf("/") > 0)
-          {
-            responseMimeType = responseContentType;
-          }
-        }
-
-        /**
-         * Quoting https://developer.android.com/reference/android/webkit/WebResourceResponse:
-         * Do not use the value of a HTTP Content-Encoding header for encoding, as that header does not
-         * specify a character encoding. Content without a defined character encoding (for example image
-         * resources) should pass null for encoding.
-         * TODO: Include here other contentTypes also, not only "image".
-         */
-        if ((responseEncoding != null) && (responseMimeType != null) && responseMimeType.startsWith("image"))
-        {
-          Timber.d("Setting responseEncoding to null for contentType == %s (url == %s)", responseMimeType, url);
-          responseEncoding = null;
-        }
-
-        if (responseMimeType != null)
-        {
-          Timber.d("Removing %s to avoid Content-Type duplication", HEADER_CONTENT_TYPE);
-          responseHeadersMap.remove(HEADER_CONTENT_TYPE);
-        }
-        else if (responseHeadersMap.get(HEADER_CONTENT_LENGTH) != null)
-        {
-          // For some reason for responses which lack Content-Type header and has Content-Length==0,
-          // underlying WebView layer can trigger a DownloadListener. Applying "default" Content-Type
-          // value helps. To reduce risk we apply it only when Content-Length==0 as there is no body
-          // so there is no risk that browser will render that even when we apply a wrong Content-Type.
-          int contentLength = 0;
-          try
-          {
-            contentLength = Integer.valueOf(responseHeadersMap.get(HEADER_CONTENT_LENGTH).trim());
-          }
-          catch (final NumberFormatException e)
-          {
-            Timber.e(e, "Integer.valueOf(responseHeadersMap.get(HEADER_CONTENT_LENGTH)) failed");
-          }
-
-          if (contentLength == 0)
-          {
-            Timber.d("Setting responseMimeType to %s (url == %s)", RESPONSE_MIME_TYPE, url);
-            responseMimeType = RESPONSE_MIME_TYPE;
-          }
-        }
-
-        if (responseMimeType != null)
-        {
-          responseMimeType = responseMimeType.trim();
-        }
-        if (responseEncoding != null)
-        {
-          responseEncoding = responseEncoding.trim();
-        }
-        Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)", responseMimeType, responseEncoding, url);
-        return new WebResourceResponse(
-                responseMimeType, responseEncoding,
-                statusCode, getReasonPhrase(status),
-                responseHeadersMap, response.getInputStream());
-      }
-      Timber.w("fetchUrlAndCheckSiteKey() passes control to WebView");
-      return WebResponseResult.ALLOW_LOAD;
-    }
-
-    /**
-     * Goes over responseHeaders and does a sitekey verification
-     *
-     * Passing responseHeaders in Map just not to convert them
-     * to HeaderEntries back and forth
-     */
-    private void verifySiteKeysInHeaders(@NotNull SiteKeyVerifier verifier,
-                                         String url,
-                                         Map<String, String> requestHeadersMap,
-                                         Map<String, String> responseHeaders) {
-      for (Map.Entry<String, String> header : responseHeaders.entrySet())
-      {
-        if (header.getKey().equals(HEADER_SITEKEY))
-        {
-          // verify signature and save public key to be used as sitekey for next requests
-          try
-          {
-            if (verifier.verify(
-                Utils.getUrlWithoutAnchor(url), requestHeadersMap.get(HEADER_USER_AGENT), header.getValue()))
-            {
-              Timber.d("Url %s public key verified successfully", url);
-            }
-            else
-            {
-              Timber.e("Url %s public key is not verified", url);
-            }
-          }
-          catch (final SiteKeyException e)
-          {
-            Timber.e(e, "Failed to verify sitekey header");
-          }
-          break;
-        }
-      }
-    }
-
-    private WebResourceResponse reloadWebViewUrl(final String url,
-                                                 final ResponseHolder responseHolder)
-    {
-      String redirectedUrl = null;
-      for (final HeaderEntry header : responseHolder.response.getResponseHeaders())
-      {
-        if (header.getKey().equalsIgnoreCase(HEADER_LOCATION) &&
-            header.getValue() != null && !header.getValue().isEmpty())
-        {
-          redirectedUrl = header.getValue();
-          try
-          {
-            // check and handle relative url redirection
-            if (!Utils.isAbsoluteUrl(redirectedUrl))
-            {
-              redirectedUrl = Utils.getAbsoluteUrl(url, redirectedUrl);
-            }
-          }
-          catch (final Exception e)
-          {
-            Timber.e(e, "Failed to build absolute redirect URL");
-            redirectedUrl = null;
-          }
-        }
-      }
-
-      if (redirectedUrl != null)
-      {
-        Timber.d("redirecting a webview from %s to %s", url, redirectedUrl);
-        // we need to reload webview url to make it aware of new new url after redirection
-        redirectInProgress.set(true);
-        final Map<String, String> responseHeaders = Collections.singletonMap(HEADER_REFRESH, "0; url=" + redirectedUrl);
-        return new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, STATUS_CODE_OK,
-                "OK", responseHeaders, new ByteArrayInputStream(new byte[] {}));
-      }
-      return WebResponseResult.ALLOW_LOAD;
-    }
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request)
+    public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request)
     {
       if (request.isForMainFrame())
       {
@@ -1762,6 +882,7 @@ public class AdblockWebView extends WebView
       final Map<String, String> requestHeaders = request.getRequestHeaders();
       final String url = request.getUrl().toString();
 
+      final WebViewClient extWebViewClient = getExtWebViewClient();
       if (extWebViewClient != null)
       {
         // allow external WebViewClient to perform and intercept requests
@@ -1773,19 +894,18 @@ public class AdblockWebView extends WebView
         // we will do the sitekey verification and just return the Response
         if (externalResponse != null)
         {
-          if (!AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK.equals(abpBlockResult) )
+          if (!AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK.equals(abpBlockResult))
           {
             Timber.d("Verifying site keys with external shouldInterceptRequest response");
-            verifySiteKeysInHeaders(siteKeysConfiguration.getSiteKeyVerifier(),
-                    url,
-                    requestHeaders,
-                    externalResponse.getResponseHeaders());
+            getSiteKeysConfiguration().getSiteKeyVerifier().verifyInHeaders(url,
+                  requestHeaders,
+                  externalResponse.getResponseHeaders());
             Timber.d("Finished verifying, returning external response and stop");
           }
           else
           {
-            Timber.d("Skipped the verifying of the site keys" +
-                    " with external shouldInterceptRequest response");
+            Timber.d("Skipped verifying of the site keys with " +
+                    "external shouldInterceptRequest response");
           }
           return externalResponse;
         }
@@ -1797,17 +917,48 @@ public class AdblockWebView extends WebView
         return WebResponseResult.ALLOW_LOAD;
       }
 
-      if (requestHeaders.containsKey(HEADER_REQUESTED_RANGE))
+      if (requestHeaders.containsKey(HttpClient.HEADER_REQUESTED_RANGE))
       {
         Timber.d("Skipping site key check for the request with a Range header");
         return WebResponseResult.ALLOW_LOAD;
       }
 
-      return fetchUrlAndCheckSiteKey(request.isForMainFrame() ? view : null,
-              url,
-              requestHeaders,
-              request.getMethod());
+      return siteKeyExtractor.obtainAndCheckSiteKey(AdblockWebView.this, request);
     }
+  }
+
+  public boolean canAcceptCookie(final String requestUrl, final String cookieString)
+  {
+    final String documentUrl = navigationUrl.get();
+    if (documentUrl == null || requestUrl == null || cookieString == null)
+    {
+      return false;
+    }
+    if (!acceptCookie.get())
+    {
+      return false;
+    }
+    if (!acceptThirdPartyCookies.get())
+    {
+      return Utils.isFirstPartyCookie(documentUrl, requestUrl, cookieString);
+    }
+    return true;
+  }
+
+  // not a huge saving, but still nice to lazy init
+  // since `contentTypeDetector` might not be used ever
+  private ContentTypeDetector ensureContentTypeDetectorCreatedAndGet()
+  {
+    if (contentTypeDetector == null)
+    {
+      final HeadersContentTypeDetector headersContentTypeDetector =
+          new HeadersContentTypeDetector();
+      final UrlFileExtensionTypeDetector urlFileExtensionTypeDetector =
+          new UrlFileExtensionTypeDetector();
+      contentTypeDetector = new OrderedContentTypeDetector(headersContentTypeDetector,
+          urlFileExtensionTypeDetector);
+    }
+    return contentTypeDetector;
   }
 
   private void notifyNavigation()
@@ -1848,17 +999,22 @@ public class AdblockWebView extends WebView
 
   private void elemhideBlockedResource(final String url)
   {
-    Timber.d("Trying to elemhide visible blocked resource with url: " + url);
-    final String filenameWithQuery;
+    String filenameWithQuery;
     try
     {
       filenameWithQuery = Utils.extractPathWithQuery(url);
+      if (filenameWithQuery.startsWith("/"))
+      {
+        filenameWithQuery = filenameWithQuery.substring(1);
+      }
     }
     catch (final MalformedURLException e)
     {
       Timber.e("Failed to parse URI for blocked resource:" + url + ". Skipping element hiding");
       return;
     }
+    Timber.d("Trying to elemhide visible blocked resource with url `%s` and path `%s`",
+        url, filenameWithQuery);
 
     /*
     It finds all the elements with source URLs ending with ... and then compare full paths.
@@ -1890,25 +1046,22 @@ public class AdblockWebView extends WebView
     });
   }
 
-  private String getReasonPhrase(ServerResponse.NsStatus status)
-  {
-    return status.name().replace("_", "");
-  }
-
   private void initRandom()
   {
-    elementsHiddenFlag = "abp" + Math.abs(new Random().nextLong());
+    final Random random = new Random();
+    elementsHiddenFlag = "abp" + Math.abs(random.nextLong());
+    sitekeyExtractedFlag = "abp" + Math.abs(random.nextLong());
   }
 
   private class ElemHideThread extends Thread
   {
     private String stylesheetString;
     private String emuSelectorsString;
-    private CountDownLatch finishedLatch;
-    private AtomicBoolean isFinished;
-    private AtomicBoolean isCancelled;
+    private final CountDownLatch finishedLatch;
+    private final AtomicBoolean isFinished;
+    private final AtomicBoolean isCancelled;
 
-    public ElemHideThread(CountDownLatch finishedLatch)
+    public ElemHideThread(final CountDownLatch finishedLatch)
     {
       this.finishedLatch = finishedLatch;
       isFinished = new AtomicBoolean(false);
@@ -1951,7 +1104,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          List<String> referrerChain = new ArrayList<>(1);
+          final List<String> referrerChain = new ArrayList<>(1);
           String parentUrl = navigationUrl.get();
           referrerChain.add(parentUrl);
           while ((parentUrl = url2Referrer.get(parentUrl)) != null)
@@ -1966,14 +1119,14 @@ public class AdblockWebView extends WebView
 
           final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
 
-          List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
+          final List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
 
           try
           {
             Timber.d("Listed subscriptions: %d", subscriptions.size());
             if (BuildConfig.DEBUG)
             {
-              for (Subscription eachSubscription : subscriptions)
+              for (final Subscription eachSubscription : subscriptions)
               {
                 Timber.d("Subscribed to "
                   + (eachSubscription.isDisabled() ? "disabled" : "enabled")
@@ -1983,7 +1136,7 @@ public class AdblockWebView extends WebView
           }
           finally
           {
-            for (Subscription eachSubscription : subscriptions)
+            for (final Subscription eachSubscription : subscriptions)
             {
               eachSubscription.dispose();
             }
@@ -2003,6 +1156,7 @@ public class AdblockWebView extends WebView
             Timber.d("Requesting elemhide selectors from AdblockEngine for %s in %s",
                     navigationUrlLocalRef, this);
 
+            final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
             final String siteKey = (siteKeysConfiguration != null
               ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
                 .getAny(referrerChain, ""))
@@ -2027,7 +1181,7 @@ public class AdblockWebView extends WebView
             // elemhideemu
             Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s in %s",
                     navigationUrlLocalRef, this);
-            List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
+            final List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
               .getEngine()
               .getElementHidingEmulationSelectors(navigationUrlLocalRef, domain, referrerChain, siteKey);
 
@@ -2064,7 +1218,7 @@ public class AdblockWebView extends WebView
       }
     }
 
-    private void finish(String selectorsString, String emuSelectorsString)
+    private void finish(final String selectorsString, final String emuSelectorsString)
     {
       isFinished.set(true);
       Timber.d("Setting elemhide string %d bytes", selectorsString.length());
@@ -2079,7 +1233,7 @@ public class AdblockWebView extends WebView
     private final Object finishedRunnableLockObject = new Object();
     private Runnable finishedRunnable;
 
-    public void setFinishedRunnable(Runnable runnable)
+    public void setFinishedRunnable(final Runnable runnable)
     {
       synchronized (finishedRunnableLockObject)
       {
@@ -2102,7 +1256,7 @@ public class AdblockWebView extends WebView
     }
   }
 
-  private Runnable elemHideThreadFinishedRunnable = new Runnable()
+  private final Runnable elemHideThreadFinishedRunnable = new Runnable()
   {
     @Override
     public void run()
@@ -2126,7 +1280,7 @@ public class AdblockWebView extends WebView
     }
   }
 
-  private void startAbpLoading(String newUrl)
+  private void startAbpLoading(final String newUrl)
   {
     Timber.d("Start loading %s", newUrl);
 
@@ -2158,7 +1312,7 @@ public class AdblockWebView extends WebView
     {
       if (injectJs == null)
       {
-        StringBuffer sb = new StringBuffer();
+        final StringBuffer sb = new StringBuffer();
         sb.append(readScriptFile("inject.js").replace(HIDE_TOKEN, readScriptFile("css.js")));
         sb.append(readScriptFile("elemhideemu.js"));
         injectJs = sb.toString();
@@ -2232,7 +1386,7 @@ public class AdblockWebView extends WebView
   }
 
   @Override
-  public void loadUrl(String url)
+  public void loadUrl(final String url)
   {
     checkCookieSettings();
     ensureProvider();
@@ -2246,7 +1400,7 @@ public class AdblockWebView extends WebView
   }
 
   @Override
-  public void loadUrl(String url, Map<String, String> additionalHttpHeaders)
+  public void loadUrl(final String url, final Map<String, String> additionalHttpHeaders)
   {
     checkCookieSettings();
     ensureProvider();
@@ -2260,7 +1414,7 @@ public class AdblockWebView extends WebView
   }
 
   @Override
-  public void loadData(String data, String mimeType, String encoding)
+  public void loadData(final String data, final String mimeType, final String encoding)
   {
     checkCookieSettings();
     ensureProvider();
@@ -2274,8 +1428,8 @@ public class AdblockWebView extends WebView
   }
 
   @Override
-  public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding,
-                                  String historyUrl)
+  public void loadDataWithBaseURL(final String baseUrl, final String data, final String mimeType, final String encoding,
+                                  final String historyUrl)
   {
     checkCookieSettings();
     ensureProvider();
@@ -2373,9 +1527,9 @@ public class AdblockWebView extends WebView
 
   private class DisposeRunnable implements Runnable
   {
-    private Runnable disposeFinished;
+    private final Runnable disposeFinished;
 
-    private DisposeRunnable(Runnable disposeFinished)
+    private DisposeRunnable(final Runnable disposeFinished)
     {
       this.disposeFinished = disposeFinished;
     }
@@ -2413,7 +1567,7 @@ public class AdblockWebView extends WebView
 
     try
     {
-      AdblockEngine engine = getProvider().getEngine();
+      final AdblockEngine engine = getProvider().getEngine();
       if (engine != null)
       {
         engine.removeSettingsChangedListener(engineSettingsChangedCb);
@@ -2428,7 +1582,7 @@ public class AdblockWebView extends WebView
 
     stopLoading();
 
-    DisposeRunnable disposeRunnable = new DisposeRunnable(disposeFinished);
+    final DisposeRunnable disposeRunnable = new DisposeRunnable(disposeFinished);
     synchronized (elemHideThreadLockObject)
     {
       if (elemHideThread != null)

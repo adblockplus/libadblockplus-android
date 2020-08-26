@@ -6,6 +6,8 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
@@ -16,15 +18,15 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import androidx.test.platform.app.InstrumentationRegistry;
 import timber.log.Timber;
 
 import static android.webkit.WebSettings.LOAD_NO_CACHE;
 
 public class WebViewTestSuit<T extends WebView>
 {
-  private final static int MAX_PAGE_LOAD_WAIT_TIME_SEC = 20;
+  private final static int MAX_PAGE_LOAD_WAIT_TIME_SEC = 60;
   public T webView;
+  public WebViewClient extWebViewClient;
   public final Map<String, Long> results = new HashMap<>();
   public WebViewClient client = null;
 
@@ -61,16 +63,19 @@ public class WebViewTestSuit<T extends WebView>
     }
   }
 
-  private class WebViewWaitingClient extends  WebViewClient
+  private class WebViewWaitingClient extends WebViewClient
   {
     private String lastPageStartedUrl = "";
     private AtomicReference<Long> startTime = new AtomicReference<>(null);
-    private CountDownLatch countDownLatch;
+    private final CountDownLatch countDownLatch;
+    private final WebViewClient extWebViewClient;
 
-    public WebViewWaitingClient(final CountDownLatch countDownLatch)
+    public WebViewWaitingClient(final CountDownLatch countDownLatch,
+                                final WebViewClient extWebViewClient)
     {
       super();
       this.countDownLatch = countDownLatch;
+      this.extWebViewClient = extWebViewClient;
     }
 
     public void resetTimer()
@@ -86,6 +91,10 @@ public class WebViewTestSuit<T extends WebView>
       if (startTime.get() == null)
       {
         startTime.set(System.currentTimeMillis());
+      }
+      if (extWebViewClient != null)
+      {
+        extWebViewClient.onPageStarted(view, url, favicon);
       }
     }
 
@@ -107,13 +116,21 @@ public class WebViewTestSuit<T extends WebView>
           WebViewTestSuit.this.results.put(Utils.getUrlWithoutParams(url), timeDelta);
         }
         resetTimer();
+        if (extWebViewClient != null)
+        {
+          extWebViewClient.onPageFinished(view, url);
+        }
         countDownLatch.countDown();
       }
+      else if (extWebViewClient != null)
+      {
+        extWebViewClient.onPageFinished(view, url);
+      }
     }
-  };
+  }
 
   // Clear cookies and cache
-  private void clearWebViewsState() throws InterruptedException
+  public void clearWebViewsState() throws InterruptedException
   {
     final CountDownLatch countDownLatch = new CountDownLatch(1);
     InstrumentationRegistry.getInstrumentation().runOnMainSync(new Runnable()
@@ -125,7 +142,7 @@ public class WebViewTestSuit<T extends WebView>
         CookieManager.getInstance().removeAllCookies(new ValueCallback<Boolean>()
         {
           @Override
-          public void onReceiveValue(Boolean value)
+          public void onReceiveValue(final Boolean value)
           {
             if (!value)
             {
@@ -139,10 +156,11 @@ public class WebViewTestSuit<T extends WebView>
     countDownLatch.await();
   }
 
-  public void loadUrlAndWait(final String url) throws InterruptedException
+  public boolean loadUrlAndWait(final String url) throws InterruptedException
   {
     final CountDownLatch countDownLatch = new CountDownLatch(1);
-    final WebViewWaitingClient webViewClient = new WebViewWaitingClient(countDownLatch);
+    final WebViewWaitingClient webViewClient = new WebViewWaitingClient(
+        countDownLatch, extWebViewClient);
     InstrumentationRegistry.getInstrumentation().runOnMainSync(new Runnable()
     {
       @Override
@@ -152,13 +170,14 @@ public class WebViewTestSuit<T extends WebView>
         webView.loadUrl(url);
       }
     });
-    boolean hasFinished = countDownLatch.await(MAX_PAGE_LOAD_WAIT_TIME_SEC, TimeUnit.SECONDS);
+    final boolean hasFinished = countDownLatch.await(MAX_PAGE_LOAD_WAIT_TIME_SEC, TimeUnit.SECONDS);
     if (!hasFinished)
     {
       webViewClient.resetTimer();
       Timber.w("Skipping url `%s` from measurement due to too long loading time in %s!",
           url, (webView instanceof AdblockWebView ? "AdblockWebView" : "WebView"));
     }
+    return hasFinished;
   }
 
   public void measure(final String url) throws InterruptedException

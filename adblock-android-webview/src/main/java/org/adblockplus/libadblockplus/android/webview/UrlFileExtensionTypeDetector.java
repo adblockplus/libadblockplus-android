@@ -17,13 +17,15 @@
 
 package org.adblockplus.libadblockplus.android.webview;
 
+import android.webkit.WebResourceRequest;
+
 import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
+
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class UrlFileExtensionTypeDetector
+public class UrlFileExtensionTypeDetector implements ContentTypeDetector
 {
   private static final String[] EXTENSIONS_JS    = { "js" };
   private static final String[] EXTENSIONS_CSS   = { "css" };
@@ -64,27 +66,30 @@ public class UrlFileExtensionTypeDetector
     mapExtensions(EXTENSIONS_HTML, FilterEngine.ContentType.SUBDOCUMENT);
     mapExtensions(EXTENSIONS_IMAGE, FilterEngine.ContentType.IMAGE);
     mapExtensions(EXTENSIONS_MEDIA, FilterEngine.ContentType.MEDIA);
-  };
+  }
 
-  private static final Pattern RE_FILE_EXTENSION =
-    Pattern.compile(".*/.+?(\\.(.+?))+(?:\\?.*)?(?:#.*)?$", Pattern.CASE_INSENSITIVE);
-
-  /**
-   * Detects ContentType for given URL
-   * @param url URL
-   * @return ContentType or `null` if not detected
-   */
-  public FilterEngine.ContentType detect(final String url)
+  // JavaDoc inherited from base interface
+  @Override
+  public FilterEngine.ContentType detect(final WebResourceRequest request)
   {
-    if (url == null)
+    if (request == null || request.getUrl() == null)
     {
       return null;
     }
-    final Matcher result = RE_FILE_EXTENSION.matcher(url);
-    if (result.find() && result.groupCount() == 2)
+    final String path = request.getUrl().getPath();
+    if (path == null)
     {
-      final String fileExtension = result.group(2).toLowerCase();
-      return extensionTypeMap.get(fileExtension);
+      return null;
+    }
+    final int lastIndexOfDot = path.lastIndexOf('.');
+    if (lastIndexOfDot == -1)
+    {
+      return null;
+    }
+    final String fileExtension = path.substring(lastIndexOfDot + 1);
+    if (fileExtension != null)
+    {
+      return extensionTypeMap.get(fileExtension.toLowerCase());
     }
     return null;
   }
