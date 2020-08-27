@@ -24,13 +24,20 @@ public abstract class HttpClient
   public static final String HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest";
   public static final String HEADER_REQUESTED_RANGE = "Range";
   public static final String HEADER_LOCATION = "Location";
-  public static final String HEADER_SET_COOKIE = "Set-Cookie";
   public static final String HEADER_COOKIE = "Cookie";
   public static final String HEADER_USER_AGENT = "User-Agent";
   public static final String HEADER_ACCEPT = "Accept";
   public static final String HEADER_REFRESH = "Refresh";
   public static final String HEADER_SEC_FETCH_MODE = "Sec-Fetch-Mode";
   // use low-case strings as in WebResponse all header keys are lowered-case
+  public static final String HEADER_SET_COOKIE = "set-cookie";
+  public static final String HEADER_WWW_AUTHENTICATE = "www-authenticate";
+  public static final String HEADER_PROXY_AUTHENTICATE = "proxy-authenticate";
+  public static final String HEADER_EXPIRES = "expires";
+  public static final String HEADER_DATE = "date";
+  public static final String HEADER_RETRY_AFTER = "retry-after";
+  public static final String HEADER_LAST_MODIFIED = "last-modified";
+  public static final String HEADER_VIA = "via";
   public static final String HEADER_SITEKEY = "x-adblock-key";
   public static final String HEADER_CONTENT_TYPE = "content-type";
   public static final String HEADER_CONTENT_LENGTH = "content-length";

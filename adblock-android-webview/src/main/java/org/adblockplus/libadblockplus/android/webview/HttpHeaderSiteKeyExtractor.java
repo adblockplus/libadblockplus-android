@@ -31,6 +31,7 @@ import org.adblockplus.libadblockplus.android.webview.AdblockWebView.WebResponse
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -156,6 +157,7 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     }
 
     final List<HeaderEntry> responseHeaders = response.getResponseHeaders();
+    final List<HeaderEntry> cookieHeadersToRemove = new ArrayList<>();
     for (final HeaderEntry eachEntry : responseHeaders)
     {
       if (HttpClient.HEADER_SET_COOKIE.equalsIgnoreCase(eachEntry.getKey()))
@@ -169,8 +171,11 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
         {
           Timber.d("Rejecting setCookie(%s)", url);
         }
+        cookieHeadersToRemove.add(eachEntry);
       }
     }
+    // DP-971: We don't need to pass HEADER_SET_COOKIE data further
+    responseHeaders.removeAll(cookieHeadersToRemove);
 
     // since we'd like to make this extractor work
     // as a main extractor as well as a secondary

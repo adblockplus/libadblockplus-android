@@ -21,6 +21,7 @@ import android.content.Context;
 
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HeaderEntry;
+import org.adblockplus.libadblockplus.HttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,10 +39,14 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import timber.log.Timber;
 
@@ -335,18 +340,73 @@ public final class Utils
     return buffer;
   }
 
+  public static final Set<String> commaNotMergableHeaders = Collections.unmodifiableSet(
+      new HashSet<>(Arrays.asList(
+          HttpClient.HEADER_SET_COOKIE, HttpClient.HEADER_WWW_AUTHENTICATE,
+          HttpClient.HEADER_PROXY_AUTHENTICATE, HttpClient.HEADER_EXPIRES, HttpClient.HEADER_DATE,
+          HttpClient.HEADER_RETRY_AFTER, HttpClient.HEADER_LAST_MODIFIED, HttpClient.HEADER_VIA
+      ))
+  );
+
   /**
    * Convert map to list of headers
-   * @param list list of headers
+   * @param headersListLowerCase list of headers
    * @return map of headers
    */
-  public static Map<String, String> convertHeaderEntriesToMap(final List<HeaderEntry> list)
+  public static Map<String, String> convertHeaderEntriesToMap(final List<HeaderEntry> headersListLowerCase)
   {
-    final Map<String, String> map = new HashMap<>(list.size());
-    for (final HeaderEntry header : list)
+    final Map<String, String> map = new HashMap<>(headersListLowerCase.size());
+    for (final HeaderEntry header : headersListLowerCase)
     {
-      /* FIXME: List<HeaderEntry> can contain duplicated keys which will be overwritten here */
-      map.put(header.getKey(), header.getValue());
+      if (!map.containsKey((header.getKey())))
+      {
+        map.put(header.getKey(), header.getValue());
+      }
+      else
+      {
+        final boolean skipMerge = commaNotMergableHeaders.contains(header.getKey());
+        /*
+         * See DP-971 for more context of this code but here we are trying to merge headers values.
+         * HTTP 1.1 Section 4.2 (RFC 2616):
+         * Multiple message-header fields with the same field-name MAY be present in a message if and
+         * only if the entire field-value for that header field is defined as a comma-separated list
+         * [i.e., #(values)].
+         * It MUST be possible to combine the multiple header fields into one "field-name: field-value"
+         * pair, without changing the semantics of the message, by appending each subsequent field-value
+         * to the first, each separated by a comma.
+         *
+         * Newer versions of HTTP should not change that:
+         * HTTP/2 leaves all of HTTP 1.1's high-level semantics, such as methods, status codes,
+         * header fields, and URIs, the same. What is new is how the data is framed and transported
+         * between the client and the server.
+         * HTTP/3 uses the same semantics as HTTP/1.1 and HTTP/2 (the same operations like GET and POST)
+         * and same response codes (like 200 or 404) but uses a different transport protocol aware of
+         * these semantics and capable of recovering from packet loss with minimal performance loss.
+        */
+        if (skipMerge)
+        {
+          /*
+           * Concatenating Set-Cookie header values using "\n" did not work, so we try to merge only
+           * those headers which can be concatenated by "," character, while other duplicated headers
+           * we just overwrite.
+           */
+          Timber.d("convertHeaderEntriesToMap() overwrites value of `%s` header",
+              header.getKey());
+          map.put(header.getKey(), header.getValue());
+        }
+        else if (map.get(header.getKey()).equalsIgnoreCase(header.getValue()))
+        {
+          Timber.d("convertHeaderEntriesToMap() skips duplicated value of `%s` header",
+              header.getKey());
+        }
+        else
+        {
+          final String mergedValue =  map.get(header.getKey()) + ", " + header.getValue();
+          Timber.d("convertHeaderEntriesToMap() merges values of `%s` header",
+              header.getKey());
+          map.put(header.getKey(), mergedValue);
+        }
+      }
     }
     return map;
   }
