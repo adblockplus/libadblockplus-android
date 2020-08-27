@@ -22,6 +22,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -65,9 +66,7 @@ public class MainActivity extends AppCompatActivity
       WebView.setWebContentsDebuggingEnabled(true);
     }
 
-    final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
-    final boolean restoreChecked = sharedPreferences.getBoolean(SAVED_RESTORE_TABS_CHECK, false);
-    if (!restoreChecked)
+    if (tabs.isEmpty())
     {
       addTab(false, getIntent().getDataString());
     }
@@ -189,8 +188,31 @@ public class MainActivity extends AppCompatActivity
 
     final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
     final int tabsCount = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0);
-    for (int i = 0; i < tabsCount; ++i)
+
+    final List<Fragment> fragments = this.getSupportFragmentManager().getFragments();
+
+    final TabFragment[] tabFragments = new TabFragment[fragments.size()];
+    for (final Fragment fragment : fragments)
     {
+      final TabFragment tabFragment = (TabFragment) fragment;
+      final String title = tabFragment.getTitle();
+      final String extractIdString = title.replaceAll(getString(R.string.main_tab_title), "");
+      final int index = Integer.parseInt(extractIdString) - 1;
+      tabFragments[index] = tabFragment;
+    }
+    int i = 0;
+    for (final TabFragment tabFragment : tabFragments)
+    {
+      // some tab fragments might be recovered through
+      // android on create so we just need to add them into
+      // tabs
+      addTab(tabFragment);
+      ++i;
+    }
+    for (; i < tabsCount; ++i)
+    {
+      // the rest of the tab fragments need to be explicitly
+      // created through add tab
       Timber.d("initControls() adds tab %d", i);
       addTab(false, null);
     }
@@ -205,11 +227,18 @@ public class MainActivity extends AppCompatActivity
    */
   private void addTab(final boolean useCustomIntercept, final String navigateToUrl)
   {
+    final TabFragment newTab = TabFragment.newInstance(
+        getString(R.string.main_tab_title).concat(String.valueOf(tabs.size() + 1)),
+        navigateToUrl,
+        useCustomIntercept);
+    addTab(newTab);
+  }
+
+  private void addTab(final TabFragment tab)
+  {
     final int newTabsCount = tabs.size() + 1;
     viewPager.setOffscreenPageLimit(newTabsCount);
-    tabs.add(TabFragment.newInstance(getString(R.string.main_tab_title, newTabsCount),
-            navigateToUrl,
-            useCustomIntercept));
+    tabs.add(tab);
     viewPager.getAdapter().notifyDataSetChanged();
     tabLayout.getTabAt(tabs.size() - 1).select(); // scroll to the last tab
     tabLayout.invalidate();
