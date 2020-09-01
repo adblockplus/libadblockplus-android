@@ -6,7 +6,7 @@ import org.adblockplus.libadblockplus.FilterEngine;
 
 /**
  * Detects content type based on {@link HeadersContentTypeDetector}
- * and {@link org.adblockplus.libadblockplus.android.webview.UrlFileExtensionTypeDetector}
+ * and {@link UrlFileExtensionTypeDetector}
  * <p>
  * Can accept a list of content type detectors
  * <p>
@@ -22,7 +22,7 @@ public class OrderedContentTypeDetector implements ContentTypeDetector
    * with provided detectors
    * <p>
    * At the moment only {@link HeadersContentTypeDetector}
-   * and {@link org.adblockplus.libadblockplus.android.webview.UrlFileExtensionTypeDetector} exists
+   * and {@link UrlFileExtensionTypeDetector} exists
    *
    * @param detectors an array of instances of {@link ContentTypeDetector}
    */

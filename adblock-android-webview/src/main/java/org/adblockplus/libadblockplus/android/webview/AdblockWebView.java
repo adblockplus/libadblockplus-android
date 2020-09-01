@@ -43,6 +43,7 @@ import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
 import org.adblockplus.libadblockplus.android.webview.content_type.HeadersContentTypeDetector;
 import org.adblockplus.libadblockplus.android.webview.content_type.OrderedContentTypeDetector;
+import org.adblockplus.libadblockplus.android.webview.content_type.UrlFileExtensionTypeDetector;
 import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl;
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 import org.jetbrains.annotations.TestOnly;
