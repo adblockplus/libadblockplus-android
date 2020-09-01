@@ -16,45 +16,30 @@
  */
 package org.adblockplus.libadblockplus.android;
 
-import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-
 import timber.log.Timber;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Provides single instance of AdblockEngine shared between registered clients
  */
-public class SingleInstanceEngineProvider implements AdblockEngineProvider, AdblockEngine.Factory
+public class SingleInstanceEngineProvider implements AdblockEngineProvider
 {
   private AdblockEngine.Factory engineFactory;
-  private Context context;
-  private String basePath;
-  private boolean developmentBuild;
-  private AtomicReference<String> preloadedPreferenceName = new AtomicReference<>();
-  private AtomicReference<Map<String, Integer>> urlToResourceIdMap = new AtomicReference<>();
   private AtomicReference<AdblockEngine> engineReference = new AtomicReference<>();
-  private AtomicLong v8IsolateProviderPtr = new AtomicLong(0);
   private List<EngineCreatedListener> engineCreatedListeners = new CopyOnWriteArrayList<>();
   private List<BeforeEngineDisposedListener> beforeEngineDisposedListeners = new CopyOnWriteArrayList<>();
   private List<EngineDisposedListener> engineDisposedListeners = new CopyOnWriteArrayList<>();
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
   private final ReentrantReadWriteLock referenceCounterLock = new ReentrantReadWriteLock();
   private final ExecutorService executorService;
-  private boolean disabledByDefault = false;
 
   /*
     Simple ARC management for AdblockEngine
@@ -83,26 +68,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider, Adbl
   }
 
   /**
-   * Init with context
-   * @param context application context
-   * @param basePath file system root to store files
-   *
-   *                 Adblock Plus library will download subscription files and store them on
-   *                 the path passed. The path should exist and the directory content should not be
-   *                 cleared out occasionally. Using `context.getCacheDir().getAbsolutePath()` is not
-   *                 recommended because it can be cleared by the system.
-   * @param developmentBuild debug or release?
-   */
-  public SingleInstanceEngineProvider(final Context context,
-                                      final String basePath,
-                                      final boolean developmentBuild)
-  {
-    initFactory(context, basePath, developmentBuild);
-    this.executorService = createExecutorService();
-  }
-
-  /**
-   * Init with context
+   * Init with factory
    * @param engineFactory Factory to build AdblockEngine
    */
   public SingleInstanceEngineProvider(final AdblockEngine.Factory engineFactory)
@@ -111,53 +77,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider, Adbl
     this.executorService = createExecutorService();
   }
 
-  private void initFactory(final Context context,
-                           final String basePath,
-                           final boolean developmentBuild)
-  {
-    this.context = context.getApplicationContext();
-    this.basePath = basePath;
-    this.developmentBuild = developmentBuild;
-
-    this.engineFactory = this;
-  }
-
   protected ExecutorService createExecutorService()
   {
     final ExecutorService executorService = Executors.newSingleThreadExecutor();
     Runtime.getRuntime().addShutdownHook(new ExecutorServiceShutdownHook(executorService));
     return executorService;
-  }
-
-  /**
-   * Use preloaded subscriptions
-   * @param preferenceName Shared Preferences name to store intercepted requests stats
-   * @param urlToResourceIdMap URL to Android resource id map
-   * @return this (for method chaining)
-   */
-  public SingleInstanceEngineProvider preloadSubscriptions(String preferenceName,
-                                                           Map<String, Integer> urlToResourceIdMap)
-  {
-    this.preloadedPreferenceName.set(preferenceName);
-    this.urlToResourceIdMap.set(urlToResourceIdMap);
-    return this;
-  }
-
-  public SingleInstanceEngineProvider useV8IsolateProvider(long ptr)
-  {
-    this.v8IsolateProviderPtr.set(ptr);
-    return this;
-  }
-
-  /**
-   * Will create filter engine disabled by default. This means subscriptions will be updated only
-   * when setEnabled(true) will be called. This function configures only default engine state. If
-   * other state is stored in settings, it will be preferred.
-   */
-  public SingleInstanceEngineProvider setDisabledByDefault()
-  {
-    this.disabledByDefault = true;
-    return this;
   }
 
   @Override
@@ -217,54 +141,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider, Adbl
     this.engineDisposedListeners.clear();
   }
 
-  @Override
-  public AdblockEngine build()
-  {
-    final ConnectivityManager connectivityManager =
-        (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    final IsAllowedConnectionCallback isAllowedConnectionCallback =
-        new IsAllowedConnectionCallbackImpl(connectivityManager);
-
-    final AdblockEngine.Builder builder = AdblockEngine
-        .builder(
-            AdblockEngine.generateAppInfo(context, developmentBuild),
-            basePath)
-        .setIsAllowedConnectionCallback(isAllowedConnectionCallback)
-        .enableElementHiding(true);
-
-    final long v8IsolateProviderPtrLocal = v8IsolateProviderPtr.get();
-    if (v8IsolateProviderPtrLocal != 0)
-    {
-      builder.useV8IsolateProvider(v8IsolateProviderPtrLocal);
-    }
-
-    final String preloadedPreferenceNameLocal = preloadedPreferenceName.get();
-    final Map<String, Integer> urlToResourceIdMapLocal = urlToResourceIdMap.get();
-    // if preloaded subscriptions provided
-    if (preloadedPreferenceNameLocal != null)
-    {
-      SharedPreferences preloadedSubscriptionsPrefs = context.getSharedPreferences(
-          preloadedPreferenceNameLocal,
-          Context.MODE_PRIVATE);
-      builder.preloadSubscriptions(
-          context,
-          urlToResourceIdMapLocal,
-          new AndroidHttpClientResourceWrapper.SharedPrefsStorage(preloadedSubscriptionsPrefs));
-    }
-
-    return builder.build();
-  }
-
   private void createAdblock()
   {
     Timber.d("Creating adblock engine ...");
     final AdblockEngine engine = engineFactory.build();
     Timber.d("Engine created");
-
-    if (disabledByDefault)
-    {
-      engine.configureDisabledByDefault(context);
-    }
 
     engineReference.set(engine);
 
