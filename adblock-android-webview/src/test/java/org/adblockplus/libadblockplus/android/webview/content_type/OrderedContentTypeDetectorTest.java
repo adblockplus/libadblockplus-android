@@ -3,7 +3,6 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 import android.net.Uri;
 
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.android.webview.UrlFileExtensionTypeDetector;
 import org.junit.Test;
 
 import java.util.HashMap;
