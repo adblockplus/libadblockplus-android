@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
 import android.os.Build.VERSION;
 import timber.log.Timber;
 
@@ -105,7 +106,7 @@ public final class AdblockEngine
   private volatile HttpClient httpClient;
   private volatile FilterChangeCallback filterChangeCallback;
   private volatile ShowNotificationCallback showNotificationCallback;
-  private volatile boolean elemhideEnabled;
+  private volatile boolean elemhideEnabled = true;
   private volatile boolean enabled = true;
   private volatile List<String> whitelistedDomains;
   private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
@@ -206,6 +207,12 @@ public final class AdblockEngine
       // and requests (AndroidHttpClient and probably wrappers) are not specified yet
       this.appInfo = appInfo;
       this.basePath = basePath;
+    }
+
+    public Builder setDisableByDefault()
+    {
+      this.engine.configureDisabledByDefault(context);
+      return this;
     }
 
     public Builder enableElementHiding(boolean enable)
@@ -341,6 +348,18 @@ public final class AdblockEngine
   public static Builder builder(AppInfo appInfo, String basePath)
   {
     return new Builder(appInfo, basePath);
+  }
+
+  public static Builder builder(final Context context,
+                                final String basePath,
+                                final boolean developmentBuild)
+  {
+    final AppInfo appInfo = AdblockEngine.generateAppInfo(context, developmentBuild);
+    final ConnectivityManager connectivityManager =
+        (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    final IsAllowedConnectionCallback isAllowedConnectionCallback =
+        new IsAllowedConnectionCallbackImpl(connectivityManager);
+    return builder(appInfo, basePath).setIsAllowedConnectionCallback(isAllowedConnectionCallback);
   }
 
   public void dispose()

@@ -19,13 +19,13 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.AndroidBase64Processor;
 import org.adblockplus.libadblockplus.android.AndroidHttpClient;
+import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.security.JavaSignatureVerifier;
 import org.adblockplus.libadblockplus.security.SignatureVerifier;
@@ -34,6 +34,10 @@ import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl;
 import org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier;
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 import org.adblockplus.libadblockplus.util.Base64Processor;
+
+import java.util.Map;
+
+import timber.log.Timber;
 
 /**
  * AdblockHelper shared resources
@@ -54,6 +58,8 @@ public class AdblockHelper
   private static AdblockHelper _instance;
 
   private boolean isInitialized;
+  private Context context;
+  private AdblockEngine.Builder factory;
   private SingleInstanceEngineProvider provider;
   private AdblockSettingsStorage storage;
   private SiteKeysConfiguration siteKeysConfiguration;
@@ -129,6 +135,15 @@ public class AdblockHelper
     return _instance;
   }
 
+  public AdblockEngine.Builder getFactory()
+  {
+    if (factory == null)
+    {
+      throw new IllegalStateException("Usage exception: call init(...) first");
+    }
+    return factory;
+  }
+
   public static synchronized void deinit()
   {
     _instance = null;
@@ -169,19 +184,23 @@ public class AdblockHelper
    * @param developmentBuild debug or release?
    * @param preferenceName Shared Preferences name to store adblock settings
    */
-  public SingleInstanceEngineProvider init(Context context, String basePath,
-                                           boolean developmentBuild, String preferenceName)
+  public AdblockHelper init(final Context context,
+                            final String basePath,
+                            final boolean developmentBuild,
+                            final String preferenceName)
   {
     if (isInitialized)
     {
       throw new IllegalStateException("Usage exception: already initialized. Check `isInit()`");
     }
 
-    initProvider(context, basePath, developmentBuild);
-    initStorage(context, preferenceName);
+    final Context appContext = context.getApplicationContext();
+    initFactory(appContext, basePath, developmentBuild);
+    initProvider();
+    initStorage(appContext, preferenceName);
     initSiteKeysConfiguration();
     isInitialized = true;
-    return provider;
+    return this;
   }
 
   /**
@@ -193,9 +212,17 @@ public class AdblockHelper
     return isInitialized;
   }
 
-  private void initProvider(Context context, String basePath, boolean developmentBuild)
+  private void initFactory(final Context context,
+                           final String basePath,
+                           final boolean developmentBuild)
   {
-    provider = new SingleInstanceEngineProvider(context, basePath, developmentBuild);
+    factory = AdblockEngine.builder(context, basePath, developmentBuild);
+    this.context = context;
+  }
+
+  private void initProvider()
+  {
+    provider = new SingleInstanceEngineProvider(factory);
     provider.addEngineCreatedListener(engineCreatedListener);
     provider.addBeforeEngineDisposedListener(beforeEngineDisposedListener);
     provider.addEngineDisposedListener(engineDisposedListener);
@@ -222,6 +249,58 @@ public class AdblockHelper
 
     siteKeysConfiguration = new SiteKeysConfiguration(
         signatureVerifier, publicKeyHolder, httpClient, siteKeyVerifier);
+  }
+
+  /**
+   * Use preloaded subscriptions
+   * @param preferenceName Shared Preferences name to store intercepted requests stats
+   * @param urlToResourceIdMap URL to Android resource id map
+   * @return this (for method chaining)
+   */
+  public AdblockHelper preloadSubscriptions(final String preferenceName,
+                                            final Map<String, Integer> urlToResourceIdMap)
+  {
+    final SharedPreferences prefs = context.getSharedPreferences(
+        preferenceName,
+        Context.MODE_PRIVATE);
+    factory.preloadSubscriptions(
+        context,
+        urlToResourceIdMap,
+        new AndroidHttpClientResourceWrapper.SharedPrefsStorage(prefs));
+    return this;
+  }
+
+  /**
+   * Add "engine created" even listener
+   * @param listener Listener
+   */
+  public AdblockHelper addEngineCreatedListener(
+      final AdblockEngineProvider.EngineCreatedListener listener)
+  {
+    provider.addEngineCreatedListener(listener);
+    return this;
+  }
+
+  /**
+   * Add "engine disposed" listener
+   * @param listener Listener
+   */
+  public AdblockHelper addEngineDisposedListener(
+      final AdblockEngineProvider.EngineDisposedListener listener)
+  {
+    provider.addEngineDisposedListener(listener);
+    return this;
+  }
+
+  /**
+   * Will create filter engine disabled by default. This means subscriptions will be updated only
+   * when setEnabled(true) will be called. This function configures only default engine state. If
+   * other state is stored in settings, it will be preferred.
+   */
+  public AdblockHelper setDisabledByDefault()
+  {
+    factory.setDisableByDefault();
+    return this;
   }
 
   /**
