@@ -25,6 +25,7 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.SwitchPreferenceCompat;
 import timber.log.Timber;
 
+import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.ConnectionType;
 import org.adblockplus.libadblockplus.android.Subscription;
 
@@ -86,32 +87,11 @@ public class GeneralSettingsFragment
   }
 
   @Override
-  public void onCreate(Bundle savedInstanceState)
-  {
-    super.onCreate(savedInstanceState);
-    // Issue DP-212: In case GeneralSettingsFragment was destroyed and recreated
-    // (app minimized and restored scenario) and some of it's child views were
-    // displayed before app was minimized, app can crash after restoring because
-    // of not initialized preferences because child views are being displayed before
-    // onResume() is called.
-    // So we call also here initPreferences() to fix that allowing to be called
-    // twice when  GeneralSettingsFragment is created.
-    initPreferences();
-  }
-
-  @Override
   public void onCreatePreferences(Bundle bundle, String key)
   {
     readKeys();
     addPreferencesFromResource(R.xml.preference_adblock_general);
     bindPreferences();
-  }
-
-  @Override
-  public void onResume()
-  {
-    super.onResume();
-    initPreferences();
   }
 
   private void readKeys()
@@ -130,15 +110,6 @@ public class GeneralSettingsFragment
     acceptableAdsEnabled = (SwitchPreferenceCompat) findPreference(SETTINGS_AA_ENABLED_KEY);
     whitelistedDomains = findPreference(SETTINGS_WL_DOMAINS_KEY);
     allowedConnectionType = (ListPreference) findPreference(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY);
-  }
-
-  private void initPreferences()
-  {
-    initEnabled();
-    initFilterLists();
-    initAcceptableAdsEnabled();
-    initWhitelistedDomains();
-    initUpdatesConnection();
   }
 
   private void initUpdatesConnection()
@@ -186,7 +157,7 @@ public class GeneralSettingsFragment
     final Map<String, String> localeToTitle = Utils.getLocaleToTitleMap(getContext());
 
     // all available values
-    Subscription[] availableSubscriptions = provider.getAdblockEngine().getRecommendedSubscriptions();
+    Subscription[] availableSubscriptions = engine.getRecommendedSubscriptions();
     CharSequence[] availableSubscriptionsTitles = new CharSequence[availableSubscriptions.length];
     CharSequence[] availableSubscriptionsValues = new CharSequence[availableSubscriptions.length];
     for (int i = 0; i < availableSubscriptions.length; i++)
@@ -212,6 +183,30 @@ public class GeneralSettingsFragment
     }
     filterLists.setValues(selectedSubscriptionValues);
     filterLists.setOnPreferenceChangeListener(this);
+  }
+
+  @Override
+  protected void onSettingsReady()
+  {
+    initEnabled();
+    initAcceptableAdsEnabled();
+    initWhitelistedDomains();
+    initUpdatesConnection();
+    checkReadyAndInitFilterLists();
+  }
+
+  @Override
+  protected void onAdblockEngineReady()
+  {
+    checkReadyAndInitFilterLists();
+  }
+
+  private void checkReadyAndInitFilterLists()
+  {
+    if (engine != null && settings != null)
+    {
+      initFilterLists();
+    }
   }
 
   private void initEnabled()
@@ -263,11 +258,10 @@ public class GeneralSettingsFragment
 
     // apply settings
     allowedConnectionType.setValue(value);
-    provider.getAdblockEngine().getFilterEngine().setAllowedConnectionType(value);
+    engine.getFilterEngine().setAllowedConnectionType(value);
 
     // signal event
     listener.onAdblockSettingsChanged(this);
-
   }
 
   private void handleAcceptableAdsEnabledChanged(Boolean newValue)
@@ -279,7 +273,7 @@ public class GeneralSettingsFragment
     provider.getAdblockSettingsStorage().save(settings);
 
     // apply settings
-    provider.getAdblockEngine().setAcceptableAdsEnabled(enabledValue);
+    engine.setAcceptableAdsEnabled(enabledValue);
 
     // signal event
     listener.onAdblockSettingsChanged(this);
@@ -289,7 +283,7 @@ public class GeneralSettingsFragment
   {
     List<Subscription> selectedSubscriptions = new LinkedList<>();
 
-    for (Subscription eachSubscription : provider.getAdblockEngine().getRecommendedSubscriptions())
+    for (Subscription eachSubscription : engine.getRecommendedSubscriptions())
     {
       if (newValue.contains(eachSubscription.url))
       {
@@ -302,10 +296,10 @@ public class GeneralSettingsFragment
     provider.getAdblockSettingsStorage().save(settings);
 
     // apply settings
-    provider.getAdblockEngine().setSubscriptions(newValue);
+    engine.setSubscriptions(newValue);
 
     // since 'aa enabled' setting affects subscriptions list, we need to set it again
-    provider.getAdblockEngine().setAcceptableAdsEnabled(settings.isAcceptableAdsEnabled());
+    engine.setAcceptableAdsEnabled(settings.isAcceptableAdsEnabled());
 
     // signal event
     listener.onAdblockSettingsChanged(this);
@@ -318,7 +312,7 @@ public class GeneralSettingsFragment
     provider.getAdblockSettingsStorage().save(settings);
 
     // apply settings
-    provider.getAdblockEngine().setEnabled(newValue);
+    engine.setEnabled(newValue);
 
     // signal event
     listener.onAdblockSettingsChanged(this);
