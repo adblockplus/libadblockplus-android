@@ -85,6 +85,7 @@ public class WhitelistedDomainsSettingsFragment
       false);
 
     bindControls(rootView);
+    checkAndInitControls();
 
     return rootView;
   }
@@ -96,10 +97,24 @@ public class WhitelistedDomainsSettingsFragment
   }
 
   @Override
-  public void onResume()
+  protected void onSettingsReady()
   {
-    super.onResume();
-    initControls();
+    checkAndInitControls();
+  }
+
+  private void checkAndInitControls()
+  {
+    // domain != null is used as just as a way to check that the controls are bound.
+    if (settings != null && provider != null && domain != null)
+    {
+      initControls();
+    }
+  }
+
+  @Override
+  protected void onAdblockEngineReady()
+  {
+    // nothing
   }
 
   private void bindControls(View rootView)
@@ -134,7 +149,7 @@ public class WhitelistedDomainsSettingsFragment
       provider.getAdblockSettingsStorage().save(settings);
 
       // apply settings
-      provider.getAdblockEngine().setWhitelistedDomains(settings.getWhitelistedDomains());
+      engine.setWhitelistedDomains(settings.getWhitelistedDomains());
 
       // signal event
       listener.onAdblockSettingsChanged(WhitelistedDomainsSettingsFragment.this);
@@ -238,7 +253,7 @@ public class WhitelistedDomainsSettingsFragment
     provider.getAdblockSettingsStorage().save(settings);
 
     // apply settings
-    provider.getAdblockEngine().setWhitelistedDomains(whitelistedDomains);
+    engine.setWhitelistedDomains(whitelistedDomains);
 
     // signal event
     listener.onAdblockSettingsChanged(WhitelistedDomainsSettingsFragment.this);

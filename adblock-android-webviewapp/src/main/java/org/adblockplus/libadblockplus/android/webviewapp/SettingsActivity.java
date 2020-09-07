@@ -19,16 +19,17 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import timber.log.Timber;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SubscriptionsManager;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
-import org.adblockplus.libadblockplus.android.settings.GeneralSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.AdblockSettings;
-import org.adblockplus.libadblockplus.android.settings.BaseSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.AdblockSettingsStorage;
+import org.adblockplus.libadblockplus.android.settings.BaseSettingsFragment;
+import org.adblockplus.libadblockplus.android.settings.GeneralSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.WhitelistedDomainsSettingsFragment;
+
+import timber.log.Timber;
 
 public class SettingsActivity
   extends AppCompatActivity
@@ -78,17 +79,53 @@ public class SettingsActivity
   // provider
 
   @Override
-  public AdblockEngine getAdblockEngine()
+  public AdblockEngineProvider getAdblockEngineProvider()
   {
-    // if it's retained asynchronously we have to wait until it's ready
-    AdblockHelper.get().getProvider().waitForReady();
-    return AdblockHelper.get().getProvider().getEngine();
+    return AdblockHelper.get().getProvider();
   }
 
   @Override
   public AdblockSettingsStorage getAdblockSettingsStorage()
   {
     return AdblockHelper.get().getStorage();
+  }
+
+  private ProgressFragment progressFragment = null;
+
+  @Override
+  public void onLoadStarted()
+  {
+    Timber.d("Loading started");
+    checkAndShowProgress();
+  }
+
+  private void checkAndShowProgress()
+  {
+    if (progressFragment != null)
+    {
+      return;
+    }
+
+    progressFragment = new ProgressFragment();
+    progressFragment.show(getSupportFragmentManager(), "progress");
+  }
+
+  @Override
+  public void onLoadFinished()
+  {
+    Timber.d("Loading finished");
+    checkAndHideProgress();
+  }
+
+  private void checkAndHideProgress()
+  {
+    if (progressFragment == null)
+    {
+      return;
+    }
+
+    progressFragment.dismissAllowingStateLoss();
+    progressFragment = null;
   }
 
   // listener
@@ -120,5 +157,6 @@ public class SettingsActivity
     super.onDestroy();
     subscriptionsManager.dispose();
     AdblockHelper.get().getProvider().release();
+    checkAndHideProgress();
   }
 }
