@@ -19,9 +19,9 @@ build_dependencies:
       - libadblockplus/
       - buildtools/
   variables:
+    GIT_SUBMODULE_STRATEGY: recursive
     WGET_FLAGS: "-q"
   script:
-    - ./ensure_dependencies.py
     - cd ./libadblockplus
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
