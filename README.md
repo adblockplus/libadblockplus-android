@@ -9,14 +9,11 @@ This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventio
 be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
 before making any new commits to the repo.
 
-## Updating the dependencies
+## Dependencies
 
-Adblock Android SDK has dependencies that aren't in this repository.
-To update those, call:
-
-    ./ensure_dependencies.py
-
-Please make sure you have *python2* installed
+Project dependencies are declared as git [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules),
+make sure your checkout contains submodules. For example `git clone --recurse-submodules` when
+initially cloning or `git submodule init && git submodule update` to update an existing clone.
 
 ## Library
 
@@ -446,7 +443,7 @@ Note it can be invoked from background thread.
 Enabling/disabling of ad blocking per AdblockWebView is not supported.
 
 Ad blocking requires JavaScript to be enabled and every AdblockWebView instance enables JavaScript
-during the initialization. 
+during the initialization.
 
 ### Building
 
