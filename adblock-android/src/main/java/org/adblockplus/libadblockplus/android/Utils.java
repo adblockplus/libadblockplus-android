@@ -535,4 +535,34 @@ public final class Utils
         .replace(U2028, "\u2028")
         .replace(U2029, "\u2029");
   }
+
+  /**
+   * Checks that the host is subdomain of (or equals to) the domain
+   * @param host host
+   * @param domain domain
+   * @return host is a subdomain or domain
+   */
+  public static boolean isSubdomainOrDomain(final String host, final String domain)
+  {
+    if (host.length() == 0 || domain.length() == 0 || !host.endsWith(domain))
+    {
+      return false;
+    }
+    final String[] domainPieces = domain.split("\\.");
+    final String[] hostPieces = host.split("\\.");
+    if (hostPieces.length < domainPieces.length)
+    {
+      return false;
+    }
+    final int domainLastPiece = domainPieces.length - 1;
+    final int hostLastPiece = hostPieces.length - 1;
+    for (int piece = 0; piece <= domainLastPiece; ++piece)
+    {
+      if (!hostPieces[hostLastPiece - piece].equals(domainPieces[domainLastPiece - piece]))
+      {
+        return false;
+      }
+    }
+    return true;
+  }
 }

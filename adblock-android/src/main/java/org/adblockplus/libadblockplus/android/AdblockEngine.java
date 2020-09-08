@@ -23,9 +23,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Build.VERSION;
-import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.AppInfo;
+import org.adblockplus.libadblockplus.DomainWhitelist;
 import org.adblockplus.libadblockplus.FileSystem;
 import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterChangeCallback;
@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import timber.log.Timber;
 
 public final class AdblockEngine
 {
@@ -108,7 +110,7 @@ public final class AdblockEngine
   private volatile ShowNotificationCallback showNotificationCallback;
   private volatile boolean elemhideEnabled = true;
   private volatile boolean enabled = true;
-  private volatile List<String> whitelistedDomains;
+  private volatile DomainWhitelist domainWhitelist = new DomainWhitelist();
   private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
   private SharedPreferences prefs;
 
@@ -744,28 +746,6 @@ public final class AdblockEngine
     return this.filterEngine.isDocumentWhitelisted(url, referrerChain, sitekey);
   }
 
-  public boolean isDomainWhitelisted(final String url, final List<String> referrerChain)
-  {
-    if (whitelistedDomains == null)
-    {
-      return false;
-    }
-
-    // using Set to remove duplicates
-    Set<String> referrersAndResourceUrls = new HashSet<>(referrerChain);
-    referrersAndResourceUrls.add(url);
-
-    for (String eachUrl : referrersAndResourceUrls)
-    {
-      if (whitelistedDomains.contains(filterEngine.getHostFromURL(eachUrl)))
-      {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   public boolean isElemhideWhitelisted(final String url,
                                        final List<String> referrerChain,
                                        final String sitekey)
@@ -830,11 +810,16 @@ public final class AdblockEngine
 
   public void setWhitelistedDomains(List<String> domains)
   {
-    this.whitelistedDomains = domains;
+    domainWhitelist.setDomains(domains);
+  }
+
+  public boolean isDomainWhitelisted(final String url, final List<String> referrerChain)
+  {
+    return domainWhitelist.hasAnyDomain(url, referrerChain);
   }
 
   public List<String> getWhitelistedDomains()
   {
-    return whitelistedDomains;
+    return domainWhitelist.getDomains();
   }
 }
