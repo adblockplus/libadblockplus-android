@@ -21,11 +21,6 @@ import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -36,6 +31,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class UtilsTest
 {
@@ -243,6 +243,31 @@ public class UtilsTest
     }
   }
 
+  @Test
+  public void testIsSubOrDomain()
+  {
+    assertFalse(Utils.isSubdomainOrDomain("", ""));
+    assertFalse(Utils.isSubdomainOrDomain("host.com", ""));
+    assertFalse(Utils.isSubdomainOrDomain("", "domain.com"));
+
+    assertTrue(Utils.isSubdomainOrDomain("com", "com"));
+    assertFalse(Utils.isSubdomainOrDomain("co", "com"));
+    assertFalse(Utils.isSubdomainOrDomain("com", "co"));
+
+    assertFalse(Utils.isSubdomainOrDomain("www,google.com", "google.com"));
+
+    assertTrue(Utils.isSubdomainOrDomain("google.com", "com"));
+    assertTrue(Utils.isSubdomainOrDomain("www.google.com", "com"));
+    assertTrue(Utils.isSubdomainOrDomain("www.google.com", "google.com"));
+    assertTrue(Utils.isSubdomainOrDomain("www.google.com", "www.google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("google.com", "www.google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("com", "www.google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("com", "google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("gogoogle.com", "google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("www.gogoogle.com", "google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("www.gogoogle.com", "www.google.com"));
+  }
+  
   private void verifyHeaderEntriesMap(final Set<String> inputHeadersSet,
                                       final Map<String, String> outputHeadersMap,
                                       final String expectedValue)
