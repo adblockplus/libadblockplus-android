@@ -6,9 +6,6 @@ stages:
   - device_tests
   - publish
 
-variables:
-  GRADLE_OPTS: "-Xmx4096m" #set max heap size to 4gb
-
 # This updates the cache with shared dependencies
 build_dependencies:
   stage: build_dependencies
