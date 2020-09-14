@@ -17,19 +17,23 @@
 
 package org.adblockplus.libadblockplus.test;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.common.Notifier;
+
 import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.ServerResponse;
-import org.adblockplus.libadblockplus.android.ConnectionInputStream;
 import org.adblockplus.libadblockplus.android.AndroidHttpClient;
+import org.adblockplus.libadblockplus.android.ConnectionInputStream;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -37,24 +41,30 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import timber.log.Timber;
+import wiremock.org.apache.http.HttpStatus;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.any;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 // The test requires active internet connection and actually downloads files from the internet
+// except local test done with use of wiremock
 public class AndroidHttpClientTest extends BaseFilterEngineTest
 {
-  protected static final Charset charset = Charset.forName("UTF-8");
-  protected ServerResponse serverResponse = null;
+  private static final Charset charset = StandardCharsets.UTF_8;
+  private ServerResponse serverResponse = null;
 
   private static class AndroidHttpClientWithoutSubscriptions extends AndroidHttpClient
   {
-    public AndroidHttpClientWithoutSubscriptions(final boolean compressedStream)
+    AndroidHttpClientWithoutSubscriptions(final boolean compressedStream)
     {
       super(compressedStream);
     }
@@ -76,7 +86,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     }
   }
 
-  private HttpClient androidHttpClient = new AndroidHttpClientWithoutSubscriptions(true);
+  private final HttpClient androidHttpClient = new AndroidHttpClientWithoutSubscriptions(true);
 
   @Override
   public void setUp()
@@ -90,7 +100,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     ServerResponse response;
   }
 
-  private ServerResponse makeHttpRequest(final String url)
+  private ServerResponse makeHttpRequest(final String url, final boolean followRedirect)
   {
     final ResponseHolder responseHolder = new ResponseHolder();
     final CountDownLatch latch = new CountDownLatch(1);
@@ -107,7 +117,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     try
     {
       final List<HeaderEntry> headersList = new ArrayList<>();
-      final HttpRequest request = new HttpRequest(url, HttpClient.REQUEST_METHOD_GET, headersList, true, true);
+      final HttpRequest request = new HttpRequest(url, HttpClient.REQUEST_METHOD_GET, headersList, followRedirect, true);
       androidHttpClient.request(request, callback);
     }
     catch (final AdblockPlusException e)
@@ -130,10 +140,10 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   @Test
   public void testAdblockWebViewHttpRequest()
   {
-    final ServerResponse response = makeHttpRequest("https://easylist-downloads.adblockplus.org/exceptionrules.txt");
+    final ServerResponse response = makeHttpRequest("https://easylist-downloads.adblockplus.org/exceptionrules.txt", true);
     assertNotNull(response);
 
-    assertEquals(response.getResponseStatus(), 200);
+    assertEquals(HTTP_OK, response.getResponseStatus());
     assertNotNull(response.getInputStream());
 
     final ConnectionInputStream connectionInputStream = (ConnectionInputStream)(response.getInputStream());
@@ -141,7 +151,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     final Scanner scanner = new Scanner(connectionInputStream).useDelimiter("\\A");
     final String result = scanner.hasNext() ? scanner.next() : "";
     final String matchingString = "[Adblock Plus 2.0]";
-    assertTrue(result.substring(0, matchingString.length()).equals(matchingString));
+    assertEquals(matchingString, result.substring(0, matchingString.length()));
     try
     {
       connectionInputStream.close();
@@ -150,6 +160,90 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     {
       Timber.e(e, "inputStream.close() failed");
     }
+  }
+
+  @Test
+  public void testFollowingRedirectedHttpRequest()
+  {
+    // https://d.android.com is a redirect site to https://developer.android.com/
+    final ServerResponse response = makeHttpRequest("https://d.android.com", true);
+    assertNotNull(response);
+
+    assertEquals(HTTP_OK, response.getResponseStatus());
+    assertEquals("https://developer.android.com/", response.getFinalUrl());
+    assertNotNull(response.getInputStream());
+  }
+
+  @Test
+  public void testFollowingRedirectedHttpRequestLocal() throws IOException
+  {
+    final WireMockServer wireMockServer = new WireMockServer(wireMockConfig().dynamicPort().notifier(
+        new Notifier()
+        {
+          @Override
+          public void info(final String message)
+          {
+            Timber.i(message);
+          }
+
+          @Override
+          public void error(final String message)
+          {
+            Timber.e(message);
+          }
+
+          @Override
+          public void error(final String message, final Throwable t)
+          {
+            Timber.e(t, message);
+          }
+        }
+    ));
+
+    try
+    {
+      wireMockServer.start();
+      final String initialResource = "/index.html";
+      final String initialUrl = wireMockServer.baseUrl() + initialResource;
+      final String redirectedResource = "/redirected.html";
+      final String redirectedUrl = wireMockServer.baseUrl() + redirectedResource;
+      final String redirectedContent = "Hello, World";
+
+      wireMockServer
+          .stubFor(any(urlPathEqualTo(initialResource))
+          .willReturn(aResponse()
+            .withStatus(HttpStatus.SC_TEMPORARY_REDIRECT)
+            .withHeader(HttpClient.HEADER_LOCATION, redirectedResource)));
+
+      wireMockServer
+          .stubFor(any(urlPathEqualTo(redirectedResource))
+              .willReturn(aResponse()
+                  .withStatus(HttpStatus.SC_OK)
+                  .withHeader(HttpClient.HEADER_CONTENT_TYPE, "text/plain")
+                  .withBody(redirectedContent)));
+
+      final ServerResponse response = makeHttpRequest(initialUrl, true);
+
+      assertNotNull(response);
+      assertEquals(redirectedUrl, response.getFinalUrl());
+      final String actualContent = new String(Utils.toByteArray(response.getInputStream()));
+      assertEquals(redirectedContent, actualContent);
+    }
+    finally
+    {
+      wireMockServer.stop();
+    }
+  }
+
+  @Test
+  public void testNotFollowingRedirectedHttpRequest()
+  {
+    // https://d.android.com is a redirect site to https://developer.android.com/
+    final ServerResponse response = makeHttpRequest("https://d.android.com", false);
+    assertNotNull(response);
+
+    assertEquals(HTTP_MOVED_PERM, response.getResponseStatus());
+    assertNotNull(response.getInputStream());
   }
 
   @Test
@@ -189,7 +283,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
     {
       @Override
-      public void onFinished(ServerResponse response)
+      public void onFinished(final ServerResponse response)
       {
         serverResponse = response;
         latch.countDown();
@@ -218,7 +312,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
     {
       @Override
-      public void onFinished(ServerResponse response)
+      public void onFinished(final ServerResponse response)
       {
         serverResponse = response;
         latch.countDown();
@@ -285,7 +379,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
     {
       @Override
-      public void onFinished(ServerResponse response)
+      public void onFinished(final ServerResponse response)
       {
         serverResponse = response;
         latch.countDown();
@@ -308,7 +402,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     final HttpClient.Callback javaCallback = new HttpClient.Callback() // java callback
     {
       @Override
-      public void onFinished(ServerResponse response)
+      public void onFinished(final ServerResponse response)
       {
         serverResponse = response;
         latch.countDown();
