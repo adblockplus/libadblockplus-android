@@ -36,7 +36,6 @@ import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.Platform;
-import org.adblockplus.libadblockplus.ShowNotificationCallback;
 import org.adblockplus.libadblockplus.Subscription;
 
 import java.util.ArrayList;
@@ -107,7 +106,6 @@ public final class AdblockEngine
   private volatile FileSystem fileSystem;
   private volatile HttpClient httpClient;
   private volatile FilterChangeCallback filterChangeCallback;
-  private volatile ShowNotificationCallback showNotificationCallback;
   private volatile boolean elemhideEnabled = true;
   private volatile boolean enabled = true;
   private volatile DomainWhitelist domainWhitelist = new DomainWhitelist();
@@ -130,8 +128,9 @@ public final class AdblockEngine
     return this;
   }
 
-  public static AppInfo generateAppInfo(final Context context, boolean developmentBuild,
-                                        String application, String applicationVersion)
+  public static AppInfo generateAppInfo(final Context context,
+                                        final String application,
+                                        final String applicationVersion)
   {
     final String sdkVersion = String.valueOf(VERSION.SDK_INT);
     String locale = Locale.getDefault().toString().replace('_', '-');
@@ -144,8 +143,7 @@ public final class AdblockEngine
       AppInfo
         .builder()
         .setApplicationVersion(sdkVersion)
-        .setLocale(locale)
-        .setDevelopmentBuild(developmentBuild);
+        .setLocale(locale);
 
     if (application != null)
     {
@@ -160,7 +158,7 @@ public final class AdblockEngine
     return builder.build();
   }
 
-  public static AppInfo generateAppInfo(final Context context, boolean developmentBuild)
+  public static AppInfo generateAppInfo(final Context context)
   {
     try
     {
@@ -168,7 +166,7 @@ public final class AdblockEngine
       String application = context.getPackageName();
       String applicationVersion = packageInfo.versionName;
 
-      return generateAppInfo(context, developmentBuild, application, applicationVersion);
+      return generateAppInfo(context, application, applicationVersion);
     }
     catch (PackageManager.NameNotFoundException e)
     {
@@ -257,12 +255,6 @@ public final class AdblockEngine
       return this;
     }
 
-    public Builder setShowNotificationCallback(ShowNotificationCallback callback)
-    {
-      engine.showNotificationCallback = callback;
-      return this;
-    }
-
     public Builder setFilterChangeCallback(FilterChangeCallback callback)
     {
       engine.filterChangeCallback = callback;
@@ -306,11 +298,6 @@ public final class AdblockEngine
 
     private void initCallbacks()
     {
-      if (engine.showNotificationCallback != null)
-      {
-        engine.filterEngine.setShowNotificationCallback(engine.showNotificationCallback);
-      }
-
       if (engine.filterChangeCallback != null)
       {
         engine.filterEngine.setFilterChangeCallback(engine.filterChangeCallback);
@@ -352,11 +339,9 @@ public final class AdblockEngine
     return new Builder(appInfo, basePath);
   }
 
-  public static Builder builder(final Context context,
-                                final String basePath,
-                                final boolean developmentBuild)
+  public static Builder builder(final Context context, final String basePath)
   {
-    final AppInfo appInfo = AdblockEngine.generateAppInfo(context, developmentBuild);
+    final AppInfo appInfo = AdblockEngine.generateAppInfo(context);
     final ConnectivityManager connectivityManager =
         (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     final IsAllowedConnectionCallback isAllowedConnectionCallback =
@@ -377,11 +362,6 @@ public final class AdblockEngine
         this.filterEngine.removeFilterChangeCallback();
       }
 
-      if (this.showNotificationCallback != null)
-      {
-        this.filterEngine.removeShowNotificationCallback();
-      }
-
       this.platform.dispose();
       this.platform = null;
     }
@@ -391,12 +371,6 @@ public final class AdblockEngine
     {
       this.filterChangeCallback.dispose();
       this.filterChangeCallback = null;
-    }
-
-    if (this.showNotificationCallback != null)
-    {
-      this.showNotificationCallback.dispose();
-      this.showNotificationCallback = null;
     }
   }
 

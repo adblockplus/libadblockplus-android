@@ -100,7 +100,7 @@ public class WebViewInterceptRequestTest
           Context.MODE_PRIVATE).getAbsolutePath();
       AdblockHelper
           .get()
-          .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
+          .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
           .retain(true);
     }
   }

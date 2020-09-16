@@ -95,13 +95,6 @@ public:
               const StatCallback& callback) const override;
 };
 
-class JniShowNotificationCallback : public JniCallbackBase
-{
-public:
-  JniShowNotificationCallback(JNIEnv* env, jobject callbackObject);
-  void Callback(AdblockPlus::Notification&&);
-};
-
 class JniWebRequestCallback : public JniCallbackBase, public AdblockPlus::IWebRequest
 {
 public:

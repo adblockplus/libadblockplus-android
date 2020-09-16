@@ -32,6 +32,5 @@ public class DefaultPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
     assertEquals("android", jsEngine.evaluate("_appInfo.application").asString());
     assertEquals("0", jsEngine.evaluate("_appInfo.applicationVersion").asString());
     assertEquals("en_US", jsEngine.evaluate("_appInfo.locale").asString());
-    assertFalse(jsEngine.evaluate("_appInfo.developmentBuild").asBoolean());
   }
 }

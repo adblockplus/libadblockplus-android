@@ -181,12 +181,10 @@ public class AdblockHelper
    *                 the path passed. The path should exist and the directory content should not be
    *                 cleared out occasionally. Using `context.getCacheDir().getAbsolutePath()` is not
    *                 recommended because it can be cleared by the system.
-   * @param developmentBuild debug or release?
    * @param preferenceName Shared Preferences name to store adblock settings
    */
   public AdblockHelper init(final Context context,
                             final String basePath,
-                            final boolean developmentBuild,
                             final String preferenceName)
   {
     if (isInitialized)
@@ -195,12 +193,34 @@ public class AdblockHelper
     }
 
     final Context appContext = context.getApplicationContext();
-    initFactory(appContext, basePath, developmentBuild);
+    initFactory(appContext, basePath);
     initProvider();
     initStorage(appContext, preferenceName);
     initSiteKeysConfiguration();
     isInitialized = true;
     return this;
+  }
+
+  /**
+   * Init with context
+   * @deprecated <p> Use {@link AdblockHelper#init(Context,String,String)} instead.
+   * @param context application context
+   * @param basePath file system root to store files
+   *
+   *                 Adblock Plus library will download subscription files and store them on
+   *                 the path passed. The path should exist and the directory content should not be
+   *                 cleared out occasionally. Using `context.getCacheDir().getAbsolutePath()` is not
+   *                 recommended because it can be cleared by the system.
+   * @param developmentBuild debug or release?
+   * @param preferenceName Shared Preferences name to store adblock settings
+   */
+  @Deprecated
+  public AdblockHelper init(final Context context,
+                            final String basePath,
+                            final boolean developmentBuild,
+                            final String preferenceName)
+  {
+    return init(context, basePath, preferenceName);
   }
 
   /**
@@ -212,11 +232,9 @@ public class AdblockHelper
     return isInitialized;
   }
 
-  private void initFactory(final Context context,
-                           final String basePath,
-                           final boolean developmentBuild)
+  private void initFactory(final Context context, final String basePath)
   {
-    factory = AdblockEngine.builder(context, basePath, developmentBuild);
+    factory = AdblockEngine.builder(context, basePath);
     this.context = context;
   }
 

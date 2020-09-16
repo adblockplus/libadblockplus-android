@@ -29,7 +29,6 @@ public class AllPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
   private final String APPLICATION = "4";
   private final String APPLICATION_VERSION = "5";
   private final String LOCALE = "2";
-  private final boolean DEVELOPMENT_BUILD = true;
 
   @Override
   public void setUp()
@@ -40,7 +39,6 @@ public class AllPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
         .setApplication(APPLICATION)
         .setApplicationVersion(APPLICATION_VERSION)
         .setLocale(LOCALE)
-        .setDevelopmentBuild(DEVELOPMENT_BUILD)
         .build();
     setUpAppInfo(appInfo);
     super.setUp();
@@ -54,6 +52,5 @@ public class AllPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
     assertEquals(APPLICATION, jsEngine.evaluate("_appInfo.application").asString());
     assertEquals(APPLICATION_VERSION, jsEngine.evaluate("_appInfo.applicationVersion").asString());
     assertEquals(LOCALE, jsEngine.evaluate("_appInfo.locale").asString());
-    assertEquals(DEVELOPMENT_BUILD, jsEngine.evaluate("_appInfo.developmentBuild").asBoolean());
   }
 }

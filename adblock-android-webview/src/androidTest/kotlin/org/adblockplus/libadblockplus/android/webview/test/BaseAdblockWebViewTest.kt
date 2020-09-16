@@ -76,7 +76,7 @@ abstract class BaseAdblockWebViewTest {
             Timber.d("Initializing with basePath=$basePath")
             AdblockHelper
                 .get()
-                .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
+                .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
         }
     }
 

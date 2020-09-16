@@ -24,18 +24,16 @@ public class AppInfo
   public final String application;
   public final String applicationVersion;
   public final String locale;
-  public final boolean developmentBuild;
 
   private AppInfo(final String version, final String name,
                   final String application, final String applicationVersion,
-                  final String locale, final boolean developmentBuild)
+                  final String locale)
   {
     this.version = version;
     this.name = name;
     this.application = application;
     this.applicationVersion = applicationVersion;
     this.locale = locale;
-    this.developmentBuild = developmentBuild;
   }
 
   public static Builder builder()
@@ -50,7 +48,6 @@ public class AppInfo
     private String application = "android";
     private String applicationVersion = "0";
     private String locale = "en_US";
-    private boolean developmentBuild = false;
 
     private Builder()
     {
@@ -87,15 +84,9 @@ public class AppInfo
       return this;
     }
 
-    public Builder setDevelopmentBuild(final boolean developmentBuild)
-    {
-      this.developmentBuild = developmentBuild;
-      return this;
-    }
-
     public AppInfo build()
     {
-      return new AppInfo(this.version, this.name, this.application, this.applicationVersion, this.locale, this.developmentBuild);
+      return new AppInfo(this.version, this.name, this.application, this.applicationVersion, this.locale);
     }
   }
 }
