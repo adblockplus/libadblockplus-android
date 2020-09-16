@@ -120,21 +120,6 @@ public final class FilterEngine
     return getElementHidingEmulationSelectors(this.ptr, domain);
   }
 
-  public void showNextNotification()
-  {
-    showNextNotification(this.ptr);
-  }
-
-  public void setShowNotificationCallback(final ShowNotificationCallback callback)
-  {
-    setShowNotificationCallback(this.ptr, callback.ptr);
-  }
-
-  public void removeShowNotificationCallback()
-  {
-    removeShowNotificationCallback(this.ptr);
-  }
-
   /**
    * Checks if any active filter matches the supplied URL.
    * @param url url URL to match.
@@ -306,12 +291,6 @@ public final class FilterEngine
   private static native String getElementHidingStyleSheet(long ptr, String domain, boolean specificOnly);
 
   private static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
-
-  private static native void showNextNotification(long ptr);
-
-  private static native void setShowNotificationCallback(long ptr, long callbackPtr);
-
-  private static native void removeShowNotificationCallback(long ptr);
 
   private static native JsValue getPref(long ptr, String pref);
 

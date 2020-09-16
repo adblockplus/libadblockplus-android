@@ -206,8 +206,6 @@ jobject NewJniFilter(JNIEnv* env, AdblockPlus::Filter&& filter);
 
 jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription);
 
-jobject NewJniNotification(JNIEnv* env, AdblockPlus::Notification&& notification);
-
 jobject NewJniEmulationSelector(JNIEnv* env, const AdblockPlus::IFilterEngine::EmulationSelector& emulationSelector);
 
 jobject JniStringVectorToArrayList(JNIEnv* env, const std::vector<std::string>& stringVector);

@@ -1278,7 +1278,7 @@ public class AdblockWebView extends WebView
     if (getProvider() == null)
     {
       final AdblockEngine.Factory factory = AdblockEngine
-        .builder(getContext(), AdblockEngine.BASE_PATH_DIRECTORY, BuildConfig.DEBUG);
+        .builder(getContext(), AdblockEngine.BASE_PATH_DIRECTORY);
       setProvider(new SingleInstanceEngineProvider(factory));
     }
   }
