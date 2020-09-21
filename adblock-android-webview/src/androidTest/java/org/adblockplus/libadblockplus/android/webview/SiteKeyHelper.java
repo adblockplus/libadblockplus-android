@@ -39,10 +39,10 @@ import java.security.SignatureException;
 
 public class SiteKeyHelper
 {
-  public final SignatureVerifier signatureVerifier = new JavaSignatureVerifier();
-  public final PublicKeyHolder publicKeyHolder = new PublicKeyHolderImpl();
-  public final Base64Processor base64Processor = new AndroidBase64Processor();
-  public final TestSiteKeyVerifier siteKeyVerifier =
+  public SignatureVerifier signatureVerifier = new JavaSignatureVerifier();
+  public PublicKeyHolder publicKeyHolder = new PublicKeyHolderImpl();
+  public Base64Processor base64Processor = new AndroidBase64Processor();
+  public TestSiteKeyVerifier siteKeyVerifier =
       new TestSiteKeyVerifier(signatureVerifier, publicKeyHolder, base64Processor);
 
   public static class TestSiteKeyVerifier extends SiteKeyVerifier

@@ -30,10 +30,12 @@ import org.adblockplus.libadblockplus.android.webview.imageIsNotBlocked
 import org.adblockplus.libadblockplus.android.webview.escapeForRegex
 import org.adblockplus.libadblockplus.android.webview.elementIsElemhidden
 import org.adblockplus.libadblockplus.android.webview.elementIsNotElemhidden
+import org.adblockplus.libadblockplus.security.SlowSignatureVerifierWrapper
 import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
-import org.junit.Assert
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import timber.log.Timber
 import wiremock.org.apache.http.HttpStatus
@@ -66,7 +68,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
         subscribeToAdblockWebViewEvents(blockedResources, whitelistedResources)
 
         Timber.d("Start loading...")
-        Assert.assertTrue("$indexPageUrl exceeded loading timeout",
+        assertTrue("$indexPageUrl exceeded loading timeout",
             testSuitAdblock.loadUrlAndWait(indexPageUrl))
         Timber.d("Loaded")
 
@@ -92,6 +94,35 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                 whitelistedResources.add(info)
             }
         })
+    }
+
+    private fun initSitekey(pageUrl: String, verifyDelayMillis: Long? = null): Pair<String, String> {
+        val siteKeyHelper = SiteKeyHelper()
+
+        if (verifyDelayMillis != null) {
+            val slowSignatureVerifier = SlowSignatureVerifierWrapper(
+                verifyDelayMillis, siteKeyHelper.signatureVerifier)
+            siteKeyHelper.signatureVerifier = slowSignatureVerifier
+            siteKeyHelper.siteKeyVerifier = SiteKeyHelper.TestSiteKeyVerifier(
+                slowSignatureVerifier, siteKeyHelper.publicKeyHolder, siteKeyHelper.base64Processor)
+        }
+
+        val userAgent = "someUserAgent"
+        val pair = siteKeyHelper.buildXAdblockKeyValue(pageUrl, userAgent)
+        val publicKey = PublicKeyHolderImpl.stripPadding(pair.first) // stripping '==' at the end
+        val sitekey = publicKey
+        val signature = pair.second
+
+        instrumentation.runOnMainSync {
+            testSuitAdblock.webView.settings.userAgentString = userAgent
+            testSuitAdblock.webView.siteKeysConfiguration = SiteKeysConfiguration(
+                siteKeyHelper.signatureVerifier,
+                siteKeyHelper.publicKeyHolder,
+                AndroidHttpClient(),
+                siteKeyHelper.siteKeyVerifier)
+            testSuitAdblock.webView.siteKeysConfiguration.forceChecks = true
+        }
+        return Pair(sitekey, signature)
     }
 
     override fun initHttpServer(reqResData: Array<WireMockReqResData>) {
@@ -230,24 +261,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     fun testWhitelistedSubframeResourceIsWhitelistedWithSitekey() {
         val blockingRule = greenImage
         val subFrameHtml = "subframe.html"
-
-        val siteKeyHelper = SiteKeyHelper()
         val subFrameUrl = "${wireMockRule.baseUrl()}/$subFrameHtml"
-        val userAgent = "someUserAgent"
-        val pair = siteKeyHelper.buildXAdblockKeyValue(subFrameUrl, userAgent)
-        val publicKey = PublicKeyHolderImpl.stripPadding(pair.first) // stripping '==' at the end
-        val sitekey = publicKey
-        val signature = pair.second
-
-        instrumentation.runOnMainSync {
-            testSuitAdblock.webView.settings.userAgentString = userAgent
-            testSuitAdblock.webView.siteKeysConfiguration = SiteKeysConfiguration(
-                siteKeyHelper.signatureVerifier,
-                siteKeyHelper.publicKeyHolder,
-                AndroidHttpClient(),
-                siteKeyHelper.siteKeyVerifier)
-            testSuitAdblock.webView.siteKeysConfiguration.forceChecks = true
-        }
+        val (sitekey, signature) = initSitekey(subFrameUrl)
 
         // whitelist with sitekey
         val whitelistingRule = "@@\$subdocument,document,sitekey=$sitekey"
@@ -296,5 +311,38 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
             // can't access subframe with JS so there is no [known at the moment] way
             // to assert subframe resource visibility
+    }
+
+    @Test
+    @Ignore("Ignored until we have DP-1581 fixed")
+    fun testWhitelistedMainFrameWithSitekey() {
+        val blockingRule = greenImage
+
+        // 30 seconds delay should be enough to force all the other resources requests coming
+        // to simulate "resource loading check happens before sitekey extracted"
+        val (sitekey, signature) = initSitekey(indexPageUrl, 30_000)
+
+        // whitelist main frame with sitekey
+        val whitelistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+
+        val (_, whitelistedResources) = load(
+            listOf(blockingRule, whitelistingRule),
+            """
+            |<html data-adblockkey="$signature">
+            |<body>
+            |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
+            |</body>
+            |</html>
+            |""".trimMargin())
+
+        // main frame resource is NOT blocked (whitelisted)
+        assertNotNull(whitelistedResources.find {
+            it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
+        })
+
+        // green image in main frame is NOT blocked
+        onAdblockWebView()
+            .check(imageIsNotBlocked(blockedImageWithSlashId))
+            .check(elementIsNotElemhidden(blockedImageWithSlashId))
     }
 }
