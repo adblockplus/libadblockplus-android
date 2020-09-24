@@ -6,6 +6,8 @@ android {
   compileSdkVersion 29
   buildToolsVersion "28.0.3"
 
+  testBuildType project.getProperties().get("testBuildType", "debug")
+
   defaultConfig {
     minSdkVersion 21
     targetSdkVersion 29

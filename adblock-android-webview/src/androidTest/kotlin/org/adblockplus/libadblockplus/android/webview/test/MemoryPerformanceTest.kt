@@ -21,6 +21,7 @@ import android.os.Debug
 import android.os.SystemClock
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import java.util.concurrent.CountDownLatch
@@ -32,7 +33,6 @@ import org.adblockplus.libadblockplus.android.webview.AdblockWebView
 import org.adblockplus.libadblockplus.AppInfo
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import org.junit.Test
@@ -85,8 +85,8 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         }
     }
 
+    @LargeTest
     @Test
-    @Ignore
     fun benchmark() {
         var results = benchmarkFilterList(resourcesList, folder.newFolder().absolutePath)
         writeResultsOnFile(results)
@@ -209,36 +209,27 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
     }
 }
 
-@Ignore
 class MemoryBenchmark_20_full_AA : BenchMarkMemory(R.raw.easy_20, R.raw.exceptionrules)
 
-@Ignore
 class MemoryBenchmark_20_min_AA : BenchMarkMemory(R.raw.easy_20, R.raw.exceptionrules_min)
 
-@Ignore
 class MemoryBenchmark_50_full_AA : BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules)
 
-@Ignore
 class MemoryBenchmark_50_min_AA :
     BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules_min)
 
-@Ignore
 class MemoryBenchmark_80_full_AA :
     BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules)
 
-@Ignore
 class MemoryBenchmark_80_min_AA :
     BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules_min)
 
-@Ignore
 class MemoryBenchmark_full_easy_full_AA :
     BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules)
 
-@Ignore
 class MemoryBenchmark_full_easy_min_AA :
     BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules_min)
 
-@Ignore
 class MemoryBenchmark_minDist_full_AA :
     BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules)
 

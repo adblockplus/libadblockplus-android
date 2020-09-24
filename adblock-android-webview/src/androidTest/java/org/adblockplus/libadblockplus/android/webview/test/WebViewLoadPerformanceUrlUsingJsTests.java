@@ -25,17 +25,18 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
+import org.adblockplus.libadblockplus.android.webview.PerformanceTest;
 import org.adblockplus.libadblockplus.android.webview.WebViewActivity;
 import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -61,7 +62,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class WebViewLoadUrlPerfUsingJsTests
+public class WebViewLoadPerformanceUrlUsingJsTests
 {
   private static final List<String> TESTING_URLS = Arrays.asList(
       "http://incident.net/v8/files/mp4/",
@@ -371,7 +372,8 @@ public class WebViewLoadUrlPerfUsingJsTests
    * *  org.adblockplus.libadblockplus.android.webviewapp.test/androidx.test.runner.AndroidJUnitRunner
    */
 
-  @Ignore("waiting for nightly CI build")
+  @LargeTest
+  @PerformanceTest
   @Test
   public void testLoadTime() throws InterruptedException, IOException
   {
