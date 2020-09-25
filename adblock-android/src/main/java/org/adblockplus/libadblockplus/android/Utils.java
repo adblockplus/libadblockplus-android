@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.android;
 
 import android.content.Context;
 
+import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
@@ -564,5 +565,17 @@ public final class Utils
       }
     }
     return true;
+  }
+
+  /**
+   * Creates whitelisting filter for a given domain
+   * @param filterEngine Filtering engine
+   * @param domain Domain that needs to be white listed
+   * @return Whitelisting filter
+   */
+  public static Filter createDomainWhitelistingFilter(final FilterEngine filterEngine,
+                                                      final String domain)
+  {
+    return filterEngine.getFilter("@@||" + domain + "^$document");
   }
 }

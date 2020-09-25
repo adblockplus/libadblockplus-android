@@ -756,14 +756,7 @@ public class AdblockWebView extends WebView
             : null);
 
           // whitelisted
-          if (engine.isDomainWhitelisted(url, referrerChain))
-          {
-            isWhitelisted = true;
-            Timber.w("%s domain is whitelisted, allow loading", url);
-            notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                url, referrerChain, EventsListener.WhitelistReason.DOMAIN));
-          }
-          else if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
+          if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
           {
             isWhitelisted = true;
             Timber.w("%s document is whitelisted, allow loading", url);

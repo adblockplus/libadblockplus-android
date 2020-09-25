@@ -78,7 +78,7 @@ public class AdblockHelper
         // all the settings except `enabled` and whitelisted domains list
         // are saved by adblock engine itself
         engine.setEnabled(settings.isAdblockEnabled());
-        engine.setWhitelistedDomains(settings.getWhitelistedDomains());
+        engine.initWhitelistedDomains(settings.getWhitelistedDomains());
 
         // allowed connection type is saved by filter engine but we need to override it
         // as filter engine can be not created when changing
