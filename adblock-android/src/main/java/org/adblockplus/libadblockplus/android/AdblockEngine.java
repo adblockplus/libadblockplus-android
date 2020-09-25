@@ -25,7 +25,6 @@ import android.net.ConnectivityManager;
 import android.os.Build.VERSION;
 
 import org.adblockplus.libadblockplus.AppInfo;
-import org.adblockplus.libadblockplus.DomainWhitelist;
 import org.adblockplus.libadblockplus.FileSystem;
 import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterChangeCallback;
@@ -108,7 +107,6 @@ public final class AdblockEngine
   private volatile FilterChangeCallback filterChangeCallback;
   private volatile boolean elemhideEnabled = true;
   private volatile boolean enabled = true;
-  private volatile DomainWhitelist domainWhitelist = new DomainWhitelist();
   private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
   private SharedPreferences prefs;
 
@@ -750,7 +748,6 @@ public final class AdblockEngine
      */
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDomainWhitelisted(url, referrerChain)
         || this.isDocumentWhitelisted(url, referrerChain, sitekey)
         || this.isElemhideWhitelisted(url, referrerChain, sitekey))
     {
@@ -768,7 +765,6 @@ public final class AdblockEngine
   {
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDomainWhitelisted(url, referrerChainArray)
         || this.isDocumentWhitelisted(url, referrerChainArray, sitekey)
         || this.isElemhideWhitelisted(url, referrerChainArray, sitekey))
     {
@@ -782,18 +778,55 @@ public final class AdblockEngine
     return this.filterEngine;
   }
 
-  public void setWhitelistedDomains(List<String> domains)
+  /**
+   * Init whitelisting filters.
+   * @param domains List of domains to be whitelisted
+   */
+  public void initWhitelistedDomains(final List<String> domains)
   {
-    domainWhitelist.setDomains(domains);
+    for (final String domain : domains)
+    {
+      addDomainWhitelistingFilter(domain);
+    }
   }
 
-  public boolean isDomainWhitelisted(final String url, final List<String> referrerChain)
+  /**
+   * Add whitelisting filter for a given domain.
+   * @param domain Domain to be added for whitelisting
+   */
+  public void addDomainWhitelistingFilter(final String domain)
   {
-    return domainWhitelist.hasAnyDomain(url, referrerChain);
+    final Filter filter = Utils.createDomainWhitelistingFilter(filterEngine, domain);
+    try
+    {
+      if (!filter.isListed())
+      {
+        filter.addToList();
+      }
+    }
+    finally
+    {
+      filter.dispose();
+    }
   }
 
-  public List<String> getWhitelistedDomains()
+  /**
+   * Remove whitelisting filter for given domain.
+   * @param domain Domain to be removed from whitelisting
+   */
+  public void removeDomainWhitelistingFilter(final String domain)
   {
-    return domainWhitelist.getDomains();
+    final Filter filter = Utils.createDomainWhitelistingFilter(filterEngine, domain);
+    try
+    {
+      if (filter.isListed())
+      {
+        filter.removeFromList();
+      }
+    }
+    finally
+    {
+      filter.dispose();
+    }
   }
 }

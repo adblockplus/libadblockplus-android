@@ -147,14 +147,14 @@ public class WhitelistedDomainsSettingsFragment
     public void onClick(final View v)
     {
       // update and save settings
-      int position = (Integer) v.getTag();
-      String removeDomain = settings.getWhitelistedDomains().get(position);
-      Timber.w("Removing domain: %s", removeDomain);
+      final int position = (Integer) v.getTag();
+      final String removeDomain = settings.getWhitelistedDomains().get(position);
+      Timber.i("Removing domain: %s, %d", removeDomain, position);
       settings.getWhitelistedDomains().remove(position);
       provider.getAdblockSettingsStorage().save(settings);
 
       // apply settings
-      engine.setWhitelistedDomains(settings.getWhitelistedDomains());
+      engine.removeDomainWhitelistingFilter(removeDomain);
 
       // signal event
       listener.onAdblockSettingsChanged(WhitelistedDomainsSettingsFragment.this);
@@ -272,7 +272,7 @@ public class WhitelistedDomainsSettingsFragment
       provider.getAdblockSettingsStorage().save(settings);
 
       // apply settings
-      engine.setWhitelistedDomains(whitelistedDomains);
+      engine.addDomainWhitelistingFilter(newDomain);
 
       // signal event
       listener.onAdblockSettingsChanged(WhitelistedDomainsSettingsFragment.this);
