@@ -98,7 +98,7 @@ abstract class BaseAdblockWebViewTest {
      * !NOTE! SiteKeyExtractor will be converted into an interface soon, so initializing
      * extra SiteKeyExtractor won't be required
      */
-    private class AlwaysEnabledSitekeyExtractorDelegate(private val extractor: SiteKeyExtractor)
+    protected class AlwaysEnabledSitekeyExtractor(val extractor: SiteKeyExtractor)
         : SiteKeyExtractor {
 
         override fun obtainAndCheckSiteKey(webView: AdblockWebView?, request: WebResourceRequest?): WebResourceResponse? {
@@ -181,7 +181,7 @@ abstract class BaseAdblockWebViewTest {
         testSuitAdblock.webView = activityRule.activity.adblockWebView
         testSuitAdblock.setUp()
         testSuitAdblock.webView.siteKeyExtractor =
-            AlwaysEnabledSitekeyExtractorDelegate(testSuitAdblock.webView.siteKeyExtractor)
+            AlwaysEnabledSitekeyExtractor(testSuitAdblock.webView.siteKeyExtractor)
     }
 
     protected fun initSystemTestSuit() {

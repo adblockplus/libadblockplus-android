@@ -26,20 +26,16 @@ import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.ServerResponse;
-import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView.WebResponseResult;
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import timber.log.Timber;
 
-import static org.adblockplus.libadblockplus.HttpClient.STATUS_CODE_OK;
 import static org.adblockplus.libadblockplus.android.Utils.convertHeaderEntriesToMap;
 import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEntries;
 
@@ -47,9 +43,9 @@ import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeaderEnt
  * Makes a custom HTTP request and then does the <i>Site Key</i> verification by calling
  * {@link org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier#verifyInHeaders(String, Map, Map)}
  */
-class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
+public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
 {
-  HttpHeaderSiteKeyExtractor(final AdblockWebView webView)
+  public HttpHeaderSiteKeyExtractor(final AdblockWebView webView)
   {
     super(webView);
   }
@@ -64,6 +60,7 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     {
       return WebResponseResult.ALLOW_LOAD;
     }
+
     final Map<String, String> requestHeadersMap = request.getRequestHeaders();
     final String requestMethod = request.getMethod();
     String url = request.getUrl().toString();
@@ -101,29 +98,11 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
         headersList.add(new HeaderEntry(HttpClient.HEADER_COOKIE, cookieValue));
       }
 
-      // DP-1277: For a top level navigation url we need to set this meta header
-      // See:
-      // - https://www.w3.org/TR/fetch-metadata/#sec-fetch-dest-header
-      // - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Mode
-      if (request.isForMainFrame())
-      {
-        // For convenience use requestHeadersMap
-        // instead of headersList to find if header is already set
-        if (!requestHeadersMap.containsKey(HttpClient.HEADER_SEC_FETCH_MODE))
-        {
-          final String headerValue = "navigate";
-          Timber.d("Adding %s (%s) request header for url %s",
-              HttpClient.HEADER_SEC_FETCH_MODE,
-              headerValue, url);
-          headersList.add(new HeaderEntry(HttpClient.HEADER_SEC_FETCH_MODE, headerValue));
-        }
-      }
-
       final HttpRequest httpRequest = new HttpRequest(
           url,
           requestMethod,
           headersList,
-          !request.isForMainFrame(),
+          true,         // always true since we don't use it for main frame
           true);
       configuration.getHttpClient().request(httpRequest, callback);
     }
@@ -149,7 +128,10 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     final int statusCode = response.getResponseStatus();
 
     // in some circumstances statusCode gets > 599
-    if (!HttpClient.isStatusAllowed(statusCode))
+    // also checking redirect should not happen but
+    // jic it would not crash
+    if (!HttpClient.isStatusAllowed(statusCode) ||
+         HttpClient.isRedirectCode(statusCode))
     {
       // looks like the response is just broken
       // let it go
@@ -176,18 +158,6 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     }
     // DP-971: We don't need to pass HEADER_SET_COOKIE data further
     responseHeaders.removeAll(cookieHeadersToRemove);
-
-    // since we'd like to make this extractor work
-    // as a main extractor as well as a secondary
-    // we are leaving actions that are happening only for main frame
-    if (HttpClient.isRedirectCode(statusCode))
-    {
-      if (request.isForMainFrame())
-      {
-        return reloadWebViewUrl(webView, url, responseHolder);
-      }
-      return WebResponseResult.ALLOW_LOAD;
-    }
 
     if (response.getFinalUrl() != null)
     {
@@ -293,50 +263,6 @@ class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
           responseHeadersMap, response.getInputStream());
     }
     Timber.w("fetchUrlAndCheckSiteKey() passes control to WebView");
-    return WebResponseResult.ALLOW_LOAD;
-  }
-
-  private static WebResourceResponse reloadWebViewUrl(final AdblockWebView webView,
-                                                      final String url,
-                                                      final ResponseHolder responseHolder)
-  {
-    String redirectedUrl = null;
-    for (final HeaderEntry header : responseHolder.response.getResponseHeaders())
-    {
-      if (header.getKey().equalsIgnoreCase(HttpClient.HEADER_LOCATION) &&
-          header.getValue() != null && !header.getValue().isEmpty())
-      {
-        redirectedUrl = header.getValue();
-        try
-        {
-          // check and handle relative url redirection
-          if (!Utils.isAbsoluteUrl(redirectedUrl))
-          {
-            redirectedUrl = Utils.getAbsoluteUrl(url, redirectedUrl);
-          }
-        }
-        catch (final Exception e)
-        {
-          Timber.e(e, "Failed to build absolute redirect URL");
-          redirectedUrl = null;
-        }
-      }
-    }
-
-    if (redirectedUrl != null)
-    {
-      Timber.d("redirecting a webview from %s to %s", url, redirectedUrl);
-      // we need to reload webview url to make it aware of new new url after redirection
-      webView.setRedirectInProgress(true);
-      final Map<String, String> responseHeaders = Collections.singletonMap(
-          HttpClient.HEADER_REFRESH, "0; url=" + redirectedUrl);
-      return new WebResourceResponse(WebResponseResult.RESPONSE_MIME_TYPE,
-          WebResponseResult.RESPONSE_CHARSET_NAME,
-          STATUS_CODE_OK,
-          "OK",
-          responseHeaders,
-          new ByteArrayInputStream(new byte[]{}));
-    }
     return WebResponseResult.ALLOW_LOAD;
   }
 
