@@ -28,7 +28,6 @@ public abstract class HttpClient
   public static final String HEADER_USER_AGENT = "User-Agent";
   public static final String HEADER_ACCEPT = "Accept";
   public static final String HEADER_REFRESH = "Refresh";
-  public static final String HEADER_SEC_FETCH_MODE = "Sec-Fetch-Mode";
   // use low-case strings as in WebResponse all header keys are lowered-case
   public static final String HEADER_SET_COOKIE = "set-cookie";
   public static final String HEADER_WWW_AUTHENTICATE = "www-authenticate";

@@ -33,7 +33,6 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.Subscription;
@@ -102,7 +101,6 @@ public class AdblockWebView extends WebView
   private boolean loading;
   private String elementsHiddenFlag;
   private String sitekeyExtractedFlag;
-  private final AtomicBoolean redirectInProgress = new AtomicBoolean(false);
   private SiteKeyExtractor siteKeyExtractor;
   private final AtomicBoolean acceptCookie = new AtomicBoolean(true);
   private final AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
@@ -259,11 +257,6 @@ public class AdblockWebView extends WebView
      * @param info contains auxiliary information about a blocked resource.
      */
     void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info);
-  }
-
-  public void setRedirectInProgress(final boolean redirectInProgress)
-  {
-    this.redirectInProgress.set(redirectInProgress);
   }
 
   private final AtomicReference<EventsListener> eventsListenerAtomicReference
@@ -500,11 +493,6 @@ public class AdblockWebView extends WebView
     @Override
     public void onProgressChanged(final WebView view, final int newProgress)
     {
-      if (redirectInProgress.get())
-      {
-        Timber.d("Skipping onProgressChanged to %d%% for url: %s", newProgress, view.getUrl());
-        return;
-      }
       Timber.d("onProgressChanged to %d%% for url: %s", newProgress, view.getUrl());
       tryInjectJs();
 
@@ -589,12 +577,6 @@ public class AdblockWebView extends WebView
     @Override
     public void onPageFinished(final WebView view, final String url)
     {
-      if (redirectInProgress.get())
-      {
-        Timber.d("Skipping onPageFinished for url: %s", url);
-        redirectInProgress.set(false);
-        return;
-      }
       Timber.d("onPageFinished called for url %s", url);
       loading = false;
 
@@ -607,16 +589,9 @@ public class AdblockWebView extends WebView
       Timber.e("onReceivedError:" +
         " code=%d" +
         " with description=%s" +
-        " for url=%s" +
-        " redirectInProgress.get()=%s",
-        errorCode, description, failingUrl, redirectInProgress.get());
+        " for url=%s",
+        errorCode, description, failingUrl);
       loadError = errorCode;
-
-      if (redirectInProgress.get())
-      {
-        Timber.d("Skipping onReceivedError for redirection");
-        return;
-      }
 
       super.onReceivedError(view, errorCode, description, failingUrl);
     }
@@ -629,16 +604,9 @@ public class AdblockWebView extends WebView
               " code=%d" +
               " with description=%s" +
               " for url=%s" +
-              " redirectInProgress.get()=%s" +
               " request.isForMainFrame()=%s",
               error.getErrorCode(), error.getDescription(), request.getUrl(),
-              redirectInProgress.get(), request.isForMainFrame());
-
-      if (redirectInProgress.get() && request.isForMainFrame())
-      {
-        Timber.d("Skipping onReceivedError for redirection");
-        return;
-      }
+              request.isForMainFrame());
 
       super.onReceivedError(view, request, error);
     }

@@ -35,7 +35,7 @@ import timber.log.Timber;
 // because one might forgot that some aspects of it
 // for example, that `JsSiteKeyExtractor` ads a javascript interface handler
 // to the WebView
-class CombinedSiteKeyExtractor implements SiteKeyExtractor
+public class CombinedSiteKeyExtractor implements SiteKeyExtractor
 {
   private final SiteKeyExtractor httpExtractor;
   private final SiteKeyExtractor jsExtractor;
