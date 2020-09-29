@@ -107,7 +107,7 @@ class FilterEngineLoadTimeBenchmark {
             httpClientWrapper.setListener {
                 url, _ -> Timber.i("Intercepted $url to avoid networking")
             }
-            platform.setUpJsEngine(AdblockEngine.generateAppInfo(context, false))
+            platform.setUpJsEngine(AdblockEngine.generateAppInfo(context))
             Timber.d("Path = $basePath")
         }
     }
