@@ -196,13 +196,16 @@ public final class AdblockEngine
 
     private AdblockEngine engine;
 
-    protected Builder(final AppInfo appInfo, final String basePath)
+    protected Builder(final Context context,
+                      final AppInfo appInfo,
+                      final String basePath)
     {
       engine = new AdblockEngine();
       engine.elemhideEnabled = true;
 
       // we can't create JsEngine and FilterEngine right now as it starts to download subscriptions
       // and requests (AndroidHttpClient and probably wrappers) are not specified yet
+      this.context = context;
       this.appInfo = appInfo;
       this.basePath = basePath;
     }
@@ -309,6 +312,18 @@ public final class AdblockEngine
       // httpClient should be ready to be used passed right after JsEngine is created
       createEngines();
 
+      // force update filters if moved from "disabled by default" state to regular state,
+      // see https://jira.eyeo.com/browse/DP-1558
+      if (engine.isEnabled())
+      {
+        engine.ensurePrefs(context);
+        if (engine.shouldForceSyncWhenEnabled())
+        {
+          engine.saveShouldForceSyncWhenEnabled(false);
+          engine.forceSync();
+        }
+      }
+
       initCallbacks();
 
       return engine;
@@ -332,9 +347,11 @@ public final class AdblockEngine
     }
   }
 
-  public static Builder builder(AppInfo appInfo, String basePath)
+  public static Builder builder(final Context context,
+                                final AppInfo appInfo,
+                                final String basePath)
   {
-    return new Builder(appInfo, basePath);
+    return new Builder(context, appInfo, basePath);
   }
 
   public static Builder builder(final Context context, final String basePath)
@@ -344,7 +361,8 @@ public final class AdblockEngine
         (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     final IsAllowedConnectionCallback isAllowedConnectionCallback =
         new IsAllowedConnectionCallbackImpl(connectivityManager);
-    return builder(appInfo, basePath).setIsAllowedConnectionCallback(isAllowedConnectionCallback);
+    return builder(context, appInfo, basePath)
+        .setIsAllowedConnectionCallback(isAllowedConnectionCallback);
   }
 
   public void dispose()
@@ -558,20 +576,33 @@ public final class AdblockEngine
   // This method is called when SingleInstanceEngineProvider configured to have filter engine
   // disabled by default. It will configure setting to force subscriptions to be updated
   // when engine will be enabled first time
-  void configureDisabledByDefault(final Context context)
+  public void configureDisabledByDefault(final Context context)
   {
     setEnabled(false);
-
-    if (prefs == null)
-    {
-      prefs = context.getSharedPreferences(ENGINE_STORAGE_NAME,
-              Context.MODE_PRIVATE);
-    }
+    ensurePrefs(context);
 
     if (!prefs.contains(FORCE_SYNC_WHEN_ENABLED_PREF))
     {
-      prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, true).commit();
+      saveShouldForceSyncWhenEnabled(true);
     }
+  }
+
+  private void ensurePrefs(final Context context)
+  {
+    if (prefs == null)
+    {
+      loadPrefs(context);
+    }
+  }
+
+  private void saveShouldForceSyncWhenEnabled(final boolean force)
+  {
+    prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, force).commit();
+  }
+
+  private void loadPrefs(final Context context)
+  {
+    prefs = context.getSharedPreferences(ENGINE_STORAGE_NAME, Context.MODE_PRIVATE);
   }
 
   public void setEnabled(final boolean enabled)
@@ -585,27 +616,9 @@ public final class AdblockEngine
     // let us check pref forcing update.
     // See configureDisabledByDefault method for preference setup.
 
-    if (enabled && valueChanged && prefs != null
-            && prefs.getBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false))
+    if (enabled && valueChanged && prefs != null && shouldForceSyncWhenEnabled())
     {
-      final List<Subscription> listed = filterEngine.getListedSubscriptions();
-
-      try
-      {
-        for (final Subscription subscription : listed)
-        {
-          subscription.updateFilters();
-        }
-
-        prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false).commit();
-      }
-      finally
-      {
-        for (final Subscription subscription : listed)
-        {
-          subscription.dispose();
-        }
-      }
+      forceSync();
     }
 
     if (valueChanged)
@@ -618,6 +631,34 @@ public final class AdblockEngine
         }
       }
     }
+  }
+
+  private void forceSync()
+  {
+    Timber.i("Force updating subscription filters");
+    final List<Subscription> listed = filterEngine.getListedSubscriptions();
+
+    try
+    {
+      for (final Subscription subscription : listed)
+      {
+        subscription.updateFilters();
+      }
+
+      saveShouldForceSyncWhenEnabled(false);
+    }
+    finally
+    {
+      for (final Subscription subscription : listed)
+      {
+        subscription.dispose();
+      }
+    }
+  }
+
+  private boolean shouldForceSyncWhenEnabled()
+  {
+    return prefs.getBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false);
   }
 
   public boolean isEnabled()

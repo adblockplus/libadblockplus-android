@@ -134,7 +134,7 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
 
         val engineFactory = AdblockEngine
-            .builder(AppInfo.builder().build(), folder)
+            .builder(context, AppInfo.builder().build(), folder)
             .preloadSubscriptions(context, localResources, MockStorage())
             .setForceUpdatePreloadedSubscriptions(false)
         val customEngineProvider = SingleInstanceEngineProvider(engineFactory)
