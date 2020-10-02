@@ -825,9 +825,12 @@ public final class AdblockEngine
    */
   public void initWhitelistedDomains(final List<String> domains)
   {
-    for (final String domain : domains)
+    if (domains != null)
     {
-      addDomainWhitelistingFilter(domain);
+      for (final String domain : domains)
+      {
+        addDomainWhitelistingFilter(domain);
+      }
     }
   }
 
