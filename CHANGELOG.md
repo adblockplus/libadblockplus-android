@@ -1,9 +1,12 @@
 # Changelog
 All notable changes to Adblock Android SDK will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Semantic Versioning is introduced. [!358](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/358)
 
 ## [4.0] - 2020-08-26 - [!333](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/333)
 ### Changed
