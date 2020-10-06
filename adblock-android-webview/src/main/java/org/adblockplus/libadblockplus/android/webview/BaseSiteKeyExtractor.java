@@ -27,6 +27,8 @@ import java.lang.ref.WeakReference;
 @SuppressWarnings("WeakerAccess") // API
 public abstract class BaseSiteKeyExtractor implements SiteKeyExtractor
 {
+  public static final int RESOURCE_HOLD_MAX_TIME_MS = 1000;
+
   private SiteKeysConfiguration siteKeysConfiguration;
   private boolean isEnabled = true;
   protected final WeakReference<AdblockWebView> webViewWeakReference;

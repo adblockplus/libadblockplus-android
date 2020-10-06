@@ -266,6 +266,20 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     return WebResponseResult.ALLOW_LOAD;
   }
 
+  @Override
+  public void startNewPage()
+  {
+    // no-op
+  }
+
+  @Override
+  public boolean waitForSitekeyCheck(final WebResourceRequest request)
+  {
+    // no need to block the network request for this extractor
+    // this callback is used in JsSiteKeyExtractor
+    return false;
+  }
+
   private static String getReasonPhrase(final ServerResponse.NsStatus status)
   {
     return status.name().replace("_", "");
