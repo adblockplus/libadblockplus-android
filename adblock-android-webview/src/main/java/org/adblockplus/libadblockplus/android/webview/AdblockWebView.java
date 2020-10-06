@@ -611,6 +611,19 @@ public class AdblockWebView extends WebView
       super.onReceivedError(view, request, error);
     }
 
+    private AbpShouldBlockResult notifyAndReturnBlockingResponse(final String requestUrl,
+                                                         final List<String> parentFrameUrls,
+                                                         final FilterEngine.ContentType contentType)
+    {
+      if (isVisibleResource(contentType))
+      {
+        elemhideBlockedResource(requestUrl);
+      }
+      notifyResourceBlocked(new EventsListener.BlockedResourceInfo(requestUrl,
+          parentFrameUrls, contentType));
+      return AbpShouldBlockResult.BLOCK_LOAD;
+    }
+
     private AbpShouldBlockResult shouldAbpBlockRequest(final WebResourceRequest request)
     {
       // here we just trying to fill url -> referrer map
@@ -713,15 +726,16 @@ public class AdblockWebView extends WebView
           // never blocking main frame requests, just subrequests
           Timber.w("%s is main frame, allow loading", url);
 
+          siteKeyExtractor.startNewPage();
           siteKeyExtractor.setEnabled(isAcceptableAdsEnabled);
         }
         else
         {
           final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
-          final String siteKey = (siteKeysConfiguration != null
-            ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+          String siteKey = (siteKeysConfiguration != null
+              ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
               .getAny(referrerChain, ""))
-            : null);
+              : null);
 
           // whitelisted
           if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
@@ -735,7 +749,7 @@ public class AdblockWebView extends WebView
           {
             // determine the content
             FilterEngine.ContentType contentType =
-                    ensureContentTypeDetectorCreatedAndGet().detect(request);
+                ensureContentTypeDetectorCreatedAndGet().detect(request);
             if (contentType == null)
             {
               Timber.w("contentTypeDetector didn't recognize content type");
@@ -752,32 +766,99 @@ public class AdblockWebView extends WebView
             if (!referrerChain.isEmpty())
             {
               final String parentUrl = referrerChain.get(0);
-              final List<String> referrerChainForGenericblock = referrerChain.subList(1, referrerChain.size());
+              final List<String> referrerChainForGenericblock = referrerChain.subList(1,
+                  referrerChain.size());
               specificOnly = engine.isGenericblockWhitelisted(parentUrl,
-                      referrerChainForGenericblock, siteKey);
+                  referrerChainForGenericblock, siteKey);
               if (specificOnly)
               {
-                Timber.w("Found genericblock filter for url %s which parent is %s", url, parentUrl);
+                Timber.w("Found genericblock filter for url %s which parent is %s",
+                    url, parentUrl);
               }
             }
 
             // check if we should block
-            final AdblockEngine.MatchesResult result = engine.matches(
+            AdblockEngine.MatchesResult result = engine.matches(
                 url, FilterEngine.ContentType.maskOf(contentType),
                 referrerChain, siteKey, specificOnly);
 
             if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
             {
-              Timber.w("Blocked loading %s", url);
+              Timber.i("Attempting to block request with AA on the first try: %s", url);
 
-              if (isVisibleResource(contentType))
+              // Need to run `waitForSitekeyCheck` to hold the actual check until
+              // the sitekey is either obtained or not present
+              final boolean waitedForSitekey = siteKeyExtractor.waitForSitekeyCheck(request);
+              if (waitedForSitekey)
               {
-                elemhideBlockedResource(url);
-              }
+                // Request was held, start over to see if it's now whitelisted
+                Timber.i("Restarting the check having waited for the sitekey: %s", url);
 
-              notifyResourceBlocked(new EventsListener.BlockedResourceInfo(
-                  url, referrerChain, contentType));
-              return AbpShouldBlockResult.BLOCK_LOAD;
+                siteKey = (siteKeysConfiguration != null
+                    ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+                    .getAny(referrerChain, ""))
+                    : null);
+
+                if (siteKey == null || siteKey.isEmpty())
+                {
+                  Timber.i("SiteKey is not found, blocking the resource %s", url);
+                  return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
+                }
+
+                if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
+                {
+                  isWhitelisted = true;
+                  Timber.w("%s document is whitelisted, allow loading", url);
+                  notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
+                      url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
+                }
+                else
+                {
+                  specificOnly = false;
+                  if (!referrerChain.isEmpty())
+                  {
+                    final String parentUrl = referrerChain.get(0);
+                    final List<String> referrerChainForGenericblock = referrerChain.subList(1,
+                        referrerChain.size());
+                    specificOnly = engine.isGenericblockWhitelisted(parentUrl,
+                        referrerChainForGenericblock, siteKey);
+                    if (specificOnly)
+                    {
+                      Timber.w("Found genericblock filter for url %s which parent is %s",
+                          url, parentUrl);
+                    }
+                  }
+
+                  // check if we should block
+                  result = engine.matches(
+                      url, FilterEngine.ContentType.maskOf(contentType),
+                      referrerChain, siteKey, specificOnly);
+
+                  if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
+                  {
+                    Timber.i("Blocked loading %s with AA %s", url,
+                        isAcceptableAdsEnabled ? "enabled" : "disabled");
+                    return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
+                  }
+                  if (result == AdblockEngine.MatchesResult.WHITELISTED)
+                  {
+                    isWhitelisted = true;
+                    Timber.w("%s is whitelisted in matches()", url);
+                    notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
+                        url, referrerChain, EventsListener.WhitelistReason.FILTER));
+                  }
+                  Timber.d("Allowed loading %s", url);
+                }
+              } // if (waitedForSitekey)
+
+              // This check is required because the resource could be whitelisted on the second
+              // check after waiting for the sitekey check conclusion
+              if (!isWhitelisted)
+              {
+                Timber.i("Blocked loading %s with AA %s", url,
+                    isAcceptableAdsEnabled ? "enabled" : "disabled");
+                return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
+              }
             }
             else if (result == AdblockEngine.MatchesResult.WHITELISTED)
             {
