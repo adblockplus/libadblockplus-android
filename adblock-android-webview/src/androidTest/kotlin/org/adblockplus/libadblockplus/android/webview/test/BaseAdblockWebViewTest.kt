@@ -101,8 +101,8 @@ abstract class BaseAdblockWebViewTest {
     protected class AlwaysEnabledSitekeyExtractor(val extractor: SiteKeyExtractor)
         : SiteKeyExtractor {
 
-        override fun obtainAndCheckSiteKey(webView: AdblockWebView?, request: WebResourceRequest?): WebResourceResponse? {
-            return extractor.obtainAndCheckSiteKey(webView, request)
+        override fun extract(request: WebResourceRequest?): WebResourceResponse? {
+            return extractor.extract(request)
         }
 
         override fun setSiteKeysConfiguration(siteKeysConfiguration: SiteKeysConfiguration?) {
