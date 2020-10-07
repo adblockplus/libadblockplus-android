@@ -536,15 +536,15 @@ public class AdblockWebView extends WebView
     BLOCK_LOAD,
   }
 
-  static class WebResponseResult
+  public static class WebResponseResult
   {
     // decisions
-    static String RESPONSE_CHARSET_NAME = "UTF-8";
-    static String RESPONSE_MIME_TYPE = "text/plain";
+    public static final String RESPONSE_CHARSET_NAME = "UTF-8";
+    public static final  String RESPONSE_MIME_TYPE = "text/plain";
 
-    static WebResourceResponse ALLOW_LOAD = null;
-    static WebResourceResponse BLOCK_LOAD =
-            new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, null);
+    public static final WebResourceResponse ALLOW_LOAD = null;
+    public static final WebResourceResponse BLOCK_LOAD =
+        new WebResourceResponse(RESPONSE_MIME_TYPE, RESPONSE_CHARSET_NAME, null);
   }
 
   /**
@@ -967,7 +967,7 @@ public class AdblockWebView extends WebView
         return WebResponseResult.ALLOW_LOAD;
       }
 
-      return siteKeyExtractor.obtainAndCheckSiteKey(AdblockWebView.this, request);
+      return siteKeyExtractor.extract(request);
     }
   }
 

@@ -108,8 +108,7 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
   }
 
   @Override
-  public WebResourceResponse obtainAndCheckSiteKey(final AdblockWebView webView,
-                                                   final WebResourceRequest request)
+  public WebResourceResponse extract(final WebResourceRequest request)
   {
   /*
     obtainAndCheckSiteKey is not used here because was mainly created for

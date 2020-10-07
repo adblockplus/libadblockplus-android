@@ -56,8 +56,7 @@ public class CombinedSiteKeyExtractor implements SiteKeyExtractor
   Any of it may be used directly and will be doing its job properly for any request
    */
   @Override
-  public WebResourceResponse obtainAndCheckSiteKey(
-      final AdblockWebView webView, final WebResourceRequest frameRequest)
+  public WebResourceResponse extract(final WebResourceRequest frameRequest)
   {
     // at this point non-frame requests must have been filtered by ContentTypeDetector
     // so this presumably all non-main frame requests are of SUBDOCUMENT type (frames and iframes)
@@ -65,7 +64,7 @@ public class CombinedSiteKeyExtractor implements SiteKeyExtractor
     {
       Timber.d("Falling back to native sitekey requests for %s",
           frameRequest.getUrl().toString());
-      return httpExtractor.obtainAndCheckSiteKey(webView, frameRequest);
+      return httpExtractor.extract(frameRequest);
     }
 
     return AdblockWebView.WebResponseResult.ALLOW_LOAD;

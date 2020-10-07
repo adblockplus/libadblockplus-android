@@ -55,13 +55,11 @@ public interface SiteKeyExtractor
    * This method must perform custom HTTP request or return one of states from
    * {@link AdblockWebView.WebResponseResult}
    *
-   * @param webView corresponding WebView (an instance of {@link AdblockWebView}
    * @param request a request that might be used for understanding
    *                additional options (e.g. is the request intended for the main frame)
    * @return a response that will be passed to
    */
-  WebResourceResponse obtainAndCheckSiteKey(AdblockWebView webView,
-                                            WebResourceRequest request);
+  WebResourceResponse extract(WebResourceRequest request);
 
   /**
    * Notifies about starting of a new page

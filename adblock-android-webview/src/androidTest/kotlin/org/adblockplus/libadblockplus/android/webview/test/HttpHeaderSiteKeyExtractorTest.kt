@@ -68,9 +68,9 @@ class HttpHeaderSiteKeyExtractorTest : BaseAdblockWebViewTest() {
 
         assertTrue(testSuitAdblock.loadUrlAndWait(indexPageUrl))
         //test that is called only one time
-        verify(sitekeyExtractorMock, times(1)).obtainAndCheckSiteKey(any(), any())
+        verify(sitekeyExtractorMock, times(1)).extract(any())
         // test that when it is called with subframe url one time
-        verify(sitekeyExtractorMock, times(1)).obtainAndCheckSiteKey(any(),
+        verify(sitekeyExtractorMock, times(1)).extract(
                 argThat { it.url.toString() == subFrameUrl }
         )
     }

@@ -402,7 +402,7 @@ public final class Utils
         }
         else
         {
-          final String mergedValue =  map.get(header.getKey()) + ", " + header.getValue();
+          final String mergedValue = map.get(header.getKey()) + ", " + header.getValue();
           Timber.d("convertHeaderEntriesToMap() merges values of `%s` header",
               header.getKey());
           map.put(header.getKey(), mergedValue);
@@ -417,7 +417,7 @@ public final class Utils
    * @param map map of headers
    * @return list of headers
    */
-  public static List<HeaderEntry> convertMapToHeaderEntries(final Map<String, String> map)
+  public static List<HeaderEntry> convertMapToHeadersList(final Map<String, String> map)
   {
     final List<HeaderEntry> list = new ArrayList<>(map.size());
     for (final Map.Entry<String, String> header : map.entrySet())
