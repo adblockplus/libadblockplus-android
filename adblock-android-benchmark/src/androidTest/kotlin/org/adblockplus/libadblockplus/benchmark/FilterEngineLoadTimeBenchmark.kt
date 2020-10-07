@@ -40,6 +40,7 @@ import timber.log.Timber
 import timber.log.Timber.DebugTree
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 import kotlin.system.measureTimeMillis
 
 fun randomDirectory() = File.createTempFile("adblock", ".tmpdir").also {
@@ -201,7 +202,10 @@ class FilterEngineLoadTimeBenchmark {
 
         // check saved subscriptions data
         assertTrue(pattersIniFile.exists())
-        assertEquals(PATTERNS_INI_LENGTH, pattersIniFile.length())
+
+        // Note: the actual file size can be a bit different when building locally vs. on CI
+        // due to different datetimes (lastDownload, lastSuccess) and some empty lines
+        assertTrue(abs(pattersIniFile.length() - PATTERNS_INI_LENGTH) < 10)
         Timber.d("State is ready, starting benchmarking")
 
         // the dir is the same as it was used for the first FE create,
