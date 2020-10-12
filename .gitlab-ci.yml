@@ -192,7 +192,7 @@ memory_benchmark:
     - "android-pi"
   stage: device_tests
   script:
-    - chmod +x ./tools/run_benchmark.sh && ./tools/run_benchmark.sh
+    - chmod +x ./tools/run_benchmark.py && ./tools/run_benchmark.py
     # performance tests: only the @PerformanceTest annotation
     - adb shell am instrument -w -r \
       -e debug false \
