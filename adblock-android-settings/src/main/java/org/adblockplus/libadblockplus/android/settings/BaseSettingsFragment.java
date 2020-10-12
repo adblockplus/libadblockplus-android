@@ -98,6 +98,11 @@ public abstract class BaseSettingsFragment
     this.engine = engine;
     checkLoadingFinished();
     onAdblockEngineReady();
+    initSettings();
+  }
+
+  private void initSettings()
+  {
     if (settings == null)
     {
       settings = AdblockSettingsStorage.getDefaultSettings(engine);
@@ -120,9 +125,14 @@ public abstract class BaseSettingsFragment
       checkLoadingFinished();
       onSettingsReady();
     }
+
     if (engine == null)
     {
       startGetAdblockEngine();
+    }
+    else
+    {
+      initSettings();
     }
   }
 
