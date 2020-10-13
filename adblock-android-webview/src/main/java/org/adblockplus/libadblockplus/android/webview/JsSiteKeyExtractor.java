@@ -32,7 +32,7 @@ import timber.log.Timber;
  */
 class JsSiteKeyExtractor extends BaseSiteKeyExtractor
 {
-  private CountDownLatch latch;
+  private volatile CountDownLatch latch;
   private final AtomicBoolean isSiteKeyProcessingFinished;
   private final AtomicBoolean isJavascriptInterfaceSet;
   private final Handler callerThreadHandler;
@@ -125,6 +125,7 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
   @Override
   public void startNewPage()
   {
+    Timber.d("startNewPage() called");
     isSiteKeyProcessingFinished.set(false);
     latch = new CountDownLatch(1);
   }
