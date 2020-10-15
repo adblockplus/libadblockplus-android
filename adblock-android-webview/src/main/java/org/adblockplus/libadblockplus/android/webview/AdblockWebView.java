@@ -22,10 +22,12 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -725,8 +727,6 @@ public class AdblockWebView extends WebView
         {
           // never blocking main frame requests, just subrequests
           Timber.w("%s is main frame, allow loading", url);
-
-          siteKeyExtractor.startNewPage();
           siteKeyExtractor.setEnabled(isAcceptableAdsEnabled);
         }
         else
@@ -1385,6 +1385,7 @@ public class AdblockWebView extends WebView
     if (AdblockWebView.this.canGoBack())
     {
       navigationUrl.set(null);
+      siteKeyExtractor.startNewPage();
     }
     super.goBack();
   }
@@ -1400,6 +1401,7 @@ public class AdblockWebView extends WebView
     if (AdblockWebView.this.canGoForward())
     {
       navigationUrl.set(null);
+      siteKeyExtractor.startNewPage();
     }
     super.goForward();
   }
@@ -1431,7 +1433,13 @@ public class AdblockWebView extends WebView
   }
 
   @Override
-  public void loadUrl(final String url)
+  public WebBackForwardList restoreState(final Bundle inState)
+  {
+    siteKeyExtractor.startNewPage();
+    return super.restoreState(inState);
+  }
+
+  private void loadUrlCommon()
   {
     checkCookieSettings();
     ensureProvider();
@@ -1441,49 +1449,35 @@ public class AdblockWebView extends WebView
       stopAbpLoading();
     }
 
+    siteKeyExtractor.startNewPage();
+  }
+
+  @Override
+  public void loadUrl(final String url)
+  {
+    loadUrlCommon();
     super.loadUrl(url);
   }
 
   @Override
   public void loadUrl(final String url, final Map<String, String> additionalHttpHeaders)
   {
-    checkCookieSettings();
-    ensureProvider();
-
-    if (loading)
-    {
-      stopAbpLoading();
-    }
-
+    loadUrlCommon();
     super.loadUrl(url, additionalHttpHeaders);
   }
 
   @Override
   public void loadData(final String data, final String mimeType, final String encoding)
   {
-    checkCookieSettings();
-    ensureProvider();
-
-    if (loading)
-    {
-      stopAbpLoading();
-    }
-
+    loadUrlCommon();
     super.loadData(data, mimeType, encoding);
   }
 
   @Override
-  public void loadDataWithBaseURL(final String baseUrl, final String data, final String mimeType, final String encoding,
-                                  final String historyUrl)
+  public void loadDataWithBaseURL(final String baseUrl, final String data, final String mimeType,
+                                  final String encoding, final String historyUrl)
   {
-    checkCookieSettings();
-    ensureProvider();
-
-    if (loading)
-    {
-      stopAbpLoading();
-    }
-
+    loadUrlCommon();
     super.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl);
   }
 
