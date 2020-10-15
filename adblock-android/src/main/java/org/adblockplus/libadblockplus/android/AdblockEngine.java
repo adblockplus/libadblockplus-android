@@ -21,8 +21,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
 import android.os.Build.VERSION;
-import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FileSystem;
@@ -35,7 +35,6 @@ import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.Platform;
-import org.adblockplus.libadblockplus.ShowNotificationCallback;
 import org.adblockplus.libadblockplus.Subscription;
 
 import java.util.ArrayList;
@@ -45,6 +44,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import timber.log.Timber;
 
 public final class AdblockEngine
 {
@@ -104,10 +105,8 @@ public final class AdblockEngine
   private volatile FileSystem fileSystem;
   private volatile HttpClient httpClient;
   private volatile FilterChangeCallback filterChangeCallback;
-  private volatile ShowNotificationCallback showNotificationCallback;
-  private volatile boolean elemhideEnabled;
+  private volatile boolean elemhideEnabled = true;
   private volatile boolean enabled = true;
-  private volatile List<String> whitelistedDomains;
   private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
   private SharedPreferences prefs;
 
@@ -127,8 +126,9 @@ public final class AdblockEngine
     return this;
   }
 
-  public static AppInfo generateAppInfo(final Context context, boolean developmentBuild,
-                                        String application, String applicationVersion)
+  public static AppInfo generateAppInfo(final Context context,
+                                        final String application,
+                                        final String applicationVersion)
   {
     final String sdkVersion = String.valueOf(VERSION.SDK_INT);
     String locale = Locale.getDefault().toString().replace('_', '-');
@@ -141,8 +141,7 @@ public final class AdblockEngine
       AppInfo
         .builder()
         .setApplicationVersion(sdkVersion)
-        .setLocale(locale)
-        .setDevelopmentBuild(developmentBuild);
+        .setLocale(locale);
 
     if (application != null)
     {
@@ -157,7 +156,7 @@ public final class AdblockEngine
     return builder.build();
   }
 
-  public static AppInfo generateAppInfo(final Context context, boolean developmentBuild)
+  public static AppInfo generateAppInfo(final Context context)
   {
     try
     {
@@ -165,7 +164,7 @@ public final class AdblockEngine
       String application = context.getPackageName();
       String applicationVersion = packageInfo.versionName;
 
-      return generateAppInfo(context, developmentBuild, application, applicationVersion);
+      return generateAppInfo(context, application, applicationVersion);
     }
     catch (PackageManager.NameNotFoundException e)
     {
@@ -197,15 +196,24 @@ public final class AdblockEngine
 
     private AdblockEngine engine;
 
-    protected Builder(final AppInfo appInfo, final String basePath)
+    protected Builder(final Context context,
+                      final AppInfo appInfo,
+                      final String basePath)
     {
       engine = new AdblockEngine();
       engine.elemhideEnabled = true;
 
       // we can't create JsEngine and FilterEngine right now as it starts to download subscriptions
       // and requests (AndroidHttpClient and probably wrappers) are not specified yet
+      this.context = context;
       this.appInfo = appInfo;
       this.basePath = basePath;
+    }
+
+    public Builder setDisableByDefault()
+    {
+      this.engine.configureDisabledByDefault(context);
+      return this;
     }
 
     public Builder enableElementHiding(boolean enable)
@@ -248,12 +256,6 @@ public final class AdblockEngine
       return this;
     }
 
-    public Builder setShowNotificationCallback(ShowNotificationCallback callback)
-    {
-      engine.showNotificationCallback = callback;
-      return this;
-    }
-
     public Builder setFilterChangeCallback(FilterChangeCallback callback)
     {
       engine.filterChangeCallback = callback;
@@ -264,7 +266,7 @@ public final class AdblockEngine
     {
       if (androidHttpClient == null)
       {
-        androidHttpClient = new AndroidHttpClient(true, "UTF-8");
+        androidHttpClient = new AndroidHttpClient(true);
       }
       engine.httpClient = androidHttpClient;
 
@@ -297,11 +299,6 @@ public final class AdblockEngine
 
     private void initCallbacks()
     {
-      if (engine.showNotificationCallback != null)
-      {
-        engine.filterEngine.setShowNotificationCallback(engine.showNotificationCallback);
-      }
-
       if (engine.filterChangeCallback != null)
       {
         engine.filterEngine.setFilterChangeCallback(engine.filterChangeCallback);
@@ -314,6 +311,18 @@ public final class AdblockEngine
 
       // httpClient should be ready to be used passed right after JsEngine is created
       createEngines();
+
+      // force update filters if moved from "disabled by default" state to regular state,
+      // see https://jira.eyeo.com/browse/DP-1558
+      if (engine.isEnabled())
+      {
+        engine.ensurePrefs(context);
+        if (engine.shouldForceSyncWhenEnabled())
+        {
+          engine.saveShouldForceSyncWhenEnabled(false);
+          engine.forceSync();
+        }
+      }
 
       initCallbacks();
 
@@ -338,9 +347,22 @@ public final class AdblockEngine
     }
   }
 
-  public static Builder builder(AppInfo appInfo, String basePath)
+  public static Builder builder(final Context context,
+                                final AppInfo appInfo,
+                                final String basePath)
   {
-    return new Builder(appInfo, basePath);
+    return new Builder(context, appInfo, basePath);
+  }
+
+  public static Builder builder(final Context context, final String basePath)
+  {
+    final AppInfo appInfo = AdblockEngine.generateAppInfo(context);
+    final ConnectivityManager connectivityManager =
+        (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    final IsAllowedConnectionCallback isAllowedConnectionCallback =
+        new IsAllowedConnectionCallbackImpl(connectivityManager);
+    return builder(context, appInfo, basePath)
+        .setIsAllowedConnectionCallback(isAllowedConnectionCallback);
   }
 
   public void dispose()
@@ -356,11 +378,6 @@ public final class AdblockEngine
         this.filterEngine.removeFilterChangeCallback();
       }
 
-      if (this.showNotificationCallback != null)
-      {
-        this.filterEngine.removeShowNotificationCallback();
-      }
-
       this.platform.dispose();
       this.platform = null;
     }
@@ -370,12 +387,6 @@ public final class AdblockEngine
     {
       this.filterChangeCallback.dispose();
       this.filterChangeCallback = null;
-    }
-
-    if (this.showNotificationCallback != null)
-    {
-      this.showNotificationCallback.dispose();
-      this.showNotificationCallback = null;
     }
   }
 
@@ -565,20 +576,33 @@ public final class AdblockEngine
   // This method is called when SingleInstanceEngineProvider configured to have filter engine
   // disabled by default. It will configure setting to force subscriptions to be updated
   // when engine will be enabled first time
-  void configureDisabledByDefault(final Context context)
+  public void configureDisabledByDefault(final Context context)
   {
     setEnabled(false);
-
-    if (prefs == null)
-    {
-      prefs = context.getSharedPreferences(ENGINE_STORAGE_NAME,
-              Context.MODE_PRIVATE);
-    }
+    ensurePrefs(context);
 
     if (!prefs.contains(FORCE_SYNC_WHEN_ENABLED_PREF))
     {
-      prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, true).commit();
+      saveShouldForceSyncWhenEnabled(true);
     }
+  }
+
+  private void ensurePrefs(final Context context)
+  {
+    if (prefs == null)
+    {
+      loadPrefs(context);
+    }
+  }
+
+  private void saveShouldForceSyncWhenEnabled(final boolean force)
+  {
+    prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, force).commit();
+  }
+
+  private void loadPrefs(final Context context)
+  {
+    prefs = context.getSharedPreferences(ENGINE_STORAGE_NAME, Context.MODE_PRIVATE);
   }
 
   public void setEnabled(final boolean enabled)
@@ -592,27 +616,9 @@ public final class AdblockEngine
     // let us check pref forcing update.
     // See configureDisabledByDefault method for preference setup.
 
-    if (enabled && valueChanged && prefs != null
-            && prefs.getBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false))
+    if (enabled && valueChanged && prefs != null && shouldForceSyncWhenEnabled())
     {
-      final List<Subscription> listed = filterEngine.getListedSubscriptions();
-
-      try
-      {
-        for (final Subscription subscription : listed)
-        {
-          subscription.updateFilters();
-        }
-
-        prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false).commit();
-      }
-      finally
-      {
-        for (final Subscription subscription : listed)
-        {
-          subscription.dispose();
-        }
-      }
+      forceSync();
     }
 
     if (valueChanged)
@@ -625,6 +631,34 @@ public final class AdblockEngine
         }
       }
     }
+  }
+
+  private void forceSync()
+  {
+    Timber.i("Force updating subscription filters");
+    final List<Subscription> listed = filterEngine.getListedSubscriptions();
+
+    try
+    {
+      for (final Subscription subscription : listed)
+      {
+        subscription.updateFilters();
+      }
+
+      saveShouldForceSyncWhenEnabled(false);
+    }
+    finally
+    {
+      for (final Subscription subscription : listed)
+      {
+        subscription.dispose();
+      }
+    }
+  }
+
+  private boolean shouldForceSyncWhenEnabled()
+  {
+    return prefs.getBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false);
   }
 
   public boolean isEnabled()
@@ -725,28 +759,6 @@ public final class AdblockEngine
     return this.filterEngine.isDocumentWhitelisted(url, referrerChain, sitekey);
   }
 
-  public boolean isDomainWhitelisted(final String url, final List<String> referrerChain)
-  {
-    if (whitelistedDomains == null)
-    {
-      return false;
-    }
-
-    // using Set to remove duplicates
-    Set<String> referrersAndResourceUrls = new HashSet<>(referrerChain);
-    referrersAndResourceUrls.add(url);
-
-    for (String eachUrl : referrersAndResourceUrls)
-    {
-      if (whitelistedDomains.contains(filterEngine.getHostFromURL(eachUrl)))
-      {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   public boolean isElemhideWhitelisted(final String url,
                                        final List<String> referrerChain,
                                        final String sitekey)
@@ -777,7 +789,6 @@ public final class AdblockEngine
      */
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDomainWhitelisted(url, referrerChain)
         || this.isDocumentWhitelisted(url, referrerChain, sitekey)
         || this.isElemhideWhitelisted(url, referrerChain, sitekey))
     {
@@ -795,7 +806,6 @@ public final class AdblockEngine
   {
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDomainWhitelisted(url, referrerChainArray)
         || this.isDocumentWhitelisted(url, referrerChainArray, sitekey)
         || this.isElemhideWhitelisted(url, referrerChainArray, sitekey))
     {
@@ -809,13 +819,58 @@ public final class AdblockEngine
     return this.filterEngine;
   }
 
-  public void setWhitelistedDomains(List<String> domains)
+  /**
+   * Init whitelisting filters.
+   * @param domains List of domains to be whitelisted
+   */
+  public void initWhitelistedDomains(final List<String> domains)
   {
-    this.whitelistedDomains = domains;
+    if (domains != null)
+    {
+      for (final String domain : domains)
+      {
+        addDomainWhitelistingFilter(domain);
+      }
+    }
   }
 
-  public List<String> getWhitelistedDomains()
+  /**
+   * Add whitelisting filter for a given domain.
+   * @param domain Domain to be added for whitelisting
+   */
+  public void addDomainWhitelistingFilter(final String domain)
   {
-    return whitelistedDomains;
+    final Filter filter = Utils.createDomainWhitelistingFilter(filterEngine, domain);
+    try
+    {
+      if (!filter.isListed())
+      {
+        filter.addToList();
+      }
+    }
+    finally
+    {
+      filter.dispose();
+    }
+  }
+
+  /**
+   * Remove whitelisting filter for given domain.
+   * @param domain Domain to be removed from whitelisting
+   */
+  public void removeDomainWhitelistingFilter(final String domain)
+  {
+    final Filter filter = Utils.createDomainWhitelistingFilter(filterEngine, domain);
+    try
+    {
+      if (filter.isListed())
+      {
+        filter.removeFromList();
+      }
+    }
+    finally
+    {
+      filter.dispose();
+    }
   }
 }

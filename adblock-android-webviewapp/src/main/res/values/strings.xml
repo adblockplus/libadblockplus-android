@@ -10,7 +10,7 @@
     <string name="main_next">&gt;</string>
     <string name="main_settings">Settings</string>
     <string name="main_add_tab">Add tab</string>
-    <string name="main_tab_title">Tab #%d</string>
+    <string name="main_tab_title">Tab #</string>
     <string name="main_restore_checkbox">Restore tabs</string>
 
     <string name="fragment_tab_counter_unset">-</string>

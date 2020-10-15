@@ -56,7 +56,7 @@ public class WebViewSetupAndDisposeStressTest
           context.getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
       AdblockHelper
           .get()
-          .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME);
+          .init(context, basePath, AdblockHelper.PREFERENCE_NAME);
     }
   }
 

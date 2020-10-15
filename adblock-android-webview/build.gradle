@@ -3,12 +3,14 @@ apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'kotlin-android'
 
 android {
-  compileSdkVersion 28
+  compileSdkVersion 29
   buildToolsVersion "28.0.3"
+
+  testBuildType project.getProperties().get("testBuildType", "debug")
 
   defaultConfig {
     minSdkVersion 21
-    targetSdkVersion 28
+    targetSdkVersion 29
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }

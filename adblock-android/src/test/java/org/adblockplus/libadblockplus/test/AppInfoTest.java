@@ -33,7 +33,6 @@ public class AppInfoTest
     final String APPLICATION = "4";
     final String APPLICATION_VERSION = "5";
     final String LOCALE = "2";
-    final boolean DEVELOPMENT_BUILD = true;
 
     final AppInfo appInfo = AppInfo.builder()
         .setVersion(VERSION)
@@ -41,7 +40,6 @@ public class AppInfoTest
         .setApplication(APPLICATION)
         .setApplicationVersion(APPLICATION_VERSION)
         .setLocale(LOCALE)
-        .setDevelopmentBuild(DEVELOPMENT_BUILD)
         .build();
 
     assertEquals(VERSION, appInfo.version);
@@ -49,7 +47,6 @@ public class AppInfoTest
     assertEquals(APPLICATION, appInfo.application);
     assertEquals(APPLICATION_VERSION, appInfo.applicationVersion);
     assertEquals(LOCALE, appInfo.locale);
-    assertEquals(DEVELOPMENT_BUILD, appInfo.developmentBuild);
   }
 
   @Test
@@ -62,6 +59,5 @@ public class AppInfoTest
     assertEquals("android", appInfo.application);
     assertEquals("0", appInfo.applicationVersion);
     assertEquals("en_US", appInfo.locale);
-    assertFalse(appInfo.developmentBuild);
   }
 }

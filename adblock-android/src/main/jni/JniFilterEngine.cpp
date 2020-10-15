@@ -109,48 +109,6 @@ static jobject JNICALL JniGetSubscription(JNIEnv* env, jclass clazz, jlong ptr, 
   CATCH_THROW_AND_RETURN(env, 0);
 }
 
-static void JNICALL JniShowNextNotification(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
-
-  try
-  {
-    engine.ShowNextNotification();
-  }
-  CATCH_AND_THROW(env);
-}
-
-static void JNICALL JniSetShowNotificationCallback(JNIEnv* env, jclass clazz,
-                                                  jlong ptr, jlong callbackPtr)
-{
-  AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
-
-  JniShowNotificationCallback* const callback =
-      JniLongToTypePtr<JniShowNotificationCallback>(callbackPtr);
-
-  auto showNotificationCallback = [callback](AdblockPlus::Notification&& notification)
-  {
-    callback->Callback(std::move(notification));
-  };
-
-  try
-  {
-    engine.SetShowNotificationCallback(showNotificationCallback);
-  }
-  CATCH_AND_THROW(env)
-}
-
-static void JNICALL JniRemoveShowNotificationCallback(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
-
-  try
-  {
-    engine.RemoveShowNotificationCallback();
-  }
-  CATCH_AND_THROW(env);
-}
-
 static jobject JNICALL JniGetListedSubscriptions(JNIEnv* env, jclass clazz, jlong ptr)
 {
   AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
@@ -480,9 +438,6 @@ static JNINativeMethod methods[] =
   { (char*)"getFilter", (char*)"(JLjava/lang/String;)" TYP("Filter"), (void*)JniGetFilter },
   { (char*)"getListedFilters", (char*)"(J)Ljava/util/List;", (void*)JniGetListedFilters },
   { (char*)"getSubscription", (char*)"(JLjava/lang/String;)" TYP("Subscription"), (void*)JniGetSubscription },
-  { (char*)"showNextNotification", (char*)"(J)V", (void*)JniShowNextNotification },
-  { (char*)"setShowNotificationCallback", (char*)"(JJ)V", (void*)JniSetShowNotificationCallback },
-  { (char*)"removeShowNotificationCallback", (char*)"(J)V", (void*)JniRemoveShowNotificationCallback },
   { (char*)"getListedSubscriptions", (char*)"(J)Ljava/util/List;", (void*)JniGetListedSubscriptions },
   { (char*)"fetchAvailableSubscriptions", (char*)"(J)Ljava/util/List;", (void*)JniFetchAvailableSubscriptions },
   { (char*)"setFilterChangeCallback", (char*)"(JJ)V", (void*)JniSetFilterChangeCallback },

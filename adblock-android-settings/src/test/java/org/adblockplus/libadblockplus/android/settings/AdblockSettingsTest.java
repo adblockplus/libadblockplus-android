@@ -56,7 +56,7 @@ public class AdblockSettingsTest
     final List<String> domains = new LinkedList<>();
     for (int i = 0; i < whitelistedDomainsCount; i++)
     {
-      domains.add("http://www.domain" + (i + 1) + ".com");
+      domains.add("www.domain" + (i + 1) + ".com");
     }
     settings.setWhitelistedDomains(domains);
 

@@ -29,8 +29,6 @@ static void TransformAppInfo(JNIEnv* env, jobject jAppInfo, AdblockPlus::AppInfo
   appInfo.locale = JniGetStringField(env, clazz, jAppInfo, "locale");
   appInfo.name = JniGetStringField(env, clazz, jAppInfo, "name");
   appInfo.version = JniGetStringField(env, clazz, jAppInfo, "version");
-
-  appInfo.developmentBuild = JniGetBooleanField(env, clazz, jAppInfo, "developmentBuild");
 }
 
 static AdblockPlus::Platform& GetPlatformRef(jlong ptr)

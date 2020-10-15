@@ -21,6 +21,7 @@ import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.TestFilterChangeCallback;
+import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -347,7 +348,9 @@ public class FilterEngineTest extends BaseFilterEngineTest
   public void testMatchesOnWhitelistedDomain()
   {
     filterEngine.getFilter("adbanner.gif").addToList();
-    filterEngine.getFilter("@@||example.org^$document").addToList();
+    final Filter domainWhitelistingFilter = Utils.createDomainWhitelistingFilter(filterEngine,
+        "example.org");
+    domainWhitelistingFilter.addToList();
 
     final Filter match1 =
       filterEngine.matches("http://ads.com/adbanner.gif", maskOf(FilterEngine.ContentType.IMAGE),
@@ -368,7 +371,9 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("adbanner.gif.js$script,image").addToList();
     filterEngine.getFilter("@@notbanner.gif").addToList();
     filterEngine.getFilter("blockme").addToList();
-    filterEngine.getFilter("@@||example.doc^$document").addToList();
+    final Filter domainWhitelistingFilter = Utils.createDomainWhitelistingFilter(filterEngine,
+        "example.doc");
+    domainWhitelistingFilter.addToList();
     filterEngine.getFilter("||popexample.com^$popup").addToList();
 
     assertNull("another url should not match",
@@ -533,7 +538,9 @@ public class FilterEngineTest extends BaseFilterEngineTest
   @Test
   public void testDocumentWhitelisting()
   {
-    filterEngine.getFilter("@@||example.org^$document").addToList();
+    final Filter domainWhitelistingFilter = Utils.createDomainWhitelistingFilter(filterEngine,
+        "example.org");
+    domainWhitelistingFilter.addToList();
     filterEngine.getFilter("@@||example.com^$document,domain=example.de").addToList();
 
     assertTrue(filterEngine.isDocumentWhitelisted("http://example.org", EMPTY_LIST, NO_SITEKEY));

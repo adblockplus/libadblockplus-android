@@ -1,0 +1,46 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'androidx.benchmark'
+
+android {
+  compileSdkVersion 29
+
+  defaultConfig {
+    minSdkVersion 16
+    targetSdkVersion 29
+    missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
+    // warning: keep in sync with ".gitlab-ci.yml"
+    testInstrumentationRunnerArgument 'androidx.benchmark.output.enable', 'true'
+    testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'LOW-BATTERY'
+    testInstrumentationRunner 'androidx.benchmark.junit4.AndroidBenchmarkRunner'
+  }
+
+  testBuildType = "release"
+
+  buildTypes {
+    release {
+      isDefault = true
+      minifyEnabled true
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'benchmark-proguard-rules.pro'
+      signingConfig signingConfigs.debug
+    }
+  }
+
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+
+  sourceSets {
+    androidTest.java.srcDirs += 'src/androidTest/kotlin'
+  }
+}
+
+dependencies {
+  androidTestImplementation project(":adblock-android")
+  androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  androidTestImplementation "androidx.benchmark:benchmark-junit4:$benchmark_version"
+  androidTestImplementation 'junit:junit:4.12'
+  androidTestImplementation 'androidx.test:runner:1.1.0'
+  androidTestImplementation 'androidx.test:rules:1.1.0'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+}

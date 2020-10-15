@@ -15,7 +15,7 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.webview;
+package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 

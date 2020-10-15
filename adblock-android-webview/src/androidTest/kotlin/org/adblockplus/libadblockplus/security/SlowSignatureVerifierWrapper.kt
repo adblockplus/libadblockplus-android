@@ -15,38 +15,22 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus;
+package org.adblockplus.libadblockplus.security
 
-public class TestShowNotificationCallback extends ShowNotificationCallback
-{
-  private boolean called;
-  private Notification notification;
+import android.os.SystemClock
+import timber.log.Timber
+import java.security.PublicKey
 
-  public TestShowNotificationCallback()
-  {
-    reset();
-  }
-
-  public boolean isCalled()
-  {
-    return called;
-  }
-
-  public Notification getNotification()
-  {
-    return notification;
-  }
-
-  public void reset()
-  {
-    this.called = false;
-    this.notification = null;
-  }
-
-  @Override
-  public void showNotificationCallback(final Notification notification)
-  {
-    this.called = true;
-    this.notification = notification;
-  }
+class SlowSignatureVerifierWrapper(
+    private val delayMillis: Long,
+    private val signatureVerifier: SignatureVerifier
+) : SignatureVerifier {
+    override fun verify(publicKey: PublicKey?,
+                        data: ByteArray?,
+                        signatureBytes: ByteArray?): Boolean {
+        Timber.w("Slowing down signature verification for $delayMillis ms...")
+        SystemClock.sleep(delayMillis)
+        Timber.w("Slowing down (unblocked)")
+        return signatureVerifier.verify(publicKey, data, signatureBytes)
+    }
 }

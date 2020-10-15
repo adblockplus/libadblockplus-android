@@ -6,9 +6,6 @@ stages:
   - device_tests
   - publish
 
-variables:
-  GRADLE_OPTS: "-Xmx4096m" #set max heap size to 4gb
-
 # This updates the cache with shared dependencies
 build_dependencies:
   stage: build_dependencies
@@ -19,9 +16,9 @@ build_dependencies:
       - libadblockplus/
       - buildtools/
   variables:
+    GIT_SUBMODULE_STRATEGY: recursive
     WGET_FLAGS: "-q"
   script:
-    - ./ensure_dependencies.py
     - cd ./libadblockplus
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
@@ -56,6 +53,11 @@ build_libadblockplus-android:all:
   stage: build
   script:
     - ./gradlew clean assemble assembleAndroidTest
+  # won't run for manual and scheduled; we'd like to run
+  # `build_libadblockplus-android:all-and-test-release` instead
+  except:
+    - schedules
+    - web
   artifacts:
     paths:
       - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
@@ -64,7 +66,31 @@ build_libadblockplus-android:all:
       - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
       - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
       - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
-      - adblock-android-settings/build/outputs/apk/androidTest/debug/adblock-android-settings-debug-androidTest.apk
+
+# Builds additional release test apk for performance testing at nightly runs
+build_libadblockplus-android:all-and-test-release:
+  <<: *cache_readonly
+  stage: build
+  variables:
+    PATH_TO_RELEASE_APK: "adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk"
+  script:
+    # we are building release apk as a separate call since we also need a debug test apk
+    - ./gradlew clean assemble assembleAndroidTest && ./gradlew assembleAndroidTest -PtestBuildType=release
+    # sign test apk with debug key
+    - jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android ${PATH_TO_RELEASE_APK} androiddebugkey
+  artifacts:
+    paths:
+      - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
+      - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
+      # The test APKs are used later in the device testing
+      - $PATH_TO_RELEASE_APK
+      - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
+      - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
+      - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
+      - adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
+  only:
+    - schedules
+    - web
 
 # The remaining build_* jobs are only built on rc branches
 # They are run only to test that the build works, we dont use the artefacts
@@ -114,6 +140,8 @@ build_libadblockplus-android:without-jni:
   script:
     - SKIP_JNI_COMPILATION=true ./gradlew clean assemble
 
+# These are the instrumented tests that run on the real devices on https://saucelabs.com TestObject.
+# @LargeTest tests are skipped in this job
 testobject_tests:
   stage: device_tests
   script:
@@ -139,24 +167,70 @@ testobject_tests:
     reports:
       junit: philll-adblockwebview-app-*.xml
 
+# FilterEngine memory benchmarking
+# This job runs @LargeTest instrumented tests as well as all the others.
 memory_benchmark:
+  tags:
+    # This is a Raspberry PI with an attached rooted device that is located at the office.
+    - "android-pi"
   stage: device_tests
-  image: ubuntu:18.04
-  before_script:
-    - apt-get update
-    - apt-get -qy install adb
-    # this is libadblockplus-android dedicated emulator instance on CI, more info at https://jira.eyeo.com/browse/DP-1322
-    - adb connect 172.17.0.1:4444
   script:
-    - chmod +r ./adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
-    - chmod +x ./tools/run_benchmark.sh
-    - ./tools/run_benchmark.sh
-
+    - chmod +x ./tools/run_benchmark.sh && ./tools/run_benchmark.sh
+    # performance tests: only the @PerformanceTest annotation
+    - adb shell am instrument -w -r \
+      -e debug false \
+      -e size large \
+      -e annotation org.adblockplus.libadblockplus.android.webview.PerformanceTest \
+      org.adblockplus.libadblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner
+  after_script:
+    - adb uninstall org.adblockplus.libadblockplus.android.webview.test
+    - adb kill-server
   artifacts:
       paths:
         - adblock-android-webview/build/outputs/memory_benchmark/
       reports:
         metrics: metrics.txt
+  only:
+    - schedules
+    - web
+
+# FilterEngine performance benchmarking
+performance_benchmark:
+  tags:
+    # This is a Raspberry PI with an attached rooted device that is located at the office.
+    - "android-pi"
+  stage: device_tests
+  variables:
+    LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
+    BENCHMARK_PULL_DIR: "adblock-android-benchmark/build/outputs/connected_android_test_additional_output"
+  script:
+    # Gradle feels heavy for Raspberry Pi
+    # so using "adb" commands directly instead of "gradlew ..." commands:
+    # (see https://developer.android.com/studio/profile/run-benchmarks-in-ci)
+    # ./gradlew lockClocks
+    - adb install adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
+    - adb push adblock-android-benchmark/scripts/lockClocks.sh $LOCK_CLOCK_FILE
+    - adb shell su - -c $LOCK_CLOCK_FILE
+    - adb shell rm $LOCK_CLOCK_FILE
+    # ./gradlew :adblock-android-benchmark:connectedCheck
+    - adb shell am instrument -w -r \
+      -e androidx.benchmark.suppressErrors LOW-BATTERY \
+      -e no-isolated-storage 1 \
+      -e androidx.benchmark.output.enable true \
+      org.adblockplus.libadblockplus.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner
+    # collect benchmarking results raw file
+    - mkdir -p $BENCHMARK_PULL_DIR
+    - adb pull /storage/emulated/0/Download/org.adblockplus.libadblockplus.benchmark.test-benchmarkData.json $BENCHMARK_PULL_DIR/benchmarkData.json
+  after_script:
+    - adb uninstall org.adblockplus.libadblockplus.benchmark.test
+    # ./gradle unlockClocks
+    - adb shell reboot
+  artifacts:
+    paths:
+      - $BENCHMARK_PULL_DIR
+  only:
+    - schedules
+    - web
 
 .publish_template: &publish_template
   stage: publish

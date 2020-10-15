@@ -32,9 +32,8 @@ import timber.log.Timber;
  */
 class JsSiteKeyExtractor extends BaseSiteKeyExtractor
 {
-  private static final int HOLD_LOCK_TIMEOUT_S = 1;
-
-  private CountDownLatch latch;
+  private volatile CountDownLatch latch;
+  private final AtomicBoolean isSiteKeyProcessingFinished;
   private final AtomicBoolean isJavascriptInterfaceSet;
   private final Handler callerThreadHandler;
   private Runnable enableStateRunner;
@@ -46,6 +45,7 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
     callerThreadHandler = new Handler();
     view.addJavascriptInterface(new JsCallbackInterface(this), JsCallbackInterface.NAME);
     isJavascriptInterfaceSet = new AtomicBoolean(true);
+    isSiteKeyProcessingFinished = new AtomicBoolean(false);
   }
 
   @Override
@@ -108,28 +108,55 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
   }
 
   @Override
-  public WebResourceResponse obtainAndCheckSiteKey(final AdblockWebView webView,
-                                                   final WebResourceRequest request)
+  public WebResourceResponse extract(final WebResourceRequest request)
   {
+  /*
+    obtainAndCheckSiteKey is not used here because was mainly created for
+    HttpSiteKeyExtractor to be able to intercept request and initiate a custom one.
+
+    Call to waitForSitekeyCheck does all the magic by holding the thread while
+    extracting and verifying sitekey.
+
+    Hence we are returning null and allowing all requests.
+   */
+    return null;
+  }
+
+  @Override
+  public void startNewPage()
+  {
+    Timber.d("startNewPage() called");
+    isSiteKeyProcessingFinished.set(false);
+    latch = new CountDownLatch(1);
+  }
+
+  @Override
+  public boolean waitForSitekeyCheck(final WebResourceRequest request)
+  {
+    if (request.isForMainFrame())
+    {
+      return false;
+    }
+
+    if (!isEnabled() || isSiteKeyProcessingFinished.get())
+    {
+      return false;
+    }
+
     // waitSitekeyCheck is used only blocking the network thread while
     // the key verification is ongoing
-    if (isEnabled())
+    Timber.d("Holding request %s", request.getUrl().toString());
+    try
     {
-      latch = new CountDownLatch(1);
-
-      try
-      {
-        Timber.d("Holding request %s", request.getUrl().toString());
-        latch.await(HOLD_LOCK_TIMEOUT_S, TimeUnit.SECONDS); // not expecting to wait more then a second
-        Timber.d("Un-holding request %s", request.getUrl().toString());
-      }
-      catch (final InterruptedException error)
-      {
-        // not likely to happen
-        Timber.e(error);
-      }
+      latch.await(RESOURCE_HOLD_MAX_TIME_MS, TimeUnit.MILLISECONDS);
+      Timber.d("Un-holding request %s", request.getUrl().toString());
     }
-    return AdblockWebView.WebResponseResult.ALLOW_LOAD;
+    catch (final InterruptedException error)
+    {
+      // not likely to happen
+      Timber.e("Holding request error: %s", error);
+    }
+    return true;
   }
 
   private void verifySiteKey(final String url, final String userAgent, final String value)
@@ -210,6 +237,7 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
       {
         extractor.latch.countDown();
       }
+      extractor.isSiteKeyProcessingFinished.set(true);
     }
 
     @JavascriptInterface
@@ -228,6 +256,7 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
         extractor.latch.countDown();
       }
       // collecting the url
+      extractor.isSiteKeyProcessingFinished.set(true);
       Timber.d("Key does not exist on url %s", url);
     }
 
@@ -241,6 +270,7 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
       }
       // doing nothing at the moment
       // still holding the lock
+      extractor.isSiteKeyProcessingFinished.set(false);
       Timber.d("DOM not yet ready on url %s", url);
     }
   }

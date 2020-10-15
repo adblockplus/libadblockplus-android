@@ -35,7 +35,7 @@ import timber.log.Timber;
 // because one might forgot that some aspects of it
 // for example, that `JsSiteKeyExtractor` ads a javascript interface handler
 // to the WebView
-class CombinedSiteKeyExtractor implements SiteKeyExtractor
+public class CombinedSiteKeyExtractor implements SiteKeyExtractor
 {
   private final SiteKeyExtractor httpExtractor;
   private final SiteKeyExtractor jsExtractor;
@@ -56,23 +56,15 @@ class CombinedSiteKeyExtractor implements SiteKeyExtractor
   Any of it may be used directly and will be doing its job properly for any request
    */
   @Override
-  public WebResourceResponse obtainAndCheckSiteKey(
-      final AdblockWebView webView, final WebResourceRequest frameRequest)
+  public WebResourceResponse extract(final WebResourceRequest frameRequest)
   {
-    if (frameRequest.isForMainFrame())
-    {
-      // JsSiteKeyExtractor will hold the thread with the main frame request
-      jsExtractor.obtainAndCheckSiteKey(webView, frameRequest);
-    }
     // at this point non-frame requests must have been filtered by ContentTypeDetector
     // so this presumably all non-main frame requests are of SUBDOCUMENT type (frames and iframes)
-    else
+    if (!frameRequest.isForMainFrame())
     {
-      // we cannot inject JS, hence get sitekey into iframe,
-      // falling back to the old implementation
       Timber.d("Falling back to native sitekey requests for %s",
           frameRequest.getUrl().toString());
-      return httpExtractor.obtainAndCheckSiteKey(webView, frameRequest);
+      return httpExtractor.extract(frameRequest);
     }
 
     return AdblockWebView.WebResponseResult.ALLOW_LOAD;
@@ -83,6 +75,21 @@ class CombinedSiteKeyExtractor implements SiteKeyExtractor
   {
     httpExtractor.setSiteKeysConfiguration(siteKeysConfiguration);
     jsExtractor.setSiteKeysConfiguration(siteKeysConfiguration);
+  }
+
+  @Override
+  public void startNewPage()
+  {
+    httpExtractor.startNewPage();
+    jsExtractor.startNewPage();
+  }
+
+  @Override
+  public boolean waitForSitekeyCheck(final WebResourceRequest request)
+  {
+    final boolean httpWaited = httpExtractor.waitForSitekeyCheck(request);
+    final boolean jsWaited = jsExtractor.waitForSitekeyCheck(request);
+    return httpWaited || jsWaited;
   }
 
   @Override

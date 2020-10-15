@@ -27,9 +27,9 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
+import org.adblockplus.libadblockplus.android.webview.PerformanceTest;
 import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -69,7 +69,7 @@ public class WebViewLoadPerformanceTest
           context.getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
       AdblockHelper
           .get()
-          .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME);
+          .init(context, basePath, AdblockHelper.PREFERENCE_NAME);
     }
   }
 
@@ -80,8 +80,8 @@ public class WebViewLoadPerformanceTest
   }
 
   @LargeTest
+  @PerformanceTest
   @Test
-  @Ignore("The test lasts for too long to be executed as a part of build routine")
   public void testOnPageFinishedLoadTime() throws InterruptedException
   {
     // Setup adblockWebView

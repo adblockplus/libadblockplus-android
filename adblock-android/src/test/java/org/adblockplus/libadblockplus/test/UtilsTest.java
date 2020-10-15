@@ -17,21 +17,25 @@
 
 package org.adblockplus.libadblockplus.test;
 
+import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class UtilsTest
 {
@@ -237,5 +241,115 @@ public class UtilsTest
     {
       assertFalse(Utils.isFirstPartyCookie(navigationUrl, urlAndCookieEntry.getKey(), urlAndCookieEntry.getValue()));
     }
+  }
+
+  @Test
+  public void testIsSubOrDomain()
+  {
+    assertFalse(Utils.isSubdomainOrDomain("", ""));
+    assertFalse(Utils.isSubdomainOrDomain("host.com", ""));
+    assertFalse(Utils.isSubdomainOrDomain("", "domain.com"));
+
+    assertTrue(Utils.isSubdomainOrDomain("com", "com"));
+    assertFalse(Utils.isSubdomainOrDomain("co", "com"));
+    assertFalse(Utils.isSubdomainOrDomain("com", "co"));
+
+    assertFalse(Utils.isSubdomainOrDomain("www,google.com", "google.com"));
+
+    assertTrue(Utils.isSubdomainOrDomain("google.com", "com"));
+    assertTrue(Utils.isSubdomainOrDomain("www.google.com", "com"));
+    assertTrue(Utils.isSubdomainOrDomain("www.google.com", "google.com"));
+    assertTrue(Utils.isSubdomainOrDomain("www.google.com", "www.google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("google.com", "www.google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("com", "www.google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("com", "google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("gogoogle.com", "google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("www.gogoogle.com", "google.com"));
+    assertFalse(Utils.isSubdomainOrDomain("www.gogoogle.com", "www.google.com"));
+  }
+  
+  private void verifyHeaderEntriesMap(final Set<String> inputHeadersSet,
+                                      final Map<String, String> outputHeadersMap,
+                                      final String expectedValue)
+  {
+    for (final String header : inputHeadersSet)
+    {
+      assertTrue(outputHeadersMap.containsKey(header));
+      assertEquals(expectedValue, outputHeadersMap.get(header));
+    }
+  }
+
+  @Test
+  public void testConvertHeaderEntriesToMap()
+  {
+    final Set<String> commaNotMergableHeaders = Utils.commaNotMergableHeaders;
+    // Just some examples, can be actually any strings not present in commaNotMergableHeaders
+    final Set<String> commaMergableHeaders = new HashSet<>(Arrays.asList(
+        "cache-control", "content-language", "etag", "transfer-encoding"
+    ));
+
+    // Make sure headers sets have no intersection
+    for (final String header : commaNotMergableHeaders)
+    {
+      assertFalse(commaMergableHeaders.contains(header));
+    }
+
+    // We don't verify here headers value semantics so any string will do
+    final String headerValue1 = "12334 AAAA bbbb";
+    final String headerValue2 = "CCCC 5555 dddd";
+
+
+    // Test not mergable headers => headerValue2 overwrites headerValue1
+    final List<HeaderEntry> notMergableHeadersData = new ArrayList<>();
+    for (final String header : commaNotMergableHeaders)
+    {
+      notMergableHeadersData.add(new HeaderEntry(header, headerValue1));
+      notMergableHeadersData.add(new HeaderEntry(header, headerValue2));
+    }
+    final Map<String, String> notMergableHeadersDataConverted =
+        Utils.convertHeaderEntriesToMap(notMergableHeadersData);
+
+    // Verify that resulting map has expected size
+    assertTrue(notMergableHeadersDataConverted.size() * 2 == notMergableHeadersData.size());
+    // Verify all input headers are present and contain 2nd value
+    verifyHeaderEntriesMap(commaNotMergableHeaders, notMergableHeadersDataConverted, headerValue2);
+
+
+    // Test mergable headers with identical values (case insensitive) => should not be merged
+    final List<HeaderEntry> mergableHeadersDataWithIdenticaltValues = new ArrayList<>();
+    for (final String header : commaMergableHeaders)
+    {
+      mergableHeadersDataWithIdenticaltValues.add(new HeaderEntry(header, headerValue1.toLowerCase()));
+      mergableHeadersDataWithIdenticaltValues.add(new HeaderEntry(header, headerValue1.toUpperCase()));
+    }
+
+    final Map<String, String> mergableHeadersDataWithIdenticaltValuesConverted =
+        Utils.convertHeaderEntriesToMap(mergableHeadersDataWithIdenticaltValues);
+
+    // Verify that resulting map has expected size
+    assertTrue(mergableHeadersDataWithIdenticaltValuesConverted.size() * 2
+        == mergableHeadersDataWithIdenticaltValues.size());
+    // Verify all input headers are present and contain 1st value which is not duplicated
+    verifyHeaderEntriesMap(commaMergableHeaders, mergableHeadersDataWithIdenticaltValuesConverted,
+        headerValue1.toLowerCase());
+
+
+    // Test mergable headers with distinct values => should be merged
+    final List<HeaderEntry> mergableHeadersDataWithDistinctValues = new ArrayList<>();
+    for (final String header : commaMergableHeaders)
+    {
+      mergableHeadersDataWithDistinctValues.add(new HeaderEntry(header, headerValue1));
+      mergableHeadersDataWithDistinctValues.add(new HeaderEntry(header, headerValue2));
+    }
+
+    final Map<String, String> mergableHeadersDataWithDistinctValuesConverted =
+        Utils.convertHeaderEntriesToMap(mergableHeadersDataWithDistinctValues);
+
+    // Verify that resulting map has expected size
+    assertTrue(mergableHeadersDataWithDistinctValuesConverted.size() * 2
+        == mergableHeadersDataWithDistinctValues.size());
+    // Verify all input headers are present and contain 1st value which is not duplicated
+    verifyHeaderEntriesMap(commaMergableHeaders, mergableHeadersDataWithDistinctValuesConverted,
+        headerValue1 + ", " + headerValue2);
   }
 }

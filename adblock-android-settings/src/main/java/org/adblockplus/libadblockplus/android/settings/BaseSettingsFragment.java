@@ -23,12 +23,16 @@ import android.support.v7.preference.PreferenceFragmentCompat;
 import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
+
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class BaseSettingsFragment
   <ListenerClass extends BaseSettingsFragment.Listener>
   extends PreferenceFragmentCompat
 {
   protected AdblockSettings settings;
+  protected AdblockEngine engine;
   protected Provider provider;
   protected ListenerClass listener;
 
@@ -38,8 +42,11 @@ public abstract class BaseSettingsFragment
    */
   public interface Provider
   {
-    AdblockEngine getAdblockEngine();
+    AdblockEngineProvider getAdblockEngineProvider();
     AdblockSettingsStorage getAdblockSettingsStorage();
+
+    void onLoadStarted();
+    void onLoadFinished();
   }
 
   /**
@@ -72,23 +79,101 @@ public abstract class BaseSettingsFragment
     return clazz.cast(activity);
   }
 
-  public void loadSettings()
+  protected abstract void onSettingsReady();
+
+  private final AdblockEngineProvider.EngineCreatedListener engineCreatedListener = new
+      AdblockEngineProvider.EngineCreatedListener()
+      {
+        @Override
+        public void onAdblockEngineCreated(final AdblockEngine engine)
+        {
+          onAdblockEngineReadyInternal(engine);
+        }
+      };
+
+  protected abstract void onAdblockEngineReady();
+
+  private void onAdblockEngineReadyInternal(final AdblockEngine engine)
   {
-    settings = provider.getAdblockSettingsStorage().load();
+    this.engine = engine;
+    checkLoadingFinished();
+    onAdblockEngineReady();
+    initSettings();
+  }
+
+  private void initSettings()
+  {
     if (settings == null)
     {
-      Timber.w("No adblock settings, yet. Using default ones from adblock engine");
-
-      // null because it was not saved yet
-      settings = AdblockSettingsStorage.getDefaultSettings(provider.getAdblockEngine());
+      settings = AdblockSettingsStorage.getDefaultSettings(engine);
+      checkLoadingFinished();
+      onSettingsReady();
     }
   }
 
-  @Override
-  public void onCreate(Bundle savedInstanceState)
+  private void startLoadSettings()
   {
-    super.onCreate(savedInstanceState);
-    loadSettings();
+    provider.onLoadStarted();
+    settings = provider.getAdblockSettingsStorage().load();
+    if (settings == null)
+    {
+      // null because it was not saved yet
+      Timber.w("No adblock settings, yet. Using default ones from adblock engine");
+    }
+    else
+    {
+      checkLoadingFinished();
+      onSettingsReady();
+    }
+
+    if (engine == null)
+    {
+      startGetAdblockEngine();
+    }
+    else
+    {
+      initSettings();
+    }
+  }
+
+  private void checkLoadingFinished()
+  {
+    if (settings != null && engine != null)
+    {
+      provider.onLoadFinished();
+    }
+  }
+
+  private void startGetAdblockEngine()
+  {
+    final AdblockEngineProvider adblockEngineProvider = provider.getAdblockEngineProvider();
+    final ReentrantReadWriteLock.ReadLock lock = adblockEngineProvider.getReadEngineLock();
+    final boolean locked = lock.tryLock();
+
+    try
+    {
+      final AdblockEngine adblockEngine = adblockEngineProvider.getEngine();
+      if (adblockEngine != null)
+      {
+        this.onAdblockEngineReadyInternal(adblockEngine);
+      }
+      else
+      {
+        adblockEngineProvider.addEngineCreatedListener(engineCreatedListener);
+      }
+    }
+    finally
+    {
+      if (locked)
+      {
+        lock.unlock();
+      }
+    }
+  }
+
+  private void stopLoadSettings()
+  {
+    provider.getAdblockEngineProvider().removeEngineCreatedListener(engineCreatedListener);
   }
 
   @Override
@@ -102,7 +187,14 @@ public abstract class BaseSettingsFragment
   public void onResume()
   {
     super.onResume();
-    loadSettings();
+    startLoadSettings();
+  }
+
+  @Override
+  public void onPause()
+  {
+    stopLoadSettings();
+    super.onPause();
   }
 
   public AdblockSettings getSettings()

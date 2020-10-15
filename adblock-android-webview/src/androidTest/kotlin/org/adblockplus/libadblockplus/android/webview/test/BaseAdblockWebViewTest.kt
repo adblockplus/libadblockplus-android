@@ -20,6 +20,8 @@ package org.adblockplus.libadblockplus.android.webview.test
 import android.app.Instrumentation
 import android.content.Context
 import android.os.SystemClock
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.web.sugar.Web
@@ -27,17 +29,15 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Notifier
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit.WireMockRule
 import org.adblockplus.libadblockplus.android.AdblockEngine
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView
+import org.adblockplus.libadblockplus.android.webview.SiteKeyExtractor
 import org.adblockplus.libadblockplus.android.webview.WebViewActivity
 import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit
 import org.adblockplus.libadblockplus.android.webview.autoDispose
-import org.adblockplus.libadblockplus.android.webview.*
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -76,7 +76,7 @@ abstract class BaseAdblockWebViewTest {
             Timber.d("Initializing with basePath=$basePath")
             AdblockHelper
                 .get()
-                .init(context, basePath, true, AdblockHelper.PREFERENCE_NAME)
+                .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
         }
     }
 
@@ -98,15 +98,23 @@ abstract class BaseAdblockWebViewTest {
      * !NOTE! SiteKeyExtractor will be converted into an interface soon, so initializing
      * extra SiteKeyExtractor won't be required
      */
-    private class AlwaysEnabledSitekeyExtractorDelegate(private val extractor: SiteKeyExtractor)
+    protected class AlwaysEnabledSitekeyExtractor(val extractor: SiteKeyExtractor)
         : SiteKeyExtractor {
 
-        override fun obtainAndCheckSiteKey(webView: AdblockWebView?, request: WebResourceRequest?): WebResourceResponse? {
-            return extractor.obtainAndCheckSiteKey(webView, request)
+        override fun extract(request: WebResourceRequest?): WebResourceResponse? {
+            return extractor.extract(request)
         }
 
         override fun setSiteKeysConfiguration(siteKeysConfiguration: SiteKeysConfiguration?) {
             extractor.setSiteKeysConfiguration(siteKeysConfiguration)
+        }
+
+        override fun startNewPage() {
+            extractor.startNewPage();
+        }
+
+        override fun waitForSitekeyCheck(request: WebResourceRequest?): Boolean {
+            return extractor.waitForSitekeyCheck(request)
         }
 
         override fun setEnabled(enabled: Boolean) {
@@ -171,7 +179,7 @@ abstract class BaseAdblockWebViewTest {
                 .willReturn(WireMock.aResponse().withStatus(HttpStatus.SC_NOT_FOUND)))
     }
 
-    protected fun onAdblockWebView() : Web.WebInteraction<Void> {
+    protected fun onAdblockWebView(): Web.WebInteraction<Void> {
         return Web.onWebView(ViewMatchers.withContentDescription(WebViewActivity.ADBLOCK_WEBVIEW))
             .withNoTimeout()
     }
@@ -181,7 +189,7 @@ abstract class BaseAdblockWebViewTest {
         testSuitAdblock.webView = activityRule.activity.adblockWebView
         testSuitAdblock.setUp()
         testSuitAdblock.webView.siteKeyExtractor =
-            AlwaysEnabledSitekeyExtractorDelegate(testSuitAdblock.webView.siteKeyExtractor)
+            AlwaysEnabledSitekeyExtractor(testSuitAdblock.webView.siteKeyExtractor)
     }
 
     protected fun initSystemTestSuit() {
