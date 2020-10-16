@@ -1349,6 +1349,7 @@ public class AdblockWebView extends WebView
     {
       elemHideLatch = null;
     }
+    clearReferrers();
   }
 
   private void buildInjectJs()
