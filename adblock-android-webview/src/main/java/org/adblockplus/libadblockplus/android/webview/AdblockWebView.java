@@ -630,6 +630,7 @@ public class AdblockWebView extends WebView
     {
       // here we just trying to fill url -> referrer map
       final String url = request.getUrl().toString();
+      final String urlWithoutFragment = Utils.getUrlWithoutFragment(url);
 
       final boolean isMainFrame = request.isForMainFrame();
       boolean isWhitelisted = false;
@@ -697,7 +698,7 @@ public class AdblockWebView extends WebView
           Timber.d("Header referrer for " + url + " is " + referrer);
           if (!url.equals(referrer))
           {
-            url2Referrer.put(url, referrer);
+            url2Referrer.put(urlWithoutFragment, referrer);
           }
           else
           {
@@ -711,7 +712,7 @@ public class AdblockWebView extends WebView
 
         // reconstruct frames hierarchy
         final List<String> referrerChain = new ArrayList<>();
-        String parent = url;
+        String parent = urlWithoutFragment;
         while ((parent = url2Referrer.get(parent)) != null)
         {
           if (referrerChain.contains(parent))
@@ -737,6 +738,31 @@ public class AdblockWebView extends WebView
               .getAny(referrerChain, ""))
               : null);
 
+          // determine the content
+          FilterEngine.ContentType contentType =
+              ensureContentTypeDetectorCreatedAndGet().detect(request);
+
+          if (contentType == null)
+          {
+            Timber.w("contentTypeDetector didn't recognize content type");
+            contentType = FilterEngine.ContentType.OTHER;
+          }
+
+          if (contentType == FilterEngine.ContentType.SUBDOCUMENT && referrer != null)
+          {
+            // Due to "strict-origin-when-cross-origin" referrer policy set as default starting
+            // Chromium 85 we have to fix the referrers chain with just "origin".
+            // See https://jira.eyeo.com/browse/DP-1621
+            try
+            {
+              url2Referrer.put(Utils.getOrigin(url), referrer);
+            }
+            catch (final MalformedURLException | IllegalArgumentException e)
+            {
+              Timber.e(e, "Failed to extract origin from %s", url);
+            }
+          }
+
           // whitelisted
           if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
           {
@@ -747,15 +773,6 @@ public class AdblockWebView extends WebView
           }
           else
           {
-            // determine the content
-            FilterEngine.ContentType contentType =
-                ensureContentTypeDetectorCreatedAndGet().detect(request);
-            if (contentType == null)
-            {
-              Timber.w("contentTypeDetector didn't recognize content type");
-              contentType = FilterEngine.ContentType.OTHER;
-            }
-
             if (contentType == FilterEngine.ContentType.SUBDOCUMENT ||
                 contentType == FilterEngine.ContentType.OTHER)
             {

@@ -78,6 +78,20 @@ abstract class BaseAdblockWebViewTest {
                 .get()
                 .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
         }
+
+        val timberNotifier = object : Notifier {
+            override fun info(message: String?) {
+                Timber.i(message)
+            }
+
+            override fun error(message: String?) {
+                Timber.e(message)
+            }
+
+            override fun error(message: String?, t: Throwable?) {
+                Timber.e(t, message)
+            }
+        }
     }
 
     data class WireMockReqResData(val urlPath: String,
@@ -126,19 +140,7 @@ abstract class BaseAdblockWebViewTest {
     val basePathRule = TemporaryFolder()
 
     @get:Rule
-    val wireMockRule = WireMockRule(wireMockConfig().dynamicPort().notifier(object : Notifier {
-        override fun info(message: String?) {
-            Timber.i(message)
-        }
-
-        override fun error(message: String?) {
-            Timber.e(message)
-        }
-
-        override fun error(message: String?, t: Throwable?) {
-            Timber.e(t, message)
-        }
-    }))
+    val wireMockRule = WireMockRule(wireMockConfig().dynamicPort().notifier(timberNotifier))
 
     @get:Rule
     val activityRule = ActivityTestRule(WebViewActivity::class.java, false, true)

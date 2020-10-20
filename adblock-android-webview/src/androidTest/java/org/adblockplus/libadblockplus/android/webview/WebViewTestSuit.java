@@ -18,7 +18,9 @@
 package org.adblockplus.libadblockplus.android.webview;
 
 import android.graphics.Bitmap;
+import android.net.http.SslError;
 import android.webkit.CookieManager;
+import android.webkit.SslErrorHandler;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -142,6 +144,23 @@ public class WebViewTestSuit<T extends WebView>
       else if (extWebViewClient != null)
       {
         extWebViewClient.onPageFinished(view, url);
+      }
+    }
+
+    @Override
+    public void onReceivedSslError(final WebView view,
+                                   final SslErrorHandler handler,
+                                   final SslError error)
+    {
+      if (extWebViewClient != null)
+      {
+        extWebViewClient.onReceivedSslError(view, handler, error);
+      }
+      else
+      {
+        // warning: do not call `super` method if having `extWebViewClient`:
+        // it will prevent relaxing SSL errors
+        super.onReceivedSslError(view, handler, error);
       }
     }
   }
