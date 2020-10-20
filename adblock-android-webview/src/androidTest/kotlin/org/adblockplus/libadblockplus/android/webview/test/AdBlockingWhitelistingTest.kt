@@ -17,20 +17,27 @@
 
 package org.adblockplus.libadblockplus.android.webview.test
 
-import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import android.net.http.SslError
+import android.webkit.SslErrorHandler
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.any
+import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
+import org.adblockplus.libadblockplus.HttpClient
 import org.adblockplus.libadblockplus.android.AndroidHttpClient
 import org.adblockplus.libadblockplus.android.Utils
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView
 import org.adblockplus.libadblockplus.android.webview.BaseSiteKeyExtractor
 import org.adblockplus.libadblockplus.android.webview.SiteKeyHelper
-import org.adblockplus.libadblockplus.android.webview.imageIsBlocked
-import org.adblockplus.libadblockplus.android.webview.imageIsNotBlocked
-import org.adblockplus.libadblockplus.android.webview.escapeForRegex
 import org.adblockplus.libadblockplus.android.webview.elementIsElemhidden
 import org.adblockplus.libadblockplus.android.webview.elementIsNotElemhidden
+import org.adblockplus.libadblockplus.android.webview.escapeForRegex
+import org.adblockplus.libadblockplus.android.webview.imageIsBlocked
+import org.adblockplus.libadblockplus.android.webview.imageIsNotBlocked
 import org.adblockplus.libadblockplus.security.SlowSignatureVerifierWrapper
 import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
@@ -40,6 +47,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import timber.log.Timber
 import wiremock.org.apache.http.HttpStatus
+import java.io.File
+import java.io.FileOutputStream
+import java.security.KeyStore
 
 class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
 
@@ -55,6 +65,19 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
         const val blockingPathPrefix = "blocking/"
         const val notMatchingBlockingPathPrefix = "not${blockingPathPrefix}"
         const val blockingPathFilter = "^blocking^"
+
+        const val localhost = "127.0.0.1"
+        const val sslPort = 8443
+        const val certificatePassword = "abp"
+
+        private val allowingSelfSignedCertificatesWebViewClient = object : WebViewClient() {
+            override fun onReceivedSslError(view: WebView,
+                                            handler: SslErrorHandler,
+                                            error: SslError) {
+                Timber.w("Proceeding self-signed certificate anyway")
+                handler.proceed()
+            }
+        }
     }
 
     private fun load(filterRules: List<String>, content: String):
@@ -130,12 +153,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
         super.initHttpServer(reqResData)
 
         // green image
-        wireMockRule
-            .stubFor(any(urlMatching(""".*${greenImage.escapeForRegex()}"""))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "image/png")
-                    .withBody(Utils.toByteArray(context.assets.open("green.png")))))
+        initHttpGreenImage()
 
         // red image
         wireMockRule
@@ -144,6 +162,15 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                     .withStatus(HttpStatus.SC_OK)
                     .withHeader("Content-Type", "image/png")
                     .withBody(Utils.toByteArray(context.assets.open("red.png")))))
+    }
+
+    private fun initHttpGreenImage(server: WireMockServer = wireMockRule) {
+        server
+            .stubFor(any(urlMatching(""".*${greenImage.escapeForRegex()}"""))
+                .willReturn(aResponse()
+                    .withStatus(HttpStatus.SC_OK)
+                    .withHeader("Content-Type", "image/png")
+                    .withBody(Utils.toByteArray(context.assets.open("green.png")))))
     }
 
     @Test
@@ -256,6 +283,168 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
             // can't access subframe with JS so there is no [known at the moment] way
             // to assert subframe resource visibility
+    }
+
+    @Test
+    fun testUrlFragmentDoesNotBreakReferrerChain() {
+        val subFrameHtml = "subframe.html"
+
+        // whitelist root frame url
+        val whitelistingRule = "@@localhost"
+
+        wireMockRule
+            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                .willReturn(aResponse()
+                    .withStatus(HttpStatus.SC_OK)
+                    .withHeader("Content-Type", "text/html")
+                    .withBody(
+                        """
+                        |<html>
+                        |<body>
+                        |  <img src="$greenImage"/>
+                        |</body>
+                        |</html>
+                        |""".trimMargin())))
+
+        val (_, whitelistedResources) = load(
+            listOf(whitelistingRule),
+            """
+            |<html>
+            |<body>
+            |  <iframe src="$subFrameHtml#fragment"/>
+            |</body>
+            |</html>
+            |""".trimMargin())
+
+        // subframe resource is whitelisted: it must have 2 referrers (subframe + main frame)
+        assertNotNull(whitelistedResources.find {
+            it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
+        })
+    }
+
+    @Test
+    fun testCrossOriginReferrers() {
+        val subFrameHtml = "subframe.html"
+
+        // whitelisting main frame
+        val whitelistingRule = "@@$localhost\$subdocument,document"
+
+        val selfSignedCertificateFile = extractCertificate()
+        testSuitAdblock.extWebViewClient = allowingSelfSignedCertificatesWebViewClient
+
+        val mainFramePort = sslPort
+        val subFramePort = mainFramePort + 1
+
+        val mainFrameServer = WireMockServer(wireMockConfig()
+            .bindAddress(localhost)
+            .dynamicPort()
+            .notifier(timberNotifier)
+            .httpsPort(mainFramePort)
+            .keystorePath(selfSignedCertificateFile.absolutePath)
+            .keystoreType(KeyStore.getDefaultType())
+            .keystorePassword(certificatePassword)
+        )
+
+        val subFramePath = "$subFrameHtml?query=m"
+        val subFrameUrl = "https://$localhost:$subFramePort/$subFramePath"
+        mainFrameServer
+            .stubFor(any(urlPathEqualTo("/$indexHtml"))
+                .willReturn(aResponse()
+                    .withStatus(HttpStatus.SC_OK)
+                    .withHeader("Content-Type", HttpClient.MIME_TYPE_TEXT_HTML)
+                    .withBody(
+                        """
+                        |<html>
+                        |<body>
+                        |  <iframe src="$subFrameUrl"/>
+                        |</body>
+                        |</html>
+                        |""".trimMargin())))
+        initHttpGreenImage(mainFrameServer)
+
+        // since the port is different it will be another origin and cross origin interaction
+        val subFrameServer = WireMockServer(wireMockConfig()
+            .bindAddress(localhost)
+            .dynamicPort()
+            .notifier(timberNotifier)
+            .httpsPort(subFramePort)
+            .keystorePath(selfSignedCertificateFile.absolutePath)
+            .keystoreType(KeyStore.getDefaultType())
+            .keystorePassword(certificatePassword))
+
+        val mainFrameResourceUrl = "https://$localhost:$mainFramePort/$greenImage"
+        subFrameServer
+            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                .willReturn(aResponse()
+                    .withStatus(HttpStatus.SC_OK)
+                    .withHeader("Content-Type", HttpClient.MIME_TYPE_TEXT_HTML)
+                    .withHeader("Referrer-Policy", "strict-origin-when-cross-origin") // !
+                    .withBody(
+                        """
+                        |<html>
+                        |<body>
+                        |  <img src="$mainFrameResourceUrl"/>
+                        |</body>
+                        |</html>
+                        |""".trimMargin())))
+
+        addFilterRules(listOf(whitelistingRule))
+
+        val blockedResources = mutableListOf<AdblockWebView.EventsListener.BlockedResourceInfo>()
+        val whitelistedResources = mutableListOf<AdblockWebView.EventsListener.WhitelistedResourceInfo>()
+        subscribeToAdblockWebViewEvents(blockedResources, whitelistedResources)
+
+        subFrameServer.start()
+        mainFrameServer.start()
+
+        try {
+            Timber.d("Start loading...")
+            assertTrue("${mainFrameServer.baseUrl()}/$indexHtml exceeded loading timeout",
+                testSuitAdblock.loadUrlAndWait("${mainFrameServer.baseUrl()}/$indexHtml"))
+            Timber.d("Loaded")
+
+            // subframe resource is whitelisted
+            assertNotNull(whitelistedResources.find {
+                it.requestUrl == mainFrameResourceUrl && it.parentFrameUrls.size == 2
+            })
+        } finally {
+            mainFrameServer.stop()
+            subFrameServer.stop()
+            selfSignedCertificateFile.delete()
+        }
+    }
+
+    @Test
+    fun testCrossOriginReferrers_realWorldCase() {
+        // Warning: the test requires working internet connection and expected website content:
+        // frame https://5290727.fls.doubleclick.net/.. requests resources from another origin
+        // - https://adservice.google.com/ ...
+
+        // whitelisting main frame
+        val whitelistingRule = "@@localhost\$subdocument,document"
+
+        val (_, whitelistedResources) = load(
+            listOf(whitelistingRule),
+            """
+            |<html>
+            |<body>
+            |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
+            |  <iframe src="https://5290727.fls.doubleclick.net/activityi;src=5290727;type=allpa0;cat=nyti-0;ord=1;num=4241703782611;gtm=2wg9u1;auiddc=875088139.1602152521;u4=;u5=undefined;u6=undefined;u7=awSL7zh9ur3vET0ZkRQj3y;u8=;u10=;u11=3;u12=100000005877499;u13=undefined;u14=undefined;u15=undefined;u16=nyt-vi;u17=https%3A%2F%2Fwww.nytimes.com%2F;~oref=https%3A%2F%2Fwww.nytimes.com%2F?"/>
+            |</body>
+            |</html>
+            |""".trimMargin())
+
+        // subframe resource is whitelisted
+        assertNotNull(whitelistedResources.find {
+            it.requestUrl.contains("adservice.google.com") && it.parentFrameUrls.size == 2
+        })
+    }
+
+    private fun extractCertificate(): File {
+        val selfSignedCertificateFile = File.createTempFile("abp", ".bks")
+        selfSignedCertificateFile.delete()
+        context.assets.open("abp.bks").copyTo(FileOutputStream(selfSignedCertificateFile))
+        return selfSignedCertificateFile
     }
 
     @Test

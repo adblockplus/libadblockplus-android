@@ -267,7 +267,7 @@ public class UtilsTest
     assertFalse(Utils.isSubdomainOrDomain("www.gogoogle.com", "google.com"));
     assertFalse(Utils.isSubdomainOrDomain("www.gogoogle.com", "www.google.com"));
   }
-  
+
   private void verifyHeaderEntriesMap(final Set<String> inputHeadersSet,
                                       final Map<String, String> outputHeadersMap,
                                       final String expectedValue)
@@ -351,5 +351,17 @@ public class UtilsTest
     // Verify all input headers are present and contain 1st value which is not duplicated
     verifyHeaderEntriesMap(commaMergableHeaders, mergableHeadersDataWithDistinctValuesConverted,
         headerValue1 + ", " + headerValue2);
+  }
+
+  @Test
+  public void testGetWithoutFragment()
+  {
+    assertEquals("http://invalid   domain.com", Utils.getUrlWithoutFragment("http://invalid   domain.com"));
+    assertEquals("http://domain.com", Utils.getUrlWithoutFragment("http://domain.com"));
+    assertEquals("http://domain.com", Utils.getUrlWithoutFragment("http://domain.com#fragment"));
+    assertEquals("http://sub.domain.com", Utils.getUrlWithoutFragment("http://sub.domain.com#fragment"));
+    assertEquals("https://domain.com", Utils.getUrlWithoutFragment("https://domain.com#fragment"));
+    assertEquals("https://domain.com:80", Utils.getUrlWithoutFragment("https://domain.com:80#fragment"));
+    assertEquals("https://domain.com:80/path", Utils.getUrlWithoutFragment("https://domain.com:80/path#fragment"));
   }
 }
