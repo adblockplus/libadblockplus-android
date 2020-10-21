@@ -23,6 +23,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
@@ -732,6 +733,16 @@ public class AdblockWebView extends WebView
         }
         else
         {
+          // Here we discover if referrerChain is empty or incomplete (i.e. does not contain the
+          // navigation url) so we add at least the top referrer which is navigationUrl.
+          final String navigationUrlLocal = navigationUrl.get();
+          if (!TextUtils.isEmpty(navigationUrlLocal) && (referrerChain.isEmpty() ||
+              !referrerChain.contains(navigationUrlLocal)))
+          {
+            Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal, url);
+            referrerChain.add(0, navigationUrlLocal);
+          }
+
           final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
           String siteKey = (siteKeysConfiguration != null
               ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
