@@ -2,6 +2,9 @@ apply plugin: 'com.android.application'
 apply plugin: 'de.undercouch.download'
 apply plugin: 'kotlin-android'
 
+final RANDOMIZED_APP_ID = "randomizedAppId"
+final ADBLOCK_ENABLED = "adblockEnabled"
+
 // using download file task plugin more info at https://github.com/michel-kraemer/gradle-download-task
 task downloadSubscriptionLists(type: Download) {
   src([
@@ -11,17 +14,28 @@ task downloadSubscriptionLists(type: Download) {
   dest "./src/main/res/raw/"
   overwrite true
 }
+
 android {
   compileSdkVersion Config.compileSdkVersion
   buildToolsVersion Config.buildToolsVersion
 
   defaultConfig {
-    applicationId "org.adblockplus.libadblockplus.android.webviewapp"
+    def appId = "org.adblockplus.libadblockplus.android.webviewapp"
+    if (project.hasProperty(RANDOMIZED_APP_ID) && project.property(RANDOMIZED_APP_ID).toBoolean()) {
+      appId = appId + "_" + (System.currentTimeMillis() / 1000L).toInteger()
+    }
+    applicationId appId
     minSdkVersion Config.webView_minSdkVersion
     targetSdkVersion Config.targetSdkVersion
     versionCode 46
     versionName = Config.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
+
+    def adblockEnabledDefault = "true"
+    if (project.hasProperty(ADBLOCK_ENABLED) && !project.property(ADBLOCK_ENABLED).toBoolean()) {
+      adblockEnabledDefault = "false"
+    }
+    buildConfigField("boolean", "ADBLOCK_ENABLED", adblockEnabledDefault)
   }
 
   buildTypes {
