@@ -3,11 +3,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'androidx.benchmark'
 
 android {
-  compileSdkVersion 29
+  compileSdkVersion Config.compileSdkVersion
 
   defaultConfig {
-    minSdkVersion 16
-    targetSdkVersion 29
+    minSdkVersion Config.minSdkVersion
+    targetSdkVersion Config.targetSdkVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
     // warning: keep in sync with ".gitlab-ci.yml"
     testInstrumentationRunnerArgument 'androidx.benchmark.output.enable', 'true'
@@ -27,7 +27,7 @@ android {
   }
 
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = Config.jvmTarget
   }
 
   sourceSets {
@@ -37,10 +37,10 @@ android {
 
 dependencies {
   androidTestImplementation project(":adblock-android")
-  androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  androidTestImplementation "androidx.benchmark:benchmark-junit4:$benchmark_version"
-  androidTestImplementation 'junit:junit:4.12'
-  androidTestImplementation 'androidx.test:runner:1.1.0'
-  androidTestImplementation 'androidx.test:rules:1.1.0'
-  androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+  androidTestImplementation Deps.kotlin_stdlib
+  androidTestImplementation Deps.androidx_benchmark_junit4
+  androidTestImplementation Deps.junit4
+  androidTestImplementation Deps.androidx_test_core
+  androidTestImplementation Deps.androidx_test_runner
+  androidTestImplementation Deps.androidx_test_ext_junit
 }
