@@ -89,6 +89,31 @@ public class AdblockWebView extends WebView
   private Integer loadError;
   private ProxyWebChromeClient intWebChromeClient;
   private ProxyWebViewClient intWebViewClient;
+
+  /*
+   * url2Referrer map stores referrer mappings for the urls: url => its parent (referrer).
+   * This data is critical for ABP whitelisting feature (blocked requests don't have children
+   * subrequests hence this is logically important only for whitelisting features).
+   * Because of a limitations of the WebView API we are populating this collection only based on
+   * the "Referer" HTTP request header. But this header can be missing, most often due to the
+   * fact that "Referrer-Policy" is set to "no-referrer" value.
+   *
+   * Lifecycle:
+   * url2Referrer data is cleared on the following situations:
+   *  - onPageStarted callback is called
+   *  - goBack(), goForward(), reload(), load() WebView API methods are called.
+   *
+   *  We are adding entries to url2Referrer in the shouldAbpBlockRequest() method, and in the same
+   *  method url2Referrer is traversed to build frames hierarchy for the request. Here are important
+   *  things to remember:
+   *  - For requests of type FilterEngine.ContentType.SUBDOCUMENT we are adding two mappings:
+   *  requestUrl => referrer, Utils.getOrigin(url) => referrer (see DP-1621)
+   *  - As mentioned before, when "Referer" HTTP request header was missing for some request, we
+   *  will not be able to build a complete frames hierarchy. To mitigate this problem slightly, when
+   *  reading url2Referrer to build frames hierarchy we are making sure that root (navigation url)
+   *  is added to the frames hierarchy (see DP-1763)
+   *  - When reading entries we are making sure that there is no loop (see DP-184).
+   */
   private final Map<String, String> url2Referrer
           = Collections.synchronizedMap(new HashMap<String, String>());
   private final AtomicReference<String> navigationUrl = new AtomicReference<>();
@@ -1176,21 +1201,7 @@ public class AdblockWebView extends WebView
         }
         else
         {
-          final List<String> referrerChain = new ArrayList<>(1);
-          String parentUrl = navigationUrl.get();
-          referrerChain.add(parentUrl);
-          while ((parentUrl = url2Referrer.get(parentUrl)) != null)
-          {
-            if (referrerChain.contains(parentUrl))
-            {
-              Timber.w("Detected referrer loop, finished creating referrers list");
-              break;
-            }
-            referrerChain.add(0, parentUrl);
-          }
-
           final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
-
           final List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
 
           try
@@ -1227,6 +1238,9 @@ public class AdblockWebView extends WebView
             // elemhide
             Timber.d("Requesting elemhide selectors from AdblockEngine for %s in %s",
                     navigationUrlLocalRef, this);
+
+            final List<String> referrerChain = new ArrayList<>(1);
+            referrerChain.add(navigationUrl.get());
 
             final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
             final String siteKey = (siteKeysConfiguration != null
