@@ -1,5 +1,5 @@
 object Config {
-    const val moduleVersion = "4.1.0"
+    const val moduleVersion = "4.1.1"
 
     const val buildToolsVersion = "28.0.3"
     const val compileSdkVersion = 29

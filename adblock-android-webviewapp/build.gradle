@@ -19,7 +19,7 @@ android {
     applicationId "org.adblockplus.libadblockplus.android.webviewapp"
     minSdkVersion Config.webView_minSdkVersion
     targetSdkVersion Config.targetSdkVersion
-    versionCode 45
+    versionCode 46
     versionName = Config.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
   }
