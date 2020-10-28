@@ -103,8 +103,8 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         // https://developer.android.com/reference/android/os/Debug.MemoryInfo
         val totalAccountedInAndroidStudio =
             memInfoVar.totalPss -
-                memInfoVar.getMemoryStat("summary.private-other").toDouble() -
-                memInfoVar.getMemoryStat("summary.system").toDouble()
+                memInfoVar.getMemoryStat("summary.private-other").toInt() -
+                memInfoVar.getMemoryStat("summary.system").toInt()
 
         return mutableMapOf("TOTAL PSS (KB)" to memInfoVar.totalPss.toString(),
             "TOTAL_ANDROID_STUDIO (KB) " to totalAccountedInAndroidStudio.toString(),

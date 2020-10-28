@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterEngine;
@@ -150,6 +151,35 @@ public final class Utils
     }
 
     return getStringBeforeChar(urlWithParams, '?');
+  }
+
+  public static String getUrlWithoutFragment(final String url)
+  {
+    return getStringBeforeChar(url, '#');
+  }
+
+  public static String getOrigin(final String url) throws MalformedURLException
+  {
+    if (url == null)
+    {
+      throw new IllegalArgumentException("URL can't be null");
+    }
+
+    final URL uri = new URL(url);
+    final StringBuilder sb = new StringBuilder();
+    sb.append(uri.getProtocol());
+    sb.append("://");
+    sb.append(uri.getHost());
+    if (uri.getPort() != -1)
+    {
+      sb.append(":");
+      sb.append(uri.getPort());
+    }
+    if (!TextUtils.isEmpty(uri.getPath()) || !TextUtils.isEmpty(uri.getQuery()))
+    {
+      sb.append("/");
+    }
+    return sb.toString();
   }
 
   public static String getUrlWithoutAnchor(final String urlWithAnchor)
