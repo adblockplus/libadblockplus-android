@@ -6,9 +6,7 @@ private object Versions {
     const val mockito_kotlin = "2.2.0"
     const val timber = "4.7.1"
     const val wiremock = "2.27.2"
-
-    @Deprecated("The support library is deprecated in favor of AndroidX")
-    const val android_support = "28.0.0"
+    const val android_material = "1.2.1"
 
     @Deprecated("This doesn't work with the latest Android Gradle Plugin")
     const val bintray_release = "0.9.1"
@@ -16,9 +14,11 @@ private object Versions {
     object AndroidX {
         const val benchmark = "1.0.0"
         const val espresso = "3.3.0"
-        const val multidex = "2.0.1"
+        const val multidex = "2.0.0"
         const val test = "1.3.0"
         const val test_ext = "1.1.2"
+        const val appcompat = "1.2.0"
+        const val preference = "1.1.1"
     }
 }
 
@@ -45,15 +45,9 @@ object Deps {
     const val tools_kotlin_gradle_plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
 
     const val wiremock_standalone = "com.github.tomakehurst:wiremock-standalone:${Versions.wiremock}"
-
-    @Deprecated("The support library is deprecated in favor of AndroidX")
-    const val android_support_appcompat = "com.android.support:appcompat-v7:${Versions.android_support}"
-
-    @Deprecated("The support library is deprecated in favor of AndroidX")
-    const val android_support_design = "com.android.support:design:${Versions.android_support}"
-
-    @Deprecated("The support library is deprecated in favor of AndroidX")
-    const val android_support_preference = "com.android.support:preference-v14:${Versions.android_support}"
+    const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.AndroidX.appcompat}"
+    const val androidx_preference = "androidx.preference:preference:${Versions.AndroidX.preference}"
+    const val android_material = "com.google.android.material:material:${Versions.android_material}"
 
     @Deprecated("This doesn't work with the latest Android Gradle Plugin")
     const val novoda_bintray_release = "com.novoda:bintray-release:${Versions.bintray_release}"

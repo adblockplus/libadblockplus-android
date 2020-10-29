@@ -19,13 +19,12 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v7.preference.ListPreference;
-import android.support.v14.preference.MultiSelectListPreference;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.SwitchPreferenceCompat;
-import timber.log.Timber;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
+import androidx.preference.ListPreference;
+import androidx.preference.MultiSelectListPreference;
+import androidx.preference.Preference;
+import androidx.preference.SwitchPreferenceCompat;
+
 import org.adblockplus.libadblockplus.android.ConnectionType;
 import org.adblockplus.libadblockplus.android.Subscription;
 
@@ -35,14 +34,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import timber.log.Timber;
+
 /**
  * General Adblock settings fragment.
  * Use the {@link GeneralSettingsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
 public class GeneralSettingsFragment
-  extends BaseSettingsFragment<GeneralSettingsFragment.Listener>
-  implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener
+    extends BaseSettingsFragment<GeneralSettingsFragment.Listener>
+    implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener
 {
   private String SETTINGS_ENABLED_KEY;
   private String SETTINGS_FILTER_LISTS_KEY;
