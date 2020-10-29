@@ -44,6 +44,6 @@ android {
 dependencies {
   implementation project(':adblock-android-settings')
   implementation project(':adblock-android-webview')
-  implementation Deps.android_support_appcompat
-  implementation Deps.android_support_design
+  implementation Deps.androidx_appcompat
+  implementation Deps.android_material
 }

@@ -28,7 +28,7 @@ android {
 
 dependencies {
   api project(':adblock-android')
-  api Deps.android_support_preference
+  api Deps.androidx_preference
   testImplementation Deps.junit4
   testImplementation Deps.kotlin_stdlib
   androidTestImplementation Deps.kotlin_stdlib

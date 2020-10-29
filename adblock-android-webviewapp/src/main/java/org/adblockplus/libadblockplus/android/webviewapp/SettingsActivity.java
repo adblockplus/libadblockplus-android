@@ -18,7 +18,8 @@
 package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SubscriptionsManager;
