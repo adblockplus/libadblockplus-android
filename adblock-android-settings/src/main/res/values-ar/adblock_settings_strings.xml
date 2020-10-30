@@ -2,18 +2,18 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
-    <string name="fragment_adblock_settings_enabled_summary">السماح بالإعلانات وحظرها على المواقع الإلكترونية في هذا التطبيق</string>
+    <string name="fragment_adblock_settings_enabled_summary">السماح بحجب الإعلانات على المواقع الإلكترونية في هذا التطبيق</string>
     <string name="fragment_adblock_settings_filter_lists_title">قوائم عوامل التصفية</string>
     <string name="fragment_adblock_settings_filter_lists_summary">إضافة أو إزالة قوائم عوامل التصفية حسب اللغة</string>
-    <string name="fragment_adblock_settings_aa_enabled_title">الإعلان المقبول</string>
-    <string name="fragment_adblock_settings_aa_enabled_summary">نود أن نشجع مواقع الويب على استخدام إعلانات نزيهة غير تطفلية. ولهذا السبب وضعنا إرشادات صارمة لتحديد الإعلانات المقبولة والتي تظهر تحت الإعدادات الافتراضية. إذا كنت تريد التصفح دون رؤية أي إعلانات، فيمكنك تعطيل هذا الإعداد في أي وقت.</string>
-    <string name="fragment_adblock_settings_wl_title">مجالات مدرجة في القوائم البيضاء</string>
-    <string name="fragment_adblock_settings_wl_summary">إضافة مواقع ويب تريد رؤية الإعلانات فيها إلى هذه القائمة</string>
-    <string name="fragment_adblock_settings_add_domain">إضافة مجال</string>
-    <string name="fragment_adblock_settings_wl_domains">مجالات مدرجة في القوائم البيضاء</string>
-    <string name="fragment_adblock_settings_allowed_connection_type">تهيئة التحديثات التلقائية</string>
-    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">شبكات واي فاي غير محدودة</string>
-    <string name="fragment_adblock_settings_allowed_connection_type_wifi">كل شبكات الواي فاي</string>
+    <string name="fragment_adblock_settings_aa_enabled_title">الإعلانات المقبولة</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">الإعلانات المقبولة هي إعلانات غير مزعجة تتوافق مع معيار صارم للإعلانات. وتساعد هذه الإعلانات في توفير عائد مادي لمنشئي المحتوى في حين لا تتداخل مع المحتوى الذي تستعرضه.</string>
+    <string name="fragment_adblock_settings_wl_title">القائمة المسموح بها</string>
+    <string name="fragment_adblock_settings_wl_summary">ادعم المواقع الإلكترونية المفضلة لديك بإضافتها إلى هذه القائمة. وفي حالة إضافتها، قد تشاهد إعلانات عليها.</string>
+    <string name="fragment_adblock_settings_add_domain">أدخل عنوان الموقع (URL)</string>
+    <string name="fragment_adblock_settings_wl_domains">القائمة المسموح بها</string>
+    <string name="fragment_adblock_settings_allowed_connection_type">ضبط طريقة تحميل تحديثات القوائم التلقائية</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">شبكات الواي فاي (Wi-Fi) المجانية فقط</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">كل شبكات الواي فاي (Wi-Fi).</string>
     <string name="fragment_adblock_settings_allowed_connection_type_all">دائمًا</string>
 
 </resources>
