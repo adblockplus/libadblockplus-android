@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+<module name="Checker">
+  <module name="TreeWalker">
+    <module name="TypeName" />
+    <module name="MultipleVariableDeclarations"/>
+    <module name="EmptyLineSeparator">
+      <property name="allowNoEmptyLineBetweenFields" value="true" />
+    </module>
+    <module name="LeftCurly">
+      <property name="option" value="nl" />
+    </module>
+    <module name="Indentation">
+      <property name="basicOffset" value="2" />
+      <property name="caseIndent" value="2" />
+      <property name="throwsIndent" value="2" />
+      <property name="arrayInitIndent" value="2" />
+      <property name="lineWrappingIndentation" value="2" />
+    </module>
+    <module name="EmptyCatchBlock" />
+    <module name="NeedBraces" />
+
+    <!-- Imports -->
+    <module name="AvoidStarImport" />
+    <module name="ImportOrder">
+      <property name="groups" value="android,androidx,com,junit,net,org,java,javax" />
+      <property name="separated" value="true" />
+      <property name="sortStaticImportsAlphabetically" value="true" />
+    </module>
+    <module name="UnusedImports" />
+    <module name="RedundantImport" />
+  </module>
+
+  <module name="FileTabCharacter">
+    <property name="eachLine" value="true" />
+  </module>
+  <module name="Header">
+    <property name="headerFile" value="config/header.java" />
+  </module>
+  <module name="LineLength">
+    <property name="max" value="120" />
+  </module>
+</module>

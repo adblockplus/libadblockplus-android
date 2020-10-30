@@ -175,7 +175,8 @@ public final class AdblockEngine
   /**
    * Builds Adblock engine
    */
-  public interface Factory {
+  public interface Factory
+  {
     AdblockEngine build();
   }
 
@@ -400,7 +401,8 @@ public final class AdblockEngine
     return this.elemhideEnabled;
   }
 
-  private static org.adblockplus.libadblockplus.android.Subscription convertJsSubscription(final Subscription jsSubscription)
+  private static org.adblockplus.libadblockplus.android.Subscription convertJsSubscription(
+          final Subscription jsSubscription)
   {
     final org.adblockplus.libadblockplus.android.Subscription subscription =
       new org.adblockplus.libadblockplus.android.Subscription();
@@ -429,7 +431,9 @@ public final class AdblockEngine
     try
     {
       if (!jsPrefixes.isUndefined() && !jsPrefixes.isNull())
+      {
         subscription.prefixes = jsPrefixes.asString();
+      }
     }
     finally
     {
@@ -718,7 +722,7 @@ public final class AdblockEngine
       // (documentUrls contains the referrers on Android)
       try
       {
-        JsValue jsText = filter.getProperty("text");
+        final JsValue jsText = filter.getProperty("text");
         try
         {
           if (referrerChain.isEmpty() && (jsText.toString()).contains("||"))
@@ -731,8 +735,9 @@ public final class AdblockEngine
           jsText.dispose();
         }
       }
-      catch (NullPointerException e)
+      catch (final NullPointerException e)
       {
+        Timber.w(e);
       }
 
       return filter.getType() != Filter.Type.EXCEPTION
