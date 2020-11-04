@@ -6,11 +6,11 @@
     <string name="fragment_adblock_settings_filter_lists_title">过滤列表</string>
     <string name="fragment_adblock_settings_filter_lists_summary">添加或移除特定语言筛选列表</string>
     <string name="fragment_adblock_settings_aa_enabled_title">可接受广告</string>
-    <string name="fragment_adblock_settings_aa_enabled_summary">我们希望鼓励网站使用直接的，非侵入式的广告。这就是为什么我们颁布了严格的规定，以便鉴别可接受的广告，并在下列默认设置中显示。如果你希望无广告的浏览，您可以在任何时候禁用该设置。</string>
-    <string name="fragment_adblock_settings_wl_title">白名单域名</string>
-    <string name="fragment_adblock_settings_wl_summary">将你希望看到广告的网站添加到这个列表中</string>
-    <string name="fragment_adblock_settings_add_domain">添加域名</string>
-    <string name="fragment_adblock_settings_wl_domains">白名单域名</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">可接受广告是符合严格广告标准的广告，不会给人造成困扰。这些广告助于内容创作者 带来收入，并且不会干扰您观看的内容。此功能默认为开启，但您可以随时关闭。</string>
+    <string name="fragment_adblock_settings_wl_title">允许列表</string>
+    <string name="fragment_adblock_settings_wl_summary">支持您最喜爱的网站，将其添加到此列表。您可能在这些网站上看到广告。</string>
+    <string name="fragment_adblock_settings_add_domain">输入 URL</string>
+    <string name="fragment_adblock_settings_wl_domains">允许列表</string>
     <string name="fragment_adblock_settings_allowed_connection_type">配置自动更新</string>
     <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">非计量 Wi-Fi 网络</string>
     <string name="fragment_adblock_settings_allowed_connection_type_wifi">所有 Wi-Fi 网络</string>

@@ -2,17 +2,17 @@
 
     <string name="fragment_adblock_settings_general_title">Adblock Plus</string>
     <string name="fragment_adblock_settings_enabled_title">Adblock Plus</string>
-    <string name="fragment_adblock_settings_enabled_summary">Разрешить в этом приложении блокировку рекламы на сайтах</string>
+    <string name="fragment_adblock_settings_enabled_summary">Разрешить блокировку рекламы на сайтах в этом приложении</string>
     <string name="fragment_adblock_settings_filter_lists_title">Списки фильтров</string>
     <string name="fragment_adblock_settings_filter_lists_summary">Добавить или удалить списки фильтрации для определенных языков</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Допустимая реклама</string>
-    <string name="fragment_adblock_settings_aa_enabled_summary">Мы хотели бы призывать веб-сайты использовать прямую, ненавязчивую рекламу. Вот почему мы установили строгие правила для определения Допустимой рекламы, которые отображаются в настройках по умолчанию. Если вы хотите просматривать сайты без рекламы, вы можете отключить эту настройку в любое время.</string>
-    <string name="fragment_adblock_settings_wl_title">Разрешенные домены</string>
-    <string name="fragment_adblock_settings_wl_summary">Добавьте сайты, на которых вы хотите видеть рекламу к этому списку.</string>
-    <string name="fragment_adblock_settings_add_domain">Добавить домен</string>
-    <string name="fragment_adblock_settings_wl_domains">Разрешенные домены</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Допустимая реклама – это реклама, которая не является назойливой и соответствует строгим требованиям, предъявляемым к рекламе. Такая реклама помогает создателям контента получать доход и не мешает просмотру контента. Эта функция включена по умолчанию, но вы можете её отключить в любой момент.</string>
+    <string name="fragment_adblock_settings_wl_title">Разрешенный список</string>
+    <string name="fragment_adblock_settings_wl_summary">Поддержите ваши любимые сайты, добавив их в этот список. На этих сайтах вы можете увидеть рекламу.</string>
+    <string name="fragment_adblock_settings_add_domain">Ввести URL-адрес</string>
+    <string name="fragment_adblock_settings_wl_domains">Разрешенный список</string>
     <string name="fragment_adblock_settings_allowed_connection_type">Настроить автоматические обновления</string>
-    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Неизмеряемые сети Wi-Fi</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">Сети Wi-Fi без ограничений по объему данных</string>
     <string name="fragment_adblock_settings_allowed_connection_type_wifi">Все сети Wi-Fi</string>
     <string name="fragment_adblock_settings_allowed_connection_type_all">Всегда</string>
 

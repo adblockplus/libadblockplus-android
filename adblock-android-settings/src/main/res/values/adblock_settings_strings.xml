@@ -19,19 +19,19 @@
     <string name="fragment_adblock_settings_aa_enabled_title">Acceptable Ads</string>
 
     <!-- Summary of SwitchPreference to enable/disable Acceptable Ads -->
-    <string name="fragment_adblock_settings_aa_enabled_summary">We\'d like to encourage websites to use straightforward, nonintrusive advertising. That\'s why we\'ve established strict guidelines to identify Acceptable Ads, which are shown under default settings. If you wish to browse ad-free, you can disable this setting at any time.</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">Acceptable ads are non-annoying ads that comply with a strict ad standard. They help generate revenue for content creators and do not interfere with the content you are viewing. This feature is turned on by default, but you can turn it off at any time.</string>
 
     <!-- Title of Preference to configure whitelisted domains -->
-    <string name="fragment_adblock_settings_wl_title">Whitelisted domains</string>
+    <string name="fragment_adblock_settings_wl_title">Allowlist</string>
 
     <!-- Summary of Preference to configure whitelisted domains -->
-    <string name="fragment_adblock_settings_wl_summary">Add websites that you want to see ads on to this list</string>
+    <string name="fragment_adblock_settings_wl_summary">Support your favorite websites by adding them to this list. You might see ads on them.</string>
 
     <!-- Hint of EditText for typing domain in whitelisted domains fragment -->
-    <string name="fragment_adblock_settings_add_domain">Add domain</string>
+    <string name="fragment_adblock_settings_add_domain">Enter URL</string>
 
     <!-- Text of TextView above the list of whitelisted domains in whitelisted domains fragment -->
-    <string name="fragment_adblock_settings_wl_domains">Whitelisted domains</string>
+    <string name="fragment_adblock_settings_wl_domains">Allowlist</string>
 
     <!-- Title of ListPreference and Dialog to configure update connection type -->
     <string name="fragment_adblock_settings_allowed_connection_type">Configure automatic updates</string>
