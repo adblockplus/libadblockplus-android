@@ -184,35 +184,8 @@ regression_tests:
     # `./gradlew cucumber` launches cucumber executor that then launches Appium client
     - cd automation && ./gradlew cucumber
 
-# FilterEngine memory benchmarking
-# This job runs @LargeTest instrumented tests as well as all the others.
-memory_benchmark:
-  tags:
-    # This is a Raspberry PI with an attached rooted device that is located at the office.
-    - "android-pi"
-  stage: device_tests
-  script:
-    - chmod +x ./tools/run_benchmark.py && ./tools/run_benchmark.py
-    # performance tests: only the @PerformanceTest annotation
-    - adb shell am instrument -w -r \
-      -e debug false \
-      -e size large \
-      -e annotation org.adblockplus.libadblockplus.android.webview.PerformanceTest \
-      org.adblockplus.libadblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner
-  after_script:
-    - adb uninstall org.adblockplus.libadblockplus.android.webview.test
-    - adb kill-server
-  artifacts:
-      paths:
-        - adblock-android-webview/build/outputs/memory_benchmark/
-      reports:
-        metrics: metrics.txt
-  only:
-    - schedules
-    - web
-
-# FilterEngine performance benchmarking
-performance_benchmark:
+# FilterEngine performance benchmarking and memory
+benchmark:
   tags:
     # This is a Raspberry PI with an attached rooted device that is located at the office.
     - "android-pi"
@@ -220,31 +193,23 @@ performance_benchmark:
   variables:
     LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
     BENCHMARK_PULL_DIR: "adblock-android-benchmark/build/outputs/connected_android_test_additional_output"
+  before_script:
+    # for publish benchmark
+    - pip3 install pygsheets
   script:
-    # Gradle feels heavy for Raspberry Pi
-    # so using "adb" commands directly instead of "gradlew ..." commands:
-    # (see https://developer.android.com/studio/profile/run-benchmarks-in-ci)
-    # ./gradlew lockClocks
-    - adb install adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
-    - adb push adblock-android-benchmark/scripts/lockClocks.sh $LOCK_CLOCK_FILE
-    - adb shell su - -c $LOCK_CLOCK_FILE
-    - adb shell rm $LOCK_CLOCK_FILE
-    # ./gradlew :adblock-android-benchmark:connectedCheck
-    - adb shell am instrument -w -r \
-      -e androidx.benchmark.suppressErrors LOW-BATTERY \
-      -e no-isolated-storage 1 \
-      -e androidx.benchmark.output.enable true \
-      org.adblockplus.libadblockplus.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner
-    # collect benchmarking results raw file
-    - mkdir -p $BENCHMARK_PULL_DIR
-    - adb pull /storage/emulated/0/Download/org.adblockplus.libadblockplus.benchmark.test-benchmarkData.json $BENCHMARK_PULL_DIR/benchmarkData.json
+    - export BENCHMARK_GSHEETS_TOKEN_FILE_DIR=$(pwd)
+    - cp $BENCHMARK_GSHEETS_TOKEN_FILE ./sheets.googleapis.com-python.json
+    - ./tools/performance_benchmark.py
+    - ./tools/memory_benchmark.py
+    - ./tools/publish_benchmark.py
   after_script:
-    - adb uninstall org.adblockplus.libadblockplus.benchmark.test
-    # ./gradle unlockClocks
     - adb shell reboot
   artifacts:
     paths:
       - $BENCHMARK_PULL_DIR
+      - adblock-android-webview/build/outputs/memory_benchmark/
+    reports:
+        metrics: metrics.txt
   only:
     - schedules
     - web

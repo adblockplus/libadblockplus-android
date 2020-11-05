@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""
+This script runs memory benchmark on android device.
+1) installs apk for testing assuming it already is built
+2) iterates following instructions NUM_TESTS times:
+2.1) runs each test scenario under `memory_benchmark_test` array
+2.2) collects the .csv output.
+3) calculates average for the test scenarios and inserts it into a metrics.txt
+   file
+"""
 
 import argparse
 import csv
@@ -15,14 +24,14 @@ TOTAL_ANDROID_STUDIO_COLUMN = 2
 
 def exit_with(message):
     print(message)
-    sys.exit(-1)
+    sys.exit(1)
 
 
-def run_command(command, fail=True):
+def run_command(command, exitOnError=True):
     child = subprocess.Popen(command, shell=True, close_fds=True)
     child.communicate()
     if child.returncode != 0:
-        if fail:
+        if exitOnError:
             exit_with(command + " failed!")
         else:
             print(command + " failed!")
