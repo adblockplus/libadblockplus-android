@@ -170,6 +170,7 @@ testobject_tests:
 # automated regression tests using Appium
 regression_tests:
   stage: device_tests
+  retry: 1
   variables:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
