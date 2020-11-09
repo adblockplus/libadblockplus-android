@@ -66,7 +66,6 @@ build_libadblockplus-android:all:
       - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
       - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
       - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
-
 # Builds additional release test apk for performance testing at nightly runs
 build_libadblockplus-android:all-and-test-release:
   <<: *cache_readonly
@@ -140,8 +139,6 @@ build_libadblockplus-android:without-jni:
   script:
     - SKIP_JNI_COMPILATION=true ./gradlew clean assemble
 
-# These are the instrumented tests that run on the real devices on https://saucelabs.com TestObject.
-# @LargeTest tests are skipped in this job
 testobject_tests:
   stage: device_tests
   script:
@@ -167,35 +164,25 @@ testobject_tests:
     reports:
       junit: philll-adblockwebview-app-*.xml
 
-# FilterEngine memory benchmarking
-# This job runs @LargeTest instrumented tests as well as all the others.
-memory_benchmark:
-  tags:
-    # This is a Raspberry PI with an attached rooted device that is located at the office.
-    - "android-pi"
+# automated regression tests using Appium
+regression_tests:
   stage: device_tests
+  variables:
+    # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
+    GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
+    # demo app debug apk
+    TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
   script:
-    - chmod +x ./tools/run_benchmark.sh && ./tools/run_benchmark.sh
-    # performance tests: only the @PerformanceTest annotation
-    - adb shell am instrument -w -r \
-      -e debug false \
-      -e size large \
-      -e annotation org.adblockplus.libadblockplus.android.webview.PerformanceTest \
-      org.adblockplus.libadblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner
-  after_script:
-    - adb uninstall org.adblockplus.libadblockplus.android.webview.test
-    - adb kill-server
-  artifacts:
-      paths:
-        - adblock-android-webview/build/outputs/memory_benchmark/
-      reports:
-        metrics: metrics.txt
-  only:
-    - schedules
-    - web
+    # TESTOBJ_PROJECT_KEY should exist, testing it
+    - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
+    # we are not using submodules, because automation is not a part of repository functionality
+    # its rather a standalone set of scripts
+    - git clone $GIT_AUTOMATION_REPO automation
+    # `./gradlew cucumber` launches cucumber executor that then launches Appium client
+    - cd automation && ./gradlew cucumber
 
-# FilterEngine performance benchmarking
-performance_benchmark:
+# FilterEngine performance benchmarking and memory
+benchmark:
   tags:
     # This is a Raspberry PI with an attached rooted device that is located at the office.
     - "android-pi"
@@ -203,34 +190,29 @@ performance_benchmark:
   variables:
     LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
     BENCHMARK_PULL_DIR: "adblock-android-benchmark/build/outputs/connected_android_test_additional_output"
+  before_script:
+    # for publish benchmark
+    - pip3 install pygsheets
   script:
-    # Gradle feels heavy for Raspberry Pi
-    # so using "adb" commands directly instead of "gradlew ..." commands:
-    # (see https://developer.android.com/studio/profile/run-benchmarks-in-ci)
-    # ./gradlew lockClocks
-    - adb install adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
-    - adb push adblock-android-benchmark/scripts/lockClocks.sh $LOCK_CLOCK_FILE
-    - adb shell su - -c $LOCK_CLOCK_FILE
-    - adb shell rm $LOCK_CLOCK_FILE
-    # ./gradlew :adblock-android-benchmark:connectedCheck
-    - adb shell am instrument -w -r \
-      -e androidx.benchmark.suppressErrors LOW-BATTERY \
-      -e no-isolated-storage 1 \
-      -e androidx.benchmark.output.enable true \
-      org.adblockplus.libadblockplus.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner
-    # collect benchmarking results raw file
-    - mkdir -p $BENCHMARK_PULL_DIR
-    - adb pull /storage/emulated/0/Download/org.adblockplus.libadblockplus.benchmark.test-benchmarkData.json $BENCHMARK_PULL_DIR/benchmarkData.json
+    - echo $CI_PIPELINE_SOURCE
+    - echo $CI_PIPELINE_SOURCE
+    - export BENCHMARK_GSHEETS_TOKEN_FILE_DIR=$(pwd)
+    - cp $BENCHMARK_GSHEETS_TOKEN_FILE ./sheets.googleapis.com-python.json
+    - ./tools/performance_benchmark.py
+    - ./tools/memory_benchmark.py
+    - ./tools/publish_benchmark.py
   after_script:
-    - adb uninstall org.adblockplus.libadblockplus.benchmark.test
-    # ./gradle unlockClocks
     - adb shell reboot
   artifacts:
     paths:
       - $BENCHMARK_PULL_DIR
+      - adblock-android-webview/build/outputs/memory_benchmark/
+    reports:
+        metrics: metrics.txt
   only:
     - schedules
     - web
+    - tags
 
 .publish_template: &publish_template
   stage: publish
