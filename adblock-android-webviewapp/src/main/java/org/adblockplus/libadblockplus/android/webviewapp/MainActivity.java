@@ -135,6 +135,7 @@ public class MainActivity extends AppCompatActivity
   @Override
   protected void onNewIntent(final Intent intent)
   {
+    super.onNewIntent(intent);
     navigateIfUrlIntent(tabs.get(0), intent);
   }
 
