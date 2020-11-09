@@ -16,6 +16,7 @@
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:paddingStart="0dp"
+        android:paddingLeft="0dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
         tools:text="http://www.google.com"/>
 
@@ -25,6 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/fragment_adblock_allowlisted_domains_remove"
-        android:paddingStart="@dimen/fragment_adblock_al_padding" />
+        android:paddingStart="@dimen/fragment_adblock_al_padding"
+        android:paddingLeft="@dimen/fragment_adblock_al_padding" />
 
 </LinearLayout>
