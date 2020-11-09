@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Nyelvspecifikus szűrőlisták hozzáadása vagy eltávolítása</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Elfogadható hirdetések</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Az elfogadható hirdetések olyan nem bosszantó hirdetések, amelyek szigorú hirdetési szabályoknak felelnek meg. Segítenek a tartalomkészítők bevételeinek generálásában, és nem zavarják a tartalmak megtekintését. Alapértelmezésként be van kapcsolva ezen funkció, de ez bármikor kikapcsolható.</string>
-    <string name="fragment_adblock_settings_wl_title">Engedélyezőlista</string>
+    <string name="fragment_adblock_settings_al_title">Engedélyezőlista</string>
     <string name="fragment_adblock_settings_wl_summary">Támogassa kedvenc weboldalait e listához történő hozzáadással. Előfordulhat, hogy hirdetéseket is láthat rajtuk.</string>
     <string name="fragment_adblock_settings_add_domain">URL-cím megadása</string>
     <string name="fragment_adblock_settings_wl_domains">Engedélyezőlista</string>

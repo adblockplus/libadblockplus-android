@@ -75,10 +75,10 @@ public class AdblockHelper
       {
         Timber.d("Applying saved adblock settings to adblock engine");
         // apply last saved settings to adblock engine.
-        // all the settings except `enabled` and whitelisted domains list
+        // all the settings except `enabled` and allowlisted domains list
         // are saved by adblock engine itself
         engine.setEnabled(settings.isAdblockEnabled());
-        engine.initWhitelistedDomains(settings.getWhitelistedDomains());
+        engine.initAllowlistedDomains(settings.getAllowlistedDomains());
 
         // allowed connection type is saved by filter engine but we need to override it
         // as filter engine can be not created when changing

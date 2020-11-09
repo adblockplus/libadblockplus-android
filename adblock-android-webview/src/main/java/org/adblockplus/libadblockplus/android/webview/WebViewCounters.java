@@ -29,7 +29,7 @@ import java.lang.ref.WeakReference;
 final public class WebViewCounters
 {
   private int blockedCounter = 0;
-  private int whitelistedCounter = 0;
+  private int allowlistedCounter = 0;
   private EventsListener eventsListener;
 
   // In order to synchronously change counter value and to emit events in the UI thread we schedule
@@ -41,10 +41,10 @@ final public class WebViewCounters
       new WeakRunnable(this, new ResetBlockedOperation());
   private final Runnable blockedIncrementRunnable =
       new WeakRunnable(this, new IncrementBlockedOperation());
-  private final Runnable whitelistedResetRunnable =
-      new WeakRunnable(this, new ResetWhitelistedOperation());
-  private final Runnable whitelistedIncrementRunnable =
-      new WeakRunnable(this, new IncrementWhitelistedOperation());
+  private final Runnable allowlistedResetRunnable =
+      new WeakRunnable(this, new ResetAllowlistedOperation());
+  private final Runnable allowlistedIncrementRunnable =
+      new WeakRunnable(this, new IncrementAllowlistedOperation());
 
   /**
    * A helper method for creation of AdblockWebView.EventsListener and binding it with
@@ -62,7 +62,7 @@ final public class WebViewCounters
       public void onNavigation()
       {
         counters.resetBlocked();
-        counters.resetWhitelisted();
+        counters.resetAllowlisted();
       }
 
       @Override
@@ -72,9 +72,9 @@ final public class WebViewCounters
       }
 
       @Override
-      public void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info)
+      public void onResourceLoadingAllowlisted(final AllowlistedResourceInfo info)
       {
-        counters.incrementWhitelisted();
+        counters.incrementAllowlisted();
       }
     };
   }
@@ -93,12 +93,12 @@ final public class WebViewCounters
     void onBlockedChanged(final int newValue);
 
     /**
-     * An event signalling about changing of the counter of whitelisted resources. This event
+     * An event signalling about changing of the counter of allowlisted resources. This event
      * is emitted from a user interface thread (via constructor's `view.post`).
      *
-     * @param newValue A new value of whitelisted resources.
+     * @param newValue A new value of allowlisted resources.
      */
-    void onWhitelistedChanged(final int newValue);
+    void onAllowlistedChanged(final int newValue);
   }
 
   /**
@@ -120,11 +120,11 @@ final public class WebViewCounters
   }
 
   /**
-   * Thread safe resetting of the whitelisted counter.
+   * Thread safe resetting of the allowlisted counter.
    */
-  public void resetWhitelisted()
+  public void resetAllowlisted()
   {
-    handler.post(whitelistedResetRunnable);
+    handler.post(allowlistedResetRunnable);
   }
 
   /**
@@ -136,11 +136,11 @@ final public class WebViewCounters
   }
 
   /**
-   * Thread safe incrementation of the whitelisted counter.
+   * Thread safe incrementation of the allowlisted counter.
    */
-  public void incrementWhitelisted()
+  public void incrementAllowlisted()
   {
-    handler.post(whitelistedIncrementRunnable);
+    handler.post(allowlistedIncrementRunnable);
   }
 
   private void notifyBlockedChanged()
@@ -151,11 +151,11 @@ final public class WebViewCounters
     }
   }
 
-  private void notifyWhitelistedChanged()
+  private void notifyAllowlistedChanged()
   {
     if (eventsListener != null)
     {
-      eventsListener.onWhitelistedChanged(whitelistedCounter);
+      eventsListener.onAllowlistedChanged(allowlistedCounter);
     }
   }
 
@@ -206,13 +206,13 @@ final public class WebViewCounters
     }
   }
 
-  private static class ResetWhitelistedOperation implements WeakRunnable.Operation
+  private static class ResetAllowlistedOperation implements WeakRunnable.Operation
   {
     @Override
     public void run(final WebViewCounters counters)
     {
-      counters.whitelistedCounter = 0;
-      counters.notifyWhitelistedChanged();
+      counters.allowlistedCounter = 0;
+      counters.notifyAllowlistedChanged();
     }
   }
 
@@ -226,13 +226,13 @@ final public class WebViewCounters
     }
   }
 
-  private static class IncrementWhitelistedOperation implements WeakRunnable.Operation
+  private static class IncrementAllowlistedOperation implements WeakRunnable.Operation
   {
     @Override
     public void run(final WebViewCounters counters)
     {
-      ++counters.whitelistedCounter;
-      counters.notifyWhitelistedChanged();
+      ++counters.allowlistedCounter;
+      counters.notifyAllowlistedChanged();
     }
   }
 }

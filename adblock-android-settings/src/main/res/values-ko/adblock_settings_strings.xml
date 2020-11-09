@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">언어별 필터 목록 추가 또는 제거</string>
     <string name="fragment_adblock_settings_aa_enabled_title">허용되는 광고</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">허용되는 광고란 엄격한 광고 기준을 준수하는 성가시지 않은 광고입니다.  콘텐츠 크리에이터의 수익 창출에 도움이 되며 표시 중인 콘텐츠를 방해하지 않습니다. 이 기능은 기본 설정에서 켜짐 상태이지만 언제든지 끌 수 있습니다.</string>
-    <string name="fragment_adblock_settings_wl_title">허용 목록</string>
+    <string name="fragment_adblock_settings_al_title">허용 목록</string>
     <string name="fragment_adblock_settings_wl_summary">이 목록에 즐겨 찾는 웹 사이트를 추가하여 지원할 수 있습니다.  광고가 표시될 수 있습니다.</string>
     <string name="fragment_adblock_settings_add_domain">URL 입력</string>
     <string name="fragment_adblock_settings_wl_domains">허용 목록</string>

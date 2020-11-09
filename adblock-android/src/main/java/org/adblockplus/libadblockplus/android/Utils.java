@@ -598,12 +598,12 @@ public final class Utils
   }
 
   /**
-   * Creates whitelisting filter for a given domain
+   * Creates allowlisting filter for a given domain
    * @param filterEngine Filtering engine
-   * @param domain Domain that needs to be white listed
-   * @return Whitelisting filter
+   * @param domain Domain that needs to be allow listed
+   * @return Allowlisting filter
    */
-  public static Filter createDomainWhitelistingFilter(final FilterEngine filterEngine,
+  public static Filter createDomainAllowlistingFilter(final FilterEngine filterEngine,
                                                       final String domain)
   {
     return filterEngine.getFilter("@@||" + domain + "^$document");

@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">ভাষা যুক্ত করুন বা সরান- নির্দিষ্ট ফিল্টার তালিকা</string>
   <string name="fragment_adblock_settings_aa_enabled_title">গ্রহণযোগ্য বিজ্ঞাপনগুলি</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">আমরা সহজবোধ্য, অ-ছদ্মবেশী বিজ্ঞাপনগুলি ব্যবহার করতে ওয়েবসাইটগুলিকে উত্সাহিত করতে চাই। সেই কারণে আমরা গ্রহণযোগ্য বিজ্ঞাপনগুলি চিহ্নিত করতে কঠোর নির্দেশাবলী স্থাপন করেছি, যা ডিফল্ট সেটিংসে দেখানো হয়েছে। যদি আপনি বিজ্ঞাপন মুক্ত ভাবে ব্রাউজ করতে চান, তবে আপনি এই সেটিংটি যেকোনো সময়ে অক্ষম করতে পারেন।</string>
-  <string name="fragment_adblock_settings_wl_title">পরিচ্ছন্ন তলিকাভুক্ত ডোমেইনগুলি</string>
+  <string name="fragment_adblock_settings_al_title">পরিচ্ছন্ন তলিকাভুক্ত ডোমেইনগুলি</string>
   <string name="fragment_adblock_settings_wl_summary">এই তালিকায় সেই ওয়েবসাইটগুলি যোগ করুন যাতে বিজ্ঞাপন দেখতে চান</string>
   <string name="fragment_adblock_settings_add_domain">ডোমেন যোগ করুন</string>
   <string name="fragment_adblock_settings_wl_domains">পরিচ্ছন্ন তলিকাভুক্ত ডোমেইনগুলি</string>

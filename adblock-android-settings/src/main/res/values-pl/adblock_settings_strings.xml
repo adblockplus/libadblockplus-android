@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Dodaj lub usuń listy filtrów dla określonego języka</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Akceptowalne reklamy</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Akceptowalne reklamy to reklamy nieirytujące, które podlegają rygorystycznym normom tworzenia reklam. Pomagają one generować dochód dla twórców, a Tobie nie przeszkadzają w oglądaniu treści stron.</string>
-    <string name="fragment_adblock_settings_wl_title">Lista dozwolonych</string>
+    <string name="fragment_adblock_settings_al_title">Lista dozwolonych</string>
     <string name="fragment_adblock_settings_wl_summary">Wspieraj swoje ulubione witryny, dodając je do tej listy. Reklamy będą na nich wyświetlane.</string>
     <string name="fragment_adblock_settings_add_domain">Dodaj domenę</string>
     <string name="fragment_adblock_settings_wl_domains">Lista dozwolonych</string>

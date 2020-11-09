@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="@dimen/fragment_adblock_wl_padding"
-    tools:context="org.adblockplus.libadblockplus.android.settings.WhitelistedDomainsSettingsFragment">
+    android:padding="@dimen/fragment_adblock_al_padding"
+    tools:context="org.adblockplus.libadblockplus.android.settings.AllowlistedDomainsSettingsFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -29,18 +29,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/fragment_adblock_whitelisted_domains_add"
-            android:paddingStart="@dimen/fragment_adblock_wl_item_padding" />
+            android:src="@drawable/fragment_adblock_allowlisted_domains_add"
+            android:paddingStart="@dimen/fragment_adblock_al_item_padding" />
 
     </LinearLayout>
 
-    <!-- Whitelisted domain label -->
+    <!-- Allowlisted domain label -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/fragment_adblock_settings_wl_domains"
-        android:paddingTop="@dimen/fragment_adblock_wl_padding"
-        android:paddingBottom="@dimen/fragment_adblock_wl_padding"
+        android:paddingTop="@dimen/fragment_adblock_al_padding"
+        android:paddingBottom="@dimen/fragment_adblock_al_padding"
         android:textAppearance="?android:attr/textAppearanceMedium"/>
 
     <!-- ListView -->

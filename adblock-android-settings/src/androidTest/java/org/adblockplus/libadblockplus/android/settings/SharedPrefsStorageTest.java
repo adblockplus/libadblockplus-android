@@ -58,7 +58,7 @@ public class SharedPrefsStorageTest
     }
   }
 
-  public static AdblockSettings buildModel(int subscriptionsCount, int whitelistedDomainsCount)
+  public static AdblockSettings buildModel(int subscriptionsCount, int allowlistedDomainsCount)
   {
     final AdblockSettings settings = new AdblockSettings();
     settings.setAdblockEnabled(true);
@@ -76,11 +76,11 @@ public class SharedPrefsStorageTest
     settings.setSubscriptions(subscriptions);
 
     final List<String> domains = new LinkedList<>();
-    for (int i = 0; i < whitelistedDomainsCount; i++)
+    for (int i = 0; i < allowlistedDomainsCount; i++)
     {
       domains.add("http://www.domain" + (i + 1) + ".com");
     }
-    settings.setWhitelistedDomains(domains);
+    settings.setAllowlistedDomains(domains);
 
     return settings;
   }
@@ -99,12 +99,12 @@ public class SharedPrefsStorageTest
       assertEquals(expected.getSubscriptions().get(i).url, actual.getSubscriptions().get(i).url);
     }
 
-    assertNotNull(actual.getWhitelistedDomains());
-    assertEquals(expected.getWhitelistedDomains().size(), actual.getWhitelistedDomains().size());
+    assertNotNull(actual.getAllowlistedDomains());
+    assertEquals(expected.getAllowlistedDomains().size(), actual.getAllowlistedDomains().size());
 
-    for (int i = 0; i < expected.getWhitelistedDomains().size(); i++)
+    for (int i = 0; i < expected.getAllowlistedDomains().size(); i++)
     {
-      assertEquals(expected.getWhitelistedDomains().get(i), actual.getWhitelistedDomains().get(i));
+      assertEquals(expected.getAllowlistedDomains().get(i), actual.getAllowlistedDomains().get(i));
     }
   }
 
@@ -309,96 +309,96 @@ public class SharedPrefsStorageTest
   }
 
   @Test
-  public void testWhitelistedDomains_Null()
+  public void testAllowlistedDomains_Null()
   {
     final AdblockSettings savedSettings = new AdblockSettings();
     savedSettings.setAdblockEnabled(true);
-    assertNull(savedSettings.getWhitelistedDomains());
+    assertNull(savedSettings.getAllowlistedDomains());
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNull(loadedSettings.getWhitelistedDomains());
+    assertNull(loadedSettings.getAllowlistedDomains());
   }
 
   @Test
-  public void testWhitelistedDomains_Empty()
+  public void testAllowlistedDomains_Empty()
   {
     final AdblockSettings savedSettings = new AdblockSettings();
     savedSettings.setAdblockEnabled(true);
-    savedSettings.setWhitelistedDomains(Collections.<String>emptyList());
+    savedSettings.setAllowlistedDomains(Collections.<String>emptyList());
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getWhitelistedDomains());
-    assertEquals(0, loadedSettings.getWhitelistedDomains().size());
+    assertNotNull(loadedSettings.getAllowlistedDomains());
+    assertEquals(0, loadedSettings.getAllowlistedDomains().size());
   }
 
   @Test
-  public void testWhitelistedDomains_SingleValue()
+  public void testAllowlistedDomains_SingleValue()
   {
     final AdblockSettings savedSettings = new AdblockSettings();
     savedSettings.setAdblockEnabled(true);
 
-    final List<String> whitelistedDomains = new LinkedList<>();
-    whitelistedDomains.add("http://www.domain1.com");
+    final List<String> allowlistedDomains = new LinkedList<>();
+    allowlistedDomains.add("http://www.domain1.com");
 
-    savedSettings.setWhitelistedDomains(whitelistedDomains);
+    savedSettings.setAllowlistedDomains(allowlistedDomains);
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getWhitelistedDomains());
-    assertEquals(1, loadedSettings.getWhitelistedDomains().size());
+    assertNotNull(loadedSettings.getAllowlistedDomains());
+    assertEquals(1, loadedSettings.getAllowlistedDomains().size());
 
     assertEquals(
-        savedSettings.getWhitelistedDomains().get(0),
-        loadedSettings.getWhitelistedDomains().get(0));
+        savedSettings.getAllowlistedDomains().get(0),
+        loadedSettings.getAllowlistedDomains().get(0));
   }
 
   @Test
-  public void testWhitelistedDomains_SingleValueNonEnglish()
+  public void testAllowlistedDomains_SingleValueNonEnglish()
   {
     final AdblockSettings savedSettings = new AdblockSettings();
     savedSettings.setAdblockEnabled(true);
 
-    final List<String> whitelistedDomains = new LinkedList<>();
-    whitelistedDomains.add("http://почта.рф");
+    final List<String> allowlistedDomains = new LinkedList<>();
+    allowlistedDomains.add("http://почта.рф");
 
-    savedSettings.setWhitelistedDomains(whitelistedDomains);
+    savedSettings.setAllowlistedDomains(allowlistedDomains);
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getWhitelistedDomains());
-    assertEquals(1, loadedSettings.getWhitelistedDomains().size());
+    assertNotNull(loadedSettings.getAllowlistedDomains());
+    assertEquals(1, loadedSettings.getAllowlistedDomains().size());
 
     assertEquals(
-        savedSettings.getWhitelistedDomains().get(0),
-        loadedSettings.getWhitelistedDomains().get(0));
+        savedSettings.getAllowlistedDomains().get(0),
+        loadedSettings.getAllowlistedDomains().get(0));
   }
 
   @Test
-  public void testWhitelistedDomains_MultipleValues()
+  public void testAllowlistedDomains_MultipleValues()
   {
     final AdblockSettings savedSettings = new AdblockSettings();
     savedSettings.setAdblockEnabled(true);
 
-    final List<String> whitelistedDomains = new LinkedList<>();
-    whitelistedDomains.add("http://www.domain1.com");
-    whitelistedDomains.add("http://www.domain2.com");
+    final List<String> allowlistedDomains = new LinkedList<>();
+    allowlistedDomains.add("http://www.domain1.com");
+    allowlistedDomains.add("http://www.domain2.com");
 
-    savedSettings.setWhitelistedDomains(whitelistedDomains);
+    savedSettings.setAllowlistedDomains(allowlistedDomains);
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getWhitelistedDomains());
-    assertEquals(2, loadedSettings.getWhitelistedDomains().size());
+    assertNotNull(loadedSettings.getAllowlistedDomains());
+    assertEquals(2, loadedSettings.getAllowlistedDomains().size());
 
     assertEquals(
-        savedSettings.getWhitelistedDomains().get(0),
-        loadedSettings.getWhitelistedDomains().get(0));
+        savedSettings.getAllowlistedDomains().get(0),
+        loadedSettings.getAllowlistedDomains().get(0));
 
     assertEquals(
-        savedSettings.getWhitelistedDomains().get(1),
-        loadedSettings.getWhitelistedDomains().get(1));
+        savedSettings.getAllowlistedDomains().get(1),
+        loadedSettings.getAllowlistedDomains().get(1));
   }
 
   @Test

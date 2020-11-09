@@ -160,50 +160,50 @@ public final class FilterEngine
    * Checks if any active filter matches the supplied URL.
    * @param url URL to match which is actually first parent of URL for which we
    *            want to check a $genericblock filter.
-   *            Value obtained by `IsGenericblockWhitelisted()` is used later
+   *            Value obtained by `IsGenericblockAllowlisted()` is used later
    *            on as a `specificOnly` parameter value for `Matches()` call.
    * @param documentUrls Chain of documents requesting the resource, starting
    *                     with the current resource's parent frame, ending with the
    *                     top-level frame.
    * @param siteKey sitekey or null/empty string
-   * @return `true` if the URL is whitelisted by $genericblock filter
+   * @return `true` if the URL is allowlisted by $genericblock filter
    */
-  public boolean isGenericblockWhitelisted(final String url, final List<String> documentUrls,
+  public boolean isGenericblockAllowlisted(final String url, final List<String> documentUrls,
                                            final String siteKey)
   {
-    return isGenericblockWhitelisted(this.ptr, url, documentUrls, siteKey);
+    return isGenericblockAllowlisted(this.ptr, url, documentUrls, siteKey);
   }
 
   /**
-   * Check if the document with URL is whitelisted
+   * Check if the document with URL is allowlisted
    * @param url URL
    * @param documentUrls Chain of document URLs requesting the document,
    *                     starting with the current document's parent frame, ending with
    *                     the top-level frame.
    * @param siteKey sitekey or null/empty string
-   * @return `true` if the URL is whitelisted
+   * @return `true` if the URL is allowlisted
    */
-  public boolean isDocumentWhitelisted(final String url,
+  public boolean isDocumentAllowlisted(final String url,
                                        final List<String> documentUrls,
                                        final String siteKey)
   {
-    return isDocumentWhitelisted(this.ptr, url, documentUrls, siteKey);
+    return isDocumentAllowlisted(this.ptr, url, documentUrls, siteKey);
   }
 
   /**
-   * Check if the element hiding is whitelisted
+   * Check if the element hiding is allowlisted
    * @param url URL
    * @param documentUrls Chain of document URLs requesting the document,
    *                     starting with the current document's parent frame, ending with
    *                     the top-level frame.
    * @param siteKey sitekey or null/empty string
-   * @return `true` if element hiding is whitelisted for the supplied URL.
+   * @return `true` if element hiding is allowlisted for the supplied URL.
    */
-  public boolean isElemhideWhitelisted(final String url,
+  public boolean isElemhideAllowlisted(final String url,
                                        final List<String> documentUrls,
                                        final String siteKey)
   {
-    return isElemhideWhitelisted(this.ptr, url, documentUrls, siteKey);
+    return isElemhideAllowlisted(this.ptr, url, documentUrls, siteKey);
   }
 
   public JsValue getPref(final String pref)
@@ -298,15 +298,15 @@ public final class FilterEngine
                                              List<String> referrerChain, String siteKey,
                                              boolean specificOnly);
 
-  private static native boolean isGenericblockWhitelisted(long ptr, String url,
+  private static native boolean isGenericblockAllowlisted(long ptr, String url,
                                                                 List<String> referrerChain,
                                                                 String siteKey);
 
-  private static native boolean isDocumentWhitelisted(long ptr, String url,
+  private static native boolean isDocumentAllowlisted(long ptr, String url,
                                                             List<String> referrerChain,
                                                             String siteKey);
 
-  private static native boolean isElemhideWhitelisted(long ptr, String url,
+  private static native boolean isElemhideAllowlisted(long ptr, String url,
                                                             List<String> referrerChain,
                                                             String siteKey);
 

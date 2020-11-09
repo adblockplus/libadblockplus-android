@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Ajouter ou supprimer des listes de filtres dans une langue spécifique</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Publicité Acceptable</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Les publicités acceptables sont des publicités non agaçantes, qui sont soumises à des normes strictes. Elles contribuent à générer des revenus pour les créateurs de contenu et ne constituent pas une entrave au contenu que vous affichez.</string>
-    <string name="fragment_adblock_settings_wl_title">Liste des sites acceptables</string>
+    <string name="fragment_adblock_settings_al_title">Liste des sites acceptables</string>
     <string name="fragment_adblock_settings_wl_summary">Soutenez vos sites Internet préférés en les ajoutant à cette liste. Vous y verrez peut-être des publicités.</string>
     <string name="fragment_adblock_settings_add_domain">Entrez l\'URL</string>
     <string name="fragment_adblock_settings_wl_domains">Liste des sites acceptables</string>

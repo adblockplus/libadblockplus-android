@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">添加或移除特定语言筛选列表</string>
     <string name="fragment_adblock_settings_aa_enabled_title">可接受广告</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">可接受广告是符合严格广告标准的广告，不会给人造成困扰。这些广告助于内容创作者 带来收入，并且不会干扰您观看的内容。此功能默认为开启，但您可以随时关闭。</string>
-    <string name="fragment_adblock_settings_wl_title">允许列表</string>
+    <string name="fragment_adblock_settings_al_title">允许列表</string>
     <string name="fragment_adblock_settings_wl_summary">支持您最喜爱的网站，将其添加到此列表。您可能在这些网站上看到广告。</string>
     <string name="fragment_adblock_settings_add_domain">输入 URL</string>
     <string name="fragment_adblock_settings_wl_domains">允许列表</string>

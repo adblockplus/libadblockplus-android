@@ -48,21 +48,21 @@ public class GeneralSettingsFragment
   private String SETTINGS_ENABLED_KEY;
   private String SETTINGS_FILTER_LISTS_KEY;
   private String SETTINGS_AA_ENABLED_KEY;
-  private String SETTINGS_WL_DOMAINS_KEY;
+  private String SETTINGS_AL_DOMAINS_KEY;
   private String SETTINGS_ALLOWED_CONNECTION_TYPE_KEY;
 
   private SwitchPreferenceCompat adblockEnabled;
   private MultiSelectListPreference filterLists;
   private SwitchPreferenceCompat acceptableAdsEnabled;
-  private Preference whitelistedDomains;
+  private Preference allowlistedDomains;
   private ListPreference allowedConnectionType;
 
   /**
-   * Listener with additional `onWhitelistedDomainsClicked` event
+   * Listener with additional `onAllowlistedDomainsClicked` event
    */
   public interface Listener extends BaseSettingsFragment.Listener
   {
-    void onWhitelistedDomainsClicked(GeneralSettingsFragment fragment);
+    void onAllowlistedDomainsClicked(GeneralSettingsFragment fragment);
   }
 
   /**
@@ -100,7 +100,7 @@ public class GeneralSettingsFragment
     SETTINGS_ENABLED_KEY = getString(R.string.fragment_adblock_settings_enabled_key);
     SETTINGS_FILTER_LISTS_KEY = getString(R.string.fragment_adblock_settings_filter_lists_key);
     SETTINGS_AA_ENABLED_KEY = getString(R.string.fragment_adblock_settings_aa_enabled_key);
-    SETTINGS_WL_DOMAINS_KEY = getString(R.string.fragment_adblock_settings_wl_key);
+    SETTINGS_AL_DOMAINS_KEY = getString(R.string.fragment_adblock_settings_al_key);
     SETTINGS_ALLOWED_CONNECTION_TYPE_KEY = getString(R.string.fragment_adblock_settings_allowed_connection_type_key);
   }
 
@@ -109,7 +109,7 @@ public class GeneralSettingsFragment
     adblockEnabled = (SwitchPreferenceCompat) findPreference(SETTINGS_ENABLED_KEY);
     filterLists = (MultiSelectListPreference) findPreference(SETTINGS_FILTER_LISTS_KEY);
     acceptableAdsEnabled = (SwitchPreferenceCompat) findPreference(SETTINGS_AA_ENABLED_KEY);
-    whitelistedDomains = findPreference(SETTINGS_WL_DOMAINS_KEY);
+    allowlistedDomains = findPreference(SETTINGS_AL_DOMAINS_KEY);
     allowedConnectionType = (ListPreference) findPreference(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY);
   }
 
@@ -142,9 +142,9 @@ public class GeneralSettingsFragment
     allowedConnectionType.setOnPreferenceChangeListener(this);
   }
 
-  private void initWhitelistedDomains()
+  private void initAllowlistedDomains()
   {
-    whitelistedDomains.setOnPreferenceClickListener(this);
+    allowlistedDomains.setOnPreferenceClickListener(this);
   }
 
   private void initAcceptableAdsEnabled()
@@ -191,7 +191,7 @@ public class GeneralSettingsFragment
   {
     initEnabled();
     initAcceptableAdsEnabled();
-    initWhitelistedDomains();
+    initAllowlistedDomains();
     initUpdatesConnection();
     checkReadyAndInitFilterLists();
   }
@@ -326,16 +326,16 @@ public class GeneralSettingsFragment
   {
     filterLists.setEnabled(enabledValue);
     acceptableAdsEnabled.setEnabled(enabledValue);
-    whitelistedDomains.setEnabled(enabledValue);
+    allowlistedDomains.setEnabled(enabledValue);
     allowedConnectionType.setEnabled(enabledValue);
   }
 
   @Override
   public boolean onPreferenceClick(Preference preference)
   {
-    if (preference.getKey().equals(SETTINGS_WL_DOMAINS_KEY))
+    if (preference.getKey().equals(SETTINGS_AL_DOMAINS_KEY))
     {
-      listener.onWhitelistedDomainsClicked(this);
+      listener.onAllowlistedDomainsClicked(this);
     }
     else
     {

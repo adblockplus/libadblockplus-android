@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Pievienojiet vai noņemiet valodai raksturīgos filtru sarakstus</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Pieņemamās reklāmas</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Mēs vēlamies mudināt tīmekļa vietnes izmantot vienkāršas, neuzmācīgas reklāmas. Tādēļ mēs esam izveidota stingras vadlīnijas, lai atpazītu pieņemamās reklāmas, kas tiek parādītas, kad ir aktīvi noklusējuma iestatījumi. Ja vēlaties pārlūkot bez reklāmām, varat atslēgt šo iestatījumu jebkurā laikā.</string>
-  <string name="fragment_adblock_settings_wl_title">Baltajā sarakstā iekļautie domēni</string>
+  <string name="fragment_adblock_settings_al_title">Baltajā sarakstā iekļautie domēni</string>
   <string name="fragment_adblock_settings_wl_summary">Pievienojiet šim sarakstam tīmekļa vietnes, kurās vēlaties redzēt reklāmas</string>
   <string name="fragment_adblock_settings_add_domain">Pievienot domēnu</string>
   <string name="fragment_adblock_settings_wl_domains">Baltajā sarakstā iekļautie domēni</string>

@@ -37,12 +37,12 @@ import java.util.List;
 import timber.log.Timber;
 
 /**
- * Whitelisted domains adblock fragment.
- * Use the {@link WhitelistedDomainsSettingsFragment#newInstance} factory method to
+ * Allowlisted domains adblock fragment.
+ * Use the {@link AllowlistedDomainsSettingsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class WhitelistedDomainsSettingsFragment
-  extends BaseSettingsFragment<WhitelistedDomainsSettingsFragment.Listener>
+public class AllowlistedDomainsSettingsFragment
+  extends BaseSettingsFragment<AllowlistedDomainsSettingsFragment.Listener>
 {
   private EditText domain;
   private ImageView addDomainButton;
@@ -54,11 +54,11 @@ public class WhitelistedDomainsSettingsFragment
    */
   public interface Listener extends BaseSettingsFragment.Listener
   {
-    boolean isValidDomain(WhitelistedDomainsSettingsFragment fragment,
+    boolean isValidDomain(AllowlistedDomainsSettingsFragment fragment,
                           String domain, AdblockSettings settings);
   }
 
-  public WhitelistedDomainsSettingsFragment()
+  public AllowlistedDomainsSettingsFragment()
   {
     // required empty public constructor
   }
@@ -68,9 +68,9 @@ public class WhitelistedDomainsSettingsFragment
    * this fragment using the provided parameters.
    *
    */
-  public static WhitelistedDomainsSettingsFragment newInstance()
+  public static AllowlistedDomainsSettingsFragment newInstance()
   {
-    return new WhitelistedDomainsSettingsFragment();
+    return new AllowlistedDomainsSettingsFragment();
   }
 
   @Override
@@ -84,7 +84,7 @@ public class WhitelistedDomainsSettingsFragment
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
   {
     View rootView = inflater.inflate(
-      R.layout.fragment_adblock_whitelisted_domains_settings,
+      R.layout.fragment_adblock_allowlisted_domains_settings,
       container,
       false);
 
@@ -148,16 +148,16 @@ public class WhitelistedDomainsSettingsFragment
     {
       // update and save settings
       final int position = (Integer) v.getTag();
-      final String removeDomain = settings.getWhitelistedDomains().get(position);
+      final String removeDomain = settings.getAllowlistedDomains().get(position);
       Timber.i("Removing domain: %s, %d", removeDomain, position);
-      settings.getWhitelistedDomains().remove(position);
+      settings.getAllowlistedDomains().remove(position);
       provider.getAdblockSettingsStorage().save(settings);
 
       // apply settings
-      engine.removeDomainWhitelistingFilter(removeDomain);
+      engine.removeDomainAllowlistingFilter(removeDomain);
 
       // signal event
-      listener.onAdblockSettingsChanged(WhitelistedDomainsSettingsFragment.this);
+      listener.onAdblockSettingsChanged(AllowlistedDomainsSettingsFragment.this);
 
       // update UI
       adapter.notifyDataSetChanged();
@@ -170,15 +170,15 @@ public class WhitelistedDomainsSettingsFragment
     @Override
     public int getCount()
     {
-      return settings.getWhitelistedDomains() != null
-        ? settings.getWhitelistedDomains().size()
+      return settings.getAllowlistedDomains() != null
+        ? settings.getAllowlistedDomains().size()
         : 0;
     }
 
     @Override
     public Object getItem(int position)
     {
-      return settings.getWhitelistedDomains().get(position);
+      return settings.getAllowlistedDomains().get(position);
     }
 
     @Override
@@ -193,7 +193,7 @@ public class WhitelistedDomainsSettingsFragment
       if (convertView == null)
       {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        convertView = inflater.inflate(R.layout.fragment_adblock_whitelisted_domain_item,
+        convertView = inflater.inflate(R.layout.fragment_adblock_allowlisted_domain_item,
           parent, false);
         convertView.setTag(new Holder(convertView));
       }
@@ -220,7 +220,7 @@ public class WhitelistedDomainsSettingsFragment
         String preparedDomain = prepareDomain(domain.getText().toString());
 
         if (listener.isValidDomain(
-          WhitelistedDomainsSettingsFragment.this,
+          AllowlistedDomainsSettingsFragment.this,
           preparedDomain,
           settings))
         {
@@ -256,33 +256,33 @@ public class WhitelistedDomainsSettingsFragment
 
   public void addDomain(final String newDomain)
   {
-    List<String> whitelistedDomains = settings.getWhitelistedDomains();
-    if (whitelistedDomains == null)
+    List<String> allowlistedDomains = settings.getAllowlistedDomains();
+    if (allowlistedDomains == null)
     {
-      whitelistedDomains = new LinkedList<>();
-      settings.setWhitelistedDomains(whitelistedDomains);
+      allowlistedDomains = new LinkedList<>();
+      settings.setAllowlistedDomains(allowlistedDomains);
     }
-    if (!whitelistedDomains.contains(newDomain))
+    if (!allowlistedDomains.contains(newDomain))
     {
-      Timber.d("New whitelisted domain added: %s", newDomain);
+      Timber.d("New allowlisted domain added: %s", newDomain);
       // update and save settings
-      whitelistedDomains.add(newDomain);
-      Collections.sort(whitelistedDomains);
+      allowlistedDomains.add(newDomain);
+      Collections.sort(allowlistedDomains);
 
       provider.getAdblockSettingsStorage().save(settings);
 
       // apply settings
-      engine.addDomainWhitelistingFilter(newDomain);
+      engine.addDomainAllowlistingFilter(newDomain);
 
       // signal event
-      listener.onAdblockSettingsChanged(WhitelistedDomainsSettingsFragment.this);
+      listener.onAdblockSettingsChanged(AllowlistedDomainsSettingsFragment.this);
 
       // update UI
       adapter.notifyDataSetChanged();
     }
     else
     {
-      Timber.d("Whitelisted domain is already added: %s", newDomain);
+      Timber.d("Allowlisted domain is already added: %s", newDomain);
     }
     domain.getText().clear();
     domain.clearFocus();

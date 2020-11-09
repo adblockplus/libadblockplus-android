@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Тілге тән сүзгі тізімдерін қосу немесе жою</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Қабылданатын жарнамалар</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Веб-сайттарда тікелей емес, жалықтырмайтын жарнама пайдалануды қалаймыз. Сол себепті, әдепкі параметрлер астында көрсетілген қабылданатын жарнамаларды анықтау бойынша қатаң нұсқаулықтарды орнату керек. Егер тегін жарнаманы шолуды қаласаңыз, осы параметрді кез келген уақытта өшіре аласыз.</string>
-  <string name="fragment_adblock_settings_wl_title">Ақ тізімге енген домендер</string>
+  <string name="fragment_adblock_settings_al_title">Ақ тізімге енген домендер</string>
   <string name="fragment_adblock_settings_wl_summary">Осы тізімге жарнамалар көруді қалайтын веб-сайттарды қосу</string>
   <string name="fragment_adblock_settings_add_domain">Домен қосу</string>
   <string name="fragment_adblock_settings_wl_domains">Ақ тізімге енген домендер</string>

@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">إضافة أو إزالة قوائم عوامل التصفية حسب اللغة</string>
     <string name="fragment_adblock_settings_aa_enabled_title">الإعلانات المقبولة</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">الإعلانات المقبولة هي إعلانات غير مزعجة تتوافق مع معيار صارم للإعلانات. وتساعد هذه الإعلانات في توفير عائد مادي لمنشئي المحتوى في حين لا تتداخل مع المحتوى الذي تستعرضه.</string>
-    <string name="fragment_adblock_settings_wl_title">القائمة المسموح بها</string>
+    <string name="fragment_adblock_settings_al_title">القائمة المسموح بها</string>
     <string name="fragment_adblock_settings_wl_summary">ادعم المواقع الإلكترونية المفضلة لديك بإضافتها إلى هذه القائمة. وفي حالة إضافتها، قد تشاهد إعلانات عليها.</string>
     <string name="fragment_adblock_settings_add_domain">أدخل عنوان الموقع (URL)</string>
     <string name="fragment_adblock_settings_wl_domains">القائمة المسموح بها</string>

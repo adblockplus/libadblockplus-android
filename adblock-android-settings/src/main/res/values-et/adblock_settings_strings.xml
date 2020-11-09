@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Keelepõhiste filtriloendite lisamine või eemaldamine</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Lubatavad reklaamid</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Soovime, et veebisaidid kasutaksid otsekoheseid, mitte pealetükkivaid reklaame. Seepärast oleme kehtestanud ranged suunised lubatavate reklaamide tuvastamiseks. Need on näha vaikesätete all. Kui soovite sirvida täiesti reklaamivabalt, võite selle sätte igal ajal välja lülitada.</string>
-  <string name="fragment_adblock_settings_wl_title">Lubatud domeenide loend</string>
+  <string name="fragment_adblock_settings_al_title">Lubatud domeenide loend</string>
   <string name="fragment_adblock_settings_wl_summary">Lisage sellesse loendisse veebisaidid, kus soovite reklaame näha</string>
   <string name="fragment_adblock_settings_add_domain">Lisa domeenid</string>
   <string name="fragment_adblock_settings_wl_domains">Lubatud domeenide loend</string>
