@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Adicionar ou remover listas de filtros específicas de idiomas</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Anúncios Aceitáveis</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Anúncios aceitáveis são anúncios não irritantes que atendem a um rígido padrão. Eles ajudam a gerar receita para criadores de conteúdo e não interferem no conteúdo que você exibe.</string>
-    <string name="fragment_adblock_settings_wl_title">Lista de permissões</string>
+    <string name="fragment_adblock_settings_al_title">Lista de permissões</string>
     <string name="fragment_adblock_settings_wl_summary">Para apoiar os seus sites favoritos, adicione-os a essa lista. Você poderá ver anúncios neles.</string>
     <string name="fragment_adblock_settings_add_domain">Inserir URL</string>
     <string name="fragment_adblock_settings_wl_domains">Lista de permissões</string>

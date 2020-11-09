@@ -25,10 +25,10 @@
         app:iconSpaceReserved="false"
         android:summary="@string/fragment_adblock_settings_aa_enabled_summary" />
 
-    <!-- Whitelisted domains -->
+    <!-- Allowlisted domains -->
     <androidx.preference.Preference
-        android:key="@string/fragment_adblock_settings_wl_key"
-        android:title="@string/fragment_adblock_settings_wl_title"
+        android:key="@string/fragment_adblock_settings_al_key"
+        android:title="@string/fragment_adblock_settings_al_title"
         app:iconSpaceReserved="false"
         android:summary="@string/fragment_adblock_settings_wl_summary" />
 

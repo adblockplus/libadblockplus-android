@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Aggiungi o rimuovi elenchi di filtri specifici per la lingua</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Pubblicità Accettabili</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Le pubblicità accettabili sono annunci non fastidiosi che rispettano un rigoroso standard pubblicitario. Aiutano a generare entrate per i creatori di contenuti e non interferiscono con i contenuti che si stanno visualizzando.</string>
-    <string name="fragment_adblock_settings_wl_title">Elenco consentiti</string>
+    <string name="fragment_adblock_settings_al_title">Elenco consentiti</string>
     <string name="fragment_adblock_settings_wl_summary">Sostieni i tuoi siti web preferiti aggiungendoli a questo elenco. È possibile che su questi siti web appaiano delle pubblicità.</string>
     <string name="fragment_adblock_settings_add_domain">Inserisci URL</string>
     <string name="fragment_adblock_settings_wl_domains">Elenco consentiti</string>

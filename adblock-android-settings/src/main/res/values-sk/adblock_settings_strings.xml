@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Pridať alebo odstrániť zoznamy filtrov pre konkrétne jazyky</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Prijateľné reklamy</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Radi by sme podporili webové lokality, aby používali priamu a nerušivú reklamu. Preto sme vypracovali prísne pokyny na identifikáciu prijateľných reklám, ktoré sa zobrazujú v predvolených nastaveniach. Ak chcete prehliadať stránky bez reklám, môžete toto nastavenie kedykoľvek zakázať.</string>
-  <string name="fragment_adblock_settings_wl_title">Domény s povolenými adresami</string>
+  <string name="fragment_adblock_settings_al_title">Domény s povolenými adresami</string>
   <string name="fragment_adblock_settings_wl_summary">Pridajte webové lokality, ktoré chcete vidieť na tomto zozname</string>
   <string name="fragment_adblock_settings_add_domain">Pridať doménu</string>
   <string name="fragment_adblock_settings_wl_domains">Domény s povolenými adresami</string>

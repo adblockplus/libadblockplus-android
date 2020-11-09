@@ -248,7 +248,7 @@ static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
-static jboolean JNICALL JniIsDocumentWhitelisted(JNIEnv* env, jclass clazz, jlong ptr,
+static jboolean JNICALL JniIsDocumentAllowlisted(JNIEnv* env, jclass clazz, jlong ptr,
     jstring jUrl, jobject jReferrerChain, jstring jSiteKey)
 {
   AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
@@ -263,8 +263,8 @@ static jboolean JNICALL JniIsDocumentWhitelisted(JNIEnv* env, jclass clazz, jlon
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
 
-static jboolean JNICALL JniIsGenericblockWhitelisted(JNIEnv* env, jclass clazz, jlong ptr,
-        jstring jUrl, jobject jReferrerChain, jstring jSiteKey)
+static jboolean JNICALL JniIsGenericblockAllowlisted(JNIEnv* env, jclass clazz, jlong ptr,
+    jstring jUrl, jobject jReferrerChain, jstring jSiteKey)
 {
   AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
 
@@ -278,7 +278,7 @@ static jboolean JNICALL JniIsGenericblockWhitelisted(JNIEnv* env, jclass clazz, 
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
 
-static jboolean JNICALL JniIsElemhideWhitelisted(JNIEnv* env, jclass clazz, jlong ptr,
+static jboolean JNICALL JniIsElemhideAllowlisted(JNIEnv* env, jclass clazz, jlong ptr,
     jstring jUrl, jobject jReferrerChain, jstring jSiteKey)
 {
   AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
@@ -445,9 +445,9 @@ static JNINativeMethod methods[] =
   { (char*)"getElementHidingStyleSheet", (char*)"(JLjava/lang/String;Z)Ljava/lang/String;", (void*)JniGetElementHidingStyleSheet },
   { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
   { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;Z)" TYP("Filter"), (void*)JniMatchesMany },
-  { (char*)"isDocumentWhitelisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsDocumentWhitelisted },
-  { (char*)"isGenericblockWhitelisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsGenericblockWhitelisted },
-  { (char*)"isElemhideWhitelisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsElemhideWhitelisted },
+  { (char*)"isDocumentAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsDocumentAllowlisted },
+  { (char*)"isGenericblockAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsGenericblockAllowlisted },
+  { (char*)"isElemhideAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsElemhideAllowlisted },
   { (char*)"getPref", (char*)"(JLjava/lang/String;)" TYP("JsValue"), (void*)JniGetPref },
   { (char*)"setPref", (char*)"(JLjava/lang/String;J)V", (void*)JniSetPref },
   { (char*)"getHostFromURL", (char*)"(JLjava/lang/String;)Ljava/lang/String;", (void*)JniGetHostFromURL },

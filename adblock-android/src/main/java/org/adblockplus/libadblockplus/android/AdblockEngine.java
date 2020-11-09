@@ -63,12 +63,12 @@ public final class AdblockEngine
     /**
      * Not EXCEPTION filter is found
      */
-    NOT_WHITELISTED,
+    NOT_ALLOWLISTED,
 
     /**
      * Exception filter is found
      */
-    WHITELISTED,
+    ALLOWLISTED,
 
     /**
      * No filter is found
@@ -741,8 +741,8 @@ public final class AdblockEngine
       }
 
       return filter.getType() != Filter.Type.EXCEPTION
-          ? MatchesResult.NOT_WHITELISTED
-          : MatchesResult.WHITELISTED;
+          ? MatchesResult.NOT_ALLOWLISTED
+          : MatchesResult.ALLOWLISTED;
     }
     finally
     {
@@ -750,25 +750,25 @@ public final class AdblockEngine
     }
   }
 
-  public boolean isGenericblockWhitelisted(final String url,
+  public boolean isGenericblockAllowlisted(final String url,
                                            final List<String> referrerChain,
                                            final String sitekey)
   {
-    return this.filterEngine.isGenericblockWhitelisted(url, referrerChain, sitekey);
+    return this.filterEngine.isGenericblockAllowlisted(url, referrerChain, sitekey);
   }
 
-  public boolean isDocumentWhitelisted(final String url,
+  public boolean isDocumentAllowlisted(final String url,
                                        final List<String> referrerChain,
                                        final String sitekey)
   {
-    return this.filterEngine.isDocumentWhitelisted(url, referrerChain, sitekey);
+    return this.filterEngine.isDocumentAllowlisted(url, referrerChain, sitekey);
   }
 
-  public boolean isElemhideWhitelisted(final String url,
+  public boolean isElemhideAllowlisted(final String url,
                                        final List<String> referrerChain,
                                        final String sitekey)
   {
-    return this.filterEngine.isElemhideWhitelisted(url, referrerChain, sitekey);
+    return this.filterEngine.isElemhideAllowlisted(url, referrerChain, sitekey);
   }
 
   public String getElementHidingStyleSheet(
@@ -788,14 +788,14 @@ public final class AdblockEngine
      * this function here is called from Adblock Plus for Android.
      *
      * If element hiding is enabled, then this function now first checks for
-     * possible whitelisting of either the document or element hiding for
+     * possible allowlisting of either the document or element hiding for
      * the given URL and returns an empty list if so. This is needed to
      * ensure correct functioning of e.g. acceptable ads.
      */
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDocumentWhitelisted(url, referrerChain, sitekey)
-        || this.isElemhideWhitelisted(url, referrerChain, sitekey))
+        || this.isDocumentAllowlisted(url, referrerChain, sitekey)
+        || this.isElemhideAllowlisted(url, referrerChain, sitekey))
     {
       return "";
     }
@@ -811,8 +811,8 @@ public final class AdblockEngine
   {
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDocumentWhitelisted(url, referrerChainArray, sitekey)
-        || this.isElemhideWhitelisted(url, referrerChainArray, sitekey))
+        || this.isDocumentAllowlisted(url, referrerChainArray, sitekey)
+        || this.isElemhideAllowlisted(url, referrerChainArray, sitekey))
     {
       return new ArrayList<>();
     }
@@ -825,27 +825,27 @@ public final class AdblockEngine
   }
 
   /**
-   * Init whitelisting filters.
-   * @param domains List of domains to be whitelisted
+   * Init allowlisting filters.
+   * @param domains List of domains to be allowlisting
    */
-  public void initWhitelistedDomains(final List<String> domains)
+  public void initAllowlistedDomains(final List<String> domains)
   {
     if (domains != null)
     {
       for (final String domain : domains)
       {
-        addDomainWhitelistingFilter(domain);
+        addDomainAllowlistingFilter(domain);
       }
     }
   }
 
   /**
-   * Add whitelisting filter for a given domain.
-   * @param domain Domain to be added for whitelisting
+   * Add allowlisting filter for a given domain.
+   * @param domain Domain to be added for allowlisting
    */
-  public void addDomainWhitelistingFilter(final String domain)
+  public void addDomainAllowlistingFilter(final String domain)
   {
-    final Filter filter = Utils.createDomainWhitelistingFilter(filterEngine, domain);
+    final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
     try
     {
       if (!filter.isListed())
@@ -860,12 +860,12 @@ public final class AdblockEngine
   }
 
   /**
-   * Remove whitelisting filter for given domain.
-   * @param domain Domain to be removed from whitelisting
+   * Remove allowlisting filter for given domain.
+   * @param domain Domain to be removed from allowlisting
    */
-  public void removeDomainWhitelistingFilter(final String domain)
+  public void removeDomainAllowlistingFilter(final String domain)
   {
-    final Filter filter = Utils.createDomainWhitelistingFilter(filterEngine, domain);
+    final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
     try
     {
       if (filter.isListed())

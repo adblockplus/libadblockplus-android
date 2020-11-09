@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Añadir o eliminar listas de filtro específicas del idioma</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Anuncios Aceptables</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Los anuncios aceptables son anuncios que no molestan y que cumplen con un estándar de anuncios estricto. Ayudan a que los creadores de contenido generen ingresos y no interfieren con el contenido que estás viendo.</string>
-    <string name="fragment_adblock_settings_wl_title">Dominios incluidos en la lista blanca</string>
+    <string name="fragment_adblock_settings_al_title">Dominios incluidos en la lista blanca</string>
     <string name="fragment_adblock_settings_wl_summary">Lista de elementos permitidos</string>
     <string name="fragment_adblock_settings_add_domain">Introducir URL</string>
     <string name="fragment_adblock_settings_wl_domains">Lista de elementos permitidos</string>

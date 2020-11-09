@@ -92,8 +92,8 @@ public class AdblockWebView extends WebView
 
   /*
    * url2Referrer map stores referrer mappings for the urls: url => its parent (referrer).
-   * This data is critical for ABP whitelisting feature (blocked requests don't have children
-   * subrequests hence this is logically important only for whitelisting features).
+   * This data is critical for ABP allowlisting feature (blocked requests don't have children
+   * subrequests hence this is logically important only for allowlisting features).
    * Because of a limitations of the WebView API we are populating this collection only based on
    * the "Referer" HTTP request header. But this header can be missing, most often due to the
    * fact that "Referrer-Policy" is set to "no-referrer" value.
@@ -219,17 +219,17 @@ public class AdblockWebView extends WebView
     }
 
     /**
-     * Whitelisting reason:
+     * Allowlisting reason:
      */
-    enum WhitelistReason
+    enum AllowlistReason
     {
       /**
-       * Document is whitelisted
+       * Document is allowlisted
        */
       DOCUMENT,
 
       /**
-       * Domain is whitelisted by user
+       * Domain is allowlisted by user
        */
       DOMAIN,
 
@@ -240,21 +240,21 @@ public class AdblockWebView extends WebView
     }
 
     /**
-     * Immutable data-class containing an auxiliary information about whitelisted resource.
+     * Immutable data-class containing an auxiliary information about allowlisted resource.
      */
-    final class WhitelistedResourceInfo extends ResourceInfo
+    final class AllowlistedResourceInfo extends ResourceInfo
     {
-      private final WhitelistReason reason;
+      private final AllowlistReason reason;
 
-      public WhitelistedResourceInfo(final String requestUrl,
+      public AllowlistedResourceInfo(final String requestUrl,
                                      final List<String> parentFrameUrls,
-                                     final WhitelistReason reasons)
+                                     final AllowlistReason reasons)
       {
         super(requestUrl, parentFrameUrls);
         this.reason = reasons;
       }
 
-      public WhitelistReason getReason()
+      public AllowlistReason getReason()
       {
         return reason;
       }
@@ -278,13 +278,13 @@ public class AdblockWebView extends WebView
     void onResourceLoadingBlocked(final BlockedResourceInfo info);
 
     /**
-     * "Resource loading whitelisted" event.
+     * "Resource loading allowlisted" event.
      *
      * This method can be called on a background thread.
      * It should not block the thread for too long as it slows down resource loading.
      * @param info contains auxiliary information about a blocked resource.
      */
-    void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info);
+    void onResourceLoadingAllowlisted(final AllowlistedResourceInfo info);
   }
 
   private final AtomicReference<EventsListener> eventsListenerAtomicReference
@@ -659,7 +659,7 @@ public class AdblockWebView extends WebView
       final String urlWithoutFragment = Utils.getUrlWithoutFragment(url);
 
       final boolean isMainFrame = request.isForMainFrame();
-      boolean isWhitelisted = false;
+      boolean isAllowlisted = false;
       boolean canContainSitekey = false;
       boolean isAcceptableAdsEnabled = true;
 
@@ -799,13 +799,13 @@ public class AdblockWebView extends WebView
             }
           }
 
-          // whitelisted
-          if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
+          // allowlisted
+          if (engine.isDocumentAllowlisted(url, referrerChain, siteKey))
           {
-            isWhitelisted = true;
-            Timber.w("%s document is whitelisted, allow loading", url);
-            notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
+            isAllowlisted = true;
+            Timber.w("%s document is allowlisted, allow loading", url);
+            notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
           }
           else
           {
@@ -821,7 +821,7 @@ public class AdblockWebView extends WebView
               final String parentUrl = referrerChain.get(0);
               final List<String> referrerChainForGenericblock = referrerChain.subList(1,
                   referrerChain.size());
-              specificOnly = engine.isGenericblockWhitelisted(parentUrl,
+              specificOnly = engine.isGenericblockAllowlisted(parentUrl,
                   referrerChainForGenericblock, siteKey);
               if (specificOnly)
               {
@@ -835,7 +835,7 @@ public class AdblockWebView extends WebView
                 url, FilterEngine.ContentType.maskOf(contentType),
                 referrerChain, siteKey, specificOnly);
 
-            if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
+            if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
             {
               Timber.i("Attempting to block request with AA on the first try: %s", url);
 
@@ -844,7 +844,7 @@ public class AdblockWebView extends WebView
               final boolean waitedForSitekey = siteKeyExtractor.waitForSitekeyCheck(request);
               if (waitedForSitekey)
               {
-                // Request was held, start over to see if it's now whitelisted
+                // Request was held, start over to see if it's now allowlisted
                 Timber.i("Restarting the check having waited for the sitekey: %s", url);
 
                 siteKey = (siteKeysConfiguration != null
@@ -858,12 +858,12 @@ public class AdblockWebView extends WebView
                   return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
                 }
 
-                if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
+                if (engine.isDocumentAllowlisted(url, referrerChain, siteKey))
                 {
-                  isWhitelisted = true;
-                  Timber.w("%s document is whitelisted, allow loading", url);
-                  notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                      url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
+                  isAllowlisted = true;
+                  Timber.w("%s document is allowlisted, allow loading", url);
+                  notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                      url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
                 }
                 else
                 {
@@ -873,7 +873,7 @@ public class AdblockWebView extends WebView
                     final String parentUrl = referrerChain.get(0);
                     final List<String> referrerChainForGenericblock = referrerChain.subList(1,
                         referrerChain.size());
-                    specificOnly = engine.isGenericblockWhitelisted(parentUrl,
+                    specificOnly = engine.isGenericblockAllowlisted(parentUrl,
                         referrerChainForGenericblock, siteKey);
                     if (specificOnly)
                     {
@@ -887,38 +887,38 @@ public class AdblockWebView extends WebView
                       url, FilterEngine.ContentType.maskOf(contentType),
                       referrerChain, siteKey, specificOnly);
 
-                  if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
+                  if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
                   {
                     Timber.i("Blocked loading %s with AA %s", url,
                         isAcceptableAdsEnabled ? "enabled" : "disabled");
                     return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
                   }
-                  if (result == AdblockEngine.MatchesResult.WHITELISTED)
+                  if (result == AdblockEngine.MatchesResult.ALLOWLISTED)
                   {
-                    isWhitelisted = true;
-                    Timber.w("%s is whitelisted in matches()", url);
-                    notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                        url, referrerChain, EventsListener.WhitelistReason.FILTER));
+                    isAllowlisted = true;
+                    Timber.w("%s is allowlisted in matches()", url);
+                    notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                        url, referrerChain, EventsListener.AllowlistReason.FILTER));
                   }
                   Timber.d("Allowed loading %s", url);
                 }
               } // if (waitedForSitekey)
 
-              // This check is required because the resource could be whitelisted on the second
+              // This check is required because the resource could be allowlisted on the second
               // check after waiting for the sitekey check conclusion
-              if (!isWhitelisted)
+              if (!isAllowlisted)
               {
                 Timber.i("Blocked loading %s with AA %s", url,
                     isAcceptableAdsEnabled ? "enabled" : "disabled");
                 return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
               }
             }
-            else if (result == AdblockEngine.MatchesResult.WHITELISTED)
+            else if (result == AdblockEngine.MatchesResult.ALLOWLISTED)
             {
-              isWhitelisted = true;
-              Timber.w("%s is whitelisted in matches()", url);
-              notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                  url, referrerChain, EventsListener.WhitelistReason.FILTER));
+              isAllowlisted = true;
+              Timber.w("%s is allowlisted in matches()", url);
+              notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                  url, referrerChain, EventsListener.AllowlistReason.FILTER));
             }
             Timber.d("Allowed loading %s", url);
           }
@@ -941,11 +941,11 @@ public class AdblockWebView extends WebView
           (
             isMainFrame
             ||
-            (canContainSitekey && !isWhitelisted)
+            (canContainSitekey && !isAllowlisted)
           ))
       {
-        // if url is a main frame (whitelisted by default) or can contain by design a site key header
-        // (it content type is SUBDOCUMENT or OTHER) and it is not yet whitelisted then we need to
+        // if url is a main frame (allowlisted by default) or can contain by design a site key header
+        // (it content type is SUBDOCUMENT or OTHER) and it is not yet allowlisted then we need to
         // make custom HTTP get request to try to obtain a site key header.
         return AbpShouldBlockResult.ALLOW_LOAD;
       }
@@ -1076,12 +1076,12 @@ public class AdblockWebView extends WebView
     }
   }
 
-  private void notifyResourceWhitelisted(final EventsListener.WhitelistedResourceInfo info)
+  private void notifyResourceAllowlisted(final EventsListener.AllowlistedResourceInfo info)
   {
     final EventsListener eventsListener = getEventsListener();
     if (eventsListener != null)
     {
-      eventsListener.onResourceLoadingWhitelisted(info);
+      eventsListener.onResourceLoadingAllowlisted(info);
     }
   }
 

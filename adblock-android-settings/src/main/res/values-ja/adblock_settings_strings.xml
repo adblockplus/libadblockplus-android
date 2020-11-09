@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">特定言語フィルターリストを追加または削除</string>
     <string name="fragment_adblock_settings_aa_enabled_title">控えめな広告</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">控えめな広告とは、厳格な広告基準を遵守する邪魔にならない広告のことです。これらの広告はコンテンツ作成者の収入源となるとともに、ご覧になっているコンテンツに干渉しないようになっています。この機能はデフォルトで ON になっていますが、いつでも OFF にすることができます。</string>
-    <string name="fragment_adblock_settings_wl_title">許可リスト</string>
+    <string name="fragment_adblock_settings_al_title">許可リスト</string>
     <string name="fragment_adblock_settings_wl_summary">このリストにお気に入りのウェブサイトを追加して支援しましょう。広告が表示される場合があります。</string>
     <string name="fragment_adblock_settings_add_domain">URL を入力してください</string>
     <string name="fragment_adblock_settings_wl_domains">許可リスト</string>

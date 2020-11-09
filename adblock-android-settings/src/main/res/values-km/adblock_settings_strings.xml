@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">បន្ថែម ឬដកបញ្ជីតម្រង</string>
   <string name="fragment_adblock_settings_aa_enabled_title">ការផ្សាយពាណិជ្ជកម្ម</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">យើងចង់</string>
-  <string name="fragment_adblock_settings_wl_title">ដូមែន</string>
+  <string name="fragment_adblock_settings_al_title">ដូមែន</string>
   <string name="fragment_adblock_settings_wl_summary">បន្ថែម</string>
   <string name="fragment_adblock_settings_add_domain">បន្ថែមដូមែន</string>
   <string name="fragment_adblock_settings_wl_domains">ដូមែន</string>

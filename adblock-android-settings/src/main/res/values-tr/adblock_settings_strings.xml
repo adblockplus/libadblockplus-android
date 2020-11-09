@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Dile özel filtre listelerini ekle veya kaldır</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Kabul edilebilir reklamlar</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Kabul edilebilir reklamlar, katı bir reklam standardına uygun olan, can sıkıcı olmayan reklamlardır. Bunlar, içerik yaratıcılarının gelir elde etmesini sağlar ve görüntülediğiniz içeriği sekteye uğratmaz. Bu özellik varsayılan olarak açıktır, ancak istediğiniz zaman kapatabilirsiniz.</string>
-    <string name="fragment_adblock_settings_wl_title">İzin listesi</string>
+    <string name="fragment_adblock_settings_al_title">İzin listesi</string>
     <string name="fragment_adblock_settings_wl_summary">En sevdiğiniz web sitelerini bu listeye ekleyerek destekleyin.  Bu sitelerde reklamlar görebilirsiniz.</string>
     <string name="fragment_adblock_settings_add_domain">URL gir</string>
     <string name="fragment_adblock_settings_wl_domains">İzin listesi</string>

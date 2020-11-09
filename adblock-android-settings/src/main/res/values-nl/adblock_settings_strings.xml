@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Taalspecifieke filterlijsten toevoegen of verwijderen</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Acceptabele advertenties</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Acceptabele advertenties zijn niet-irritante advertenties die voldoen aan een strenge advertentie standaard. Ze dragen bij tot het genereren van inkomsten voor contentmakers en komen niet in de weg van de inhoud die u bekijkt. Deze optie staat standaard aan, maar u kan het elk moment uitschakelen.</string>
-  <string name="fragment_adblock_settings_wl_title">Toelatingslijst</string>
+  <string name="fragment_adblock_settings_al_title">Toelatingslijst</string>
   <string name="fragment_adblock_settings_wl_summary">Ondersteun uw favoriete websites door ze aan deze lijst toe te voegen. Er kunnen advertenties op worden weergegeven.</string>
   <string name="fragment_adblock_settings_add_domain">Voer URL in</string>
   <string name="fragment_adblock_settings_wl_domains">Toelatingslijst</string>

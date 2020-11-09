@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Προσθήκη ή αφαίρεση λιστών φίλτρου για συγκεκριμένη γλώσσα</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Αποδεκτές Διαφημίσεις</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Αποδεκτές διαφημίσεις είναι οι διαφημίσεις που δεν είναι ενοχλητικές και τηρούν αυστηρά πρότυπα. Βοηθούν τους δημιουργούς περιεχομένου να έχουν έσοδα και να μην παρεμβαίνουν στο περιεχόμενο που βλέπετε. Αυτή η λειτουργία είναι προεπιλογμένη, αλλά μπορείτε να την απενεργοποιήσετε ανά πάσα στιγμή.</string>
-    <string name="fragment_adblock_settings_wl_title">Αποδοχή λίστας</string>
+    <string name="fragment_adblock_settings_al_title">Αποδοχή λίστας</string>
     <string name="fragment_adblock_settings_wl_summary">Υποστηρίξτε τους αγαπημένους σας ιστοτόπους και προσθέστε τους σε αυτή τη λίστα. Μπορεί να δείτε διαφημίσεις στους ιστοτόπους αυτούς.</string>
     <string name="fragment_adblock_settings_add_domain">Εισάγετε διεύθυνση URL</string>
     <string name="fragment_adblock_settings_wl_domains">Αποδοχή λίστας</string>

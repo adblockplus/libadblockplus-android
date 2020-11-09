@@ -21,16 +21,16 @@
     <!-- Summary of SwitchPreference to enable/disable Acceptable Ads -->
     <string name="fragment_adblock_settings_aa_enabled_summary">Acceptable ads are non-annoying ads that comply with a strict ad standard. They help generate revenue for content creators and do not interfere with the content you are viewing. This feature is turned on by default, but you can turn it off at any time.</string>
 
-    <!-- Title of Preference to configure whitelisted domains -->
-    <string name="fragment_adblock_settings_wl_title">Allowlist</string>
+    <!-- Title of Preference to configure allowlisted domains -->
+    <string name="fragment_adblock_settings_al_title">Allowlist</string>
 
-    <!-- Summary of Preference to configure whitelisted domains -->
+    <!-- Summary of Preference to configure allowlisted domains -->
     <string name="fragment_adblock_settings_wl_summary">Support your favorite websites by adding them to this list. You might see ads on them.</string>
 
-    <!-- Hint of EditText for typing domain in whitelisted domains fragment -->
+    <!-- Hint of EditText for typing domain in allowlisted domains fragment -->
     <string name="fragment_adblock_settings_add_domain">Enter URL</string>
 
-    <!-- Text of TextView above the list of whitelisted domains in whitelisted domains fragment -->
+    <!-- Text of TextView above the list of allowlisted domains in allowlisted domains fragment -->
     <string name="fragment_adblock_settings_wl_domains">Allowlist</string>
 
     <!-- Title of ListPreference and Dialog to configure update connection type -->

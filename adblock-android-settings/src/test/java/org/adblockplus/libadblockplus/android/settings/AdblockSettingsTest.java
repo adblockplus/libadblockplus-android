@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 public class AdblockSettingsTest
 {
-  private static AdblockSettings buildModel(int subscriptionsCount, int whitelistedDomainsCount)
+  private static AdblockSettings buildModel(int subscriptionsCount, int allowlistedDomainsCount)
   {
     final AdblockSettings settings = new AdblockSettings();
     settings.setAdblockEnabled(true);
@@ -54,11 +54,11 @@ public class AdblockSettingsTest
     settings.setSubscriptions(subscriptions);
 
     final List<String> domains = new LinkedList<>();
-    for (int i = 0; i < whitelistedDomainsCount; i++)
+    for (int i = 0; i < allowlistedDomainsCount; i++)
     {
       domains.add("www.domain" + (i + 1) + ".com");
     }
-    settings.setWhitelistedDomains(domains);
+    settings.setAllowlistedDomains(domains);
 
     return settings;
   }
@@ -77,12 +77,12 @@ public class AdblockSettingsTest
       assertEquals(expected.getSubscriptions().get(i).url, actual.getSubscriptions().get(i).url);
     }
 
-    assertNotNull(actual.getWhitelistedDomains());
-    assertEquals(expected.getWhitelistedDomains().size(), actual.getWhitelistedDomains().size());
+    assertNotNull(actual.getAllowlistedDomains());
+    assertEquals(expected.getAllowlistedDomains().size(), actual.getAllowlistedDomains().size());
 
-    for (int i = 0; i < expected.getWhitelistedDomains().size(); i++)
+    for (int i = 0; i < expected.getAllowlistedDomains().size(); i++)
     {
-      assertEquals(expected.getWhitelistedDomains().get(i), actual.getWhitelistedDomains().get(i));
+      assertEquals(expected.getAllowlistedDomains().get(i), actual.getAllowlistedDomains().get(i));
     }
   }
 
@@ -130,12 +130,12 @@ public class AdblockSettingsTest
   }
 
   @Test
-  public void testWhitelistedDomains()
+  public void testAllowlistedDomains()
   {
     for (int i = 0; i < 3; i++)
     {
       final AdblockSettings settings = buildModel(1, i);
-      assertEquals(i, settings.getWhitelistedDomains().size());
+      assertEquals(i, settings.getAllowlistedDomains().size());
     }
   }
 

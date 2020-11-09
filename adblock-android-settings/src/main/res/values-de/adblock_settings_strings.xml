@@ -7,7 +7,7 @@
     <string name="fragment_adblock_settings_filter_lists_summary">Sprachspezifische Filterliste hinzufügen oder entfernen</string>
     <string name="fragment_adblock_settings_aa_enabled_title">Acceptable Ads</string>
     <string name="fragment_adblock_settings_aa_enabled_summary">Acceptable Ads sind unaufdringliche Werbeanzeigen gemäß strikter Normen. Sie helfen Urhebern dabei, Einnahmen zu generieren und stören nicht beim Anschauen der Inhalte. Standardmäßig sind Acceptable Ads aktiviert, aber du kannst sie jederzeit in den Einstellungen deaktivieren.</string>
-    <string name="fragment_adblock_settings_wl_title">Allowlist</string>
+    <string name="fragment_adblock_settings_al_title">Allowlist</string>
     <string name="fragment_adblock_settings_wl_summary">Unterstütze deine liebsten Webseiten und füge sie zu dieser Liste hinzu, um bei deren Besuch Werbung zuzulassen.</string>
     <string name="fragment_adblock_settings_add_domain">URL hinzufügen</string>
     <string name="fragment_adblock_settings_wl_domains">Allowlist</string>

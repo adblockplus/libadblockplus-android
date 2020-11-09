@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">הוסף או הסר רשימות סינון ספציפיות לשפה</string>
   <string name="fragment_adblock_settings_aa_enabled_title">פרסומות מקובלות</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">אנחנו רוצים לעודד אתרים בפרסום ישיר ושאינו מפריע. לכן ביססנו קווים מנחים נוקשים לזיהוי פרסומות מקובלות, שמוצגות בהגדרות ברירת מחדל. אם תרצו לגלוש ללא פרסומות כלל, תוכלו לבטל הגדרה זו בכל עת.</string>
-  <string name="fragment_adblock_settings_wl_title">דומיינים ברשימה הלבנה</string>
+  <string name="fragment_adblock_settings_al_title">דומיינים ברשימה הלבנה</string>
   <string name="fragment_adblock_settings_wl_summary">לרשימה הזו הוסף אתרים שבהם תרצה לראות פרסומות</string>
   <string name="fragment_adblock_settings_add_domain">הוסף דומיין</string>
   <string name="fragment_adblock_settings_wl_domains">דומיינים ברשימה הלבנה</string>

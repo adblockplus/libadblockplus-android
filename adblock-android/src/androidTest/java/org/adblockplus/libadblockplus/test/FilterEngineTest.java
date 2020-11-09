@@ -297,13 +297,13 @@ public class FilterEngineTest extends BaseFilterEngineTest
     documentUrlsForGenericblock.add("http://testpages.adblockplus.org/en/exceptions/genericblock/");
 
     // Go through all parent frames/refs to check if any of them has genericblock filter exception
-    boolean specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    boolean specificOnly = filterEngine.isGenericblockAllowlisted(firstParent, documentUrlsForGenericblock, "");
     assertFalse(specificOnly);
     Filter match1 = filterEngine.matches(urlNotGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
     assertNotNull(match1);
     assertEquals(Filter.Type.BLOCKING, match1.getType());
 
-    specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    specificOnly = filterEngine.isGenericblockAllowlisted(firstParent, documentUrlsForGenericblock, "");
     assertFalse(specificOnly);
     Filter match2 = filterEngine.matches(urlGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
     assertNotNull(match2);
@@ -313,13 +313,13 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("@@||testpages.adblockplus.org/en/exceptions/genericblock$genericblock").addToList();
 
     // Go again through all parent frames/refs to check if any of them has genericblock filter exception
-    specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    specificOnly = filterEngine.isGenericblockAllowlisted(firstParent, documentUrlsForGenericblock, "");
     assertTrue(specificOnly);
     match1 = filterEngine.matches(urlNotGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
     assertNotNull(match1);
     assertEquals(Filter.Type.BLOCKING, match1.getType());
 
-    specificOnly = filterEngine.isGenericblockWhitelisted(firstParent, documentUrlsForGenericblock, "");
+    specificOnly = filterEngine.isGenericblockAllowlisted(firstParent, documentUrlsForGenericblock, "");
     assertTrue(specificOnly);
     match2 = filterEngine.matches(urlGeneric, maskOf(FilterEngine.ContentType.IMAGE), documentUrls, "", specificOnly);
     assertNull(match2);
@@ -345,12 +345,12 @@ public class FilterEngineTest extends BaseFilterEngineTest
   }
 
   @Test
-  public void testMatchesOnWhitelistedDomain()
+  public void testMatchesOnAllowlistedDomain()
   {
     filterEngine.getFilter("adbanner.gif").addToList();
-    final Filter domainWhitelistingFilter = Utils.createDomainWhitelistingFilter(filterEngine,
+    final Filter domainAllowlistingFilter = Utils.createDomainAllowlistingFilter(filterEngine,
         "example.org");
-    domainWhitelistingFilter.addToList();
+    domainAllowlistingFilter.addToList();
 
     final Filter match1 =
       filterEngine.matches("http://ads.com/adbanner.gif", maskOf(FilterEngine.ContentType.IMAGE),
@@ -371,9 +371,9 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("adbanner.gif.js$script,image").addToList();
     filterEngine.getFilter("@@notbanner.gif").addToList();
     filterEngine.getFilter("blockme").addToList();
-    final Filter domainWhitelistingFilter = Utils.createDomainWhitelistingFilter(filterEngine,
+    final Filter domainAllowlistingFilter = Utils.createDomainAllowlistingFilter(filterEngine,
         "example.doc");
-    domainWhitelistingFilter.addToList();
+    domainAllowlistingFilter.addToList();
     filterEngine.getFilter("||popexample.com^$popup").addToList();
 
     assertNull("another url should not match",
@@ -428,14 +428,14 @@ public class FilterEngineTest extends BaseFilterEngineTest
               FilterEngine.ContentType.SCRIPT,
               FilterEngine.ContentType.OBJECT),
           Arrays.asList("http://example.doc"), "");
-      assertNotNull("non-zero mask should match on whitelisted document", filter);
+      assertNotNull("non-zero mask should match on allowlisted document", filter);
       assertEquals(Filter.Type.EXCEPTION, filter.getType());
     }
 
     {
       final Filter filter = filterEngine.matches("http://example.doc/blockme",
           /*mask*/ maskOf(), Arrays.asList("http://example.doc"), "");
-      assertNotNull("zero mask should match when document is whitelisted", filter);
+      assertNotNull("zero mask should match when document is allowlisted", filter);
       assertEquals(Filter.Type.EXCEPTION, filter.getType());
     }
   }
@@ -469,7 +469,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
   }
 
   @Test
-  public void testMatchesNestedFrameOnWhitelistedDomain()
+  public void testMatchesNestedFrameOnAllowlistedDomain()
   {
     filterEngine.getFilter("adbanner.gif").addToList();
     filterEngine.getFilter("@@||example.org^$document,domain=ads.com").addToList();
@@ -536,39 +536,39 @@ public class FilterEngineTest extends BaseFilterEngineTest
   }
 
   @Test
-  public void testDocumentWhitelisting()
+  public void testDocumentAllowlisting()
   {
-    final Filter domainWhitelistingFilter = Utils.createDomainWhitelistingFilter(filterEngine,
+    final Filter domainAllowlistingFilter = Utils.createDomainAllowlistingFilter(filterEngine,
         "example.org");
-    domainWhitelistingFilter.addToList();
+    domainAllowlistingFilter.addToList();
     filterEngine.getFilter("@@||example.com^$document,domain=example.de").addToList();
 
-    assertTrue(filterEngine.isDocumentWhitelisted("http://example.org", EMPTY_LIST, NO_SITEKEY));
-    assertFalse(filterEngine.isDocumentWhitelisted("http://example.co.uk", EMPTY_LIST, NO_SITEKEY));
-    assertFalse(filterEngine.isDocumentWhitelisted("http://example.com", EMPTY_LIST, NO_SITEKEY));
+    assertTrue(filterEngine.isDocumentAllowlisted("http://example.org", EMPTY_LIST, NO_SITEKEY));
+    assertFalse(filterEngine.isDocumentAllowlisted("http://example.co.uk", EMPTY_LIST, NO_SITEKEY));
+    assertFalse(filterEngine.isDocumentAllowlisted("http://example.com", EMPTY_LIST, NO_SITEKEY));
 
     final List<String> documentUrls1 = Arrays.asList("http://example.de");
-    assertTrue(filterEngine.isDocumentWhitelisted("http://example.com", documentUrls1, NO_SITEKEY));
-    assertFalse(filterEngine.isDocumentWhitelisted("http://example.co.uk", documentUrls1, NO_SITEKEY));
+    assertTrue(filterEngine.isDocumentAllowlisted("http://example.com", documentUrls1, NO_SITEKEY));
+    assertFalse(filterEngine.isDocumentAllowlisted("http://example.co.uk", documentUrls1, NO_SITEKEY));
   }
 
   @Test
-  public void testElemhideWhitelisting()
+  public void testElemhideAllowlisting()
   {
     filterEngine.getFilter("@@||example.org^$elemhide").addToList();
     filterEngine.getFilter("@@||example.com^$elemhide,domain=example.de").addToList();
 
-    assertTrue(filterEngine.isElemhideWhitelisted("http://example.org", EMPTY_LIST, NO_SITEKEY));
-    assertFalse(filterEngine.isElemhideWhitelisted("http://example.co.uk", EMPTY_LIST, NO_SITEKEY));
-    assertFalse(filterEngine.isElemhideWhitelisted("http://example.com", EMPTY_LIST, NO_SITEKEY));
+    assertTrue(filterEngine.isElemhideAllowlisted("http://example.org", EMPTY_LIST, NO_SITEKEY));
+    assertFalse(filterEngine.isElemhideAllowlisted("http://example.co.uk", EMPTY_LIST, NO_SITEKEY));
+    assertFalse(filterEngine.isElemhideAllowlisted("http://example.com", EMPTY_LIST, NO_SITEKEY));
 
     final List<String> documentUrls1 = Arrays.asList("http://example.de");
-    assertTrue(filterEngine.isElemhideWhitelisted("http://example.com", documentUrls1, NO_SITEKEY));
-    assertFalse(filterEngine.isElemhideWhitelisted("http://example.co.uk", documentUrls1, NO_SITEKEY));
+    assertTrue(filterEngine.isElemhideAllowlisted("http://example.com", documentUrls1, NO_SITEKEY));
+    assertFalse(filterEngine.isElemhideAllowlisted("http://example.co.uk", documentUrls1, NO_SITEKEY));
   }
 
   @Test
-  public void testIsDocAndIsElemhideWhitelistedMatchesWhitelistedSiteKey()
+  public void testIsDocAndIsElemhideAllowlistedMatchesAllowlistedSiteKey()
   {
     filterEngine.getFilter("adframe").addToList();
     final String docSiteKey = SITEKEY + "_document";
@@ -576,7 +576,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("@@$document,sitekey=" + docSiteKey).addToList();
     filterEngine.getFilter("@@$elemhide,sitekey=" + elemhideSiteKey).addToList();
 
-    // normally the frame is not whitelisted
+    // normally the frame is not allowlisted
     final List<String> documentUrls = Arrays.asList(
         "http://example.com/",
         "http://ads.com/");
@@ -605,30 +605,30 @@ public class FilterEngineTest extends BaseFilterEngineTest
         "http://ads.com/");
 
     // no sitekey
-    assertFalse(filterEngine.isDocumentWhitelisted("http://my-ads.com/adframe", documentUrls2, NO_SITEKEY));
-    assertFalse(filterEngine.isElemhideWhitelisted("http://my-ads.com/adframe", documentUrls2, NO_SITEKEY));
+    assertFalse(filterEngine.isDocumentAllowlisted("http://my-ads.com/adframe", documentUrls2, NO_SITEKEY));
+    assertFalse(filterEngine.isElemhideAllowlisted("http://my-ads.com/adframe", documentUrls2, NO_SITEKEY));
 
     // random sitekey and the correct sitekey
-    assertFalse(filterEngine.isDocumentWhitelisted("http://my-ads.com/adframe", documentUrls2, SITEKEY));
-    assertTrue(filterEngine.isDocumentWhitelisted("http://my-ads.com/adframe", documentUrls2, docSiteKey));
-    assertFalse(filterEngine.isElemhideWhitelisted("http://my-ads.com/adframe", documentUrls2, SITEKEY));
-    assertTrue(filterEngine.isElemhideWhitelisted("http://my-ads.com/adframe", documentUrls2, elemhideSiteKey));
+    assertFalse(filterEngine.isDocumentAllowlisted("http://my-ads.com/adframe", documentUrls2, SITEKEY));
+    assertTrue(filterEngine.isDocumentAllowlisted("http://my-ads.com/adframe", documentUrls2, docSiteKey));
+    assertFalse(filterEngine.isElemhideAllowlisted("http://my-ads.com/adframe", documentUrls2, SITEKEY));
+    assertTrue(filterEngine.isElemhideAllowlisted("http://my-ads.com/adframe", documentUrls2, elemhideSiteKey));
 
-    // the frame within a whitelisted frame
+    // the frame within a allowlisted frame
     final List<String> documentUrls3 = Arrays.asList(
         "http://example.com/",
         "http:/my-ads.com/adframe",
         "http://ads.com/");
 
     // no sitekey
-    assertFalse(filterEngine.isDocumentWhitelisted("http://some-ads.com", documentUrls3, NO_SITEKEY));
-    assertFalse(filterEngine.isElemhideWhitelisted("http://some-ads.com", documentUrls3, NO_SITEKEY));
+    assertFalse(filterEngine.isDocumentAllowlisted("http://some-ads.com", documentUrls3, NO_SITEKEY));
+    assertFalse(filterEngine.isElemhideAllowlisted("http://some-ads.com", documentUrls3, NO_SITEKEY));
 
     // random sitekey and the correct sitekey
-    assertFalse(filterEngine.isDocumentWhitelisted("http://some-ads.com", documentUrls3, SITEKEY));
-    assertTrue(filterEngine.isDocumentWhitelisted("http://some-ads.com", documentUrls3, docSiteKey));
-    assertFalse(filterEngine.isElemhideWhitelisted("http://some-ads.com", documentUrls3, SITEKEY));
-    assertTrue(filterEngine.isElemhideWhitelisted("http://some-ads.com", documentUrls3, elemhideSiteKey));
+    assertFalse(filterEngine.isDocumentAllowlisted("http://some-ads.com", documentUrls3, SITEKEY));
+    assertTrue(filterEngine.isDocumentAllowlisted("http://some-ads.com", documentUrls3, docSiteKey));
+    assertFalse(filterEngine.isElemhideAllowlisted("http://some-ads.com", documentUrls3, SITEKEY));
+    assertTrue(filterEngine.isElemhideAllowlisted("http://some-ads.com", documentUrls3, elemhideSiteKey));
   }
 
   @Test
@@ -780,23 +780,23 @@ public class FilterEngineTest extends BaseFilterEngineTest
   }
 
   @Test
-  public void testElementHidingEmulationSelectorsWhitelist()
+  public void testElementHidingEmulationSelectorsAllowlist()
   {
     filterEngine.getFilter("example.org#?#foo").addToList();
 
-    // before whitelisting
-    final List<FilterEngine.EmulationSelector> selectorsBeforeWhitelisting =
+    // before allowlisting
+    final List<FilterEngine.EmulationSelector> selectorsBeforeAllowlisting =
       filterEngine.getElementHidingEmulationSelectors("example.org");
-    assertEquals(1, selectorsBeforeWhitelisting.size());
-    assertEquals("foo", selectorsBeforeWhitelisting.get(0).selector);
-    assertEquals("example.org#?#foo", selectorsBeforeWhitelisting.get(0).text);
+    assertEquals(1, selectorsBeforeAllowlisting.size());
+    assertEquals("foo", selectorsBeforeAllowlisting.get(0).selector);
+    assertEquals("example.org#?#foo", selectorsBeforeAllowlisting.get(0).text);
 
-    // whitelist it
+    // allowlist it
     filterEngine.getFilter("example.org#@#foo").addToList();
 
-    final List<FilterEngine.EmulationSelector> selectorsAfterWhitelisting =
+    final List<FilterEngine.EmulationSelector> selectorsAfterAllowlisting =
       filterEngine.getElementHidingEmulationSelectors("example.org");
-    assertTrue(selectorsAfterWhitelisting.isEmpty());
+    assertTrue(selectorsAfterAllowlisting.isEmpty());
 
     // add another filter
     filterEngine.getFilter("example.org#?#another").addToList();
@@ -816,7 +816,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
     assertEquals("foo", selectors2.get(0).selector);
     assertEquals("example2.org#?#foo", selectors2.get(0).text);
 
-    // check the type of the whitelist (exception) filter
+    // check the type of the allowlist (exception) filter
     final Filter filter = filterEngine.getFilter("example.org#@#bar");
     assertEquals(Filter.Type.ELEMHIDE_EXCEPTION, filter.getType());
   }
@@ -837,7 +837,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
         "~foo.example.org,example.org#?#div:-abp-properties(width: 213px)",
         "~othersiteneg.org#?#div:-abp-properties(width: 213px)",
 
-        // whitelisted
+        // allowlisted
         "example.org#@#foo",
 
         // other site
@@ -948,7 +948,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
   {
     filterEngine.getFilter("example1.org#?#div:-abp-properties(width: 213px)").addToList();
     filterEngine.getFilter("example2.org#?#div:-abp-properties(width: 213px)").addToList();
-    // whitelisted
+    // allowlisted
     filterEngine.getFilter("example2.org#@#div:-abp-properties(width: 213px)").addToList();
 
     final List<FilterEngine.EmulationSelector> selectors1 =

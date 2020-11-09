@@ -37,8 +37,8 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
   private static final String SETTINGS_SUBSCRIPTION_URL_KEY = "url";
   private static final String SETTINGS_SUBSCRIPTION_PREFIXES_KEY = "prefixes";
   private static final String SETTINGS_SUBSCRIPTION_TITLE_KEY = "title";
-  private static final String SETTINGS_WL_DOMAINS_KEY = "whitelisted_domains";
-  private static final String SETTINGS_WL_DOMAIN_KEY = "domain";
+  private static final String SETTINGS_AL_DOMAINS_KEY = "allowlisted_domains";
+  private static final String SETTINGS_AL_DOMAIN_KEY = "domain";
   private static final String SETTINGS_ALLOWED_CONNECTION_TYPE_KEY = "allowed_connection_type";
 
   private SharedPreferences prefs;
@@ -80,26 +80,26 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     settings.setAllowedConnectionType(ConnectionType.findByValue(connectionType));
 
     loadSubscriptions(settings);
-    loadWhitelistedDomains(settings);
+    loadAllowlistedDomains(settings);
 
     return settings;
   }
 
-  private void loadWhitelistedDomains(AdblockSettings settings)
+  private void loadAllowlistedDomains(AdblockSettings settings)
   {
-    if (prefs.contains(SETTINGS_WL_DOMAINS_KEY))
+    if (prefs.contains(SETTINGS_AL_DOMAINS_KEY))
     {
       // count
-      int whitelistedDomainsCount = prefs.getInt(SETTINGS_WL_DOMAINS_KEY, 0);
+      int allowlistedDomainsCount = prefs.getInt(SETTINGS_AL_DOMAINS_KEY, 0);
 
       // each domain
-      List<String> whitelistedDomains = new LinkedList<>();
-      for (int i = 0; i < whitelistedDomainsCount; i++)
+      List<String> allowlistedDomains = new LinkedList<>();
+      for (int i = 0; i < allowlistedDomainsCount; i++)
       {
-        String whitelistedDomain = prefs.getString(getArrayItemKey(i, SETTINGS_WL_DOMAIN_KEY), "");
-        whitelistedDomains.add(whitelistedDomain);
+        String allowlistedDomain = prefs.getString(getArrayItemKey(i, SETTINGS_AL_DOMAIN_KEY), "");
+        allowlistedDomains.add(allowlistedDomain);
       }
-      settings.setWhitelistedDomains(whitelistedDomains);
+      settings.setAllowlistedDomains(allowlistedDomains);
     }
   }
 
@@ -166,7 +166,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     }
 
     saveSubscriptions(settings, editor);
-    saveWhitelistedDomains(settings, editor);
+    saveAllowlistedDomains(settings, editor);
 
     if (commit)
     {
@@ -179,18 +179,18 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     }
   }
 
-  private void saveWhitelistedDomains(AdblockSettings settings, SharedPreferences.Editor editor)
+  private void saveAllowlistedDomains(AdblockSettings settings, SharedPreferences.Editor editor)
   {
-    if (settings.getWhitelistedDomains() != null)
+    if (settings.getAllowlistedDomains() != null)
     {
       // count
-      editor.putInt(SETTINGS_WL_DOMAINS_KEY, settings.getWhitelistedDomains().size());
+      editor.putInt(SETTINGS_AL_DOMAINS_KEY, settings.getAllowlistedDomains().size());
 
       // each domain
-      for (int i = 0; i < settings.getWhitelistedDomains().size(); i++)
+      for (int i = 0; i < settings.getAllowlistedDomains().size(); i++)
       {
-        String eachDomain = settings.getWhitelistedDomains().get(i);
-        editor.putString(getArrayItemKey(i, SETTINGS_WL_DOMAIN_KEY), eachDomain);
+        String eachDomain = settings.getAllowlistedDomains().get(i);
+        editor.putString(getArrayItemKey(i, SETTINGS_AL_DOMAIN_KEY), eachDomain);
       }
     }
   }

@@ -52,7 +52,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.security.KeyStore
 
-class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
+class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
     companion object {
         private const val png = "png"
@@ -83,26 +83,26 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
 
     private fun load(filterRules: List<String>, content: String):
         Pair<List<AdblockWebView.EventsListener.BlockedResourceInfo>,
-            List<AdblockWebView.EventsListener.WhitelistedResourceInfo>> {
+            List<AdblockWebView.EventsListener.AllowlistedResourceInfo>> {
 
         addFilterRules(filterRules)
         initHttpServer(arrayOf(WireMockReqResData("/${indexHtml}", content)))
 
         val blockedResources = mutableListOf<AdblockWebView.EventsListener.BlockedResourceInfo>()
-        val whitelistedResources = mutableListOf<AdblockWebView.EventsListener.WhitelistedResourceInfo>()
-        subscribeToAdblockWebViewEvents(blockedResources, whitelistedResources)
+        val allowlistedResources = mutableListOf<AdblockWebView.EventsListener.AllowlistedResourceInfo>()
+        subscribeToAdblockWebViewEvents(blockedResources, allowlistedResources)
 
         Timber.d("Start loading...")
         assertTrue("$indexPageUrl exceeded loading timeout",
             testSuitAdblock.loadUrlAndWait(indexPageUrl))
         Timber.d("Loaded")
 
-        return Pair(blockedResources, whitelistedResources)
+        return Pair(blockedResources, allowlistedResources)
     }
 
     private fun subscribeToAdblockWebViewEvents(
         blockedResources: MutableList<AdblockWebView.EventsListener.BlockedResourceInfo>,
-        whitelistedResources: MutableList<AdblockWebView.EventsListener.WhitelistedResourceInfo>) {
+        allowlistedResources: MutableList<AdblockWebView.EventsListener.AllowlistedResourceInfo>) {
 
         testSuitAdblock.webView.setEventsListener(object : AdblockWebView.EventsListener {
             override fun onNavigation() {
@@ -114,9 +114,9 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                 blockedResources.add(info)
             }
 
-            override fun onResourceLoadingWhitelisted(
-                info: AdblockWebView.EventsListener.WhitelistedResourceInfo) {
-                whitelistedResources.add(info)
+            override fun onResourceLoadingAllowlisted(
+                info: AdblockWebView.EventsListener.AllowlistedResourceInfo) {
+                allowlistedResources.add(info)
             }
         })
     }
@@ -233,12 +233,12 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     }
 
     @Test
-    fun testWhitelistedSubframeResourceIsWhitelistedWithPath() {
+    fun testAllowlistedSubframeResourceIsAllowlistedWithPath() {
         val blockingRule = greenImage
         val subFrameHtml = "subframe.html"
 
-        // whitelist with path
-        val whitelistingRule = "@@$subFrameHtml\$subdocument,document"
+        // allowlist with path
+        val allowlistingRule = "@@$subFrameHtml\$subdocument,document"
 
         wireMockRule
             .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
@@ -254,8 +254,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                         |</html>
                         |""".trimMargin())))
 
-        val (blockedResources, whitelistedResources) = load(
-            listOf(blockingRule, whitelistingRule),
+        val (blockedResources, allowlistedResources) = load(
+            listOf(blockingRule, allowlistingRule),
             """
             |<html>
             |<body>
@@ -270,13 +270,13 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
         })
 
-        // subframe itself is whitelisted
-        assertNotNull(whitelistedResources.find {
+        // subframe itself is allowlisted
+        assertNotNull(allowlistedResources.find {
             it.requestUrl == "${wireMockRule.baseUrl()}/$subFrameHtml" && it.parentFrameUrls.size == 1
         })
 
-        // subframe resource is whitelisted
-        assertNotNull(whitelistedResources.find {
+        // subframe resource is allowlisted
+        assertNotNull(allowlistedResources.find {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
         })
 
@@ -290,8 +290,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     fun testUrlFragmentDoesNotBreakReferrerChain() {
         val subFrameHtml = "subframe.html"
 
-        // whitelist root frame url
-        val whitelistingRule = "@@localhost"
+        // allowlist root frame url
+        val allowlistingRule = "@@localhost"
 
         wireMockRule
             .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
@@ -307,8 +307,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                         |</html>
                         |""".trimMargin())))
 
-        val (_, whitelistedResources) = load(
-            listOf(whitelistingRule),
+        val (_, allowlistedResources) = load(
+            listOf(allowlistingRule),
             """
             |<html>
             |<body>
@@ -317,8 +317,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             |</html>
             |""".trimMargin())
 
-        // subframe resource is whitelisted: it must have 2 referrers (subframe + main frame)
-        assertNotNull(whitelistedResources.find {
+        // subframe resource is allowlisted: it must have 2 referrers (subframe + main frame)
+        assertNotNull(allowlistedResources.find {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
         })
     }
@@ -328,8 +328,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     fun testCrossOriginReferrers() {
         val subFrameHtml = "subframe.html"
 
-        // whitelisting main frame
-        val whitelistingRule = "@@$localhost\$subdocument,document"
+        // allowlisting main frame
+        val allowlistingRule = "@@$localhost\$subdocument,document"
 
         val selfSignedCertificateFile = extractCertificate()
         testSuitAdblock.extWebViewClient = allowingSelfSignedCertificatesWebViewClient
@@ -390,11 +390,11 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                         |</html>
                         |""".trimMargin())))
 
-        addFilterRules(listOf(whitelistingRule))
+        addFilterRules(listOf(allowlistingRule))
 
         val blockedResources = mutableListOf<AdblockWebView.EventsListener.BlockedResourceInfo>()
-        val whitelistedResources = mutableListOf<AdblockWebView.EventsListener.WhitelistedResourceInfo>()
-        subscribeToAdblockWebViewEvents(blockedResources, whitelistedResources)
+        val allowlistedResources = mutableListOf<AdblockWebView.EventsListener.AllowlistedResourceInfo>()
+        subscribeToAdblockWebViewEvents(blockedResources, allowlistedResources)
 
         subFrameServer.start()
         mainFrameServer.start()
@@ -405,8 +405,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                 testSuitAdblock.loadUrlAndWait("${mainFrameServer.baseUrl()}/$indexHtml"))
             Timber.d("Loaded")
 
-            // subframe resource is whitelisted
-            assertNotNull(whitelistedResources.find {
+            // subframe resource is allowlisted
+            assertNotNull(allowlistedResources.find {
                 it.requestUrl == mainFrameResourceUrl && it.parentFrameUrls.size == 2
             })
         } finally {
@@ -422,11 +422,11 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
         // frame https://5290727.fls.doubleclick.net/.. requests resources from another origin
         // - https://adservice.google.com/ ...
 
-        // whitelisting main frame
-        val whitelistingRule = "@@localhost\$subdocument,document"
+        // allowlisting main frame
+        val allowlistingRule = "@@localhost\$subdocument,document"
 
-        val (_, whitelistedResources) = load(
-            listOf(whitelistingRule),
+        val (_, allowlistedResources) = load(
+            listOf(allowlistingRule),
             """
             |<html>
             |<body>
@@ -436,8 +436,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             |</html>
             |""".trimMargin())
 
-        // subframe resource is whitelisted
-        assertNotNull(whitelistedResources.find {
+        // subframe resource is allowlisted
+        assertNotNull(allowlistedResources.find {
             it.requestUrl.contains("adservice.google.com") && it.parentFrameUrls.size == 2
         })
     }
@@ -450,14 +450,14 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     }
 
     @Test
-    fun testWhitelistedSubframeResourceIsWhitelistedWithSitekey() {
+    fun testAllowlistedSubframeResourceIsAllowlistedWithSitekey() {
         val blockingRule = greenImage
         val subFrameHtml = "subframe.html"
         val subFrameUrl = "${wireMockRule.baseUrl()}/$subFrameHtml"
         val (sitekey, signature) = initSitekey(subFrameUrl)
 
-        // whitelist with sitekey
-        val whitelistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+        // Allowlist with sitekey
+        val allowlistingRule = "@@\$subdocument,document,sitekey=$sitekey"
 
         wireMockRule
             .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
@@ -474,8 +474,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
                         |</html>
                         |""".trimMargin())))
 
-        val (blockedResources, whitelistedResources) = load(
-            listOf(blockingRule, whitelistingRule),
+        val (blockedResources, allowlistedResources) = load(
+            listOf(blockingRule, allowlistingRule),
             """
             |<html>
             |<body>
@@ -490,12 +490,12 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
         })
 
-        // subframe itself is not whitelisted with sitekey:
+        // subframe itself is not allowlisted with sitekey:
         // the decision (allow/block) is made before the resource is loaded
         // and sitekey value is passed in resource response headers/html body
 
-        // subframe resource is whitelisted
-        assertNotNull(whitelistedResources.find {
+        // subframe resource is allowlisted
+        assertNotNull(allowlistedResources.find {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
         })
 
@@ -506,20 +506,20 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     }
 
     @Test
-    fun testWhitelistedMainFrameResourcesHeldUntilSiteKey() {
+    fun testAllowlistedMainFrameResourcesHeldUntilSiteKey() {
         val blockingRule = greenImage
 
-        // A half of max delay ensures that resources are held and whitelisted after the sitekey
+        // A half of max delay ensures that resources are held and allowlisted after the sitekey
         // verification concludes.
         // If the resources are not held the default blocking rule will apply.
         val (sitekey, signature) = initSitekey(indexPageUrl,
                 (BaseSiteKeyExtractor.RESOURCE_HOLD_MAX_TIME_MS / 2).toLong())
 
-        // whitelist main frame with sitekey
-        val whitelistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+        // Allowlist main frame with sitekey
+        val allowlistingRule = "@@\$subdocument,document,sitekey=$sitekey"
 
-        val (_, whitelistedResources) = load(
-            listOf(blockingRule, whitelistingRule),
+        val (_, allowlistedResources) = load(
+            listOf(blockingRule, allowlistingRule),
             """
             |<html data-adblockkey="$signature">
             |<body>
@@ -528,8 +528,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             |</html>
             |""".trimMargin())
 
-        // main frame resource is NOT blocked (whitelisted)
-        assertNotNull(whitelistedResources.find {
+        // main frame resource is NOT blocked (allowlisted)
+        assertNotNull(allowlistedResources.find {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
         })
 
@@ -540,7 +540,7 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
     }
 
     @Test
-    fun testSkipWhitelistingWhenSitekeyVerificationTimeouts() {
+    fun testSkipAllowlistingWhenSitekeyVerificationTimeouts() {
         val blockingRule = greenImage
 
         // Twice the max delay is enough to simulate the timeout of holding of the resource loading
@@ -548,11 +548,11 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
         val (sitekey, signature) = initSitekey(indexPageUrl,
                 (BaseSiteKeyExtractor.RESOURCE_HOLD_MAX_TIME_MS * 2).toLong())
 
-        // whitelist main frame with sitekey
-        val whitelistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+        // Allowlist main frame with sitekey
+        val allowlistingRule = "@@\$subdocument,document,sitekey=$sitekey"
 
-        val (blockedResources, whitelistedResources) = load(
-            listOf(blockingRule, whitelistingRule),
+        val (blockedResources, allowlistedResources) = load(
+            listOf(blockingRule, allowlistingRule),
             """
             |<html data-adblockkey="$signature">
             |<body>
@@ -561,8 +561,8 @@ class AdBlockingWhitelistingTest : BaseAdblockWebViewTest() {
             |</html>
             |""".trimMargin())
 
-        // main frame resource is not whitelisted
-        assertNull(whitelistedResources.find {
+        // main frame resource is not allowlisted
+        assertNull(allowlistedResources.find {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
         })
 

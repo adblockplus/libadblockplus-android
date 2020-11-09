@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Додај или отстрани листи на филтри специфични за јазикот</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Прифатливи реклами</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Би сакале да ги охрабриме веб сајтовите да се служат со едноставно, ненаметливо рекламирање. Затоа воспоставивме строги упатства за идентификација на Прифатливите реклами, што се наоѓаат под стандардните поставки. Ако сакаш да прелистуваш без реклами, во секое време може да ја оневозможиш оваа поставка.</string>
-  <string name="fragment_adblock_settings_wl_title">Домени на бела листа</string>
+  <string name="fragment_adblock_settings_al_title">Домени на бела листа</string>
   <string name="fragment_adblock_settings_wl_summary">На оваа листа додај веб сајтови на коишто сакаш да видиш реклами</string>
   <string name="fragment_adblock_settings_add_domain">Додај домен</string>
   <string name="fragment_adblock_settings_wl_domains">Домени на бела листа</string>
