@@ -74,19 +74,18 @@ public class Application extends android.app.Application
       map.put(AndroidHttpClientResourceWrapper.EASYLIST_CHINESE, R.raw.easylist);
       map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 
-      AdblockHelper
-        .get()
+      final AdblockHelper helper = AdblockHelper.get();
+      helper
         .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
         .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
         .addEngineCreatedListener(engineCreatedListener)
-        .addEngineDisposedListener(engineDisposedListener)
-        //.setDisabledByDefault()
-        ;
+        .addEngineDisposedListener(engineDisposedListener);
 
-      AdblockHelper
-          .get()
-          .getSiteKeysConfiguration()
-          .setForceChecks(true);
+      if (!BuildConfig.ADBLOCK_ENABLED) {
+        helper.setDisabledByDefault();
+      }
+
+      helper.getSiteKeysConfiguration().setForceChecks(true);
     }
   }
 }
