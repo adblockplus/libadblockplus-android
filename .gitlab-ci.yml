@@ -6,9 +6,6 @@ stages:
   - device_tests
   - publish
 
-variables:
-  GRADLE_OPTS: "-Xmx4096m" #set max heap size to 4gb
-
 # This updates the cache with shared dependencies
 build_dependencies:
   stage: build_dependencies
@@ -56,6 +53,11 @@ build_libadblockplus-android:all:
   stage: build
   script:
     - ./gradlew clean assemble assembleAndroidTest
+  # won't run for manual and scheduled; we'd like to run
+  # `build_libadblockplus-android:all-and-test-release` instead
+  except:
+    - schedules
+    - web
   artifacts:
     paths:
       - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
@@ -64,8 +66,6 @@ build_libadblockplus-android:all:
       - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
       - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
       - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
-      - adblock-android-settings/build/outputs/apk/androidTest/debug/adblock-android-settings-debug-androidTest.apk
-
 # Builds additional release test apk for performance testing at nightly runs
 build_libadblockplus-android:all-and-test-release:
   <<: *cache_readonly
