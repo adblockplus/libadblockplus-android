@@ -6,6 +6,8 @@ stages:
   - device_tests
   - publish
 
+variables:
+  GRADLE_OPTS: "-Xmx4096m" #set max heap size to 4gb
 
 # This updates the cache with shared dependencies
 build_dependencies:
@@ -63,6 +65,31 @@ build_libadblockplus-android:all:
       - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
       - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
       - adblock-android-settings/build/outputs/apk/androidTest/debug/adblock-android-settings-debug-androidTest.apk
+
+# Builds additional release test apk for performance testing at nightly runs
+build_libadblockplus-android:all-and-test-release:
+  <<: *cache_readonly
+  stage: build
+  variables:
+    PATH_TO_RELEASE_APK: "adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk"
+  script:
+    # we are building release apk as a separate call since we also need a debug test apk
+    - ./gradlew clean assemble assembleAndroidTest && ./gradlew assembleAndroidTest -PtestBuildType=release
+    # sign test apk with debug key
+    - jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android ${PATH_TO_RELEASE_APK} androiddebugkey
+  artifacts:
+    paths:
+      - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
+      - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
+      # The test APKs are used later in the device testing
+      - $PATH_TO_RELEASE_APK
+      - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
+      - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
+      - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
+      - adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
+  only:
+    - schedules
+    - web
 
 # The remaining build_* jobs are only built on rc branches
 # They are run only to test that the build works, we dont use the artefacts
