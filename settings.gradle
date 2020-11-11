@@ -1,5 +1,5 @@
 include ':adblock-android'
-include 'adblock-android-benchmark'
+include ':adblock-android-benchmark'
 include ':adblock-android-webview'
 include ':adblock-android-settings'
 include ':adblock-android-webviewapp'
