@@ -164,6 +164,7 @@ testobject_tests:
       done
       wait $pids
   artifacts:
+    when: always
     reports:
       junit: philll-adblockwebview-app-*.xml
 
@@ -205,6 +206,7 @@ benchmark:
   after_script:
     - adb shell reboot
   artifacts:
+    when: always
     paths:
       - $BENCHMARK_PULL_DIR
       - adblock-android-webview/build/outputs/memory_benchmark/

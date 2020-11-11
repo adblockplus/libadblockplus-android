@@ -21,6 +21,7 @@ import android.opengl.Matrix
 import android.os.SystemClock
 import androidx.benchmark.junit4.BenchmarkRule
 import androidx.benchmark.junit4.measureRepeated
+import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import org.adblockplus.libadblockplus.FileSystem
 import org.adblockplus.libadblockplus.FilterEngine
@@ -166,6 +167,7 @@ class FilterEngineLoadTimeBenchmark {
     // an example for proper benchmarking sample, taken from:
     // https://cs.android.com/androidx/platform/frameworks/support/+/androidx-master-dev:benchmark/common/src/main/java/androidx/benchmark/ThrottleDetector.kt;l=47;drc=18266f9efb44e8e63a45e055ffd471dd11544c02
     @Test
+    @LargeTest
     fun measurePureCalculation() {
         val sourceMatrix = FloatArray(16) { System.nanoTime().toFloat() }
         val resultMatrix = FloatArray(16)
@@ -178,6 +180,7 @@ class FilterEngineLoadTimeBenchmark {
     }
 
     @Test
+    @LargeTest
     fun measureVeryFirstTime() {
         // "very first time" means the subscriptions data is going to be downloaded (actually loaded
         // from app resources), parsed and saved
