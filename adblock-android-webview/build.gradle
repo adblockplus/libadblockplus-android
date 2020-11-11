@@ -32,12 +32,12 @@ dependencies {
   androidTestImplementation Deps.androidx_test_ext_junit
   androidTestImplementation Deps.androidx_test_espresso_core
   androidTestImplementation Deps.androidx_test_espresso_web
-  androidTestImplementation Deps.wiremock_standalone
-  androidTestImplementation project(path: ':adblock-android-settings')
   androidTestImplementation Deps.kotlin_stdlib
   androidTestImplementation Deps.mockito_core
   androidTestImplementation Deps.mockito_android
   androidTestImplementation Deps.mockito_kotlin
+  androidTestImplementation Deps.wiremock_standalone
+  androidTestImplementation project(path: ':adblock-android-settings')
 }
 
 // DP-1771 was created as the bintray-release plugin is deprecated

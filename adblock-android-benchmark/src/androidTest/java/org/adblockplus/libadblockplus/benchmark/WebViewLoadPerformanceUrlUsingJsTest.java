@@ -15,7 +15,7 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.webview.test;
+package org.adblockplus.libadblockplus.benchmark;
 
 import android.app.Instrumentation;
 import android.content.Context;
@@ -24,17 +24,14 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.benchmark.BenchmarkState;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
-import org.adblockplus.libadblockplus.android.webview.PerformanceTest;
-import org.adblockplus.libadblockplus.android.webview.WebViewActivity;
-import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -42,10 +39,8 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-import java.util.AbstractList;
+import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,33 +52,37 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import timber.log.Timber;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class WebViewLoadPerformanceUrlUsingJsTests
+public class WebViewLoadPerformanceUrlUsingJsTest
 {
   private static final List<String> TESTING_URLS = Arrays.asList(
-      "http://incident.net/v8/files/mp4/",
-      "http://incident.net/v8/files/mp4/1.mp4",
-      "https://ndtv.com",
-      "https://zomato.com",
-      "https://www.indiamart.com",
-      "https://booking.com",
-      "https://billdesk.com",
-      "https://www.flipkart.com");
+      "https://www.amazon.com/s?k=iphone&ref=nb_sb_noss_2",
+      "https://www.google.com/search?source=hp&ei=Di5NXdzQL6S0gwePqrugDw&q=laptops&oq=laptops&gs_l=psy-ab.3..0l10.871.2625..2730...3.0..0.59.396.9......0....1..gws-wiz.....0.LLzQyUKDP2A&ved=0ahUKEwjcj6TgrvXjAhUk2uAKHQ_VDvQQ4dUDCAc&uact=5",
+      "https://www.xvideos.com/",
+      "https://www.bing.com/search?q=laptop&qs=n&form=QBLH&sp=-1&pq=laptop&sc=8-6&sk=&cvid=81A2899A72C44903A148188906E7DCEE",
+//      "https://www.baidu.com/s?tn=50000021_hao_pg&ie=utf-8&sc=UWd1pgw-pA7EnHc1FMfqnHRvPHn1rjTzP10YPiuW5y99U1Dznzu9m1YzPW01n1RsPjTd&ssl_sample=normal&srcqid=3368502456200926350&H123Tmp=nunew7&word=iphone",
+      "https://search.yahoo.com/search;_ylt=AwrEzedALE1d9ocA.lpDDWVH;_ylc=X1MDMTE5NzgwNDg2NwRfcgMyBGZyAwRncHJpZANqQjNGWDVlZFFDbWlWMlR1OXNCQVhBBG5fcnNsdAMwBG5fc3VnZwM5BG9yaWdpbgNzZWFyY2gueWFob28uY29tBHBvcwMwBHBxc3RyAwRwcXN0cmwDBHFzdHJsAzYEcXVlcnkDaXBob25lBHRfc3RtcAMxNTY1MzM4Njkx?fr2=sb-top-search&p=iphone&fr=sfp&iscqry=",
+      "https://yandex.com/search/?text=iphone&lr=98",
+      "https://www.youtube.com/results?search_query=casey+neistat",
+      "https://en.wikipedia.org/wiki/Neodymium_magnet",
+      "https://www.imdb.com/title/tt0119654/",
+      "https://cn.hao123.com/",
+      "https://www.ndtv.com/world-news/pentagon-readies-talks-with-russia-on-syria-operations-1224527",
+      "https://www.zomato.com/lublin/mandragora-lublin",
+      "https://dir.indiamart.com/search.mp?ss=iphone&prdsrc=1&mcatid=23429&catid=213",
+      "https://www.flipkart.com/search?q=iphone");
 
   private static final int PAGE_LOAD_TIMEOUT_SEC = 40;
-  private static final int TEST_TIMEOUT = 2000;
-  private static final int TEST_ITERATIONS = 5;
-  // Strips first and last number of items from result list.
-  private static final int FILTER_OUTLIERS_TO_REMOVE = 1;
-  private static final int MAX_FAILURES_PER_URL = 2;
-  private static final int MAX_FAILURES_TOTAL = TESTING_URLS.size();
+  private static final int TEST_ITERATIONS = 10;
+  private static final int MAX_FAILURES_PER_URL = TEST_ITERATIONS / 3;
+  private static final int TEST_TIMEOUT_S = PAGE_LOAD_TIMEOUT_SEC
+      * TEST_ITERATIONS * TESTING_URLS.size() * 2;
 
   @Rule
-  public final Timeout globalTimeout = Timeout.seconds(TEST_TIMEOUT);
+  public final Timeout globalTimeout = Timeout.seconds(TEST_TIMEOUT_S);
 
   @Rule
   public final ActivityTestRule<WebViewActivity> activityRule
@@ -105,54 +104,64 @@ public class WebViewLoadPerformanceUrlUsingJsTests
 
   static class LoadTimeAggregator
   {
-    final Map<String, Vector<Long>> UrlsToResults = new HashMap<>();
+    final Map<String, Vector<Long>> UrlsToTimes = new HashMap<>();
 
     LoadTimeAggregator()
     {
       for (final String url : TESTING_URLS)
       {
-        UrlsToResults.put(url, new Vector<Long>());
+        UrlsToTimes.put(url, new Vector<Long>());
       }
     }
 
     public void putUrlResult(final String url, final long loadTime)
     {
       assertNotNull(url);
-      final Vector<Long> resultsJsVector = UrlsToResults.get(url);
+      final Vector<Long> resultsJsVector = UrlsToTimes.get(url);
       assertNotNull(resultsJsVector);
       resultsJsVector.add(loadTime);
     }
 
-    static long filterValues(final AbstractList<Long> list)
+    public void reportData(final String testType, Map<String, Integer> urlFailures)
     {
-      assertFalse(list.isEmpty());
-
-      // Remove the extreme values in sorted array
-      Collections.sort(list);
-      final List<Long> subList = list.subList(FILTER_OUTLIERS_TO_REMOVE, list.size() - 1 - FILTER_OUTLIERS_TO_REMOVE);
-      assertFalse(subList.isEmpty());
-
-      // Average the rest of the entries
-      long sum = 0;
-      for (long time : subList)
-      {
-        sum += time;
-      }
-      return sum / subList.size();
-    }
-
-    public long getTotalTime()
-    {
-      long urlLoadTotalTime = 0;
       for (final String url : TESTING_URLS)
       {
-        final Vector<Long> results = UrlsToResults.get(url);
+        if (urlFailures.get(url) > MAX_FAILURES_PER_URL)
+        {
+          Timber.e("Page load failed repeatedly, skipping: %s, %d times of %d",
+              url, urlFailures.get(url), TEST_ITERATIONS);
+          continue;
+        }
+
+        final String[] domainParts;
+        try
+        {
+          domainParts = Utils.getDomain(url).split("\\.");
+        }
+        catch (final URISyntaxException e)
+        {
+          continue;
+        }
+        assertTrue(domainParts.length > 1);
+        final String secondLevelDomain = domainParts[domainParts.length - 2];
+        assertNotNull(secondLevelDomain);
+
+        final List<Long> results = UrlsToTimes.get(url);
         assertNotNull(results);
-        final long urlLoadTime = filterValues(results);
-        urlLoadTotalTime += urlLoadTime;
-        Timber.d("%s: %s (%d) for %s", getClass().getName(), results.toString(), urlLoadTime, url);
+
+        long urlTotalTime = 0;
+        for (long result : results)
+        {
+          urlTotalTime += result;
+        }
+
+        Timber.d("%s: %s for %s", getClass().getName(), results.toString(), url);
+
+        BenchmarkState.reportData(this.getClass().getName(), secondLevelDomain + testType,
+            urlTotalTime,
+            results,
+            0, 0, 1);
       }
-      return urlLoadTotalTime;
     }
   }
 
@@ -219,7 +228,7 @@ public class WebViewLoadPerformanceUrlUsingJsTests
       lastPageStartedUrl = url;
       if (startTime.get() == null)
       {
-        startTime.set(System.currentTimeMillis());
+        startTime.set(System.nanoTime());
       }
       Timber.d("UsingJs: onPageStarted called for url %s", url);
       view.evaluateJavascript(
@@ -240,9 +249,9 @@ public class WebViewLoadPerformanceUrlUsingJsTests
       {
         return;
       }
-      final long timeDelta = System.currentTimeMillis() - startTimeValue;
+      final long timeDelta = System.nanoTime() - startTimeValue;
       Timber.d("UsingJs: onPageFinishedLoading called for urls %s after %d ms (%s)", url,
-          timeDelta, lastPageStartedUrl);
+          timeDelta / 1000000, lastPageStartedUrl);
       if (timeDelta > 0)
       {
         loadTimeJsOnLoad = timeDelta;
@@ -260,9 +269,9 @@ public class WebViewLoadPerformanceUrlUsingJsTests
       {
         return;
       }
-      final long timeDelta = System.currentTimeMillis() - startTimeValue;
+      final long timeDelta = System.nanoTime() - startTimeValue;
       Timber.d("UsingJs: onPageFinished called for urls %s after %d ms (%s)", url,
-          timeDelta, lastPageStartedUrl);
+          timeDelta / 1000000, lastPageStartedUrl);
       if (timeDelta > 0)
       {
         loadTimeOnPageFinishedLoading = timeDelta;
@@ -286,7 +295,7 @@ public class WebViewLoadPerformanceUrlUsingJsTests
       AdblockHelper
           .get()
           .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
-          .retain(true);
+          .getProvider().retain(true);
     }
   }
 
@@ -343,54 +352,6 @@ public class WebViewLoadPerformanceUrlUsingJsTests
         webViewClient.setupJsCallbacks();
       }
     });
-    assertTrue("Page load failed repeatedly and unexpectedly: " + url,
-        urlFailures.get(url) <= MAX_FAILURES_PER_URL);
-
-    long totalFailures = 0;
-    for (long v : urlFailures.values())
-    {
-      totalFailures += v;
-    }
-    assertTrue("Too many load failures", totalFailures <= MAX_FAILURES_TOTAL);
-  }
-
-  /**
-   * Notes for QA (mostly).
-   * Before running the tests one needs to install the test package and main application Android
-   * package files (two separate .apk files) to current Android device or emulator. Currently those are:
-   * - ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
-   * - ./adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
-   * <p>
-   * To run both test from CLI using ADB run:
-   * adb shell am instrument -w -e \
-   * class org.adblockplus.libadblockplus.android.webviewapp.test.WebViewEspressoTest \
-   * org.adblockplus.libadblockplus.android.webviewapp.test/androidx.test.runner.AndroidJUnitRunner
-   * <p>
-   * Tu run specific test append #<testName>, f.e.:
-   * adb shell am instrument -w -e \
-   * *  class org.adblockplus.libadblockplus.android.webviewapp.test.WebViewEspressoTest#testLoadTimeInAdblockWebView \
-   * *  org.adblockplus.libadblockplus.android.webviewapp.test/androidx.test.runner.AndroidJUnitRunner
-   */
-
-  @LargeTest
-  @PerformanceTest
-  @Test
-  public void testLoadTime() throws InterruptedException, IOException
-  {
-    clearErrors();
-    int repetitionCount = 0;
-    while (repetitionCount++ < TEST_ITERATIONS)
-    {
-      Timber.d("UsingJs: running WebView iteration " + repetitionCount);
-      commonTestLogic(webViewTestSuit,
-          webViewResultsOnPageFinished, webViewResultsJsOnLoad);
-
-      Timber.d("UsingJs: running AdblockWebView iteration " + repetitionCount);
-      commonTestLogic(adblockViewTestSuit,
-          adblockWebViewResultsOnPageFinished, adblockWebViewResultsJsOnLoad);
-    }
-
-    recordResults();
   }
 
   private void commonTestLogic(final WebViewTestSuit<?> testSuit,
@@ -436,36 +397,25 @@ public class WebViewLoadPerformanceUrlUsingJsTests
     }
   }
 
-  private void recordResults() throws IOException
+  @Test
+  public void testLoadTime() throws InterruptedException
   {
-    Timber.d("WebView Results:");
-    Timber.d("Total time: onPageFinished - %d, JS onLoad - %d ",
-        webViewResultsOnPageFinished.getTotalTime(), webViewResultsJsOnLoad.getTotalTime());
-    Timber.d("AdblockWebView Results:");
-    Timber.d("Total time: onPageFinished - %d, JS onLoad - %d ",
-        adblockWebViewResultsOnPageFinished.getTotalTime(),
-        adblockWebViewResultsJsOnLoad.getTotalTime());
-    return;
+    clearErrors();
+    int repetitionCount = 0;
+    while (repetitionCount++ < TEST_ITERATIONS)
+    {
+      Timber.d("UsingJs: running WebView iteration " + repetitionCount);
+      commonTestLogic(webViewTestSuit,
+          webViewResultsOnPageFinished, webViewResultsJsOnLoad);
 
-// The code below is commented out, but should be enabled when switching the test on.
+      Timber.d("UsingJs: running AdblockWebView iteration " + repetitionCount);
+      commonTestLogic(adblockViewTestSuit,
+          adblockWebViewResultsOnPageFinished, adblockWebViewResultsJsOnLoad);
+    }
 
-//    StringBuilder sb = new StringBuilder();
-//
-//    sb.append("AVERAGE_ONPAGEFINISHED_TIME_WV " +
-//        webViewResultsOnPageFinished.getTotalTime() + "\n");
-//    sb.append("AVERAGE_ONLOAD_TIME_WV " + webViewResultsJsOnLoad.getTotalTime() + "\n");
-//    sb.append("AVERAGE_ONPAGEFINISHED_TIME_AWV " +
-//        adblockWebViewResultsOnPageFinished.getTotalTime() + "\n");
-//    sb.append("AVERAGE_ONLOAD_TIME_AWV " + adblockWebViewResultsJsOnLoad.getTotalTime() + "\n");
-//
-//    File file = new File("/storage/emulated/0/Download/pageload_benchmark.metrics");
-//    if (!file.exists())
-//    {
-//      file.createNewFile();
-//    }
-//    assertTrue(file.exists());
-//    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-//    writer.write(sb.toString());
-//    writer.close();
+    webViewResultsJsOnLoad.reportData("WebViewJS", urlFailures);
+    webViewResultsOnPageFinished.reportData("WebViewNative", urlFailures);
+    adblockWebViewResultsJsOnLoad.reportData("AdblockWebViewJS", urlFailures);
+    adblockWebViewResultsOnPageFinished.reportData("AdblockWebViewNative", urlFailures);
   }
 }
