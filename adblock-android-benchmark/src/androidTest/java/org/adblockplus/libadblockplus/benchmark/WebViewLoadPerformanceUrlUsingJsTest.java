@@ -26,6 +26,7 @@ import android.webkit.WebViewClient;
 
 import androidx.benchmark.BenchmarkState;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
@@ -398,6 +399,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
   }
 
   @Test
+  @LargeTest
   public void testLoadTime() throws InterruptedException
   {
     clearErrors();
