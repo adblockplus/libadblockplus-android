@@ -6,8 +6,13 @@
     <!-- Important: disable debuggable for accurate performance results -->
     <application
         android:debuggable="false"
+        android:requestLegacyExternalStorage="true"
         tools:ignore="HardcodedDebugMode"
-        tools:replace="android:debuggable"/>
+        tools:replace="android:debuggable">
+
+        <activity android:name=".WebViewActivity"/>
+        
+    </application>
 
     <!-- sd card -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

@@ -160,7 +160,7 @@ class Worksheet:
         self.worksheet.append_table(cell_values, overwrite=False)
 
     def __get_value_keys(self):
-        cells = self.worksheet.range('A1:Z1', 'cells')
+        cells = self.worksheet.range('A1:ZZ1', 'cells')
         headers = []
         for cell in cells[0]:
             if not cell.value == '':
@@ -187,6 +187,10 @@ class Worksheet:
                 i += 1
 
         if add_keys:
+            new_cols = len(raw_keys) + len(add_keys) - self.worksheet.cols
+            if new_cols > 0:
+                self.worksheet.add_cols(new_cols)
+                print("Added {} columns".format(new_cols))
             self.worksheet.update_values(cell_list=add_keys)
 
 
