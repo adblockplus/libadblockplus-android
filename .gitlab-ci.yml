@@ -212,7 +212,6 @@ benchmark:
   only:
     - schedules
     - web
-    - tags
 
 .publish_template: &publish_template
   stage: publish
