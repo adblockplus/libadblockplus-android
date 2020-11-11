@@ -43,7 +43,7 @@ build_dependencies:
 gradle_unit_tests:
   stage: unit_test
   script:
-    - echo $CI_PIPELINE_SOURCE
+    - echo $CI_COMMIT_TAG
     - echo $CI_PIPELINE_SOURCE
     - ./gradlew test
   artifacts:
@@ -212,6 +212,7 @@ benchmark:
   only:
     - schedules
     - web
+    - tags
 
 .publish_template: &publish_template
   stage: publish
