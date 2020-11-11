@@ -203,6 +203,9 @@ benchmark:
     - ./tools/memory_benchmark.py
     - ./tools/publish_benchmark.py
   after_script:
+    # it will only trigger rolling window job
+    # if it is a scheduled job or is a tag job (release)
+    - ./tools/trigger_past_jobs.py
     - adb shell reboot
   artifacts:
     paths:
@@ -213,6 +216,7 @@ benchmark:
   only:
     - schedules
     - web
+    - tags
 
 .publish_template: &publish_template
   stage: publish
