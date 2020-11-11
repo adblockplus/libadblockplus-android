@@ -43,6 +43,8 @@ build_dependencies:
 gradle_unit_tests:
   stage: unit_test
   script:
+    - echo $CI_PIPELINE_SOURCE
+    - echo $CI_PIPELINE_SOURCE
     - ./gradlew test
   artifacts:
     reports:
@@ -194,8 +196,6 @@ benchmark:
     # for publish benchmark
     - pip3 install pygsheets
   script:
-    - echo $CI_PIPELINE_SOURCE
-    - echo $CI_PIPELINE_SOURCE
     - export BENCHMARK_GSHEETS_TOKEN_FILE_DIR=$(pwd)
     - cp $BENCHMARK_GSHEETS_TOKEN_FILE ./sheets.googleapis.com-python.json
     - ./tools/performance_benchmark.py
