@@ -25,6 +25,7 @@ private object Versions {
 @Suppress("unused")
 object Deps {
     const val androidx_benchmark_gradle_plugin = "androidx.benchmark:benchmark-gradle-plugin:${Versions.AndroidX.benchmark}"
+    const val androidx_benchmark_common = "androidx.benchmark:benchmark-common:${Versions.AndroidX.benchmark}"
     const val androidx_benchmark_junit4 = "androidx.benchmark:benchmark-junit4:${Versions.AndroidX.benchmark}"
     const val androidx_multidex = "androidx.multidex:multidex:${Versions.AndroidX.multidex}"
     const val androidx_test_core = "androidx.test:core:${Versions.AndroidX.test}"

@@ -30,20 +30,17 @@ import org.adblockplus.libadblockplus.android.AndroidHttpClient
 import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper
 import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper.Storage
 import org.adblockplus.libadblockplus.android.TimberLogSystem
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
 import timber.log.Timber
-import timber.log.Timber.DebugTree
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.system.measureTimeMillis
 
-fun randomDirectory() = File.createTempFile("adblock", ".tmpdir").also {
+fun randomDirectory():File = File.createTempFile("adblock", ".tmpdir").also {
     it.delete()
     it.mkdirs()
 }

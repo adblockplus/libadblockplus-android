@@ -6,7 +6,7 @@ android {
   compileSdkVersion Config.compileSdkVersion
 
   defaultConfig {
-    minSdkVersion Config.minSdkVersion
+    minSdkVersion Config.webView_minSdkVersion
     targetSdkVersion Config.targetSdkVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
     // warning: keep in sync with ".gitlab-ci.yml"
@@ -31,16 +31,29 @@ android {
   }
 
   sourceSets {
-    androidTest.java.srcDirs += 'src/androidTest/kotlin'
+    androidTest.java.srcDirs += 'src/androidTest/java'
   }
 }
 
 dependencies {
-  androidTestImplementation project(":adblock-android")
-  androidTestImplementation Deps.kotlin_stdlib
-  androidTestImplementation Deps.androidx_benchmark_junit4
-  androidTestImplementation Deps.junit4
-  androidTestImplementation Deps.androidx_test_core
-  androidTestImplementation Deps.androidx_test_runner
-  androidTestImplementation Deps.androidx_test_ext_junit
+  api project(':adblock-android-settings')
+  api project(':adblock-android-webview')
+  androidTestImplementation Deps.androidx_test_espresso_core
+  androidTestImplementation Deps.androidx_test_espresso_web
+  androidTestImplementation Deps.mockito_core
+  androidTestImplementation Deps.mockito_android
+  androidTestImplementation Deps.mockito_kotlin
+  androidTestImplementation Deps.timber
+  androidTestImplementation Deps.wiremock_standalone
+  androidTestImplementation project(':adblock-android')
+  // All of the following could be androidTestImplementation, but Android Studio 4.1 doesn't
+  // navigate dependencies good enough. So it's left as is because it's a non-production module.
+  implementation Deps.kotlin_stdlib
+  implementation Deps.androidx_benchmark_junit4
+  implementation Deps.androidx_test_core
+  implementation Deps.androidx_test_runner
+  implementation Deps.androidx_test_ext_junit
+  implementation Deps.androidx_benchmark_common
+  implementation Deps.androidx_benchmark_junit4
+  implementation Deps.junit4
 }
