@@ -159,8 +159,11 @@ class Worksheet:
         cell_values.append(dataset.date_time.isoformat()[:-3] + 'Z')
 
         cell_values.append(dataset.device)
+
         if is_release:
             cell_values.append("Yes")
+        else:
+            cell_values.append("No")
 
         for key in self.__get_value_keys()[len(WORKSHEET_FIXED_HEADERS_LIST):]:
             cell_values.append(dataset.values[key] if key in dataset.values else '')

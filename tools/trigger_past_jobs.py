@@ -53,6 +53,8 @@ def get_trigger_tags(tags):
         if tag >= INIT_VERSION_VERSION:
             if tag in map_to_backport_branch:
                 trigger_tags.append(map_to_backport_branch[tag])
+            else:
+                trigger_tags.append(tag)
     return trigger_tags
 
 def start_jobs(token, tags):
@@ -68,8 +70,8 @@ def main():
     start_jobs(TOKEN, tags)
 
 # avoid never ending loops
-# PIPELINE_SOURCE will be set to "pipeline in case of it being triggered"
-# this if breaks never ending loops
-# and it should only start when there is a tag release job or scheduled
-if PIPELINE_SOURCE == "schedule" or is_tag_job:
+# this will trigger other rolling window jobs if it is either a scheduled job
+# or a release job. But it must not be a pipeline (triggered)
+# this way it will start never ending loops
+if (PIPELINE_SOURCE == "schedule" or is_tag_job) and PIPELINE_SOURCE != "pipeline":
     main()
