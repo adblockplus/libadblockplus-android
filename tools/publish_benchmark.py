@@ -30,6 +30,11 @@ import json
 BENCHMARK_GSHEETS_SPREADSHEET_ID = os.getenv('BENCHMARK_GSHEETS_SPREADSHEET_ID')
 BENCHMARK_GSHEETS_CREDENTIALS_FILE = os.getenv('BENCHMARK_GSHEETS_CREDENTIALS_FILE')
 BENCHMARK_GSHEETS_TOKEN_FILE_DIR = os.getenv('BENCHMARK_GSHEETS_TOKEN_FILE_DIR')
+CI_COMMIT_TAG = os.getenv('CI_COMMIT_TAG', "")
+
+# when it is release we launch a TAG job
+# so it should be empty when it is not a release
+is_release = (CI_COMMIT_TAG != "")
 
 # where performance benchmark located
 BENCHMARK_PULL_DIR = os.getenv("BENCHMARK_PULL_DIR", \
@@ -38,7 +43,7 @@ BENCHMARK_PULL_DIR = os.getenv("BENCHMARK_PULL_DIR", \
 CI_PROJECT_URL = os.getenv('CI_PROJECT_URL')
 
 OUTPUT_WORKSHEET_NAME = 'Data'
-WORKSHEET_FIXED_HEADERS_LIST = ["Branch/Tag", "Commit", "Pipeline", "Date/Time", "Device"]
+WORKSHEET_FIXED_HEADERS_LIST = ["Branch/Tag", "Commit", "Pipeline", "Date/Time", "Device", "Release"]
 
 GITLAB_BRANCH_FOLDER = '/-/tree/'
 GITLAB_TAG_FOLDER = '/-/tags/'
@@ -152,7 +157,12 @@ class Worksheet:
             CI_PROJECT_URL + GITLAB_PIPELINE_FOLDER + dataset.pipeline))
 
         cell_values.append(dataset.date_time.isoformat()[:-3] + 'Z')
+
         cell_values.append(dataset.device)
+        if is_release:
+            cell_values.append("Yes")
+        else:
+            cell_values.append("No")
 
         for key in self.__get_value_keys()[len(WORKSHEET_FIXED_HEADERS_LIST):]:
             cell_values.append(dataset.values[key] if key in dataset.values else '')

@@ -91,6 +91,7 @@ build_libadblockplus-android:all-and-test-release:
   only:
     - schedules
     - web
+    - tags
 
 # The remaining build_* jobs are only built on rc branches
 # They are run only to test that the build works, we dont use the artefacts
@@ -216,6 +217,7 @@ benchmark:
   only:
     - schedules
     - web
+    - tags
 
 .publish_template: &publish_template
   stage: publish
