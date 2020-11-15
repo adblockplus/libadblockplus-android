@@ -191,6 +191,7 @@ class FilterEngineLoadTimeBenchmark {
     }
 
     @Test
+    @LargeTest    
     fun measureNotTheFirstTime() {
         // "not the first time" means subscriptions data is already downloaded and saved on SD
 
