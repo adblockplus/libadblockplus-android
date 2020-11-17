@@ -164,6 +164,11 @@ class Worksheet:
         else:
             cell_values.append("No")
 
+        if is_release:
+            cell_values.append("Yes")
+        else:
+            cell_values.append("No")
+
         for key in self.__get_value_keys()[len(WORKSHEET_FIXED_HEADERS_LIST):]:
             cell_values.append(dataset.values[key] if key in dataset.values else '')
 
