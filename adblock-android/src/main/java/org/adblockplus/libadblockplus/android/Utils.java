@@ -198,7 +198,7 @@ public final class Utils
     {
       throw new IllegalArgumentException("Url can't be null");
     }
-    return new URI(url).getHost();
+    return new URI(getStringBeforeChar(url, '?')).getHost();
   }
 
   public static boolean isFirstPartyCookie(final String documentUrl, final String requestUrl, final String cookieString)
