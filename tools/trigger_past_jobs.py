@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This script will launch up to 5 benchmark jobs of the last versions to gather
 benchmark data.
@@ -5,7 +6,6 @@ benchmark data.
 It checks if the release is an old version if so, then there are 3 releases
 backported to have benchmark as well.
 """
-#!/usr/bin/env python3
 import re
 import subprocess
 import os
