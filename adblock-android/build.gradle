@@ -1,6 +1,12 @@
+apply from: "$rootDir/buildSrc/deploy.gradle"
+
+configureDeploy(this)
+
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'kotlin-android'
+
+project.ext."libraryDesc" = "An Android library that provides the core functionality of" +
+    " Adblock Plus."
 
 private String getNativeLibraryName() {
   def libraryName = System.getenv('LIBABP_SHARED_LIBRARY_NAME')
@@ -100,20 +106,6 @@ android {
     }
   }
 
-  // DP-1771 was created as the bintray-release plugin is deprecated
-  publish {
-    userOrg = Bintray.userOrg
-    groupId = Bintray.groupId
-    artifactId = 'adblock-android'
-    publishVersion = Config.moduleVersion
-    licences = Bintray.licences
-    desc = 'An Android library that provides the core functionality of Adblock Plus.'
-    website = Bintray.website
-    issueTracker = Bintray.issueTracker
-    repository = Bintray.repository
-    publications = ['abi_allRelease']
-  }
-
   def sharedV8LibFiles = System.getenv('SHARED_V8_LIB_FILENAMES')
   if (sharedV8LibFiles != null) {
     def sharedV8LibFilesSet = []
@@ -156,5 +148,10 @@ dependencies {
 afterEvaluate {
   tasks.withType(PublishToMavenLocal) {
     it.enabled = it.name.contains("Abi_allRelease")
+    def androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+    tasks.withType(Javadoc).all {
+      classpath += project.files(androidJar)
+      failOnError false
+    }
   }
 }

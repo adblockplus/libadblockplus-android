@@ -1,6 +1,12 @@
+apply from: "$rootDir/buildSrc/deploy.gradle"
+
+configureDeploy(this)
+
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'kotlin-android'
+
+project.ext."libraryDesc" = "An Android library that provides a configuration interface for" +
+    " Adblock Plus."
 
 android {
   compileSdkVersion Config.compileSdkVersion
@@ -35,25 +41,4 @@ dependencies {
   androidTestImplementation Deps.androidx_test_core
   androidTestImplementation Deps.androidx_test_runner
   androidTestImplementation Deps.androidx_test_ext_junit
-}
-
-// Add "android.jar" to javadoc plugin classpath (See DP-612)
-afterEvaluate {
-  def androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-  tasks.withType(Javadoc).all {
-    classpath += project.files(androidJar)
-  }
-}
-
-// DP-1771 was created as the bintray-release plugin is deprecated
-publish {
-  userOrg = Bintray.userOrg
-  groupId = Bintray.groupId
-  artifactId = 'adblock-android-settings'
-  publishVersion = Config.moduleVersion
-  licences = Bintray.licences
-  desc = 'An Android library that provides a configuration interface for Adblock Plus.'
-  website = Bintray.website
-  issueTracker = Bintray.issueTracker
-  repository = Bintray.repository
 }

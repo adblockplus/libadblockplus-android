@@ -1,6 +1,12 @@
+apply from: "$rootDir/buildSrc/deploy.gradle"
+
+configureDeploy(this)
+
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'kotlin-android'
+
+project.ext."libraryDesc" = "An Android library that provides a WebView component with" +
+    " Adblock Plus integrated."
 
 android {
   compileSdkVersion Config.compileSdkVersion
@@ -38,17 +44,4 @@ dependencies {
   androidTestImplementation Deps.mockito_kotlin
   androidTestImplementation Deps.wiremock_standalone
   androidTestImplementation project(path: ':adblock-android-settings')
-}
-
-// DP-1771 was created as the bintray-release plugin is deprecated
-publish {
-  userOrg = Bintray.userOrg
-  groupId = Bintray.groupId
-  artifactId = 'adblock-android-webview'
-  publishVersion = Config.moduleVersion
-  licences = Bintray.licences
-  desc = 'An Android library that provides a WebView component with Adblock Plus integrated.'
-  website = Bintray.website
-  issueTracker = Bintray.issueTracker
-  repository = Bintray.repository
 }
