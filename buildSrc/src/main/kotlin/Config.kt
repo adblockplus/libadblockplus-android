@@ -1,7 +1,7 @@
 object Config {
     const val moduleVersion = "4.1.1"
 
-    const val buildToolsVersion = "28.0.3"
+    const val buildToolsVersion = "30.0.2"
     const val compileSdkVersion = 29
     const val minSdkVersion = 16
     const val webView_minSdkVersion = 21
