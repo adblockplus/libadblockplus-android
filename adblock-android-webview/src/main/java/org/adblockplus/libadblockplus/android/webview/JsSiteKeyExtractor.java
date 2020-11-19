@@ -143,12 +143,19 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
       return false;
     }
 
+    final CountDownLatch countDownLatch = latch;
+    if (countDownLatch == null)
+    {
+      Timber.w("waitForSitekeyCheck() called for `%s` with `latch == null`!",
+          request.getUrl().toString());
+      return false;
+    }
     // waitSitekeyCheck is used only blocking the network thread while
     // the key verification is ongoing
     Timber.d("Holding request %s", request.getUrl().toString());
     try
     {
-      latch.await(RESOURCE_HOLD_MAX_TIME_MS, TimeUnit.MILLISECONDS);
+      countDownLatch.await(RESOURCE_HOLD_MAX_TIME_MS, TimeUnit.MILLISECONDS);
       Timber.d("Un-holding request %s", request.getUrl().toString());
     }
     catch (final InterruptedException error)
@@ -233,9 +240,10 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
       }
       // it its null, then we are faster then
       // the call to `waitForSitekeyCheck` and its safe to ignore
-      if (extractor.latch != null)
+      final CountDownLatch countDownLatch = extractor.latch;
+      if (countDownLatch != null)
       {
-        extractor.latch.countDown();
+        countDownLatch.countDown();
       }
       extractor.isSiteKeyProcessingFinished.set(true);
     }
@@ -251,9 +259,10 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
       // this means that the DOM is ready
       // but the html site key does not exist
       // and no reason to wait more
-      if (extractor.latch != null)
+      final CountDownLatch countDownLatch = extractor.latch;
+      if (countDownLatch != null)
       {
-        extractor.latch.countDown();
+        countDownLatch.countDown();
       }
       // collecting the url
       extractor.isSiteKeyProcessingFinished.set(true);
