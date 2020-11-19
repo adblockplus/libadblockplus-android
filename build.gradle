@@ -9,9 +9,9 @@ buildscript {
 
   dependencies {
     classpath Deps.tools_android_gradle_plugin
+    classpath Deps.tools_bintray_gradle_plugin
     classpath Deps.tools_kotlin_gradle_plugin
     classpath Deps.androidx_benchmark_gradle_plugin
-    classpath Deps.novoda_bintray_release
   }
 }
 

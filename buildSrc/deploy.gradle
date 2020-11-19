@@ -1,0 +1,117 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies {
+        classpath Deps.tools_bintray_gradle_plugin
+    }
+}
+
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+def projectName = project.hasProperty('libraryName') ? project.libraryName : project.name
+
+ext.configureDeploy = { context ->
+
+    context.afterEvaluate {
+
+        task androidJavadocs(type: Javadoc) {
+            source = android.sourceSets.main.java.srcDirs
+            classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+            android.libraryVariants.all { variant ->
+                if (variant.name == 'release') {
+                    owner.classpath += variant.javaCompileProvider.get().classpath
+                }
+            }
+            exclude '**/R.java', '**/R.html', '**/R.*.html', '**/index.html'
+            failOnError false
+        }
+
+        task sourcesJar(type: Jar) {
+            from android.sourceSets.main.java.srcDirs
+            archiveClassifier.set("sources")
+        }
+
+        task javadocsJar(type: Jar, dependsOn: androidJavadocs) {
+            from androidJavadocs.destinationDir
+            archiveClassifier.set('javadoc')
+        }
+
+        uploadArchives {
+            repositories.mavenDeployer {
+                pom.groupId = projectName
+                pom.artifactId = project.archivesBaseName
+                pom.version = Config.moduleVersion
+                repository(url: Bintray.repository)
+            }
+        }
+
+        bintray {
+            user = project.hasProperty('bintrayUser') ? project.bintrayUser
+                : System.getenv('BINTRAY_USERNAME')
+            key = project.hasProperty('bintrayKey') ? project.bintrayKey
+                : System.getenv('BINTRAY_KEY')
+            dryRun = project.hasProperty('dryRun') ? project.dryRun.toBoolean() : true
+            publish = true
+            override = true
+            publications = ['artifactPublication']
+            pkg {
+                desc = project.libraryDesc
+                issueTrackerUrl = Bintray.issueTracker
+                licenses = Bintray.licences
+                name = projectName
+                repo = 'maven'
+                userOrg = Bintray.userOrg
+                vcsUrl = Bintray.repository
+                websiteUrl = Bintray.website
+                version {
+                    name = Config.moduleVersion
+                    vcsTag = Config.moduleVersion
+                }
+            }
+        }
+
+        publishing {
+            publications {
+                artifactPublication(MavenPublication) {
+                    // Define this explicitly if using implementation or api configurations
+                    pom.withXml {
+                        def dependenciesNode = asNode().getAt('dependencies')[0] ?: asNode()
+                            .appendNode('dependencies')
+
+                        if (projectName != 'adblock-android') {
+                            // Maven can't pick up adblock-android dependency right, adding manually
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', 'org.adblockplus')
+                            dependencyNode.appendNode('artifactId', 'adblock-android')
+                            dependencyNode.appendNode('version', Config.moduleVersion)
+                        }
+
+                        // Iterate over the implementation dependencies, we don't want the test ones
+                        configurations.implementation.allDependencies.each {
+                            if (it.name != 'unspecified' && it.version != 'unspecified') {
+                                def dependencyNode = dependenciesNode.appendNode('dependency')
+                                dependencyNode.appendNode('groupId', it.group)
+                                dependencyNode.appendNode('artifactId', it.name)
+                                dependencyNode.appendNode('version', it.version)
+                            }
+                        }
+                    }
+                    def postfix = projectName == 'adblock-android' ? "-abi_all" : ""
+                    artifact("$buildDir/outputs/aar/" + projectName + postfix + "-release.aar")
+                    artifact(sourcesJar)
+                    artifact(javadocsJar)
+                    groupId Bintray.groupId
+                    artifactId projectName
+                    version Config.moduleVersion
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 private object Versions {
     const val android_gradle_plugin = "3.5.3"
+    const val bintray_gradle_plugin = "1.8.5"
     const val kotlin = "1.3.72"
     const val junit4 = "4.13.1"
     const val mockito = "2.28.2"
@@ -7,9 +8,6 @@ private object Versions {
     const val timber = "4.7.1"
     const val wiremock = "2.27.2"
     const val android_material = "1.2.1"
-
-    @Deprecated("This doesn't work with the latest Android Gradle Plugin")
-    const val bintray_release = "0.9.1"
 
     object AndroidX {
         const val benchmark = "1.0.0"
@@ -43,13 +41,11 @@ object Deps {
     const val timber = "com.jakewharton.timber:timber:${Versions.timber}"
 
     const val tools_android_gradle_plugin = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
+    const val tools_bintray_gradle_plugin = "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintray_gradle_plugin}"
     const val tools_kotlin_gradle_plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
 
     const val wiremock_standalone = "com.github.tomakehurst:wiremock-standalone:${Versions.wiremock}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.AndroidX.appcompat}"
     const val androidx_preference = "androidx.preference:preference:${Versions.AndroidX.preference}"
     const val android_material = "com.google.android.material:material:${Versions.android_material}"
-
-    @Deprecated("This doesn't work with the latest Android Gradle Plugin")
-    const val novoda_bintray_release = "com.novoda:bintray-release:${Versions.bintray_release}"
 }
