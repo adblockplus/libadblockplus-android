@@ -73,7 +73,11 @@ def main(args):
     print("Running memory benchmark tests...")
 
     minDist_min_AA_sum = 0
+    minDist_min_AA_min = None
+    minDist_min_AA_max = None
     full_easy_min_AA_sum = 0
+    full_easy_min_AA_min = None
+    full_easy_min_AA_max = None
 
     for i in range(0, NUM_TESTS):
         run_command("mkdir -p {}".format(OUTPUT_LOCATION))
@@ -98,8 +102,19 @@ def main(args):
             run_command("{} pull /storage/emulated/0/Download/memory_benchmark.csv {}/{}_min_AA.csv"
                     .format(adb_device, OUTPUT_LOCATION, test))
 
-        minDist_min_AA_sum += int(get_total_memory("MemoryBenchmark_minDist_min_AA.csv"))
-        full_easy_min_AA_sum += int(get_total_memory("MemoryBenchmark_full_easy_min_AA.csv"))
+        minDist_min_AA = int(get_total_memory("MemoryBenchmark_minDist_min_AA.csv"))
+        minDist_min_AA_sum += minDist_min_AA
+        if minDist_min_AA_min is None or minDist_min_AA < minDist_min_AA_min:
+            minDist_min_AA_min = minDist_min_AA
+        if minDist_min_AA_max is None or minDist_min_AA > minDist_min_AA_max:
+            minDist_min_AA_max = minDist_min_AA
+
+        full_easy_min_AA = int(get_total_memory("MemoryBenchmark_full_easy_min_AA.csv"))
+        full_easy_min_AA_sum += full_easy_min_AA
+        if full_easy_min_AA_min is None or full_easy_min_AA < full_easy_min_AA_min:
+            full_easy_min_AA_min = full_easy_min_AA
+        if full_easy_min_AA_max is None or full_easy_min_AA > full_easy_min_AA_max:
+            full_easy_min_AA_max = full_easy_min_AA
 
     run_command("{} logcat -d > {}/logcat.log".format(adb_device, OUTPUT_LOCATION))
     run_command("{} logcat -d -b main > {}/logcat_main.log".format(adb_device, OUTPUT_LOCATION))
@@ -110,7 +125,13 @@ def main(args):
 
     metrics = open("metrics.txt", "w")
     metrics.write("AVERAGE_MIN_EASY_MIN_AA_KB {}\n".format(minDist_min_AA_avarage))
-    metrics.write("AVERAGE_FULL_EASY_MIN_AA_KB {}".format(full_easy_min_AA_sum_avarage))
+    metrics.write("AVERAGE_FULL_EASY_MIN_AA_KB {}\n".format(full_easy_min_AA_sum_avarage))
+
+    metrics.write("MIN_MIN_EASY_MIN_AA_KB {}\n".format(minDist_min_AA_min))
+    metrics.write("MAX_MIN_EASY_MIN_AA_KB {}\n".format(minDist_min_AA_max))
+
+    metrics.write("MIN_FULL_EASY_MIN_AA_KB {}\n".format(full_easy_min_AA_min))
+    metrics.write("MAX_FULL_EASY_MIN_AA_KB {}".format(full_easy_min_AA_max))
     metrics.close()
 
 
