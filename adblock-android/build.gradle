@@ -1,12 +1,5 @@
-apply from: "$rootDir/buildSrc/deploy.gradle"
-
-configureDeploy(this)
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-
-project.ext."libraryDesc" = "An Android library that provides the core functionality of" +
-    " Adblock Plus."
 
 private String getNativeLibraryName() {
   def libraryName = System.getenv('LIBABP_SHARED_LIBRARY_NAME')
@@ -129,6 +122,12 @@ android {
 
   useLibrary 'android.test.runner'
   useLibrary 'android.test.base'
+}
+
+bintray {
+  pkg {
+    desc="An Android library that provides the core functionality of Adblock Plus."
+  }
 }
 
 dependencies {

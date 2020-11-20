@@ -1,12 +1,5 @@
-apply from: "$rootDir/buildSrc/deploy.gradle"
-
-configureDeploy(this)
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-
-project.ext."libraryDesc" = "An Android library that provides a WebView component with" +
-    " Adblock Plus integrated."
 
 android {
   compileSdkVersion Config.compileSdkVersion
@@ -24,6 +17,12 @@ android {
   sourceSets {
     test.java.srcDirs += 'src/test/kotlin'
     androidTest.java.srcDirs += 'src/androidTest/kotlin'
+  }
+}
+
+bintray {
+  pkg {
+    desc="An Android library that provides a WebView component with Adblock Plus integrated."
   }
 }
 
