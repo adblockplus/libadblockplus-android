@@ -27,7 +27,7 @@ android {
     applicationId appId
     minSdkVersion Config.webView_minSdkVersion
     targetSdkVersion Config.targetSdkVersion
-    versionCode 46
+    versionCode 47
     versionName = Config.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
 
