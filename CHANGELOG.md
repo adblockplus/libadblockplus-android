@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.1.2] - 2020-11-23 - [!414](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/414)
 ### Fixed
-- Added null check to waitForSitekeyCheck(). Improved other null checks to avoid race condition between the null check and use by capturing local references. [!411](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/411)
+- Crash in JsSiteKeyExtractor.waitForSitekeyCheck [!411](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/411)
 
 ## [4.1.1] - 2020-10-26 - [!379](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/379)
 ### Fixed
