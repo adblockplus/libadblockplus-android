@@ -42,8 +42,8 @@ In general case it's suggested to use the most recent version.
 #### Requirements
 
 * [The Android SDK](https://developer.android.com/sdk)
-* Android SDK Build tools 28.0.3
-* [The Android NDK, 16b](https://developer.android.com/ndk)
+* Android SDK Build tools 30.0.2
+* [The Android NDK, 16b](https://developer.android.com/ndk/downloads/older_releases#ndk-16b-downloads)
 
 Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
 
