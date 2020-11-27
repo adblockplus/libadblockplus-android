@@ -164,11 +164,6 @@ class Worksheet:
         else:
             cell_values.append("No")
 
-        if is_release:
-            cell_values.append("Yes")
-        else:
-            cell_values.append("No")
-
         for key in self.__get_value_keys()[len(WORKSHEET_FIXED_HEADERS_LIST):]:
             cell_values.append(dataset.values[key] if key in dataset.values else '')
 
@@ -260,7 +255,7 @@ def read_memory_benchmark():
     values = {}
     for line in lines:
         splittedLine = line.split(" ")
-        if (len(splittedLine) != 2):
+        if (len(splittedLine) < 2):
             print("memory metrics file corrupt")
             os._exit(1)
         values[splittedLine[0]] = int(float(splittedLine[1]))

@@ -50,9 +50,114 @@ class MockStorage : AndroidHttpClientResourceWrapper.Storage {
     }
 }
 
-abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListResourceID: Int) {
+abstract class BenchmarkMemory() {
     @get:Rule
     val folder = TemporaryFolder()
+    val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
+    init {
+        if (Timber.treeCount() == 0) {
+            Timber.plant(DebugTree())
+        }
+    }
+
+    @LargeTest
+    @Test
+    abstract fun benchmark();
+
+    protected fun stampMemory(): MutableMap<String, String> {
+        // calls gc to make results less volatile
+        System.gc()
+        val memInfoVar = Debug.MemoryInfo()
+        Debug.getMemoryInfo(memInfoVar)
+        // if using android studio profiler the total does not match the total pss,
+        // the total in android studio is the total pss without private other and system accounted
+        // for more information please read.
+        // https://developer.android.com/reference/android/os/Debug.MemoryInfo
+        val totalAccountedInAndroidStudio =
+                memInfoVar.totalPss -
+                        memInfoVar.getMemoryStat("summary.private-other").toInt() -
+                        memInfoVar.getMemoryStat("summary.system").toInt()
+
+        return mutableMapOf("TOTAL PSS (KB)" to memInfoVar.totalPss.toString(),
+                "TOTAL_ANDROID_STUDIO (KB) " to totalAccountedInAndroidStudio.toString(),
+                "CODE (KB) " to memInfoVar.getMemoryStat("summary.code"),
+                "STACK (KB) " to memInfoVar.getMemoryStat("summary.stack"),
+                "GRAPHICS (KB) " to memInfoVar.getMemoryStat("summary.graphics"),
+                "JAVA-HEAP(KB) " to memInfoVar.getMemoryStat("summary.java-heap"),
+                "NATIVE-HEAP(KB) " to memInfoVar.getMemoryStat("summary.native-heap"))
+    }
+
+    fun writeResultsOnFile(results: Map<String, Map<String, String>>) {
+
+        var hasPrintedHeader = false
+        val output = StringBuilder()
+        val memoryValuesNames = arrayListOf<String>()
+        for (stage in results) {
+            if (!hasPrintedHeader) {
+                output.append("STAGE , ")
+                for (memoryValue in stage.value) {
+                    memoryValuesNames.add(memoryValue.key)
+                    output.append(memoryValue.key)
+                    output.append(", ")
+                }
+                hasPrintedHeader = true
+                output.append(System.lineSeparator())
+            }
+            output.append(stage.key)
+            for (memoryValue in memoryValuesNames) {
+                output.append(", ")
+                output.append(stage.value[memoryValue])
+            }
+            output.append(System.lineSeparator())
+        }
+        // hardcoded because it is the same folder hardcoded in the host script
+        // this is for readability.
+        val file = File("/storage/emulated/0/Download/memory_benchmark.csv")
+        if (!file.exists()) {
+            file.createNewFile()
+        }
+        assertTrue(file.exists())
+        file.writeText(output.toString())
+    }
+}
+
+/*
+    Benchmarks memory of system webview,
+    this is necessary to compare to our or solution.
+ */
+class SystemWebViewBenchmark() : BenchmarkMemory() {
+    override fun benchmark() {
+        var output = mutableMapOf<String, MutableMap<String, String>>()
+        output["INIT STAGE"] = stampMemory()
+
+        val latch = CountDownLatch(1)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val webview = WebView(context)
+
+            webview.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    latch.countDown()
+                    super.onPageFinished(view, url)
+                }
+            }
+            webview.loadUrl("about:blank")
+        }
+
+        assertTrue(latch.await(1, TimeUnit.MINUTES))
+        output["FIRST WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory()
+        // added last stage the cool off period, looking at some measurements throughout the test
+        // it continues to change the memory usage after the loading of webview there is a pattern
+        // of a short rise and fall after the 4 seconds mark.
+        SystemClock.sleep(COOL_OFF_DURATION_MILLI)
+        output["5 seconds cool off"] = stampMemory()
+        writeResultsOnFile(output)
+    }
+}
+
+abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
+                                             exceptionListResourceID: Int) :
+BenchmarkMemory() {
+
 
     // mapped all subscription url to the given subscription list because the runner of the test
     // might run this in a different locale and this would result in a different easylist being
@@ -79,40 +184,11 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS to exceptionListResourceID
     )
 
-    init {
-        if (Timber.treeCount() == 0) {
-            Timber.plant(DebugTree())
-        }
-    }
-
     @LargeTest
     @Test
-    fun benchmark() {
+    override fun benchmark() {
         var results = benchmarkFilterList(resourcesList, folder.newFolder().absolutePath)
         writeResultsOnFile(results)
-    }
-
-    private fun stampMemory(): MutableMap<String, String> {
-        // calls gc to make results less volatile
-        System.gc()
-        val memInfoVar = Debug.MemoryInfo()
-        Debug.getMemoryInfo(memInfoVar)
-        // if using android studio profiler the total does not match the total pss,
-        // the total in android studio is the total pss without private other and system accounted
-        // for more information please read.
-        // https://developer.android.com/reference/android/os/Debug.MemoryInfo
-        val totalAccountedInAndroidStudio =
-            memInfoVar.totalPss -
-                memInfoVar.getMemoryStat("summary.private-other").toInt() -
-                memInfoVar.getMemoryStat("summary.system").toInt()
-
-        return mutableMapOf("TOTAL PSS (KB)" to memInfoVar.totalPss.toString(),
-            "TOTAL_ANDROID_STUDIO (KB) " to totalAccountedInAndroidStudio.toString(),
-            "CODE (KB) " to memInfoVar.getMemoryStat("summary.code"),
-            "STACK (KB) " to memInfoVar.getMemoryStat("summary.stack"),
-            "GRAPHICS (KB) " to memInfoVar.getMemoryStat("summary.graphics"),
-            "JAVA-HEAP(KB) " to memInfoVar.getMemoryStat("summary.java-heap"),
-            "NATIVE-HEAP(KB) " to memInfoVar.getMemoryStat("summary.native-heap"))
     }
 
     /**
@@ -130,8 +206,6 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
 
         var output = mutableMapOf<String, MutableMap<String, String>>()
         output["INIT STAGE"] = stampMemory()
-
-        val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
 
         val engineFactory = AdblockEngine
             .builder(context, AppInfo.builder().build(), folder)
@@ -174,64 +248,31 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         output["5 seconds cool off"] = stampMemory()
         return output
     }
-
-    fun writeResultsOnFile(results: Map<String, Map<String, String>>) {
-
-        var hasPrintedHeader = false
-        val output = StringBuilder()
-        val memoryValuesNames = arrayListOf<String>()
-        for (stage in results) {
-            if (!hasPrintedHeader) {
-                output.append("STAGE , ")
-                for (memoryValue in stage.value) {
-                    memoryValuesNames.add(memoryValue.key)
-                    output.append(memoryValue.key)
-                    output.append(", ")
-                }
-                hasPrintedHeader = true
-                output.append(System.lineSeparator())
-            }
-            output.append(stage.key)
-            for (memoryValue in memoryValuesNames) {
-                output.append(", ")
-                output.append(stage.value[memoryValue])
-            }
-            output.append(System.lineSeparator())
-        }
-        // hardcoded because it is the same folder hardcoded in the host script
-        // this is for readability.
-        val file = File("/storage/emulated/0/Download/memory_benchmark.csv")
-        if (!file.exists()) {
-            file.createNewFile()
-        }
-        assertTrue(file.exists())
-        file.writeText(output.toString())
-    }
 }
 
-class MemoryBenchmark_20_full_AA : BenchMarkMemory(R.raw.easy_20, R.raw.exceptionrules)
+class MemoryBenchmark_20_full_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules)
 
-class MemoryBenchmark_20_min_AA : BenchMarkMemory(R.raw.easy_20, R.raw.exceptionrules_min)
+class MemoryBenchmark_20_min_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules_min)
 
-class MemoryBenchmark_50_full_AA : BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules)
+class MemoryBenchmark_50_full_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules)
 
 class MemoryBenchmark_50_min_AA :
-    BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules_min)
 
 class MemoryBenchmark_80_full_AA :
-    BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules)
+    AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules)
 
 class MemoryBenchmark_80_min_AA :
-    BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules_min)
 
 class MemoryBenchmark_full_easy_full_AA :
-    BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules)
 
 class MemoryBenchmark_full_easy_min_AA :
-    BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min)
 
 class MemoryBenchmark_minDist_full_AA :
-    BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules)
 
 class MemoryBenchmark_minDist_min_AA :
-    BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min)
