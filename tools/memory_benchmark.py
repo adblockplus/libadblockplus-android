@@ -14,6 +14,7 @@ import csv
 import sys
 import subprocess
 import os
+import time
 
 memory_benchmark_adblockwebview_test = ["MemoryBenchmark_full_easy",
     "MemoryBenchmark_minDist"]
@@ -29,11 +30,15 @@ TOTAL_ANDROID_STUDIO_COLUMN = 2
 # this maps internal classpath of test to viewer name
 # ultimately its what is shown to observer
 testname_to_metrics = {
-    "MemoryBenchmark_full_easy_min_AA"  : "MIN_EASY_MIN_AA_KB",
-    "MemoryBenchmark_full_easy_full_AA" : "MIN_EASY_MIN_AA_KB",
-    "MemoryBenchmark_minDist_min_AA"    : "FULL_EASY_MIN_AA_KB",
-    "MemoryBenchmark_minDist_full_AA"   : "FULL_EASY_MIN_AA_KB",
-    "SystemWebViewBenchmark"            : "SYSTEM_WEBVIEW_KB"
+    "MemoryBenchmark_full_easy_min_AA"      : "MIN_EASY_MIN_AA_KB",
+    "MemoryBenchmark_full_easy_full_AA"     : "MIN_EASY_MIN_AA_KB",
+    "MemoryBenchmark_minDist_min_AA"        : "FULL_EASY_MIN_AA_KB",
+    "MemoryBenchmark_minDist_full_AA"       : "FULL_EASY_MIN_AA_KB",
+    "MemoryBenchmark_full_easy_min_AA_off"  : "MIN_EASY_MIN_AA_OFF_KB",
+    "MemoryBenchmark_full_easy_full_AA_off" : "MIN_EASY_MIN_AA_OFF_KB",
+    "MemoryBenchmark_minDist_min_AA_off"    : "FULL_EASY_MIN_AA_OFF_KB",
+    "MemoryBenchmark_minDist_full_AA_off"   : "FULL_EASY_MIN_AA_OFF_KB",
+    "SystemWebViewBenchmark"                : "SYSTEM_WEBVIEW_KB"
 }
 
 def map_to_metrics_name(testname, metric):
@@ -81,7 +86,7 @@ def launch_test_and_collect(adb_device, testname, output):
     run_command("{} shell am instrument -w -r -e debug false -e class {} -e \
             annotation androidx.test.filters.LargeTest {}/androidx.test.runner.AndroidJUnitRunner"
             .format(adb_device, classpath, TEST_PACKAGE))
-
+    time.sleep(1)
     print("Test done pulling results ...")
     run_command("{} pull /storage/emulated/0/Download/memory_benchmark.csv {}"
             .format(adb_device, output))
@@ -154,11 +159,12 @@ def main(args):
 
     # benchmark with adblockwebview
     for test in memory_benchmark_adblockwebview_test:
-        for aa_type in ["_full_AA", "_min_AA"]:
-            testname = test + aa_type
-            launch_tests_and_collect(NUM_TESTS, adb_device, testname)
-            max, average, median, min = calc_stats(testname, NUM_TESTS)
-            store_metrics_file(testname, max, average, median, min)
+        for aa_subscription_list in ["_full_AA", "_min_AA"]:
+            for aa_off_on in ["", "_off"]:
+                testname = test + aa_subscription_list + aa_off_on
+                launch_tests_and_collect(NUM_TESTS, adb_device, testname)
+                max, average, median, min = calc_stats(testname, NUM_TESTS)
+                store_metrics_file(testname, max, average, median, min)
 
     # test with system webview
     testname = memory_benchmark_system_webview_test
