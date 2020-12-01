@@ -182,16 +182,6 @@ public final class Utils
     return sb.toString();
   }
 
-  public static String getUrlWithoutAnchor(final String urlWithAnchor)
-  {
-    if (urlWithAnchor == null)
-    {
-      throw new IllegalArgumentException("URL can't be null");
-    }
-
-    return getStringBeforeChar(urlWithAnchor, '#');
-  }
-
   public static String getDomain(final String url) throws URISyntaxException
   {
     if (url == null)
