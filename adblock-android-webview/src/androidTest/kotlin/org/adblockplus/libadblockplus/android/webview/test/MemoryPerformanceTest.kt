@@ -155,10 +155,11 @@ class SystemWebViewBenchmark() : BenchmarkMemory() {
 }
 
 abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
-                                             exceptionListResourceID: Int) :
-BenchmarkMemory() {
+                                             exceptionListResourceID: Int,
+                                             isAAenabled: Boolean = true) :
 
-
+    BenchmarkMemory() {
+    val isAAenabled = isAAenabled
     // mapped all subscription url to the given subscription list because the runner of the test
     // might run this in a different locale and this would result in a different easylist being
     // downloaded this way any of the subscription list download results in the injection of
@@ -211,9 +212,11 @@ BenchmarkMemory() {
             .builder(context, AppInfo.builder().build(), folder)
             .preloadSubscriptions(context, localResources, MockStorage())
             .setForceUpdatePreloadedSubscriptions(false)
+
         val customEngineProvider = SingleInstanceEngineProvider(engineFactory)
 
         assertTrue(customEngineProvider.retain(false))
+        customEngineProvider.engine.isAcceptableAdsEnabled = isAAenabled;
         output["ENGINE CREATED"] = stampMemory()
         assertNotNull(customEngineProvider.engine)
 
@@ -249,7 +252,7 @@ BenchmarkMemory() {
         return output
     }
 }
-
+/* AA on */
 class MemoryBenchmark_20_full_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules)
 
 class MemoryBenchmark_20_min_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules_min)
@@ -276,3 +279,37 @@ class MemoryBenchmark_minDist_full_AA :
 
 class MemoryBenchmark_minDist_min_AA :
     AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min)
+
+/** With AA off
+ Here we still set the AA subscriptions to either full or min because it even though it is
+ off the sdk still downloads the subscriptions and might loaded it, affecting its memory sage
+*/
+class MemoryBenchmark_20_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_20_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_50_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_50_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_80_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_80_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_full_easy_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_full_easy_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_minDist_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_minDist_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min, false)
