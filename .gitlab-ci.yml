@@ -204,6 +204,7 @@ benchmark:
     - cp $BENCHMARK_GSHEETS_TOKEN_FILE ./sheets.googleapis.com-python.json
     - ./tools/performance_benchmark.py
     - ./tools/memory_benchmark.py
+    - ./tools/storage_benchmark.py
     - ./tools/publish_benchmark.py
   after_script:
     # it will only trigger rolling window job

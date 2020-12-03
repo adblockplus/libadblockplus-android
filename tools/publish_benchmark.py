@@ -243,10 +243,10 @@ def read_performance_benchmark():
 
     return values, device_fingerprint
 
-def read_memory_benchmark():
-    # right now to read memory benchmark we can read metrics.txt
+def read_metrics_benchmark():
+    # right now to read memory and storage values for each architecture we can read metrics.txt
     # it contains average for minified lists AA in 10 runs with full easy
-    # and minified easy list, this will change soon to include max and min
+    # and minified easy list, this will change soon to include max and min and median
     # with that change we can skip producing metrics file and just read the csv
     # produced by the benchmarks
 
@@ -256,7 +256,7 @@ def read_memory_benchmark():
     for line in lines:
         splittedLine = line.split(" ")
         if (len(splittedLine) < 2):
-            print("memory metrics file corrupt")
+            print("metrics file corrupted")
             os._exit(1)
         values[splittedLine[0]] = int(float(splittedLine[1]))
 
@@ -268,10 +268,10 @@ def main():
 
     print("loading benchmark results ...")
     performance_benchmark, device_fingerprint = read_performance_benchmark()
-    memory_benchmark                          = read_memory_benchmark()
+    metrics_benchmark = read_metrics_benchmark()
 
     # merge all
-    benchmarks = memory_benchmark.copy()
+    benchmarks = metrics_benchmark.copy()
     benchmarks.update(performance_benchmark)
 
     check_inputs()
