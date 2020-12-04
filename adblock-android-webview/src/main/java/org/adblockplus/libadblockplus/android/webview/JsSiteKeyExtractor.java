@@ -175,7 +175,7 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
       {
         throw new AssertionError("Verifier must be set before this is called");
       }
-      else if (verifier.verify(Utils.getUrlWithoutAnchor(url), userAgent, value))
+      else if (verifier.verify(Utils.getUrlWithoutFragment(url), userAgent, value))
       {
         Timber.d("Url %s public key verified successfully", url);
       }
