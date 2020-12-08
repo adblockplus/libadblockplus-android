@@ -31,6 +31,11 @@
 
     </LinearLayout>
 
+    <CheckBox android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/main_iframes_eh_checkbox"
+        android:id="@+id/iframes_eh_checkbox"/>
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/main_tabs"
         android:layout_width="match_parent"

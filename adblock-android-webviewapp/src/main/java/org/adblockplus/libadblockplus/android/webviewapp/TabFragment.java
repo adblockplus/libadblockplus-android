@@ -358,6 +358,11 @@ public class TabFragment extends Fragment
     }
   }
 
+  public void setJsInIframesEnabled(final boolean enabled)
+  {
+    webView.enableJsInIframes(enabled);
+  }
+
   private void initAdblockWebView()
   {
     // use shared filters data (not to increase memory consumption)
@@ -366,6 +371,7 @@ public class TabFragment extends Fragment
     if (SITEKEYS_ALLOWLISTING)
     {
       webView.setSiteKeysConfiguration(AdblockHelper.get().getSiteKeysConfiguration());
+      webView.enableJsInIframes(((MainActivity)getActivity()).elemHideInInframesEnabled());
     }
 
     this.navigate(navigateTo);

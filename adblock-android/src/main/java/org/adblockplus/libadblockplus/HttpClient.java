@@ -40,6 +40,7 @@ public abstract class HttpClient
   public static final String HEADER_SITEKEY = "x-adblock-key";
   public static final String HEADER_CONTENT_TYPE = "content-type";
   public static final String HEADER_CONTENT_LENGTH = "content-length";
+  public static final String HEADER_CSP = "content-security-policy";
 
   static
   {

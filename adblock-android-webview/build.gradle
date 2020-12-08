@@ -31,6 +31,7 @@ dependencies {
   testImplementation Deps.junit4
   testImplementation Deps.kotlin_stdlib
   testImplementation Deps.mockito_core
+  testImplementation Deps.mockito_kotlin
   androidTestImplementation Deps.androidx_test_core
   androidTestImplementation Deps.androidx_test_rules
   androidTestImplementation Deps.androidx_test_runner

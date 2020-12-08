@@ -437,6 +437,12 @@ If adblock engine provider is not set, it's created by AdblockWebView instance a
 Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
 This is optional but highly suggested. See `TabFragment.java` on usage example.
 
+Use `enableJsInIframes(true)` to enable element hiding and element hiding emulation for iframes in AdblockWebView.
+This feature does not support yet element hiding for blocked requests.
+This is optional feature which under the hood rewrites html content to inject before the `</body>` tag `<script nonce="..">..</script>` with our custom element hiding (emulation) JavaScript, and if necessary updates CSP HTTP response header adding our `nonce` string to execute the script.
+This feature also requires `setSiteKeysConfiguration(..)` to be called beforehand, otherwise an IllegalStateException is thrown.
+See `TabFragment.java` on usage example.
+
 Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and whitelisting events, eg.
 "resource loading blocked" or "resource loading whitelisted" event that can be used for stats.
 For the latter there is a convenience class `WebViewCounters` which can be bound to `EventsListener`

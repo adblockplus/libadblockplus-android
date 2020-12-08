@@ -67,11 +67,11 @@ public interface SiteKeyExtractor
    * Will be removed later in a favor of setting internal WebViewClient
    * for every SiteKeyExtractor
    *
-   * @param request from the
-   *                {@link android.webkit.WebViewClient#shouldInterceptRequest(WebView, WebResourceRequest)}
+   * @param url a request url which is held back by this call
+   * @param isMainFrame a boolean indicating whether this is a main or a subframe request
    * @return true if had to wait
    */
-  boolean waitForSitekeyCheck(final WebResourceRequest request);
+  boolean waitForSitekeyCheck(final String url, final boolean isMainFrame);
 
   /**
    * This method is called by the {@link AdblockWebView} during
