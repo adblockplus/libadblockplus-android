@@ -85,10 +85,10 @@ public class CombinedSiteKeyExtractor implements SiteKeyExtractor
   }
 
   @Override
-  public boolean waitForSitekeyCheck(final WebResourceRequest request)
+  public boolean waitForSitekeyCheck(final String url, final boolean isMainFrame)
   {
-    final boolean httpWaited = httpExtractor.waitForSitekeyCheck(request);
-    final boolean jsWaited = jsExtractor.waitForSitekeyCheck(request);
+    final boolean httpWaited = httpExtractor.waitForSitekeyCheck(url, isMainFrame);
+    final boolean jsWaited = jsExtractor.waitForSitekeyCheck(url, isMainFrame);
     return httpWaited || jsWaited;
   }
 

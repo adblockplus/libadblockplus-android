@@ -1,3 +1,122 @@
+/* Big and dummy JS file for tests. Contains our scripts concatenated. */
+
+/*
+ * This file is part of Adblock Plus <https://adblockplus.org/>,
+ * Copyright (C) 2006-present eyeo GmbH
+ *
+ * Adblock Plus is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * Adblock Plus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+{
+   {{DEBUG}} console.log('starting injecting css rules');
+   var styleSheet = {{BRIDGE}}.getElemhideStyleSheet(document.location.href);
+   {{DEBUG}} console.log('stylesheet length: ' + styleSheet.length);
+   if (styleSheet)
+   {
+      var head = document.getElementsByTagName("head")[0];
+      var style = document.createElement("style");
+      head.appendChild(style);
+      style.textContent = styleSheet;
+      {{DEBUG}} console.log('finished injecting css rules');
+   }
+   else
+   {
+      {{DEBUG}} console.log('stylesheet is empty, skipping injection');
+   }
+}
+
+/*
+ * This file is part of Adblock Plus <https://adblockplus.org/>,
+ * Copyright (C) 2006-present eyeo GmbH
+ *
+ * Adblock Plus is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * Adblock Plus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+The script is called for every blocked element that should be element hidden, eg. images.
+Excluding redefinition of the functions here for performance reason
+(assuming functions code is not changed between invocations).
+*/
+if (typeof(hideElement) !== typeof(Function))
+{
+  function hideElement(element)
+  {
+    function doHide()
+    {
+      let propertyName = "display";
+      let propertyValue = "none";
+      if (element.localName == "frame")
+      {
+        propertyName = "visibility";
+        propertyValue = "hidden";
+      }
+
+      if (element.style.getPropertyValue(propertyName) != propertyValue ||
+          element.style.getPropertyPriority(propertyName) != "important")
+      {
+        element.style.setProperty(propertyName, propertyValue, "important");
+      }
+    }
+
+    doHide();
+
+    new MutationObserver(doHide).observe(element,
+      {
+        attributes: true,
+        attributeFilter: ["style"]
+      });
+  }
+
+  function elemhideForSelector(url, selector, attempt)
+  {
+    if (attempt == 50) // time-out = 50 attempts with 100 ms delay = 5 seconds
+    {
+      {{DEBUG}} console.log("Too many attempts for selector " + selector + " with url " + url + ", exiting");
+      return;
+    }
+
+    let elements = document.querySelectorAll(selector);
+
+    // for some reason it can happen that no elements are found by selectors (DOM not ready?)
+    // so the idea is to retry with some delay
+    if (elements.length > 0)
+    {
+      for (let element of elements)
+      {
+        if (element.src == url)
+        {
+          hideElement(element);
+        }
+      }
+    }
+    else
+    {
+      {{DEBUG}} console.log("Nothing found for selector " + selector + ", retrying elemhide in 100 millis");
+      setTimeout(elemhideForSelector, 100, url, selector, attempt + 1);
+    }
+  }
+}
+
 /*
  * This file is part of Adblock Plus <https://adblockplus.org/>,
  * Copyright (C) 2006-present eyeo GmbH
@@ -1280,3 +1399,138 @@ let elemHideEmulation = new ElemHideEmulation(
 );
 
 elemHideEmulation.apply(elemHidingEmulatedPatterns);
+
+
+/*
+ * This file is part of Adblock Plus <https://adblockplus.org/>,
+ * Copyright (C) 2006-present eyeo GmbH
+ *
+ * Adblock Plus is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * Adblock Plus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+let isMainframe = window.self === window.top;
+console.log("injected JS started for " + document.location.href + " (" + isMainframe + ")")
+
+var tryReceiveSiteKey = function()
+{
+  // A bug in Android 6, when navigation starts from 'about:blank', which has empty html tag.
+  // But the document object is inherited to the further navigation, so we are getting in a state
+  // when `onSiteKeyDoesNotExist` has been already called and no further checks are performed
+  if (!window.location.href.startsWith('http')) return;
+
+  // SITEKEY_EXTRACTED_FLAG acts for a flag that we have received sitekey or could not do it
+  if (!document.{{SITEKEY_EXTRACTED_FLAG}})
+  {
+    {{DEBUG}}console.log('Getting sitekey on '+ window.location.href);
+    // checking if html tag is ready
+    let htmlCollection = document.getElementsByTagName('html');
+    let htmlTag = htmlCollection ? htmlCollection[0] : null;
+    if (htmlTag)
+    {
+      let key = (htmlTag.attributes['data-adblockkey'] || {}).value;
+      // it might return "null" as a string, cleaning up
+      if (key === "null")
+      {
+        key = null;
+      }
+      if (key)
+      {
+        {{DEBUG}}console.log("Sitekey received");
+        AbpCallback.onSiteKeyExtracted(key, window.location.href, navigator.userAgent);
+      }
+      else
+      {
+        {{DEBUG}}console.log("Sitekey does not exist in html tag");
+        AbpCallback.onSiteKeyDoesNotExist(window.location.href);
+      }
+      // Let's remember we have received the sitekey
+      document.{{SITEKEY_EXTRACTED_FLAG}} = true;
+    }
+    else // if html tag is not ready, sending `onDomNotReady` event
+    {
+      // here we tend to hold the lock while the dom is not ready
+      // to receive the key. However, this is likely to be seldom
+      AbpCallback.onDomNotReady(window.location.href);
+    }
+  }
+}
+
+var hideElements = function()
+{
+  // no need to invoke if already invoked on another event
+  if (document.{{HIDDEN_FLAG}} === true)
+  {
+    {{DEBUG}} console.log('already hidden, exiting');
+    return;
+  }
+
+  {{DEBUG}} console.log("Not yet hidden!")
+
+  // hide by injecting CSS stylesheet
+  {{HIDE}}
+
+  document.{{HIDDEN_FLAG}} = true; // set flag not to do it again
+};
+
+if (document.readyState === "complete")
+{
+  {{DEBUG}} console.log('document is in "complete" state, apply hiding')
+  hideElements();
+}
+else
+{
+  {{DEBUG}} console.log('installing listener')
+
+  // onreadystatechange event
+  document.onreadystatechange = function()
+  {
+    {{DEBUG}} console.log('onreadystatechange() event fired (' + document.readyState + ')')
+    if (document.readyState == 'interactive')
+    {
+      hideElements();
+    }
+  }
+
+   // load event
+  window.addEventListener('load', function(event)
+  {
+    {{DEBUG}} console.log('load() event fired');
+    hideElements();
+  });
+
+  // DOMContentLoaded event
+  document.addEventListener('DOMContentLoaded', function()
+  {
+    {{DEBUG}} console.log('DOMContentLoaded() event fired');
+    hideElements();
+  }, false);
+}
+
+if (isMainframe)
+{
+    // the formula = i * i * 8
+    const SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS = [0, (1 * 8), (4 * 8), (9 * 8), (16 * 8)];
+
+    // we try to retrieve the sitekey right away (~20% success) and schedule retrieving sitekey
+    // with the following intervals (ms): 0, 8, 32, 72, 128
+    tryReceiveSiteKey();
+    // we are using "for loop" to make it more simple and reliable
+    for (let i = 0; i < SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS.length; i++)
+    {
+      setTimeout(function()
+      {
+        tryReceiveSiteKey();
+      },(SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS[i]));
+    }
+}
+console.log("injected JS finished");

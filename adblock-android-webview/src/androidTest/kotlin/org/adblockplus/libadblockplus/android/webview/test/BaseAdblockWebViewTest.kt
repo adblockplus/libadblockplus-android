@@ -127,8 +127,8 @@ abstract class BaseAdblockWebViewTest {
             extractor.startNewPage();
         }
 
-        override fun waitForSitekeyCheck(request: WebResourceRequest?): Boolean {
-            return extractor.waitForSitekeyCheck(request)
+        override fun waitForSitekeyCheck(url: String, isMainFrame: Boolean): Boolean {
+            return extractor.waitForSitekeyCheck(url, isMainFrame)
         }
 
         override fun setEnabled(enabled: Boolean) {

@@ -43,12 +43,14 @@ public class MainActivity extends AppCompatActivity
   private static final String SAVED_SETTINGS = "saved_settings";
   private static final String SAVED_RESTORE_TABS_CHECK = "saved_tabs_checkbox";
   private static final String SAVED_RESTORE_TABS_COUNT = "saved_tabs_count";
+  private static final String SAVED_IFRAMES_EH = "saved_iframes_eh";
 
   private Button addTab;
   private Button settings;
   private TabLayout tabLayout;
   private ViewPager viewPager;
   private CheckBox restoreTabsCheckbox;
+  private CheckBox iframesEhCheckbox;
 
   private final List<TabFragment> tabs = new ArrayList<>();
 
@@ -73,6 +75,19 @@ public class MainActivity extends AppCompatActivity
       addTab(false, getIntent().getDataString());
     }
     navigateIfUrlIntent(tabs.get(0), getIntent());
+  }
+
+  @Override
+  protected void onDestroy()
+  {
+    final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+    sharedPreferences.edit().putBoolean(SAVED_IFRAMES_EH, iframesEhCheckbox.isChecked()).apply();
+    super.onDestroy();
+  }
+
+  public boolean elemHideInInframesEnabled()
+  {
+    return iframesEhCheckbox.isChecked();
   }
 
   private static void navigateIfUrlIntent(final TabFragment tabFragment, final Intent intent)
@@ -189,8 +204,24 @@ public class MainActivity extends AppCompatActivity
       }
     });
 
+    iframesEhCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+    {
+      @Override
+      public void onCheckedChanged(final CompoundButton compoundButton, final boolean newValue)
+      {
+        final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+        sharedPreferences.edit().putBoolean(SAVED_IFRAMES_EH, newValue).apply();
+        for (final TabFragment tabFragment : tabs)
+        {
+          tabFragment.setJsInIframesEnabled(newValue);
+        }
+      }
+    });
+
     final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
     final int tabsCount = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0);
+
+    iframesEhCheckbox.setChecked(sharedPreferences.getBoolean(SAVED_IFRAMES_EH, false));
 
     final List<Fragment> fragments = this.getSupportFragmentManager().getFragments();
 
@@ -259,5 +290,6 @@ public class MainActivity extends AppCompatActivity
     tabLayout = findViewById(R.id.main_tabs);
     viewPager = findViewById(R.id.main_viewpager);
     restoreTabsCheckbox = findViewById(R.id.restore_checkbox);
+    iframesEhCheckbox = findViewById(R.id.iframes_eh_checkbox);
   }
 }

@@ -131,9 +131,9 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
   }
 
   @Override
-  public boolean waitForSitekeyCheck(final WebResourceRequest request)
+  public boolean waitForSitekeyCheck(final String url, final boolean isMainFrame)
   {
-    if (request.isForMainFrame())
+    if (isMainFrame)
     {
       return false;
     }
@@ -146,17 +146,16 @@ class JsSiteKeyExtractor extends BaseSiteKeyExtractor
     final CountDownLatch countDownLatch = latch;
     if (countDownLatch == null)
     {
-      Timber.w("waitForSitekeyCheck() called for `%s` with `latch == null`!",
-          request.getUrl().toString());
+      Timber.w("waitForSitekeyCheck() called for `%s` with `latch == null`!", url);
       return false;
     }
     // waitSitekeyCheck is used only blocking the network thread while
     // the key verification is ongoing
-    Timber.d("Holding request %s", request.getUrl().toString());
+    Timber.d("Holding request %s", url);
     try
     {
       countDownLatch.await(RESOURCE_HOLD_MAX_TIME_MS, TimeUnit.MILLISECONDS);
-      Timber.d("Un-holding request %s", request.getUrl().toString());
+      Timber.d("Un-holding request %s", url);
     }
     catch (final InterruptedException error)
     {

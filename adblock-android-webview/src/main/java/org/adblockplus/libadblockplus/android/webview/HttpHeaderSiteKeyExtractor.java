@@ -26,12 +26,22 @@ import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.ServerResponse;
+import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView.WebResponseResult;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import timber.log.Timber;
 
@@ -125,7 +135,154 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
 
   public static class ServerResponseProcessor
   {
-    public WebResourceResponse process(final String requestUrl,
+    private static final String NONCE = "nonce-";
+    private static final String CSP_SCRIPT_SRC_PARAM = "script-src";
+    private static final String CSP_UNSAFE_INLINE = "'unsafe-inline'";
+    private static final Pattern NONCE_PATTERN =
+        Pattern.compile(String.format("%s[^;]*'(%s[^']+)'.*;", CSP_SCRIPT_SRC_PARAM, NONCE),
+            Pattern.CASE_INSENSITIVE);
+
+    private boolean containsValidUnsafeInline(final String cspHeaderValue)
+    {
+      int scriptSrcIndex = cspHeaderValue.indexOf(CSP_SCRIPT_SRC_PARAM);
+      if (scriptSrcIndex < 0)
+      {
+        return false;
+      }
+      int unsafeInlineIndex = cspHeaderValue.indexOf(CSP_UNSAFE_INLINE, scriptSrcIndex);
+      if (unsafeInlineIndex < 0)
+      {
+        return false;
+      }
+      final String inBetween = cspHeaderValue.substring(
+          scriptSrcIndex + CSP_SCRIPT_SRC_PARAM.length(), unsafeInlineIndex);
+      // Make sure that CSP_UNSAFE_INLINE we found belongs to CSP_SCRIPT_SRC_PARAM
+      return !(inBetween.contains("-src ") || inBetween.contains("-src-elem ") ||
+          inBetween.contains("-src-attr ") || inBetween.contains("navigate-to ") ||
+          inBetween.contains("form-action ") || inBetween.contains("base-uri "));
+    }
+
+    protected String updateCspHeader(final Map<String, String> responseHeaders)
+    {
+      String JS_NONCE = null;
+      for (Map.Entry<String, String> eachEntry : responseHeaders.entrySet())
+      {
+        // We want to just execute our custom inject.js script by slightly relaxing CSP if needed
+        // If a nonce for script-src is present we will reuse it, otherwise it will be added
+        if (eachEntry.getKey().toLowerCase().equals(HttpClient.HEADER_CSP) &&
+          !eachEntry.getValue().isEmpty())
+        {
+          Timber.d("Found `%s` CSP header", eachEntry.getValue());
+          if (eachEntry.getValue().toLowerCase().contains(CSP_SCRIPT_SRC_PARAM))
+          {
+            final Matcher resultREGEX = NONCE_PATTERN.matcher(eachEntry.getValue());
+            if (resultREGEX.find() && resultREGEX.groupCount() == 1)
+            {
+              JS_NONCE = resultREGEX.group(1);
+              Timber.d("Found nonce in CSP header with value `%s`", JS_NONCE);
+            }
+            else
+            {
+              if (containsValidUnsafeInline(eachEntry.getValue().toLowerCase()))
+              {
+                Timber.d("Found `%s` in CSP header, no need for update", CSP_UNSAFE_INLINE);
+                return null;
+              }
+              JS_NONCE = NONCE + UUID.randomUUID().toString();
+              final String[] splittedCSP = eachEntry.getValue().split(CSP_SCRIPT_SRC_PARAM, 2);
+              final String newCSPvalue = splittedCSP[0].trim() + " " + CSP_SCRIPT_SRC_PARAM + " '" +
+                  JS_NONCE + "' " + splittedCSP[1].trim();
+              responseHeaders.put(eachEntry.getKey(), newCSPvalue);
+              Timber.d("Added nonce to CSP header, new value `%s`", newCSPvalue);
+            }
+          }
+          break;
+        }
+      }
+      return JS_NONCE != null ? JS_NONCE.substring(NONCE.length()) : JS_NONCE;
+    }
+
+    protected String readFileToString(final InputStream inputStream)
+    {
+      final Scanner scanner = new Scanner(inputStream, WebResponseResult.RESPONSE_CHARSET_NAME)
+          .useDelimiter("\\A");
+      final String htmlString = scanner.hasNext() ? scanner.next() : "";
+      return htmlString;
+    }
+
+    // Return true on success or when no-op, false on error
+    protected boolean injectJavascript(final AdblockWebView webView, final String requestUrl,
+                                       final ServerResponse response,
+                                       final Map<String, String> responseHeaders)
+    {
+      Timber.d("injectJavascript() reads content of `%s`", requestUrl);
+
+      if (response.getInputStream() == null)
+      {
+        return true;
+      }
+      byte[] rawBytes;
+      String htmlString = "";
+      try
+      {
+        rawBytes = Utils.toByteArray(response.getInputStream());
+        htmlString = new String(rawBytes);
+      }
+      catch (final IOException e)
+      {
+        Timber.e(e, "injectJavascript() failed reading input stream to byte array");
+        return false;
+      }
+
+      // When generateStylesheetForUrl() fails to generate css then we can skip js injection
+      if (htmlString.toLowerCase().contains("</body>") &&
+          webView.generateStylesheetForUrl(requestUrl, false))
+      {
+        if (BuildConfig.DEBUG)
+        {
+          if (htmlString.toLowerCase().contains("content-security-policy"))
+          {
+            Timber.w("injectJavascript() found potential CSP meta tag directive for `%s`",
+                requestUrl);
+          }
+        }
+        final String bodyEndWithScriptTag;
+        // For now we don't check CSP in meta tags in HTML, just in headers
+        final String JS_NONCE = updateCspHeader(responseHeaders);
+        if (JS_NONCE == null)
+        {
+          bodyEndWithScriptTag = "<script>" + webView.getInjectJs() + "</script></body>";
+        }
+        else
+        {
+          bodyEndWithScriptTag = "<script nonce=\"" + JS_NONCE + "\">" + webView.getInjectJs()
+              + "</script></body>";
+        }
+        Timber.d("injectJavascript() adds injectJs for `%s`", requestUrl);
+        htmlString = htmlString.replace("</body>", bodyEndWithScriptTag);
+        try
+        {
+          // Now set up back response input stream
+          response.setInputStream(
+              new ByteArrayInputStream(htmlString.getBytes(WebResponseResult.RESPONSE_CHARSET_NAME)));
+        }
+        catch (final UnsupportedEncodingException e)
+        {
+          Timber.e(e, "injectJavascript() failed");
+          return false;
+        }
+      }
+      else
+      {
+        Timber.d("injectJavascript() skips injectJs for `%s`", requestUrl);
+        response.setInputStream(new ByteArrayInputStream(rawBytes));
+      }
+
+      return true;
+    }
+
+    public WebResourceResponse process(final AdblockWebView webView,
+                                       final String requestUrl,
                                        final ServerResponse response,
                                        final Map<String, String> responseHeaders)
     {
@@ -181,13 +338,28 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
       }
 
       responseInfo.trim();
-
       Timber.d("Using responseMimeType and responseEncoding: %s => %s (url == %s)",
-          responseInfo.getMimeType(), responseInfo.getEncoding(), requestUrl);
-      return new WebResourceResponse(
-          responseInfo.getMimeType(), responseInfo.getEncoding(),
-          response.getResponseStatus(), getReasonPhrase(response.getStatus()),
-          responseHeaders, response.getInputStream());
+          responseInfo.getMimeType() != null ? responseInfo.getMimeType() : "null",
+          responseInfo.getEncoding(), requestUrl);
+
+      // Check if feature is enabled and inspect mimeType if not null to avoid calling
+      // injectJavascript() when not necessary
+      if (!webView.getJsInIframesEnabled() ||
+          (responseInfo.getMimeType() != null &&
+              !responseInfo.getMimeType().toLowerCase().contains(HttpClient.MIME_TYPE_TEXT_HTML)) ||
+          injectJavascript(webView, requestUrl, response, responseHeaders))
+      {
+        return new WebResourceResponse(
+            responseInfo.getMimeType(), responseInfo.getEncoding(),
+            response.getResponseStatus(), getReasonPhrase(response.getStatus()),
+            responseHeaders, response.getInputStream());
+      }
+      else
+      {
+        Timber.w("Processing ServerResponse failed, request for `%s` will be repeated!",
+            requestUrl);
+        return WebResponseResult.ALLOW_LOAD;
+      }
     }
   }
 
@@ -253,26 +425,25 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
 
     if (response.getInputStream() == null)
     {
-      Timber.w("fetchUrlAndCheckSiteKey() passes control to WebView");
+      Timber.w("extract() passes control to WebView");
       return WebResponseResult.ALLOW_LOAD;
     }
 
-    return processResponse(request, url, response);
-  }
-
-  private WebResourceResponse processResponse(final WebResourceRequest request,
-                                              final String requestUrl,
-                                              final ServerResponse response)
-  {
     final Map<String, String> requestHeaders = request.getRequestHeaders();
     final Map<String, String> responseHeaders =
         convertHeaderEntriesToMap(response.getResponseHeaders());
 
     // extract the sitekey from HTTP response header
     getSiteKeysConfiguration().getSiteKeyVerifier().verifyInHeaders(
-        requestUrl, requestHeaders, responseHeaders);
+        url, requestHeaders, responseHeaders);
 
-    return new ServerResponseProcessor().process(requestUrl, response, responseHeaders);
+    final AdblockWebView adblockWebView = webViewWeakReference.get();
+    if (adblockWebView == null)
+    {
+      Timber.w("extract() couldn't get a handle to AdblockWebView, returning ALLOW_LOAD");
+      return WebResponseResult.ALLOW_LOAD;
+    }
+    return new ServerResponseProcessor().process(adblockWebView, url, response, responseHeaders);
   }
 
   // Note: `response` headers can be modified inside
@@ -348,7 +519,7 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
   }
 
   @Override
-  public boolean waitForSitekeyCheck(final WebResourceRequest request)
+  public boolean waitForSitekeyCheck(final String url, final boolean isMainFrame)
   {
     // no need to block the network request for this extractor
     // this callback is used in JsSiteKeyExtractor
