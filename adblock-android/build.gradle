@@ -6,6 +6,13 @@ private String getNativeLibraryName() {
   return libraryName != null ? libraryName : 'adblockplus-jni'
 }
 
+def getProcessesCountArg() {
+  def isClean = getGradle().getStartParameter().getTaskNames().find { it ==~ /.*clean.*/ }
+  // The clean shouldn't be parallel, because it causes problems on Mac OS X for NDK below 18
+  def procCount = isClean ? 1 : Runtime.runtime.availableProcessors()
+  return "-j" + procCount
+}
+
 android {
   compileSdkVersion Config.compileSdkVersion
   buildToolsVersion Config.buildToolsVersion
@@ -16,6 +23,11 @@ android {
     buildConfigField "String", "nativeLibraryName", '"' + getNativeLibraryName() + '"'
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     consumerProguardFiles 'proguard-rules-adblock.txt'
+    externalNativeBuild {
+      ndkBuild {
+        arguments getProcessesCountArg()
+      }
+    }
   }
 
   buildTypes {
@@ -126,7 +138,7 @@ android {
 
 bintray {
   pkg {
-    desc="An Android library that provides the core functionality of Adblock Plus."
+    desc = "An Android library that provides the core functionality of Adblock Plus."
   }
 }
 
