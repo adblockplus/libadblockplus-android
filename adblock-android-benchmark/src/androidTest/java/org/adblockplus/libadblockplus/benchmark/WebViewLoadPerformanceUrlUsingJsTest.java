@@ -35,6 +35,7 @@ import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -402,6 +403,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
   @LargeTest
   public void testLoadTime() throws InterruptedException
   {
+    AdblockHelper.get().getProvider().getEngine().getFilterEngine().setAcceptableAdsEnabled(true);
     clearErrors();
     int repetitionCount = 0;
     while (repetitionCount++ < TEST_ITERATIONS)
@@ -419,5 +421,25 @@ public class WebViewLoadPerformanceUrlUsingJsTest
     webViewResultsOnPageFinished.reportData("WebViewNative", urlFailures);
     adblockWebViewResultsJsOnLoad.reportData("AdblockWebViewJS", urlFailures);
     adblockWebViewResultsOnPageFinished.reportData("AdblockWebViewNative", urlFailures);
+  }
+  
+  @Test
+  @LargeTest
+  public void testLoadTimeAAOff() throws InterruptedException
+  {
+    clearErrors();
+
+    AdblockHelper.get().getProvider().getEngine().getFilterEngine().setAcceptableAdsEnabled(false);
+
+    int repetitionCount = 0;
+    while (repetitionCount++ < TEST_ITERATIONS)
+    {
+      Timber.d("UsingJs: running AdblockWebView AA off iteration " + repetitionCount);
+      commonTestLogic(adblockViewTestSuit,
+              adblockWebViewResultsOnPageFinished, adblockWebViewResultsJsOnLoad);
+    }
+
+    adblockWebViewResultsJsOnLoad.reportData("AdblockWebViewJS_AAOff", urlFailures);
+    adblockWebViewResultsOnPageFinished.reportData("AdblockWebViewNative_AAOff", urlFailures);
   }
 }
