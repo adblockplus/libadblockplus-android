@@ -26,12 +26,17 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
+
+import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.libadblockplus.Subscription;
+import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,13 +49,17 @@ public class MainActivity extends AppCompatActivity
   private static final String SAVED_RESTORE_TABS_CHECK = "saved_tabs_checkbox";
   private static final String SAVED_RESTORE_TABS_COUNT = "saved_tabs_count";
   private static final String SAVED_IFRAMES_EH = "saved_iframes_eh";
-
+  private final String testPageSubscriptionUrl =
+          "https://dp-testpages.adblockplus.org/en/abp-testcase-subscription.txt";
   private Button addTab;
   private Button settings;
   private TabLayout tabLayout;
   private ViewPager viewPager;
   private CheckBox restoreTabsCheckbox;
   private CheckBox iframesEhCheckbox;
+  // hidden clicks left to enable test pages subscriptions list
+  private int hiddenClicksLeft = 5;
+
 
   private final List<TabFragment> tabs = new ArrayList<>();
 
@@ -154,6 +163,46 @@ public class MainActivity extends AppCompatActivity
     navigateIfUrlIntent(tabs.get(0), intent);
   }
 
+  private void setTestPageSubscription()
+  {
+    AdblockHelper.get().getProvider().retain(true);
+    final FilterEngine fe = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
+    final Subscription subscription = fe.getSubscription(testPageSubscriptionUrl);
+    String message = "error";
+    if (subscription.isListed())
+    {
+      if (subscription.isDisabled())
+      {
+        subscription.setDisabled(false);
+        message = getResources().getString(R.string.subscription_enabled);
+      }
+      else
+      {
+        message = getResources().getString(R.string.subscription_already_listed_and_enabled);
+      }
+    }
+    else
+    {
+      subscription.addToList();
+      message = getResources().getString(R.string.subscription_added_and_enabled);
+    }
+    message += testPageSubscriptionUrl;
+    Timber.d(message);
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    subscription.dispose();
+    AdblockHelper.get().getProvider().release();
+  }
+
+  void handleHiddenSetting()
+  {
+    // countdowns counter until reaches 0
+    // and sets subscription to test pages
+    if (hiddenClicksLeft-- == 0)
+    {
+      setTestPageSubscription();
+    }
+  }
+
   private void initControls()
   {
     addTab.setOnClickListener(new View.OnClickListener()
@@ -191,6 +240,7 @@ public class MainActivity extends AppCompatActivity
       @Override
       public void onCheckedChanged(final CompoundButton compoundButton, final boolean newValue)
       {
+        handleHiddenSetting();
         final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
         sharedPreferences.edit().putBoolean(SAVED_RESTORE_TABS_CHECK, newValue).apply();
         if (!newValue)
