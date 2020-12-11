@@ -236,7 +236,7 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
 
       // When generateStylesheetForUrl() fails to generate css then we can skip js injection
       if (htmlString.toLowerCase().contains("</body>") &&
-          webView.generateStylesheetForUrl(requestUrl, false))
+          webView.generateStylesheetForUrl(Utils.getUrlWithoutFragment(requestUrl), false))
       {
         if (BuildConfig.DEBUG)
         {

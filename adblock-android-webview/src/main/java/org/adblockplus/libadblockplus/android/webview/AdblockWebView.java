@@ -42,6 +42,7 @@ import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
+import org.adblockplus.libadblockplus.android.Subscription;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
 import org.adblockplus.libadblockplus.android.webview.content_type.HeadersContentTypeDetector;
@@ -117,11 +118,11 @@ public class AdblockWebView extends WebView
   private final Map<String, String> url2Referrer
           = Collections.synchronizedMap(new HashMap<String, String>());
   /*
-   * Map with data: domain => <elemhide selectors, elemhideemu selectors>.
+   * Map with data: url => <elemhide selectors, elemhideemu selectors>.
    * This data is collected only for main frame and subframes.
    * Map is cleared when we detect a new page is being loaded or when ABP is disabled.
    */
-  private final Map<String, Pair<String, String>> domain2Stylesheets
+  private final Map<String, Pair<String, String>> url2Stylesheets
       = Collections.synchronizedMap(new HashMap<String, Pair<String, String>>());
   private final AtomicReference<String> navigationUrl = new AtomicReference<>();
   private String injectJs;
@@ -573,7 +574,7 @@ public class AdblockWebView extends WebView
   private void clearStylesheets()
   {
     Timber.d("Clearing stylesheet");
-    domain2Stylesheets.clear();
+    url2Stylesheets.clear();
   }
 
   private enum AbpShouldBlockResult
@@ -766,6 +767,18 @@ public class AdblockWebView extends WebView
         }
 
         isAcceptableAdsEnabled = engine.isAcceptableAdsEnabled();
+        if (!isAcceptableAdsEnabled && BuildConfig.DEBUG)
+        {
+          final Subscription[] listedSubscriptions = engine.getListedSubscriptions();
+          for (Subscription subscription : listedSubscriptions)
+          {
+            if (subscription.url.contains("abp-testcase-subscription.txt"))
+            {
+              isAcceptableAdsEnabled = true;
+              break;
+            }
+          }
+        }
         if (isMainFrame)
         {
           // never blocking main frame requests, just subrequests
@@ -1370,11 +1383,11 @@ public class AdblockWebView extends WebView
     clearReferrers();
   }
 
-  public boolean generateStylesheetForUrl(final String url, final boolean isMainFrame)
+  public boolean generateStylesheetForUrl(final String urlWithoutFragment, final boolean isMainFrame)
   {
     final boolean isJsInIframesEnabled = getJsInIframesEnabled();
     Timber.d("generateStylesheetForUrl() called for url %s, isMainFrame = %b, " +
-            "isJsInIframesEnabled == %b", url, isMainFrame, isJsInIframesEnabled);
+            "isJsInIframesEnabled == %b", urlWithoutFragment, isMainFrame, isJsInIframesEnabled);
     if (!isMainFrame && !isJsInIframesEnabled)
     {
       return false;
@@ -1383,11 +1396,11 @@ public class AdblockWebView extends WebView
     String domain = null;
     try
     {
-      domain = Utils.getDomain(url);
+      domain = Utils.getDomain(urlWithoutFragment);
     }
     catch (final URISyntaxException e)
     {
-      Timber.e(e, "Failed to extract domain from %s", url);
+      Timber.e(e, "Failed to extract domain from %s", urlWithoutFragment);
     }
     if (domain == null)
     {
@@ -1398,7 +1411,7 @@ public class AdblockWebView extends WebView
     String emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
 
     // Check if css was already generated
-    final Pair<String, String> stylesheets = domain2Stylesheets.get(domain);
+    final Pair<String, String> stylesheets = url2Stylesheets.get(urlWithoutFragment);
     if (stylesheets != null)
     {
       return !stylesheets.first.equals(EMPTY_ELEMHIDE_STRING) ||
@@ -1438,9 +1451,9 @@ public class AdblockWebView extends WebView
         Timber.d("Requesting elemhide selectors from AdblockEngine for %s", domain);
 
         final List<String> referrerChain = isMainFrame ?
-                new ArrayList<String>() : buildFramesHierarchy(url);
+                new ArrayList<String>() : buildFramesHierarchy(urlWithoutFragment);
         // Same as ABPChromium, for frames we include a frame itself as a parent
-        referrerChain.add(url);
+        referrerChain.add(urlWithoutFragment);
 
         final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
         String siteKey = (siteKeysConfiguration != null
@@ -1450,8 +1463,8 @@ public class AdblockWebView extends WebView
 
         if (!isMainFrame && siteKeysConfiguration != null && siteKey.isEmpty())
         {
-          Timber.d("Waiting for a site key when handling %s", url);
-          final boolean waited = siteKeyExtractor.waitForSitekeyCheck(url, isMainFrame);
+          Timber.d("Waiting for a site key when handling %s", urlWithoutFragment);
+          final boolean waited = siteKeyExtractor.waitForSitekeyCheck(urlWithoutFragment, isMainFrame);
           if (waited)
           {
             siteKey = PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
@@ -1459,12 +1472,12 @@ public class AdblockWebView extends WebView
           }
         }
 
-        final boolean specificOnly = filterEngine.matches(url,
+        final boolean specificOnly = filterEngine.matches(urlWithoutFragment,
             FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
             Collections.<String>emptyList(), siteKey) != null;
         stylesheetString = getProvider()
             .getEngine()
-            .getElementHidingStyleSheet(url, domain, referrerChain, siteKey, specificOnly);
+            .getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain, siteKey, specificOnly);
         Timber.d("Finished requesting elemhide stylesheet, got %d symbols" +
                 (specificOnly ? " (specificOnly)" : "") + " for %s", stylesheetString.length(),
             domain);
@@ -1473,7 +1486,7 @@ public class AdblockWebView extends WebView
         Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s", domain);
         final List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
             .getEngine()
-            .getElementHidingEmulationSelectors(url, domain, referrerChain, siteKey);
+            .getElementHidingEmulationSelectors(urlWithoutFragment, domain, referrerChain, siteKey);
         Timber.d("Finished requesting elemhideemu selectors, got %d symbols for %s",
             emuSelectors.size(), domain);
         emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
@@ -1482,7 +1495,7 @@ public class AdblockWebView extends WebView
     finally
     {
       lock.unlock();
-      domain2Stylesheets.put(domain, new Pair<>(stylesheetString, emuSelectorsString));
+      url2Stylesheets.put(urlWithoutFragment, new Pair<>(stylesheetString, emuSelectorsString));
       // return true if elemhide OR elemhideemu data was provided
       return !stylesheetString.equals(EMPTY_ELEMHIDE_STRING) ||
           !emuSelectorsString.equals(EMPTY_ELEMHIDE_ARRAY_STRING);
@@ -1491,15 +1504,7 @@ public class AdblockWebView extends WebView
 
   private Pair<String, String> getStylesheetsForUrl(final String url)
   {
-    try
-    {
-      return domain2Stylesheets.get(Utils.getDomain(url));
-    }
-    catch (final URISyntaxException e)
-    {
-      Timber.e(e,"Failed to extract domain from %s", url);
-    }
-    return null;
+    return url2Stylesheets.get(Utils.getUrlWithoutFragment(url));
   }
 
   // warning: do not rename (used in injected JS by method name)
