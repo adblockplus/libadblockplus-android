@@ -691,7 +691,7 @@ public class AdblockWebView extends WebView
       final boolean isMainFrame = request.isForMainFrame();
       boolean isAllowlisted = false;
       boolean canContainSitekey = false;
-      boolean isAcceptableAdsEnabled = true;
+      boolean sitekeyCheckEnabled;
 
       final String referrer = request.getRequestHeaders().get(HttpClient.HEADER_REFERRER);
 
@@ -766,15 +766,15 @@ public class AdblockWebView extends WebView
           Timber.w("No referrer header for %s", url);
         }
 
-        isAcceptableAdsEnabled = engine.isAcceptableAdsEnabled();
-        if (!isAcceptableAdsEnabled && BuildConfig.DEBUG)
+        sitekeyCheckEnabled = engine.isAcceptableAdsEnabled() || getJsInIframesEnabled();
+        if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
         {
           final Subscription[] listedSubscriptions = engine.getListedSubscriptions();
           for (Subscription subscription : listedSubscriptions)
           {
             if (subscription.url.contains("abp-testcase-subscription.txt"))
             {
-              isAcceptableAdsEnabled = true;
+              sitekeyCheckEnabled = true;
               break;
             }
           }
@@ -783,7 +783,7 @@ public class AdblockWebView extends WebView
         {
           // never blocking main frame requests, just subrequests
           Timber.w("%s is main frame, allow loading", url);
-          siteKeyExtractor.setEnabled(isAcceptableAdsEnabled);
+          siteKeyExtractor.setEnabled(sitekeyCheckEnabled);
           // For a main frame we don't need to check result of generateStylesheetForUrl as we still
           // need to inject js for a site key (site key check is disabled in inject.js for subframes).
           clearStylesheets();
@@ -915,8 +915,8 @@ public class AdblockWebView extends WebView
 
                   if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
                   {
-                    Timber.i("Blocked loading %s with AA %s", url,
-                        isAcceptableAdsEnabled ? "enabled" : "disabled");
+                    Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                        sitekeyCheckEnabled ? "enabled" : "disabled");
                     return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
                   }
                   if (result == AdblockEngine.MatchesResult.ALLOWLISTED)
@@ -934,8 +934,8 @@ public class AdblockWebView extends WebView
               // check after waiting for the sitekey check conclusion
               if (!isAllowlisted)
               {
-                Timber.i("Blocked loading %s with AA %s", url,
-                    isAcceptableAdsEnabled ? "enabled" : "disabled");
+                Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                    sitekeyCheckEnabled ? "enabled" : "disabled");
                 return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
               }
             }
@@ -959,7 +959,7 @@ public class AdblockWebView extends WebView
       // just reply that it's fine to load the resource
       final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
       if ((
-            isAcceptableAdsEnabled
+            sitekeyCheckEnabled
             ||
             (siteKeysConfiguration != null && siteKeysConfiguration.getForceChecks())
           )
