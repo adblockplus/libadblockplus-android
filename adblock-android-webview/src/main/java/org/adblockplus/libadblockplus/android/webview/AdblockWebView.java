@@ -1474,7 +1474,7 @@ public class AdblockWebView extends WebView
 
         final boolean specificOnly = filterEngine.matches(urlWithoutFragment,
             FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
-            Collections.<String>emptyList(), siteKey) != null;
+            referrerChain, siteKey) != null;
         stylesheetString = getProvider()
             .getEngine()
             .getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain, siteKey, specificOnly);
