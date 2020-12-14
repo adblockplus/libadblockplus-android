@@ -751,7 +751,7 @@ public class AdblockWebView extends WebView
 
         if (referrer != null)
         {
-          Timber.d("Header referrer for " + url + " is " + referrer);
+          Timber.d("Header referrer for %s is %s", url , referrer);
           if (!url.equals(referrer))
           {
             url2Referrer.put(urlWithoutFragment, referrer);
@@ -1067,12 +1067,39 @@ public class AdblockWebView extends WebView
 
     // Here we discover if referrerChain is empty or incomplete (i.e. does not contain the
     // navigation url) so we add at least the top referrer which is navigationUrl.
-    final String navigationUrlLocal = navigationUrl.get();
-    if (!TextUtils.isEmpty(navigationUrlLocal) && (referrerChain.isEmpty() ||
-        !referrerChain.contains(navigationUrlLocal)))
+    try
     {
-      Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal, urlWithoutFragment);
-      referrerChain.add(0, navigationUrlLocal);
+      final String navigationUrlLocal = navigationUrl.get();
+      if (TextUtils.isEmpty(navigationUrlLocal))
+      {
+        return referrerChain; //early exit
+      }
+      final String navigationUrlDomain = Utils.getDomain(navigationUrlLocal);
+      if (TextUtils.isEmpty(navigationUrlDomain))
+      {
+        return referrerChain; //early exit
+      }
+      boolean canAddTopLevelParent = false;
+      if (!referrerChain.isEmpty())
+      {
+        // Let's check if we already have a top level domain same as navigationUrlDomain, and if
+        // not then add a top level parent.
+        final String currentTopLevelDomain = Utils.getDomain(referrerChain.get(0));
+        if (!navigationUrlDomain.equals(currentTopLevelDomain))
+        {
+          canAddTopLevelParent = true;
+        }
+      }
+      if (referrerChain.isEmpty() || canAddTopLevelParent)
+      {
+        Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal,
+            urlWithoutFragment);
+        referrerChain.add(0, navigationUrlLocal);
+      }
+    }
+    catch (final URISyntaxException e)
+    {
+      Timber.e(e, "buildFramesHierarchy() failed to obtain a domain from url");
     }
 
     return referrerChain;
