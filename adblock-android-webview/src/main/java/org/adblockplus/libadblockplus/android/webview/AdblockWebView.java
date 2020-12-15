@@ -617,6 +617,22 @@ public class AdblockWebView extends WebView
     }
 
     @Override
+    public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request)
+    {
+      Timber.d("shouldOverrideUrlLoading called for view.getUrl() %s", view.getUrl());
+      clearReferrers();
+      return super.shouldOverrideUrlLoading(view, request);
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(final WebView view, final String url)
+    {
+      Timber.d("shouldOverrideUrlLoading called for url %s", url);
+      clearReferrers();
+      return super.shouldOverrideUrlLoading(view, url);
+    }
+
+    @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon)
     {
       Timber.d("onPageStarted called for url %s", url);
@@ -1222,8 +1238,6 @@ public class AdblockWebView extends WebView
 
     loading = true;
     loadError = null;
-
-    clearReferrers();
 
     if (newUrl != null)
     {
