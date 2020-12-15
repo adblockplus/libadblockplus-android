@@ -707,7 +707,7 @@ public class AdblockWebView extends WebView
       final boolean isMainFrame = request.isForMainFrame();
       boolean isAllowlisted = false;
       boolean canContainSitekey = false;
-      boolean isAcceptableAdsEnabled = true;
+      boolean sitekeyCheckEnabled;
 
       final String referrer = request.getRequestHeaders().get(HttpClient.HEADER_REFERRER);
 
@@ -767,7 +767,7 @@ public class AdblockWebView extends WebView
 
         if (referrer != null)
         {
-          Timber.d("Header referrer for " + url + " is " + referrer);
+          Timber.d("Header referrer for %s is %s", url , referrer);
           if (!url.equals(referrer))
           {
             url2Referrer.put(urlWithoutFragment, referrer);
@@ -782,15 +782,15 @@ public class AdblockWebView extends WebView
           Timber.w("No referrer header for %s", url);
         }
 
-        isAcceptableAdsEnabled = engine.isAcceptableAdsEnabled();
-        if (!isAcceptableAdsEnabled && BuildConfig.DEBUG)
+        sitekeyCheckEnabled = engine.isAcceptableAdsEnabled() || getJsInIframesEnabled();
+        if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
         {
           final Subscription[] listedSubscriptions = engine.getListedSubscriptions();
           for (Subscription subscription : listedSubscriptions)
           {
             if (subscription.url.contains("abp-testcase-subscription.txt"))
             {
-              isAcceptableAdsEnabled = true;
+              sitekeyCheckEnabled = true;
               break;
             }
           }
@@ -799,7 +799,7 @@ public class AdblockWebView extends WebView
         {
           // never blocking main frame requests, just subrequests
           Timber.w("%s is main frame, allow loading", url);
-          siteKeyExtractor.setEnabled(isAcceptableAdsEnabled);
+          siteKeyExtractor.setEnabled(sitekeyCheckEnabled);
           // For a main frame we don't need to check result of generateStylesheetForUrl as we still
           // need to inject js for a site key (site key check is disabled in inject.js for subframes).
           clearStylesheets();
@@ -931,8 +931,8 @@ public class AdblockWebView extends WebView
 
                   if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
                   {
-                    Timber.i("Blocked loading %s with AA %s", url,
-                        isAcceptableAdsEnabled ? "enabled" : "disabled");
+                    Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                        sitekeyCheckEnabled ? "enabled" : "disabled");
                     return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
                   }
                   if (result == AdblockEngine.MatchesResult.ALLOWLISTED)
@@ -950,8 +950,8 @@ public class AdblockWebView extends WebView
               // check after waiting for the sitekey check conclusion
               if (!isAllowlisted)
               {
-                Timber.i("Blocked loading %s with AA %s", url,
-                    isAcceptableAdsEnabled ? "enabled" : "disabled");
+                Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                    sitekeyCheckEnabled ? "enabled" : "disabled");
                 return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
               }
             }
@@ -975,7 +975,7 @@ public class AdblockWebView extends WebView
       // just reply that it's fine to load the resource
       final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
       if ((
-            isAcceptableAdsEnabled
+            sitekeyCheckEnabled
             ||
             (siteKeysConfiguration != null && siteKeysConfiguration.getForceChecks())
           )
@@ -1083,12 +1083,39 @@ public class AdblockWebView extends WebView
 
     // Here we discover if referrerChain is empty or incomplete (i.e. does not contain the
     // navigation url) so we add at least the top referrer which is navigationUrl.
-    final String navigationUrlLocal = navigationUrl.get();
-    if (!TextUtils.isEmpty(navigationUrlLocal) && (referrerChain.isEmpty() ||
-        !referrerChain.contains(navigationUrlLocal)))
+    try
     {
-      Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal, urlWithoutFragment);
-      referrerChain.add(0, navigationUrlLocal);
+      final String navigationUrlLocal = navigationUrl.get();
+      if (TextUtils.isEmpty(navigationUrlLocal))
+      {
+        return referrerChain; //early exit
+      }
+      final String navigationUrlDomain = Utils.getDomain(navigationUrlLocal);
+      if (TextUtils.isEmpty(navigationUrlDomain))
+      {
+        return referrerChain; //early exit
+      }
+      boolean canAddTopLevelParent = false;
+      if (!referrerChain.isEmpty())
+      {
+        // Let's check if we already have a top level domain same as navigationUrlDomain, and if
+        // not then add a top level parent.
+        final String currentTopLevelDomain = Utils.getDomain(referrerChain.get(0));
+        if (!navigationUrlDomain.equals(currentTopLevelDomain))
+        {
+          canAddTopLevelParent = true;
+        }
+      }
+      if (referrerChain.isEmpty() || canAddTopLevelParent)
+      {
+        Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal,
+            urlWithoutFragment);
+        referrerChain.add(0, navigationUrlLocal);
+      }
+    }
+    catch (final URISyntaxException e)
+    {
+      Timber.e(e, "buildFramesHierarchy() failed to obtain a domain from url");
     }
 
     return referrerChain;
@@ -1488,7 +1515,7 @@ public class AdblockWebView extends WebView
 
         final boolean specificOnly = filterEngine.matches(urlWithoutFragment,
             FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
-            Collections.<String>emptyList(), siteKey) != null;
+            referrerChain, siteKey) != null;
         stylesheetString = getProvider()
             .getEngine()
             .getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain, siteKey, specificOnly);
