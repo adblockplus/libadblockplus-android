@@ -187,6 +187,26 @@ regression_tests:
     # `./gradlew cucumber` launches cucumber executor that then launches Appium client
     - cd automation && ./gradlew cucumber
 
+# automated functional tests using Appium
+functional_tests:
+  only:
+    - schedules
+    - web
+  stage: device_tests
+  variables:
+    # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
+    GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
+    # demo app debug apk
+    TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
+  script:
+    # TESTOBJ_PROJECT_KEY should exist, testing it
+    - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
+    # we are not using submodules, because automation is not a part of repository functionality
+    # its rather a standalone set of scripts
+    - git clone $GIT_AUTOMATION_REPO automation
+    # `./gradlew functional` launches cucumber executor that then launches Appium client and executes entire functional tests
+    - cd automation && ./gradlew functional
+
 # FilterEngine performance benchmarking and memory
 benchmark:
   tags:
