@@ -68,10 +68,10 @@ public abstract class BaseSettingsFragment
   {
     if (!(activity instanceof Provider))
     {
-      String message = activity.getClass().getSimpleName()
-        + " should implement "
-        + clazz.getSimpleName()
-        + " interface";
+      final String message = activity.getClass().getSimpleName()
+          + " should implement "
+          + clazz.getSimpleName()
+          + " interface";
 
       Timber.e(message);
       throw new RuntimeException(message);
