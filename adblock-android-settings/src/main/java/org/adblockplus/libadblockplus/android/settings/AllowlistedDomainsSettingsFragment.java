@@ -28,11 +28,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import androidx.lifecycle.ViewModelProvider;
 
 import timber.log.Timber;
 
@@ -42,8 +38,9 @@ import timber.log.Timber;
  * create an instance of this fragment.
  */
 public class AllowlistedDomainsSettingsFragment
-  extends BaseSettingsFragment<AllowlistedDomainsSettingsFragment.Listener>
+    extends BaseSettingsFragment<AllowlistedDomainsSettingsFragment.Listener>
 {
+  private SettingsViewModel settingsViewModel;
   private EditText domain;
   private ImageView addDomainButton;
   private ListView listView;
@@ -66,7 +63,6 @@ public class AllowlistedDomainsSettingsFragment
   /**
    * Use this factory method to create a new instance of
    * this fragment using the provided parameters.
-   *
    */
   public static AllowlistedDomainsSettingsFragment newInstance()
   {
@@ -83,10 +79,10 @@ public class AllowlistedDomainsSettingsFragment
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
   {
-    View rootView = inflater.inflate(
-      R.layout.fragment_adblock_allowlisted_domains_settings,
-      container,
-      false);
+    final View rootView = inflater.inflate(
+        R.layout.fragment_adblock_allowlisted_domains_settings,
+        container,
+        false);
 
     bindControls(rootView);
     checkAndInitControls();
@@ -106,19 +102,25 @@ public class AllowlistedDomainsSettingsFragment
     checkAndInitControls();
   }
 
-  private void checkAndInitControls()
-  {
-    // domain != null is used as just as a way to check that the controls are bound.
-    if (settings != null && provider != null && domain != null)
-    {
-      initControls();
-    }
-  }
-
   @Override
   protected void onAdblockEngineReady()
   {
-    // nothing
+    checkAndInitControls();
+  }
+
+  private void checkAndInitControls()
+  {
+    // domain != null is used as just as a way to check that the controls are bound.
+    if (settings != null && provider != null && domain != null && engine != null)
+    {
+      settingsViewModel = new ViewModelProvider(requireActivity(),
+          new SettingsViewModelFactory(
+              getActivity().getApplication(),
+              settings,
+              engine,
+              provider)).get(SettingsViewModel.class);
+      initControls();
+    }
   }
 
   private void bindControls(View rootView)
@@ -147,14 +149,7 @@ public class AllowlistedDomainsSettingsFragment
     public void onClick(final View v)
     {
       // update and save settings
-      final int position = (Integer) v.getTag();
-      final String removeDomain = settings.getAllowlistedDomains().get(position);
-      Timber.i("Removing domain: %s, %d", removeDomain, position);
-      settings.getAllowlistedDomains().remove(position);
-      provider.getAdblockSettingsStorage().save(settings);
-
-      // apply settings
-      engine.removeDomainAllowlistingFilter(removeDomain);
+      settingsViewModel.removeDomain((Integer) v.getTag());
 
       // signal event
       listener.onAdblockSettingsChanged(AllowlistedDomainsSettingsFragment.this);
@@ -170,15 +165,13 @@ public class AllowlistedDomainsSettingsFragment
     @Override
     public int getCount()
     {
-      return settings.getAllowlistedDomains() != null
-        ? settings.getAllowlistedDomains().size()
-        : 0;
+      return settingsViewModel.getAllowlistedDomainsCount();
     }
 
     @Override
     public Object getItem(int position)
     {
-      return settings.getAllowlistedDomains().get(position);
+      return settingsViewModel.getAllowlistedDomain(position);
     }
 
     @Override
@@ -194,7 +187,7 @@ public class AllowlistedDomainsSettingsFragment
       {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         convertView = inflater.inflate(R.layout.fragment_adblock_allowlisted_domain_item,
-          parent, false);
+            parent, false);
         convertView.setTag(new Holder(convertView));
       }
 
@@ -217,19 +210,30 @@ public class AllowlistedDomainsSettingsFragment
       @Override
       public void onClick(View v)
       {
-        String preparedDomain = prepareDomain(domain.getText().toString());
+        final String preparedDomain = settingsViewModel.prepareDomain(
+            domain.getText().toString());
 
         if (listener.isValidDomain(
-          AllowlistedDomainsSettingsFragment.this,
-          preparedDomain,
-          settings))
+            AllowlistedDomainsSettingsFragment.this,
+            preparedDomain,
+            settings))
         {
-          addDomain(preparedDomain);
+          if (settingsViewModel.addDomain(preparedDomain))
+          {
+            // signal event
+            listener.onAdblockSettingsChanged(AllowlistedDomainsSettingsFragment.this);
+
+            // update UI
+            adapter.notifyDataSetChanged();
+          }
         }
         else
         {
           Timber.w("Domain " + preparedDomain + " is not valid");
         }
+
+        domain.getText().clear();
+        domain.clearFocus();
       }
     });
 
@@ -237,54 +241,4 @@ public class AllowlistedDomainsSettingsFragment
     listView.setAdapter(adapter);
   }
 
-  private String prepareDomain(final String domain)
-  {
-    String text = domain.trim();
-
-    try
-    {
-      final URL url = new URL(text);
-      text = url.getHost();
-    }
-    catch (final MalformedURLException ignored)
-    {
-      // If the text can't be parsed as a valid URL, just assume that the user entered the hostname.
-    }
-
-    return text;
-  }
-
-  public void addDomain(final String newDomain)
-  {
-    List<String> allowlistedDomains = settings.getAllowlistedDomains();
-    if (allowlistedDomains == null)
-    {
-      allowlistedDomains = new LinkedList<>();
-      settings.setAllowlistedDomains(allowlistedDomains);
-    }
-    if (!allowlistedDomains.contains(newDomain))
-    {
-      Timber.d("New allowlisted domain added: %s", newDomain);
-      // update and save settings
-      allowlistedDomains.add(newDomain);
-      Collections.sort(allowlistedDomains);
-
-      provider.getAdblockSettingsStorage().save(settings);
-
-      // apply settings
-      engine.addDomainAllowlistingFilter(newDomain);
-
-      // signal event
-      listener.onAdblockSettingsChanged(AllowlistedDomainsSettingsFragment.this);
-
-      // update UI
-      adapter.notifyDataSetChanged();
-    }
-    else
-    {
-      Timber.d("Allowlisted domain is already added: %s", newDomain);
-    }
-    domain.getText().clear();
-    domain.clearFocus();
-  }
 }
