@@ -209,3 +209,4 @@ benchmark:
   only:
     - schedules
     - web
+    - tags
