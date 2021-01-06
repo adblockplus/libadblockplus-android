@@ -437,6 +437,10 @@ If adblock engine provider is not set, it's created by AdblockWebView instance a
 Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
 This is optional but highly suggested. See `TabFragment.java` on usage example.
 
+Please note that the AdblockWebView does intercept some of the HTTP(S) requests done by the subclassed WebView and does them internally by means of `java.net.HttpURLConnection`. 
+For doing so AdblockWebView maintains the cookies in sync between the `java.net.CookieManager` and `android.webkit.CookieManager`. The sync is maintained by replacing the default `CookieHandler` by a `SharedCookieManager` which stores all the cookies in `android.webkit.CookieManager` storage.
+If a client code sets a cookie handler by calling `java.net.CookieHandler.setDefault()`, such a cookie handler will be later overwritten by our custom `SharedCookieManager` which is set by AdblockWebView when loading any url.
+
 Use `enableJsInIframes(true)` to enable element hiding and element hiding emulation for iframes in AdblockWebView.
 This feature does not support yet element hiding for blocked requests.
 This is optional feature which under the hood rewrites html content to inject before the `</body>` tag `<script nonce="..">..</script>` with our custom element hiding (emulation) JavaScript, and if necessary updates CSP HTTP response header adding our `nonce` string to execute the script.

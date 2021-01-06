@@ -34,12 +34,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,6 +54,8 @@ import static org.adblockplus.libadblockplus.android.Utils.convertMapToHeadersLi
  */
 public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
 {
+  private final AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
+
   private static String getReasonPhrase(final ServerResponse.NsStatus status)
   {
     return status.name().replace("_", "");
@@ -170,7 +172,7 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
         // We want to just execute our custom inject.js script by slightly relaxing CSP if needed
         // If a nonce for script-src is present we will reuse it, otherwise it will be added
         if (eachEntry.getKey().toLowerCase().equals(HttpClient.HEADER_CSP) &&
-          !eachEntry.getValue().isEmpty())
+            !eachEntry.getValue().isEmpty())
         {
           Timber.d("Found `%s` CSP header", eachEntry.getValue());
           if (eachEntry.getValue().toLowerCase().contains(CSP_SCRIPT_SRC_PARAM))
@@ -293,6 +295,8 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
       {
         Timber.d("Removing %s to avoid Content-Type duplication",
             HttpClient.HEADER_CONTENT_TYPE);
+        // Cookies were already stored by SharedCookieManager in a storage used by
+        // the android.webkit.CookieManager, we can strip them.
         responseHeaders.remove(HttpClient.HEADER_CONTENT_TYPE);
 
       /*
@@ -415,8 +419,6 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     }
 
     String url = request.getUrl().toString();
-    processResponseCookies(webViewWeakReference.get(), url, response);
-
     if (response.getFinalUrl() != null)
     {
       Timber.d("Updating url to %s, was (%s)", response.getFinalUrl(), url);
@@ -446,34 +448,6 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     return new ServerResponseProcessor().process(adblockWebView, url, response, responseHeaders);
   }
 
-  // Note: `response` headers can be modified inside
-  private void processResponseCookies(final AdblockWebView webView,
-                                      final String requestUrl,
-                                      final ServerResponse response)
-  {
-    final List<HeaderEntry> responseHeaders = response.getResponseHeaders();
-    final List<HeaderEntry> cookieHeadersToRemove = new ArrayList<>();
-    for (final HeaderEntry eachEntry : responseHeaders)
-    {
-      if (HttpClient.HEADER_SET_COOKIE.equalsIgnoreCase(eachEntry.getKey()))
-      {
-        if (webView.canAcceptCookie(requestUrl, eachEntry.getValue()))
-        {
-          Timber.d("Calling setCookie(%s)", requestUrl);
-          CookieManager.getInstance().setCookie(requestUrl, eachEntry.getValue());
-        }
-        else
-        {
-          Timber.d("Rejecting setCookie(%s)", requestUrl);
-        }
-        cookieHeadersToRemove.add(eachEntry);
-      }
-    }
-
-    // DP-971: We don't need to pass HEADER_SET_COOKIE data further
-    responseHeaders.removeAll(cookieHeadersToRemove);
-  }
-
   private ServerResponse sendRequest(final WebResourceRequest request) throws InterruptedException
   {
     final String requestUrl = request.getUrl().toString();
@@ -492,18 +466,20 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     };
 
     final List<HeaderEntry> requestHeadersList = convertMapToHeadersList(requestHeadersMap);
-    final String cookieValue = CookieManager.getInstance().getCookie(requestUrl);
-    if (cookieValue != null && !cookieValue.isEmpty())
+    final AdblockWebView adblockWebView = webViewWeakReference.get();
+    if (adblockWebView != null)
     {
-      Timber.d("Adding %s request header for url %s", HttpClient.HEADER_COOKIE, requestUrl);
-      requestHeadersList.add(new HeaderEntry(HttpClient.HEADER_COOKIE, cookieValue));
+      // Add fake headers to pass context data for HttpURLConnection, it will be removed later on
+      // by SharedCookieManager.get().
+      SharedCookieManager.injectPropertyHeaders(
+          acceptThirdPartyCookies.get(), adblockWebView.getNavigationUrl(), requestHeadersList);
     }
 
     final HttpRequest httpRequest = new HttpRequest(
         requestUrl,
         request.getMethod(),
         requestHeadersList,
-        true,              // always true since we don't use it for main frame
+        true, // always true since we don't use it for main frame
         true);
     getSiteKeysConfiguration().getHttpClient().request(httpRequest, callback);
 
@@ -513,9 +489,28 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
   }
 
   @Override
+  public void setEnabled(final boolean enabled)
+  {
+    super.setEnabled(enabled);
+    if (!enabled)
+    {
+      SharedCookieManager.unloadCookieManager();
+    }
+  }
+
+  @Override
   public void startNewPage()
   {
-    // no-op
+    if (isEnabled())
+    {
+      final AdblockWebView adblockWebView = webViewWeakReference.get();
+      if (adblockWebView != null)
+      {
+        // This needs to be called from UI thread!
+        acceptThirdPartyCookies.set(CookieManager.getInstance().acceptThirdPartyCookies(adblockWebView));
+      }
+      SharedCookieManager.enforceCookieManager();
+    }
   }
 
   @Override
