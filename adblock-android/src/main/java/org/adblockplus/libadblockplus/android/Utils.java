@@ -42,6 +42,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -57,6 +58,11 @@ public final class Utils
   private Utils()
   {
     //
+  }
+
+  public static boolean isNullOrEmpty(final Collection< ? > c)
+  {
+    return c == null || c.isEmpty();
   }
 
   public static String getTag(final Class<?> clazz)
@@ -191,7 +197,8 @@ public final class Utils
     return new URI(getStringBeforeChar(url, '?')).getHost();
   }
 
-  public static boolean isFirstPartyCookie(final String documentUrl, final String requestUrl, final String cookieString)
+  public static boolean isFirstPartyCookie(final String documentUrl, final String requestUrl,
+                                           final String cookieString)
   {
     if (documentUrl == null || requestUrl == null || cookieString == null)
     {
@@ -208,7 +215,7 @@ public final class Utils
     }
     catch (final URISyntaxException e)
     {
-      Timber.e(e, "Failed to getDomain(%s)", documentUrl);
+      Timber.e(e, "isFirstPartyCookie: Failed to getDomain(%s)", documentUrl);
       return false;
     }
 
@@ -233,7 +240,7 @@ public final class Utils
     }
     catch (final IllegalArgumentException e)
     {
-      Timber.e(e, "Failed call to HttpCookie.parse()");
+      Timber.e(e, "isFirstPartyCookie: Failed call to HttpCookie.parse()");
       return false;
     }
 
@@ -246,7 +253,7 @@ public final class Utils
       }
       catch (final URISyntaxException e)
       {
-        Timber.e(e, "Failed to getDomain(%s)", requestUrl);
+        Timber.e(e, "isFirstPartyCookie: Failed to getDomain(%s)", requestUrl);
         return false;
       }
     }

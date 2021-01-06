@@ -27,7 +27,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Pair;
 import android.webkit.ConsoleMessage;
-import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
@@ -133,8 +132,6 @@ public class AdblockWebView extends WebView
   private String elementsHiddenFlag;
   private String sitekeyExtractedFlag;
   private SiteKeyExtractor siteKeyExtractor;
-  private final AtomicBoolean acceptCookie = new AtomicBoolean(true);
-  private final AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
 
   /**
    * Optional boolean value.
@@ -336,6 +333,11 @@ public class AdblockWebView extends WebView
       adblockEnabled.set(OptionalBoolean.UNDEFINED);
     }
   };
+
+  public String getNavigationUrl()
+  {
+    return navigationUrl.get();
+  }
 
   public AdblockWebView(final Context context)
   {
@@ -1121,24 +1123,6 @@ public class AdblockWebView extends WebView
     return referrerChain;
   }
 
-  public boolean canAcceptCookie(final String requestUrl, final String cookieString)
-  {
-    final String documentUrl = navigationUrl.get();
-    if (documentUrl == null || requestUrl == null || cookieString == null)
-    {
-      return false;
-    }
-    if (!acceptCookie.get())
-    {
-      return false;
-    }
-    if (!acceptThirdPartyCookies.get())
-    {
-      return Utils.isFirstPartyCookie(documentUrl, requestUrl, cookieString);
-    }
-    return true;
-  }
-
   // not a huge saving, but still nice to lazy init
   // since `contentTypeDetector` might not be used ever
   private ContentTypeDetector ensureContentTypeDetectorCreatedAndGet()
@@ -1337,7 +1321,6 @@ public class AdblockWebView extends WebView
   @Override
   public void reload()
   {
-    checkCookieSettings();
     ensureProvider();
 
     if (loading)
@@ -1346,18 +1329,6 @@ public class AdblockWebView extends WebView
     }
 
     super.reload();
-  }
-
-  private void checkCookieSettings()
-  {
-    final boolean acceptCookies = CookieManager.getInstance().acceptCookie();
-    acceptCookie.set(acceptCookies);
-    // If cookies are disabled no need to check more
-    if (acceptCookies)
-    {
-      // acceptThirdPartyCookies() needs to be called from UI thread
-      acceptThirdPartyCookies.set(CookieManager.getInstance().acceptThirdPartyCookies(this));
-    }
   }
 
   @Override
@@ -1369,7 +1340,6 @@ public class AdblockWebView extends WebView
 
   private void loadUrlCommon()
   {
-    checkCookieSettings();
     ensureProvider();
 
     if (loading)

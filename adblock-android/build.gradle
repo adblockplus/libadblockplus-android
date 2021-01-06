@@ -131,9 +131,6 @@ android {
     test.java.srcDirs += 'src/test/kotlin'
     androidTest.java.srcDirs += 'src/androidTest/kotlin'
   }
-
-  useLibrary 'android.test.runner'
-  useLibrary 'android.test.base'
 }
 
 bintray {
