@@ -135,15 +135,12 @@ public class WebViewLoadPerformanceUrlUsingJsTest
           continue;
         }
 
-        final String[] domainParts;
-        try
-        {
-          domainParts = Utils.getDomain(url).split("\\.");
-        }
-        catch (final URISyntaxException e)
+        final String domain = Utils.getDomain(url);
+        if (domain == null)
         {
           continue;
         }
+        final String[] domainParts = domain.split("\\.");
         assertTrue(domainParts.length > 1);
         final String secondLevelDomain = domainParts[domainParts.length - 2];
         assertNotNull(secondLevelDomain);

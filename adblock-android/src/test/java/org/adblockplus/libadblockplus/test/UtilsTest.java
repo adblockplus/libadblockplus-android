@@ -183,14 +183,7 @@ public class UtilsTest
 
     for (final Map.Entry<String, String> urlToDomainEntry : urlToDomainMap_OK.entrySet())
     {
-      try
-      {
         assertEquals(Utils.getDomain(urlToDomainEntry.getKey()), urlToDomainEntry.getValue());
-      }
-      catch (final URISyntaxException e)
-      {
-        fail(e.getMessage());
-      }
     }
 
     // Test failures
@@ -202,14 +195,9 @@ public class UtilsTest
 
     for (final String urlEntry : wrongUrls)
     {
-      try
+      if (Utils.getDomain(urlEntry) != null)
       {
-        Utils.getDomain(urlEntry);
-        fail("URISyntaxException is expected to be thrown");
-      }
-      catch (final URISyntaxException e)
-      {
-        // expected
+        fail("getDomain(" + urlEntry + ") is expected to be null");
       }
     }
   }
