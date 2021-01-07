@@ -188,13 +188,20 @@ public final class Utils
     return sb.toString();
   }
 
-  public static String getDomain(final String url) throws URISyntaxException
+  public static String getDomain(final String url)
   {
     if (url == null)
     {
       throw new IllegalArgumentException("Url can't be null");
     }
-    return new URI(getStringBeforeChar(url, '?')).getHost();
+    try
+    {
+      return new URI(getStringBeforeChar(url, '?')).getHost();
+    }
+    catch (final URISyntaxException e)
+    {
+      return null;
+    }
   }
 
   public static boolean isFirstPartyCookie(final String documentUrl, final String requestUrl,
@@ -204,18 +211,10 @@ public final class Utils
     {
       throw new IllegalArgumentException("Arguments can't be null");
     }
-    String documentDomain;
-    try
+    final String documentDomain = getDomain(documentUrl);
+    if (documentDomain == null)
     {
-      documentDomain = getDomain(documentUrl);
-      if (documentDomain == null)
-      {
-        return false;
-      }
-    }
-    catch (final URISyntaxException e)
-    {
-      Timber.e(e, "isFirstPartyCookie: Failed to getDomain(%s)", documentUrl);
+      Timber.e("isFirstPartyCookie: Failed to getDomain(%s)", documentUrl);
       return false;
     }
 
@@ -247,13 +246,10 @@ public final class Utils
     // Cookie does not specify "Domain" param, obtain the domain from url which sets the cookie
     if (cookieDomain == null || cookieDomain.isEmpty())
     {
-      try
+      cookieDomain = getDomain(requestUrl);
+      if (cookieDomain == null || cookieDomain.isEmpty())
       {
-        cookieDomain = getDomain(requestUrl);
-      }
-      catch (final URISyntaxException e)
-      {
-        Timber.e(e, "isFirstPartyCookie: Failed to getDomain(%s)", requestUrl);
+        Timber.e("isFirstPartyCookie: Failed to getDomain(%s)", requestUrl);
         return false;
       }
     }

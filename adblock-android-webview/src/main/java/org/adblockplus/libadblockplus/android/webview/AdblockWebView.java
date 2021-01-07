@@ -1085,41 +1085,34 @@ public class AdblockWebView extends WebView
 
     // Here we discover if referrerChain is empty or incomplete (i.e. does not contain the
     // navigation url) so we add at least the top referrer which is navigationUrl.
-    try
+    final String navigationUrlLocal = navigationUrl.get();
+    if (TextUtils.isEmpty(navigationUrlLocal))
     {
-      final String navigationUrlLocal = navigationUrl.get();
-      if (TextUtils.isEmpty(navigationUrlLocal))
+      return referrerChain; //early exit
+    }
+    final String navigationUrlDomain = Utils.getDomain(navigationUrlLocal);
+    if (TextUtils.isEmpty(navigationUrlDomain))
+    {
+      Timber.e("buildFramesHierarchy() failed to obtain a domain from url " + navigationUrlLocal);
+      return referrerChain; //early exit
+    }
+    boolean canAddTopLevelParent = false;
+    if (!referrerChain.isEmpty())
+    {
+      // Let's check if we already have a top level domain same as navigationUrlDomain, and if
+      // not then add a top level parent.
+      final String currentTopLevelDomain = Utils.getDomain(referrerChain.get(0));
+      if (!navigationUrlDomain.equals(currentTopLevelDomain))
       {
-        return referrerChain; //early exit
-      }
-      final String navigationUrlDomain = Utils.getDomain(navigationUrlLocal);
-      if (TextUtils.isEmpty(navigationUrlDomain))
-      {
-        return referrerChain; //early exit
-      }
-      boolean canAddTopLevelParent = false;
-      if (!referrerChain.isEmpty())
-      {
-        // Let's check if we already have a top level domain same as navigationUrlDomain, and if
-        // not then add a top level parent.
-        final String currentTopLevelDomain = Utils.getDomain(referrerChain.get(0));
-        if (!navigationUrlDomain.equals(currentTopLevelDomain))
-        {
-          canAddTopLevelParent = true;
-        }
-      }
-      if (referrerChain.isEmpty() || canAddTopLevelParent)
-      {
-        Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal,
-            urlWithoutFragment);
-        referrerChain.add(0, navigationUrlLocal);
+        canAddTopLevelParent = true;
       }
     }
-    catch (final URISyntaxException e)
+    if (referrerChain.isEmpty() || canAddTopLevelParent)
     {
-      Timber.e(e, "buildFramesHierarchy() failed to obtain a domain from url");
+      Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal,
+          urlWithoutFragment);
+      referrerChain.add(0, navigationUrlLocal);
     }
-
     return referrerChain;
   }
 
@@ -1404,17 +1397,10 @@ public class AdblockWebView extends WebView
       return false;
     }
 
-    String domain = null;
-    try
+    final String domain = Utils.getDomain(urlWithoutFragment);
+    if (TextUtils.isEmpty(domain))
     {
-      domain = Utils.getDomain(urlWithoutFragment);
-    }
-    catch (final URISyntaxException e)
-    {
-      Timber.e(e, "Failed to extract domain from %s", urlWithoutFragment);
-    }
-    if (domain == null)
-    {
+      Timber.e("Failed to extract domain from %s", urlWithoutFragment);
       return false;
     }
 
