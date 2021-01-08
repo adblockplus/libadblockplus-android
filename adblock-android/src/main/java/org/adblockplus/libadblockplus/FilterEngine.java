@@ -31,39 +31,14 @@ public final class FilterEngine
     registerNatives();
   }
 
-  public enum ContentType
-  {
-    OTHER, SCRIPT, IMAGE, STYLESHEET, OBJECT, SUBDOCUMENT, DOCUMENT, WEBSOCKET,
-    WEBRTC, PING, XMLHTTPREQUEST, OBJECT_SUBREQUEST, MEDIA, FONT, GENERICBLOCK,
-    ELEMHIDE, GENERICHIDE;
-
-    public static Set<ContentType> maskOf(ContentType... contentTypes)
-    {
-      final Set<ContentType> set = new HashSet<>(contentTypes.length);
-      for (ContentType contentType : contentTypes)
-      {
-        set.add(contentType);
-      }
-      return set;
-    }
-  }
-
-  public static class EmulationSelector
-  {
-    public String selector;
-    public String text;
-
-    public EmulationSelector(String selector, String text)
-    {
-      this.selector = selector;
-      this.text = text;
-    }
-  }
-
-  FilterEngine(long jniPlatformPtr)
+  FilterEngine(final long jniPlatformPtr)
   {
     this.ptr = jniPlatformPtr;
   }
+
+  private static native void addFilter(long ptr, String raw);
+
+  private static native void removeFilter(long ptr, String raw);
 
   public boolean isFirstRun()
   {
@@ -72,27 +47,38 @@ public final class FilterEngine
 
   public Filter getFilter(final String text)
   {
-    return getFilter(this.ptr, text);
+    final Filter filter = getFilter(this.ptr, text);
+    if (filter != null)
+    {
+      filter.setFilterEngine(this);
+    }
+    return filter;
   }
 
   public List<Filter> getListedFilters()
   {
-    return getListedFilters(this.ptr);
+    final List<Filter> filterList = getListedFilters(this.ptr);
+    // this is a hack to support deprecated functions
+    for (final Filter filter : filterList)
+    {
+      filter.setFilterEngine(this);
+    }
+    return filterList;
   }
 
   public Subscription getSubscription(final String url)
   {
-    return getSubscription(this.ptr, url);
+    return getSubscription(this.ptr, url, this);
   }
 
   public List<Subscription> getListedSubscriptions()
   {
-    return getListedSubscriptions(this.ptr);
+    return getListedSubscriptions(this.ptr, this);
   }
 
   public List<Subscription> fetchAvailableSubscriptions()
   {
-    return fetchAvailableSubscriptions(this.ptr);
+    return fetchAvailableSubscriptions(this.ptr, this);
   }
 
   public void removeFilterChangeCallback()
@@ -133,8 +119,13 @@ public final class FilterEngine
   public Filter matches(final String url, final Set<ContentType> contentTypes,
                         final List<String> documentUrls, final String siteKey)
   {
-    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-            documentUrls, siteKey, false);
+    final Filter filter = matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
+        documentUrls, siteKey, false);
+    if (filter != null)
+    {
+      filter.setFilterEngine(this); // this is a hack to support deprecated functions
+    }
+    return filter;
   }
 
   /**
@@ -152,8 +143,13 @@ public final class FilterEngine
                         final List<String> documentUrls, final String siteKey,
                         final boolean specificOnly)
   {
-    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-            documentUrls, siteKey, specificOnly);
+    final Filter filter = matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
+        documentUrls, siteKey, specificOnly);
+    if (filter != null)
+    {
+      filter.setFilterEngine(this); // this is a hack to support deprecated functions
+    }
+    return filter;
   }
 
   /**
@@ -221,12 +217,12 @@ public final class FilterEngine
     setPref(this.ptr, pref, value.ptr);
   }
 
-  public String getHostFromURL(String url)
+  public String getHostFromURL(final String url)
   {
     return getHostFromURL(this.ptr, url);
   }
 
-  public void setAllowedConnectionType(String value)
+  public void setAllowedConnectionType(final String value)
   {
     setAllowedConnectionType(this.ptr, value);
   }
@@ -253,10 +249,11 @@ public final class FilterEngine
 
   /**
    * Schedules updating of a subscription corresponding to the passed URL.
+   *
    * @param subscriptionUrl may contain query parameters, only the beginning of the string is used
-   *                       to find a corresponding subscription.
+   *                        to find a corresponding subscription.
    */
-  public void updateFiltersAsync(String subscriptionUrl)
+  public void updateFiltersAsync(final String subscriptionUrl)
   {
     updateFiltersAsync(this.ptr, subscriptionUrl);
   }
@@ -270,6 +267,27 @@ public final class FilterEngine
     return getNativePtr(this.ptr);
   }
 
+  public void addSubscription(final Subscription subscription)
+  {
+    addSubscription(this.ptr, subscription.getUrl());
+  }
+
+  public void removeSubscription(final Subscription subscription)
+  {
+    removeSubscription(this.ptr, subscription.getUrl());
+  }
+
+  public void addFilter(final Filter filter)
+  {
+    addFilter(this.ptr, filter.getRaw());
+  }
+
+  public void removeFilter(final Filter filter)
+  {
+    removeFilter(this.ptr, filter.getRaw());
+  }
+
+
   private static native void registerNatives();
 
   private static native boolean isFirstRun(long ptr);
@@ -278,11 +296,11 @@ public final class FilterEngine
 
   private static native List<Filter> getListedFilters(long ptr);
 
-  private static native Subscription getSubscription(long ptr, String url);
+  private static native Subscription getSubscription(long ptr, String url, FilterEngine engine);
 
-  private static native List<Subscription> getListedSubscriptions(long ptr);
+  private static native List<Subscription> getListedSubscriptions(long ptr, FilterEngine engine);
 
-  private static native List<Subscription> fetchAvailableSubscriptions(long ptr);
+  private static native List<Subscription> fetchAvailableSubscriptions(long ptr, FilterEngine engine);
 
   private static native void removeFilterChangeCallback(long ptr);
 
@@ -327,4 +345,37 @@ public final class FilterEngine
   private static native void updateFiltersAsync(long ptr, String subscriptionUrl);
 
   private static native long getNativePtr(long ptr);
+
+  private static native void addSubscription(long ptr, String subscriptionUrl);
+
+  private static native void removeSubscription(long ptr, String subscriptionUrl);
+
+  public enum ContentType
+  {
+    OTHER, SCRIPT, IMAGE, STYLESHEET, OBJECT, SUBDOCUMENT, DOCUMENT, WEBSOCKET,
+    WEBRTC, PING, XMLHTTPREQUEST, OBJECT_SUBREQUEST, MEDIA, FONT, GENERICBLOCK,
+    ELEMHIDE, GENERICHIDE;
+
+    public static Set<ContentType> maskOf(final ContentType... contentTypes)
+    {
+      final Set<ContentType> set = new HashSet<>(contentTypes.length);
+      for (final ContentType contentType : contentTypes)
+      {
+        set.add(contentType);
+      }
+      return set;
+    }
+  }
+
+  public static class EmulationSelector
+  {
+    public String selector;
+    public String text;
+
+    public EmulationSelector(final String selector, final String text)
+    {
+      this.selector = selector;
+      this.text = text;
+    }
+  }
 }

@@ -39,35 +39,35 @@ public class ConsoleJsObjectTest extends BaseJsEngineTest
   @Test
   public void testConsoleLogCall()
   {
-    jsEngine.evaluate("\n\nconsole.log('foo', 'bar');\n\n", "eval");
+    jsEngine.evaluate("\n\nconsole.log('foo', 'bar');\n\n", "eval").dispose();
     verify(mockLogSystem).logCallback(LogSystem.LogLevel.LOG, "foo bar", "eval:3");
   }
 
   @Test
   public void testConsoleDebugCall()
   {
-    jsEngine.evaluate("console.debug('foo', 'bar')");
+    jsEngine.evaluate("console.debug('foo', 'bar')").dispose();
     verify(mockLogSystem).logCallback(LogSystem.LogLevel.LOG, "foo bar", ":1");
   }
 
   @Test
   public void testConsoleInfoCall()
   {
-    jsEngine.evaluate("console.info('foo', 'bar')");
+    jsEngine.evaluate("console.info('foo', 'bar')").dispose();
     verify(mockLogSystem).logCallback(LogSystem.LogLevel.INFO, "foo bar", ":1");
   }
 
   @Test
   public void testConsoleWarnCall()
   {
-    jsEngine.evaluate("console.warn('foo', 'bar')");
+    jsEngine.evaluate("console.warn('foo', 'bar')").dispose();
     verify(mockLogSystem).logCallback(LogSystem.LogLevel.WARN, "foo bar", ":1");
   }
 
   @Test
   public void testConsoleErrorCall()
   {
-    jsEngine.evaluate("console.error('foo', 'bar')");
+    jsEngine.evaluate("console.error('foo', 'bar')").dispose();
     verify(mockLogSystem).logCallback(LogSystem.LogLevel.ERROR, "foo bar", ":1");
   }
 
@@ -76,25 +76,25 @@ public class ConsoleJsObjectTest extends BaseJsEngineTest
   {
     jsEngine.evaluate(
         "\n" +
-        "function foo()\n" +
-        "{\n" +
-        "   (function() {\n" +
-        "       console.trace();\n" +
-        "   })();\n" +
-        "}\n" +
-        "foo();", "eval");
+            "function foo()\n" +
+            "{\n" +
+            "   (function() {\n" +
+            "       console.trace();\n" +
+            "   })();\n" +
+            "}\n" +
+            "foo();", "eval").dispose();
     verify(mockLogSystem).logCallback(
         LogSystem.LogLevel.TRACE,
         "1: /* anonymous */() at eval:5\n" +
-        "2: foo() at eval:6\n" +
-        "3: /* anonymous */() at eval:8\n",
+            "2: foo() at eval:6\n" +
+            "3: /* anonymous */() at eval:8\n",
         "");
   }
 
   @Test
   public void testConsoleOneCall()
   {
-    jsEngine.evaluate("\n\nconsole.log('foo', 'bar');\n\n", "eval");
+    jsEngine.evaluate("\n\nconsole.log('foo', 'bar');\n\n", "eval").dispose();
     verify(mockLogSystem, times(1))
         .logCallback(LogSystem.LogLevel.LOG, "foo bar", "eval:3");
   }
@@ -102,7 +102,7 @@ public class ConsoleJsObjectTest extends BaseJsEngineTest
   @Test
   public void testConsoleMultipleCalls()
   {
-    jsEngine.evaluate("\n\nconsole.log('foo', 'bar');console.log('foo', 'bar');\n\n", "eval");
+    jsEngine.evaluate("\n\nconsole.log('foo', 'bar');console.log('foo', 'bar');\n\n", "eval").dispose();
     verify(mockLogSystem, times(2))
         .logCallback(LogSystem.LogLevel.LOG, "foo bar", "eval:3");
   }

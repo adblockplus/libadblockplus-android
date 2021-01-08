@@ -36,6 +36,8 @@ public class FilterEngineAATest extends BaseFilterEngineTest
     setUpAppInfo(AppInfo.builder()
         .setLocale("zh")
         .build());
+    // The tests here do not need HttpClient at all
+    setUpHttpClient(null);
     super.setUp();
   }
 
@@ -73,7 +75,7 @@ public class FilterEngineAATest extends BaseFilterEngineTest
     }
     assertNotNull(aaSubscription);
     assertNotNull(langSubscription);
-    assertEquals(langSubscriptionUrl, langSubscription.getProperty("url").asString());
+    assertEquals(langSubscriptionUrl, langSubscription.getUrl());
     assertTrue(filterEngine.isAcceptableAdsEnabled());
   }
 
@@ -102,5 +104,6 @@ public class FilterEngineAATest extends BaseFilterEngineTest
     final Subscription disabledAaSubscription = findAASubscription(disabledSubscriptions);
     assertNotNull(disabledAaSubscription);
     assertTrue(disabledAaSubscription.isDisabled()); // ... but Disabled
+
   }
 }

@@ -17,71 +17,100 @@
 
 package org.adblockplus.libadblockplus;
 
-public final class Filter extends JsValue
+import java.lang.ref.WeakReference;
+
+public final class Filter
 {
-  static
+  private final Type type;
+  private final String raw;
+
+  // this is for deprecated methods
+  private WeakReference<FilterEngine> filterEngine;
+
+  // Called by Native
+  private Filter(final Type type, final String raw)
   {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
+    this.type = type;
+    this.raw = raw;
   }
 
-  private Filter(final long pointer)
-  {
-    super(pointer);
-  }
-
+  /**
+   * Retrieves the type of this filter.
+   *
+   * @return Type of this filter.
+   */
   public Type getType()
   {
-    return getType(this.ptr);
+    return type;
   }
 
+  public String getRaw()
+  {
+    return raw;
+  }
+
+  /**
+   * Checks whether this filter has been added to the list of custom filters.
+   *
+   * @return `true` if this filter has been added.
+   * @deprecated Use {@link FilterEngine#getListedFilters()} combined with find instead.
+   */
+  @Deprecated
   public boolean isListed()
   {
-    return isListed(this.ptr);
+    final FilterEngine engine = this.filterEngine.get();
+    return engine != null && engine.getListedFilters().contains(this);
   }
 
+  /**
+   * Adds this filter to the list of custom filters.
+   *
+   * @deprecated Use {@link FilterEngine#addFilter(Filter)} instead.
+   */
+  @Deprecated
   public void addToList()
   {
-    addToList(this.ptr);
+    final FilterEngine engine = this.filterEngine.get();
+    if (engine != null)
+    {
+      engine.addFilter(this);
+    }
   }
 
+  /**
+   * Removes this filter from the list of custom filters.
+   *
+   * @deprecated Use {@link FilterEngine#removeFilter(Filter)} instead.
+   */
+  @Deprecated
   public void removeFromList()
   {
-    removeFromList(this.ptr);
-  }
-
-  @Override
-  public int hashCode()
-  {
-    return (int)(this.ptr >> 32) * (int)this.ptr;
+    final FilterEngine engine = this.filterEngine.get();
+    if (engine != null)
+    {
+      engine.removeFilter(this);
+    }
   }
 
   @Override
   public boolean equals(final Object o)
   {
-    if (!(o instanceof Filter))
-    {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    final Filter filter = (Filter) o;
+    return type == filter.type &&
+        raw.equals(filter.raw);
+  }
 
-    return operatorEquals(this.ptr, ((Filter)o).ptr);
+  void setFilterEngine(final FilterEngine filterEngine)
+  {
+    this.filterEngine = new WeakReference<>(filterEngine);
   }
 
   public enum Type
   {
     BLOCKING, EXCEPTION, ELEMHIDE, ELEMHIDE_EXCEPTION, ELEMHIDE_EMULATION,
-    COMMENT, INVALID;
+    COMMENT, INVALID
   }
 
-  private static native void registerNatives();
-
-  private static native Type getType(long ptr);
-
-  private static native boolean isListed(long ptr);
-
-  private static native void addToList(long ptr);
-
-  private static native void removeFromList(long ptr);
-
-  private static native boolean operatorEquals(long ptr, long other);
 }

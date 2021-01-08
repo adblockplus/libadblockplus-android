@@ -222,7 +222,7 @@ abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
 
         // wait for all subscriptions to be loaded
         while (!customEngineProvider.engine.filterEngine.listedSubscriptions.all {
-                it.getProperty("downloadStatus")?.asString() == "synchronize_ok"
+                it.synchronizationStatus == "synchronize_ok"
             }) {
             SystemClock.sleep(SLEEP_TIME_MILLI)
         }

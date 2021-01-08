@@ -21,6 +21,28 @@ import java.io.Serializable;
 
 public class Subscription implements Serializable
 {
+  public Subscription()
+  {
+    this.title = "";
+    this.url = "";
+    this.prefixes = "";
+    this.homepage = "";
+    this.author = "";
+  }
+
+  public Subscription(final String title,
+                      final String url,
+                      final String prefixes,
+                      final String homepage,
+                      final String author)
+  {
+    this.title = title;
+    this.url = url;
+    this.prefixes = prefixes;
+    this.homepage = homepage;
+    this.author = author;
+  }
+
   public String title;
   public String url;
   public String homepage;

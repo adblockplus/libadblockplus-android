@@ -42,11 +42,20 @@ public class FilterEngineTest extends BaseFilterEngineTest
   private static final String NO_SITEKEY = null;
   private static final String SITEKEY = "cNAQEBBQADSwAwSAJBAJRmzcpTevQqkWn6dJuX";
 
+  @Override
+  public void setUp()
+  {
+    // The tests here do not need HttpClient at all
+    setUpHttpClient(null);
+    super.setUp();
+  }
+
   protected void removeSubscriptions()
   {
     while (filterEngine.getListedSubscriptions().size() > 0)
     {
-      filterEngine.getListedSubscriptions().get(0).removeFromList();
+      final Subscription subscription = filterEngine.getListedSubscriptions().get(0);
+      filterEngine.removeSubscription(subscription);
     }
   }
 
@@ -60,25 +69,31 @@ public class FilterEngineTest extends BaseFilterEngineTest
     assertEquals(Filter.Type.ELEMHIDE_EXCEPTION, filterEngine.getFilter("example.com#@#foo").getType());
     final Filter filter5 = filterEngine.getFilter("  foo  ");
     assertEquals(filter1, filter5);
-    Filter filter6 = filterEngine.getFilter("example.org#?#foo");
+    final Filter filter6 = filterEngine.getFilter("example.org#?#foo");
     assertEquals(Filter.Type.ELEMHIDE_EMULATION, filter6.getType());
   }
 
   @Test
-  public void testFilterProperties()
+  public void testAddRemoveFiltersLegacy()
   {
+    assertEquals(0, filterEngine.getListedFilters().size());
     final Filter filter = filterEngine.getFilter("foo");
-
-    assertTrue(filter.getProperty("stringFoo").isUndefined());
-    assertTrue(filter.getProperty("intFoo").isUndefined());
-    assertTrue(filter.getProperty("boolFoo").isUndefined());
-
-    filter.setProperty("stringFoo", jsEngine.newValue("y"));
-    filter.setProperty("intFoo", jsEngine.newValue(24L));
-    filter.setProperty("boolFoo", jsEngine.newValue(true));
-    assertEquals("y", filter.getProperty("stringFoo").asString());
-    assertEquals(24L, filter.getProperty("intFoo").asLong());
-    assertTrue(filter.getProperty("boolFoo").asBoolean());
+    assertEquals(0, filterEngine.getListedFilters().size());
+    assertFalse(filter.isListed());
+    filter.addToList();
+    assertEquals(1, filterEngine.getListedFilters().size());
+    assertEquals(filter, filterEngine.getListedFilters().get(0));
+    assertTrue(filter.isListed());
+    filter.addToList();
+    assertEquals(1, filterEngine.getListedFilters().size());
+    assertEquals(filter, filterEngine.getListedFilters().get(0));
+    assertTrue(filter.isListed());
+    filter.removeFromList();
+    assertEquals(0, filterEngine.getListedFilters().size());
+    assertFalse(filter.isListed());
+    filter.removeFromList();
+    assertEquals(0, filterEngine.getListedFilters().size());
+    assertFalse(filter.isListed());
   }
 
   @Test
@@ -87,38 +102,17 @@ public class FilterEngineTest extends BaseFilterEngineTest
     assertEquals(0, filterEngine.getListedFilters().size());
     final Filter filter = filterEngine.getFilter("foo");
     assertEquals(0, filterEngine.getListedFilters().size());
-    assertFalse(filter.isListed());
-    filter.addToList();
+    filterEngine.addFilter(filter);
     assertEquals(1, filterEngine.getListedFilters().size());
     assertEquals(filter, filterEngine.getListedFilters().get(0));
-    assertTrue(filter.isListed());
-    filter.addToList();
+    filterEngine.addFilter(filter);
     assertEquals(1, filterEngine.getListedFilters().size());
     assertEquals(filter, filterEngine.getListedFilters().get(0));
-    assertTrue(filter.isListed());
-    filter.removeFromList();
+    filterEngine.removeFilter(filter);
+    assertEquals(0, filterEngine.getListedFilters().size());
+    filterEngine.removeFilter(filter);
     assertEquals(0, filterEngine.getListedFilters().size());
     assertFalse(filter.isListed());
-    filter.removeFromList();
-    assertEquals(0, filterEngine.getListedFilters().size());
-    assertFalse(filter.isListed());
-  }
-
-  @Test
-  public void testSubscriptionProperties()
-  {
-    final Subscription subscription = filterEngine.getSubscription("foo");
-
-    assertTrue(subscription.getProperty("stringFoo").isUndefined());
-    assertTrue(subscription.getProperty("intFoo").isUndefined());
-    assertTrue(subscription.getProperty("boolFoo").isUndefined());
-
-    subscription.setProperty("stringFoo", jsEngine.newValue("y"));
-    subscription.setProperty("intFoo", jsEngine.newValue(24L));
-    subscription.setProperty("boolFoo", jsEngine.newValue(true));
-    assertEquals("y", subscription.getProperty("stringFoo").asString());
-    assertEquals(24L, subscription.getProperty("intFoo").asLong());
-    assertTrue(subscription.getProperty("boolFoo").asBoolean());
   }
 
   @Test
@@ -137,7 +131,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
     assertFalse(subscription.isDisabled());
     subscription.setDisabled(true);
     final List<TestFilterChangeCallback.Event> filteredEvents = new ArrayList();
-    for (TestFilterChangeCallback.Event event : callback.getEvents())
+    for (final TestFilterChangeCallback.Event event : callback.getEvents())
     {
       if (!event.getAction().equals("subscription.disabled") ||
           !event.getJsValue().getProperty("url").asString().equals("foo"))
@@ -151,6 +145,8 @@ public class FilterEngineTest extends BaseFilterEngineTest
     }
     assertEquals(1, filteredEvents.size());
     assertTrue(subscription.isDisabled());
+    filterEngine.removeFilterChangeCallback();
+    callback.dispose();
   }
 
   @Test
@@ -165,7 +161,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.setFilterChangeCallback(callback);
     subscription.setDisabled(false);
     final List<TestFilterChangeCallback.Event> filteredEvents = new ArrayList();
-    for (TestFilterChangeCallback.Event event : callback.getEvents())
+    for (final TestFilterChangeCallback.Event event : callback.getEvents())
     {
       if (!event.getAction().equals("subscription.disabled") ||
           !event.getJsValue().getProperty("url").asString().equals("foo"))
@@ -179,10 +175,12 @@ public class FilterEngineTest extends BaseFilterEngineTest
     }
     assertEquals(1, filteredEvents.size());
     assertFalse(subscription.isDisabled());
+    filterEngine.removeFilterChangeCallback();
+    callback.dispose();
   }
 
   @Test
-  public void testAddRemoveSubscriptions()
+  public void testAddRemoveSubscriptionsLegacy()
   {
     removeSubscriptions();
 
@@ -204,6 +202,26 @@ public class FilterEngineTest extends BaseFilterEngineTest
     subscription.removeFromList();
     assertEquals(0, filterEngine.getListedSubscriptions().size());
     assertFalse(subscription.isListed());
+  }
+
+  @Test
+  public void testAddRemoveSubscriptions()
+  {
+    removeSubscriptions();
+
+    assertEquals(0, filterEngine.getListedSubscriptions().size());
+    final Subscription subscription = filterEngine.getSubscription("foo");
+    assertEquals(0, filterEngine.getListedSubscriptions().size());
+    filterEngine.addSubscription(subscription);
+    assertEquals(1, filterEngine.getListedSubscriptions().size());
+    assertEquals(subscription, filterEngine.getListedSubscriptions().get(0));
+    filterEngine.addSubscription(subscription);
+    assertEquals(1, filterEngine.getListedSubscriptions().size());
+    assertEquals(subscription, filterEngine.getListedSubscriptions().get(0));
+    filterEngine.removeSubscription(subscription);
+    assertEquals(0, filterEngine.getListedSubscriptions().size());
+    filterEngine.removeSubscription(subscription);
+    assertEquals(0, filterEngine.getListedSubscriptions().size());
   }
 
   @Test
@@ -533,6 +551,8 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.removeFilterChangeCallback();
     filterEngine.getFilter("foo").removeFromList();
     assertEquals(eventsCount, callback.getEvents().size());
+    filterEngine.removeFilterChangeCallback();
+    callback.dispose();
   }
 
   @Test

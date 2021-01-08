@@ -107,7 +107,7 @@ public final class AdblockEngine
   private volatile FilterChangeCallback filterChangeCallback;
   private volatile boolean elemhideEnabled = true;
   private volatile boolean enabled = true;
-  private Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
+  private final Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
   private SharedPreferences prefs;
 
   public synchronized AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
@@ -137,11 +137,11 @@ public final class AdblockEngine
       locale = "he" + locale.substring(2);
     }
 
-    AppInfo.Builder builder =
-      AppInfo
-        .builder()
-        .setApplicationVersion(sdkVersion)
-        .setLocale(locale);
+    final AppInfo.Builder builder =
+        AppInfo
+            .builder()
+            .setApplicationVersion(sdkVersion)
+            .setLocale(locale);
 
     if (application != null)
     {
@@ -160,13 +160,13 @@ public final class AdblockEngine
   {
     try
     {
-      PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-      String application = context.getPackageName();
-      String applicationVersion = packageInfo.versionName;
+      final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+      final String application = context.getPackageName();
+      final String applicationVersion = packageInfo.versionName;
 
       return generateAppInfo(context, application, applicationVersion);
     }
-    catch (PackageManager.NameNotFoundException e)
+    catch (final PackageManager.NameNotFoundException e)
     {
       throw new RuntimeException(e);
     }
@@ -180,172 +180,10 @@ public final class AdblockEngine
     AdblockEngine build();
   }
 
-  /**
-   * Builds Adblock engine piece-by-pieece
-   */
-  public static class Builder implements Factory
+  public org.adblockplus.libadblockplus.android.Subscription[] getRecommendedSubscriptions()
   {
-    private Context context;
-    private Map<String, Integer> urlToResourceIdMap;
-    private boolean forceUpdatePreloadedSubscriptions = true;
-    private AndroidHttpClientResourceWrapper.Storage resourceStorage;
-    private HttpClient androidHttpClient;
-    private AppInfo appInfo;
-    private String basePath;
-    private IsAllowedConnectionCallback isAllowedConnectionCallback;
-    private Long v8IsolateProviderPtr;
-
-    private AdblockEngine engine;
-
-    protected Builder(final Context context,
-                      final AppInfo appInfo,
-                      final String basePath)
-    {
-      engine = new AdblockEngine();
-      engine.elemhideEnabled = true;
-
-      // we can't create JsEngine and FilterEngine right now as it starts to download subscriptions
-      // and requests (AndroidHttpClient and probably wrappers) are not specified yet
-      this.context = context;
-      this.appInfo = appInfo;
-      this.basePath = basePath;
-    }
-
-    public Builder setDisableByDefault()
-    {
-      this.engine.configureDisabledByDefault(context);
-      return this;
-    }
-
-    public Builder enableElementHiding(boolean enable)
-    {
-      engine.elemhideEnabled = enable;
-      return this;
-    }
-
-    public Builder setHttpClient(HttpClient httpClient)
-    {
-      this.androidHttpClient = httpClient;
-      return this;
-    }
-
-    public Builder preloadSubscriptions(Context context,
-                                        Map<String, Integer> urlToResourceIdMap,
-                                        AndroidHttpClientResourceWrapper.Storage storage)
-    {
-      this.context = context;
-      this.urlToResourceIdMap = urlToResourceIdMap;
-      this.resourceStorage = storage;
-      return this;
-    }
-
-    public Builder setForceUpdatePreloadedSubscriptions(boolean forceUpdate)
-    {
-      this.forceUpdatePreloadedSubscriptions = forceUpdate;
-      return this;
-    }
-
-    public Builder setIsAllowedConnectionCallback(IsAllowedConnectionCallback callback)
-    {
-      this.isAllowedConnectionCallback = callback;
-      return this;
-    }
-
-    public Builder useV8IsolateProvider(long v8IsolateProviderPtr)
-    {
-      this.v8IsolateProviderPtr = v8IsolateProviderPtr;
-      return this;
-    }
-
-    public Builder setFilterChangeCallback(FilterChangeCallback callback)
-    {
-      engine.filterChangeCallback = callback;
-      return this;
-    }
-
-    private void initRequests()
-    {
-      if (androidHttpClient == null)
-      {
-        androidHttpClient = new AndroidHttpClient(true);
-      }
-      engine.httpClient = androidHttpClient;
-
-      if (urlToResourceIdMap != null)
-      {
-        AndroidHttpClientResourceWrapper wrapper = new AndroidHttpClientResourceWrapper(
-          context, engine.httpClient, urlToResourceIdMap, resourceStorage);
-
-        if (forceUpdatePreloadedSubscriptions)
-        {
-          wrapper.setListener(new AndroidHttpClientResourceWrapper.Listener()
-          {
-            @Override
-            public void onIntercepted(String url, int resourceId)
-            {
-              Timber.d("Force subscription update for intercepted URL %s", url);
-              if (engine.filterEngine != null)
-              {
-                engine.filterEngine.updateFiltersAsync(url);
-              }
-            }
-          });
-        }
-
-        engine.httpClient = wrapper;
-      }
-
-      engine.httpClient = new AndroidHttpClientEngineStateWrapper(engine.httpClient, engine);
-    }
-
-    private void initCallbacks()
-    {
-      if (engine.filterChangeCallback != null)
-      {
-        engine.filterEngine.setFilterChangeCallback(engine.filterChangeCallback);
-      }
-    }
-
-    public AdblockEngine build()
-    {
-      initRequests();
-
-      // httpClient should be ready to be used passed right after JsEngine is created
-      createEngines();
-
-      // force update filters if moved from "disabled by default" state to regular state,
-      // see https://jira.eyeo.com/browse/DP-1558
-      if (engine.isEnabled())
-      {
-        engine.ensurePrefs(context);
-        if (engine.shouldForceSyncWhenEnabled())
-        {
-          engine.saveShouldForceSyncWhenEnabled(false);
-          engine.forceSync();
-        }
-      }
-
-      initCallbacks();
-
-      return engine;
-    }
-
-    private void createEngines()
-    {
-      engine.logSystem = new TimberLogSystem();
-      engine.fileSystem = null; // using default
-      engine.platform = new Platform(engine.logSystem, engine.fileSystem, engine.httpClient, basePath);
-      if (v8IsolateProviderPtr != null)
-      {
-        engine.platform.setUpJsEngine(appInfo, v8IsolateProviderPtr);
-      }
-      else
-      {
-        engine.platform.setUpJsEngine(appInfo);
-      }
-      engine.platform.setUpFilterEngine(isAllowedConnectionCallback);
-      engine.filterEngine = engine.platform.getFilterEngine();
-    }
+    final List<Subscription> subscriptions = this.filterEngine.fetchAvailableSubscriptions();
+    return convertJsSubscriptions(subscriptions);
   }
 
   public static Builder builder(final Context context,
@@ -405,41 +243,12 @@ public final class AdblockEngine
           final Subscription jsSubscription)
   {
     final org.adblockplus.libadblockplus.android.Subscription subscription =
-      new org.adblockplus.libadblockplus.android.Subscription();
-
-    JsValue jsTitle = jsSubscription.getProperty("title");
-    try
-    {
-      subscription.title = jsTitle.toString();
-    }
-    finally
-    {
-      jsTitle.dispose();
-    }
-
-    JsValue jsUrl = jsSubscription.getProperty("url");
-    try
-    {
-      subscription.url = jsUrl.toString();
-    }
-    finally
-    {
-      jsUrl.dispose();
-    }
-
-    JsValue jsPrefixes = jsSubscription.getProperty("prefixes");
-    try
-    {
-      if (!jsPrefixes.isUndefined() && !jsPrefixes.isNull())
-      {
-        subscription.prefixes = jsPrefixes.asString();
-      }
-    }
-    finally
-    {
-      jsPrefixes.dispose();
-    }
-
+      new org.adblockplus.libadblockplus.android.Subscription(
+          jsSubscription.getTitle(),
+          jsSubscription.getUrl(),
+          jsSubscription.getLanguages(),
+          jsSubscription.getHomepage(),
+          jsSubscription.getAuthor());
     return subscription;
   }
 
@@ -457,35 +266,22 @@ public final class AdblockEngine
     return subscriptions;
   }
 
-  public org.adblockplus.libadblockplus.android.Subscription[] getRecommendedSubscriptions()
-  {
-    List<Subscription> subscriptions = this.filterEngine.fetchAvailableSubscriptions();
-    try
-    {
-      return convertJsSubscriptions(subscriptions);
-    }
-    finally
-    {
-      for (Subscription eachSubscription : subscriptions)
-      {
-        eachSubscription.dispose();
-      }
-    }
-  }
-
   public org.adblockplus.libadblockplus.android.Subscription[] getListedSubscriptions()
   {
-    List<Subscription> subscriptions = this.filterEngine.getListedSubscriptions();
+    final List<Subscription> subscriptions = this.filterEngine.getListedSubscriptions();
+    return convertJsSubscriptions(subscriptions);
+  }
+
+  public String getDocumentationLink()
+  {
+    final JsValue jsPref = this.filterEngine.getPref("documentation_link");
     try
     {
-      return convertJsSubscriptions(subscriptions);
+      return jsPref.toString();
     }
     finally
     {
-      for (Subscription eachSubscription : subscriptions)
-      {
-        eachSubscription.dispose();
-      }
+      jsPref.dispose();
     }
   }
 
@@ -493,14 +289,7 @@ public final class AdblockEngine
   {
     for (final Subscription s : this.filterEngine.getListedSubscriptions())
     {
-      try
-      {
-        s.removeFromList();
-      }
-      finally
-      {
-        s.dispose();
-      }
+      s.removeFromList();
     }
   }
 
@@ -511,14 +300,7 @@ public final class AdblockEngine
     final Subscription sub = this.filterEngine.getSubscription(url);
     if (sub != null)
     {
-      try
-      {
-        sub.addToList();
-      }
-      finally
-      {
-        sub.dispose();
-      }
+      sub.addToList();
     }
   }
 
@@ -529,30 +311,9 @@ public final class AdblockEngine
     // remove the removed ones
     for (final Subscription eachCurrentSubscription : currentSubscriptions)
     {
-      try
+      if (!urls.contains(eachCurrentSubscription.getUrl()))
       {
-        final JsValue jsUrl = eachCurrentSubscription.getProperty("url");
-        if (jsUrl != null)
-        {
-          String eachCurrentUrl;
-          try
-          {
-            eachCurrentUrl = jsUrl.asString();
-          }
-          finally
-          {
-            jsUrl.dispose();
-          }
-
-          if (!urls.contains(eachCurrentUrl))
-          {
-            eachCurrentSubscription.removeFromList();
-          }
-        }
-      }
-      finally
-      {
-        eachCurrentSubscription.dispose();
+        eachCurrentSubscription.removeFromList();
       }
     }
 
@@ -562,16 +323,9 @@ public final class AdblockEngine
       final Subscription eachNewSubscription = this.filterEngine.getSubscription(eachNewUrl);
       if (eachNewSubscription != null)
       {
-        try
+        if (!eachNewSubscription.isListed())
         {
-          if (!eachNewSubscription.isListed())
-          {
-            eachNewSubscription.addToList();
-          }
-        }
-        finally
-        {
-          eachNewSubscription.dispose();
+          eachNewSubscription.addToList();
         }
       }
     }
@@ -642,22 +396,12 @@ public final class AdblockEngine
     Timber.i("Force updating subscription filters");
     final List<Subscription> listed = filterEngine.getListedSubscriptions();
 
-    try
+    for (final Subscription subscription : listed)
     {
-      for (final Subscription subscription : listed)
-      {
-        subscription.updateFilters();
-      }
+      subscription.updateFilters();
+    }
 
-      saveShouldForceSyncWhenEnabled(false);
-    }
-    finally
-    {
-      for (final Subscription subscription : listed)
-      {
-        subscription.dispose();
-      }
-    }
+    saveShouldForceSyncWhenEnabled(false);
   }
 
   private boolean shouldForceSyncWhenEnabled()
@@ -685,19 +429,6 @@ public final class AdblockEngine
     filterEngine.setAcceptableAdsEnabled(enabled);
   }
 
-  public String getDocumentationLink()
-  {
-    JsValue jsPref = this.filterEngine.getPref("documentation_link");
-    try
-    {
-      return jsPref.toString();
-    }
-    finally
-    {
-      jsPref.dispose();
-    }
-  }
-
   public MatchesResult matches(final String fullUrl, final Set<ContentType> contentTypes,
                                final List<String> referrerChain, final String siteKey,
                                final boolean specificOnly)
@@ -708,46 +439,42 @@ public final class AdblockEngine
     }
 
     final Filter filter = this.filterEngine.matches(fullUrl, contentTypes, referrerChain,
-            siteKey, specificOnly);
+        siteKey, specificOnly);
 
     if (filter == null)
     {
       return MatchesResult.NOT_FOUND;
     }
 
+    // hack: if there is no referrer, block only if filter is domain-specific
+    // (to re-enable in-app ads blocking, proposed on 12.11.2012 Monday meeting)
+    // (documentUrls contains the referrers on Android)
     try
     {
-      // hack: if there is no referrer, block only if filter is domain-specific
-      // (to re-enable in-app ads blocking, proposed on 12.11.2012 Monday meeting)
-      // (documentUrls contains the referrers on Android)
-      try
+      if (referrerChain.isEmpty() && filter.getRaw().contains("||"))
       {
-        final JsValue jsText = filter.getProperty("text");
-        try
-        {
-          if (referrerChain.isEmpty() && (jsText.toString()).contains("||"))
-          {
-            return MatchesResult.NOT_FOUND;
-          }
-        }
-        finally
-        {
-          jsText.dispose();
-        }
+        return MatchesResult.NOT_FOUND;
       }
-      catch (final NullPointerException e)
-      {
-        Timber.w(e);
-      }
-
-      return filter.getType() != Filter.Type.EXCEPTION
-          ? MatchesResult.NOT_ALLOWLISTED
-          : MatchesResult.ALLOWLISTED;
     }
-    finally
+    catch (final NullPointerException e)
     {
-      filter.dispose();
+      Timber.w(e);
     }
+
+    return filter.getType() != Filter.Type.EXCEPTION
+        ? MatchesResult.NOT_ALLOWLISTED
+        : MatchesResult.ALLOWLISTED;
+  }
+
+  /**
+   * Add whitelisting filter for a given domain.
+   *
+   * @param domain Domain to be added for whitelisting
+   */
+  public void addDomainWhitelistingFilter(final String domain)
+  {
+    final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
+    this.filterEngine.addFilter(filter);
   }
 
   public boolean isGenericblockAllowlisted(final String url,
@@ -846,17 +573,7 @@ public final class AdblockEngine
   public void addDomainAllowlistingFilter(final String domain)
   {
     final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
-    try
-    {
-      if (!filter.isListed())
-      {
-        filter.addToList();
-      }
-    }
-    finally
-    {
-      filter.dispose();
-    }
+    this.filterEngine.addFilter(filter);
   }
 
   /**
@@ -866,16 +583,174 @@ public final class AdblockEngine
   public void removeDomainAllowlistingFilter(final String domain)
   {
     final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
-    try
+    this.filterEngine.removeFilter(filter);
+  }
+
+  /**
+   * Builds Adblock engine piece-by-pieece
+   */
+  public static class Builder implements Factory
+  {
+    private Context context;
+    private Map<String, Integer> urlToResourceIdMap;
+    private boolean forceUpdatePreloadedSubscriptions = true;
+    private AndroidHttpClientResourceWrapper.Storage resourceStorage;
+    private HttpClient androidHttpClient;
+    private final AppInfo appInfo;
+    private final String basePath;
+    private IsAllowedConnectionCallback isAllowedConnectionCallback;
+    private Long v8IsolateProviderPtr;
+
+    private final AdblockEngine engine;
+
+    protected Builder(final Context context,
+                      final AppInfo appInfo,
+                      final String basePath)
     {
-      if (filter.isListed())
+      engine = new AdblockEngine();
+      engine.elemhideEnabled = true;
+
+      // we can't create JsEngine and FilterEngine right now as it starts to download subscriptions
+      // and requests (AndroidHttpClient and probably wrappers) are not specified yet
+      this.context = context;
+      this.appInfo = appInfo;
+      this.basePath = basePath;
+    }
+
+    public Builder setDisableByDefault()
+    {
+      this.engine.configureDisabledByDefault(context);
+      return this;
+    }
+
+    public Builder enableElementHiding(final boolean enable)
+    {
+      engine.elemhideEnabled = enable;
+      return this;
+    }
+
+    public Builder setHttpClient(final HttpClient httpClient)
+    {
+      this.androidHttpClient = httpClient;
+      return this;
+    }
+
+    public Builder preloadSubscriptions(final Context context,
+                                        final Map<String, Integer> urlToResourceIdMap,
+                                        final AndroidHttpClientResourceWrapper.Storage storage)
+    {
+      this.context = context;
+      this.urlToResourceIdMap = urlToResourceIdMap;
+      this.resourceStorage = storage;
+      return this;
+    }
+
+    public Builder setForceUpdatePreloadedSubscriptions(final boolean forceUpdate)
+    {
+      this.forceUpdatePreloadedSubscriptions = forceUpdate;
+      return this;
+    }
+
+    public Builder setIsAllowedConnectionCallback(final IsAllowedConnectionCallback callback)
+    {
+      this.isAllowedConnectionCallback = callback;
+      return this;
+    }
+
+    public Builder useV8IsolateProvider(final long v8IsolateProviderPtr)
+    {
+      this.v8IsolateProviderPtr = v8IsolateProviderPtr;
+      return this;
+    }
+
+    public Builder setFilterChangeCallback(final FilterChangeCallback callback)
+    {
+      engine.filterChangeCallback = callback;
+      return this;
+    }
+
+    private void initRequests()
+    {
+      if (androidHttpClient == null)
       {
-        filter.removeFromList();
+        androidHttpClient = new AndroidHttpClient(true);
+      }
+      engine.httpClient = androidHttpClient;
+
+      if (urlToResourceIdMap != null)
+      {
+        final AndroidHttpClientResourceWrapper wrapper = new AndroidHttpClientResourceWrapper(
+            context, engine.httpClient, urlToResourceIdMap, resourceStorage);
+
+        if (forceUpdatePreloadedSubscriptions)
+        {
+          wrapper.setListener(new AndroidHttpClientResourceWrapper.Listener()
+          {
+            @Override
+            public void onIntercepted(final String url, final int resourceId)
+            {
+              Timber.d("Force subscription update for intercepted URL %s", url);
+              if (engine.filterEngine != null)
+              {
+                engine.filterEngine.updateFiltersAsync(url);
+              }
+            }
+          });
+        }
+
+        engine.httpClient = wrapper;
+      }
+
+      engine.httpClient = new AndroidHttpClientEngineStateWrapper(engine.httpClient, engine);
+    }
+
+    private void initCallbacks()
+    {
+      if (engine.filterChangeCallback != null)
+      {
+        engine.filterEngine.setFilterChangeCallback(engine.filterChangeCallback);
       }
     }
-    finally
+
+    public AdblockEngine build()
     {
-      filter.dispose();
+      initRequests();
+
+      // httpClient should be ready to be used passed right after JsEngine is created
+      createEngines();
+
+      // force update filters if moved from "disabled by default" state to regular state,
+      // see https://jira.eyeo.com/browse/DP-1558
+      if (engine.isEnabled())
+      {
+        engine.ensurePrefs(context);
+        if (engine.shouldForceSyncWhenEnabled())
+        {
+          engine.saveShouldForceSyncWhenEnabled(false);
+          engine.forceSync();
+        }
+      }
+
+      initCallbacks();
+
+      return engine;
+    }
+
+    private void createEngines()
+    {
+      engine.logSystem = new TimberLogSystem();
+      engine.fileSystem = null; // using default
+      engine.platform = new Platform(engine.logSystem, engine.fileSystem, engine.httpClient, basePath);
+      if (v8IsolateProviderPtr != null)
+      {
+        engine.platform.setUpJsEngine(appInfo, v8IsolateProviderPtr);
+      }
+      else
+      {
+        engine.platform.setUpJsEngine(appInfo);
+      }
+      engine.platform.setUpFilterEngine(isAllowedConnectionCallback);
+      engine.filterEngine = engine.platform.getFilterEngine();
     }
   }
 }

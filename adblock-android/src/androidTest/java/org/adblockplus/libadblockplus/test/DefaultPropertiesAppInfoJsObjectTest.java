@@ -17,20 +17,30 @@
 
 package org.adblockplus.libadblockplus.test;
 
+import org.adblockplus.libadblockplus.JsValue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class DefaultPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
 {
   @Test
   public void testDefaultProperties()
   {
-    assertEquals("1.0", jsEngine.evaluate("_appInfo.version").asString());
-    assertEquals("libadblockplus-android", jsEngine.evaluate("_appInfo.name").asString());
-    assertEquals("android", jsEngine.evaluate("_appInfo.application").asString());
-    assertEquals("0", jsEngine.evaluate("_appInfo.applicationVersion").asString());
-    assertEquals("en_US", jsEngine.evaluate("_appInfo.locale").asString());
+    final JsValue version = jsEngine.evaluate("_appInfo.version");
+    assertEquals("1.0", version.asString());
+    version.dispose();
+    final JsValue name = jsEngine.evaluate("_appInfo.name");
+    assertEquals("libadblockplus-android", name.asString());
+    name.dispose();
+    final JsValue application = jsEngine.evaluate("_appInfo.application");
+    assertEquals("android", application.asString());
+    application.dispose();
+    final JsValue appVersion = jsEngine.evaluate("_appInfo.applicationVersion");
+    assertEquals("0", appVersion.asString());
+    application.dispose();
+    final JsValue locale = jsEngine.evaluate("_appInfo.locale");
+    assertEquals("en_US", locale.asString());
+    locale.dispose();
   }
 }

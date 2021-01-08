@@ -118,7 +118,7 @@ class FilterEngineLoadTimeBenchmark {
             Timber.d("Current subscriptions: $subscriptions")
             while (subscriptions.size != 2 || // 2 = locale-specific + AA
                 !subscriptions.all {
-                    it.getProperty("downloadStatus")?.asString() == "synchronize_ok"
+                    it.synchronizationStatus == "synchronize_ok"
                 }) {
                 SystemClock.sleep(SLEEP_INTERVAL_MILLIS)
                 subscriptions = filterEngine.listedSubscriptions
