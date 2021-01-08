@@ -39,7 +39,7 @@ public class JsValueTest extends BaseJsEngineTest
       value.asList();
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
@@ -52,7 +52,7 @@ public class JsValueTest extends BaseJsEngineTest
       value.call();
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
@@ -67,7 +67,7 @@ public class JsValueTest extends BaseJsEngineTest
       value.getProperty("foo");
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
@@ -77,7 +77,7 @@ public class JsValueTest extends BaseJsEngineTest
       value.setProperty("foo", jsEngine.newValue(false));
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
@@ -87,7 +87,7 @@ public class JsValueTest extends BaseJsEngineTest
       value.getJsClass();
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
@@ -97,7 +97,7 @@ public class JsValueTest extends BaseJsEngineTest
       value.getOwnPropertyNames();
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
@@ -110,7 +110,7 @@ public class JsValueTest extends BaseJsEngineTest
   {
     final String UNDEFINED = "undefined";
 
-    JsValue value = jsEngine.evaluate(UNDEFINED);
+    final JsValue value = jsEngine.evaluate(UNDEFINED);
     assertNotNull(value);
     assertTrue(value.isUndefined());
     assertFalse(value.isNull());
@@ -123,6 +123,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertEquals(UNDEFINED, value.asString());
     assertFalse(value.asBoolean());
     assertThrowsExceptions(value);
+    value.dispose();
   }
 
   @Test
@@ -130,7 +131,7 @@ public class JsValueTest extends BaseJsEngineTest
   {
     final String NULL = "null";
 
-    JsValue value = jsEngine.evaluate(NULL);
+    final JsValue value = jsEngine.evaluate(NULL);
     assertNotNull(value);
     assertFalse(value.isUndefined());
     assertTrue(value.isNull());
@@ -143,6 +144,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertEquals(NULL, value.asString());
     assertFalse(value.asBoolean());
     assertThrowsExceptions(value);
+    value.dispose();
   }
 
   @Test
@@ -150,7 +152,7 @@ public class JsValueTest extends BaseJsEngineTest
   {
     final String STRING_VALUE = "123";
 
-    JsValue value = jsEngine.evaluate("'" + STRING_VALUE +"'");
+    final JsValue value = jsEngine.evaluate("'" + STRING_VALUE + "'");
     assertNotNull(value);
     assertFalse(value.isUndefined());
     assertFalse(value.isNull());
@@ -163,6 +165,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertEquals(STRING_VALUE, value.asString());
     assertTrue(value.asBoolean());
     assertThrowsExceptions(value);
+    value.dispose();
   }
 
   @Test
@@ -171,7 +174,7 @@ public class JsValueTest extends BaseJsEngineTest
     final long LONG_VALUE = 12345678901234L;
     final String LONG_STR_VALUE = String.valueOf(LONG_VALUE);
 
-    JsValue value = jsEngine.evaluate(LONG_STR_VALUE);
+    final JsValue value = jsEngine.evaluate(LONG_STR_VALUE);
     assertNotNull(value);
     assertFalse(value.isUndefined());
     assertFalse(value.isNull());
@@ -185,6 +188,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertEquals(LONG_VALUE, value.asLong());
     assertTrue(value.asBoolean());
     assertThrowsExceptions(value);
+    value.dispose();
   }
 
   @Test
@@ -193,7 +197,7 @@ public class JsValueTest extends BaseJsEngineTest
     final boolean BOOL_VALUE = true;
     final String BOOL_STR_VALUE = String.valueOf(BOOL_VALUE);
 
-    JsValue value = jsEngine.evaluate(BOOL_STR_VALUE);
+    final JsValue value = jsEngine.evaluate(BOOL_STR_VALUE);
     assertNotNull(value);
     assertFalse(value.isUndefined());
     assertFalse(value.isNull());
@@ -206,6 +210,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertEquals(BOOL_STR_VALUE, value.asString());
     assertEquals(BOOL_VALUE, value.asBoolean());
     assertThrowsExceptions(value);
+    value.dispose();
   }
 
   @Test
@@ -219,7 +224,7 @@ public class JsValueTest extends BaseJsEngineTest
         "};\n" +
         "new Foo()";
 
-    JsValue value = jsEngine.evaluate(OBJECT_VALUE);
+    final JsValue value = jsEngine.evaluate(OBJECT_VALUE);
     assertNotNull(value);
     assertFalse(value.isUndefined());
     assertFalse(value.isNull());
@@ -240,6 +245,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertNotNull(ownPropertyNames);
     assertEquals(3, ownPropertyNames.size());
     assertTrue(value.getProperty("bar").isUndefined());
+    value.dispose();
   }
 
   @Test
@@ -247,7 +253,7 @@ public class JsValueTest extends BaseJsEngineTest
   {
     final String ARRAY_VALUE = "5,8,12";
 
-    JsValue value = jsEngine.evaluate("[" + ARRAY_VALUE + "]");
+    final JsValue value = jsEngine.evaluate("[" + ARRAY_VALUE + "]");
     assertNotNull(value);
     assertFalse(value.isUndefined());
     assertFalse(value.isNull());
@@ -266,6 +272,7 @@ public class JsValueTest extends BaseJsEngineTest
     assertEquals(3, value.getProperty("length").asLong());
     assertEquals("Array", value.getJsClass());
     assertCallThrowsException(value);
+    value.dispose();
   }
 
   @Test
@@ -273,7 +280,7 @@ public class JsValueTest extends BaseJsEngineTest
   {
     final String FUNCTION_VALUE = "(function(foo, bar) {return this.x + '/' + foo + '/' + bar;})";
 
-    JsValue value = jsEngine.evaluate(FUNCTION_VALUE);
+    final JsValue value = jsEngine.evaluate(FUNCTION_VALUE);
     assertNotNull(value);
     assertFalse(value.isUndefined());
     assertFalse(value.isNull());
@@ -287,13 +294,20 @@ public class JsValueTest extends BaseJsEngineTest
     assertAsListThrowsException(value);
     assertEquals(2L, value.getProperty("length").asLong());
 
-    JsValue thisPtr = jsEngine.evaluate("({x:2})");
-    List<JsValue> params = new LinkedList<>();
+    final JsValue thisPtr = jsEngine.evaluate("({x:2})");
+    final List<JsValue> params = new LinkedList<>();
     params.add(jsEngine.newValue(5L));
     params.add(jsEngine.newValue("xyz"));
-    JsValue result = value.call(params, thisPtr);
+    final JsValue result = value.call(params, thisPtr);
     assertNotNull(result);
     assertTrue(result.isString());
     assertEquals("2/5/xyz", result.asString());
+    value.dispose();
+    thisPtr.dispose();
+    result.dispose();
+    for (final JsValue v : params)
+    {
+      v.dispose();
+    }
   }
 }

@@ -114,11 +114,10 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       List<Subscription> subscriptions = new LinkedList<>();
       for (int i = 0; i < subscriptionsCount; i++)
       {
-        Subscription subscription = new Subscription();
-        subscription.title = prefs.getString(getSubscriptionTitleKey(i), "");
-        subscription.url = prefs.getString(getSubscriptionURLKey(i), "");
-        subscription.prefixes = prefs.getString(getSubscriptionPrefixesKey(i), "");
-        subscriptions.add(subscription);
+        subscriptions.add(new Subscription(
+            prefs.getString(getSubscriptionTitleKey(i), ""),
+            prefs.getString(getSubscriptionURLKey(i), ""),
+            prefs.getString(getSubscriptionPrefixesKey(i), ""),"", ""));
       }
       settings.setSubscriptions(subscriptions);
     }

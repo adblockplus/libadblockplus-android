@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.test;
 
 import org.adblockplus.libadblockplus.AdblockPlusException;
+import org.adblockplus.libadblockplus.JsValue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -31,19 +32,27 @@ public class GlobalJsObjectTest extends BaseJsEngineTest
   @Test
   public void testSetTimeout() throws InterruptedException
   {
-    jsEngine.evaluate("let foo; setTimeout(function() {foo = 'bar';}, 100)");
-    assertTrue(jsEngine.evaluate("foo").isUndefined());
+    jsEngine.evaluate("let foo; setTimeout(function() {foo = 'bar';}, 100)").dispose();
+    JsValue foo = jsEngine.evaluate("foo");
+    assertTrue(foo.isUndefined());
+    foo.dispose();
     Thread.sleep(SLEEP_INTERVAL_MS);
-    assertEquals("bar", jsEngine.evaluate("foo").asString());
+    foo = jsEngine.evaluate("foo");
+    assertEquals("bar", foo.asString());
+    foo.dispose();
   }
 
   @Test
   public void testSetTimeoutWithArgs() throws InterruptedException
   {
-    jsEngine.evaluate("let foo; setTimeout(function(s) {foo = s;}, 100, 'foobar')");
-    assertTrue(jsEngine.evaluate("foo").isUndefined());
+    jsEngine.evaluate("let foo; setTimeout(function(s) {foo = s;}, 100, 'foobar')").dispose();
+    JsValue foo = jsEngine.evaluate("foo");
+    assertTrue(foo.isUndefined());
     Thread.sleep(SLEEP_INTERVAL_MS);
-    assertEquals("foobar", jsEngine.evaluate("foo").asString());
+    foo.dispose();
+    foo = jsEngine.evaluate("foo");
+    assertEquals("foobar", foo.asString());
+    foo.dispose();
   }
 
   @Test
@@ -51,20 +60,20 @@ public class GlobalJsObjectTest extends BaseJsEngineTest
   {
     try
     {
-      jsEngine.evaluate("setTimeout()");
+      jsEngine.evaluate("setTimeout()").dispose();
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
 
     try
     {
-      jsEngine.evaluate("setTimeout('', 1)");
+      jsEngine.evaluate("setTimeout('', 1)").dispose();
       fail();
     }
-    catch (AdblockPlusException e)
+    catch (final AdblockPlusException e)
     {
       // expected exception
     }
@@ -73,10 +82,12 @@ public class GlobalJsObjectTest extends BaseJsEngineTest
   @Test
   public void testSetMultipleTimeouts() throws InterruptedException
   {
-    jsEngine.evaluate("let foo = []");
-    jsEngine.evaluate("setTimeout(function(s) {foo.push('1');}, 100)");
-    jsEngine.evaluate("setTimeout(function(s) {foo.push('2');}, 150)");
+    jsEngine.evaluate("let foo = []").dispose();
+    jsEngine.evaluate("setTimeout(function(s) {foo.push('1');}, 100)").dispose();
+    jsEngine.evaluate("setTimeout(function(s) {foo.push('2');}, 150)").dispose();
     Thread.sleep(SLEEP_INTERVAL_MS);
-    assertEquals("1,2", jsEngine.evaluate("foo").asString());
+    final JsValue foo = jsEngine.evaluate("foo");
+    assertEquals("1,2", foo.asString());
+    foo.dispose();
   }
 }

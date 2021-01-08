@@ -46,10 +46,7 @@ public class AdblockSettingsTest
     final List<Subscription> subscriptions = new LinkedList<>();
     for (int i = 0; i < subscriptionsCount; i++)
     {
-      final Subscription subscription = new Subscription();
-      subscription.title = "Title" + (i + 1);
-      subscription.url = "URL" + (i + 1);
-      subscriptions.add(subscription);
+      subscriptions.add(new Subscription("Title" + (i + 1), "URL" + (i + 1), "", "", ""));
     }
     settings.setSubscriptions(subscriptions);
 

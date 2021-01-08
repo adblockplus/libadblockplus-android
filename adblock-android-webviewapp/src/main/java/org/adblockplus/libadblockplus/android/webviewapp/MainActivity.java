@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity
     message += testPageSubscriptionUrl;
     Timber.d(message);
     Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    subscription.dispose();
+    
     AdblockHelper.get().getProvider().release();
   }
 

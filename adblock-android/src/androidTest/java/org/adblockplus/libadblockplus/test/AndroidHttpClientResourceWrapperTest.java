@@ -45,42 +45,24 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
   protected static final int UPDATE_SUBSCRIPTIONS_WAIT_DELAY_MS = 5 * 1000;
   protected static final int UPDATE_SUBSCRIPTIONS_WAIT_CHUNKS = 50;
 
-  private static final class TestStorage implements AndroidHttpClientResourceWrapper.Storage
+  private List<String> getUrlsListWithoutParams(final Collection<HttpRequest> requestsWithParams)
   {
-    private Set<String> interceptedUrls = new HashSet<>();
-
-    public Set<String> getInterceptedUrls()
+    final List<String> list = new LinkedList<>();
+    for (final HttpRequest eachRequest : requestsWithParams)
     {
-      return interceptedUrls;
+      list.add(Utils.getUrlWithoutParams(eachRequest.getUrl()));
     }
-
-    @Override
-    public synchronized void put(String url)
-    {
-      interceptedUrls.add(url);
-    }
-
-    @Override
-    public synchronized boolean contains(String url)
-    {
-      return interceptedUrls.contains(url);
-    }
+    return list;
   }
 
-  private static final class TestWrapperListener implements AndroidHttpClientResourceWrapper.Listener
+  private List<String> getUrlsListWithoutParams2(final Collection<String> requestsWithParams)
   {
-    private Map<String, Integer> urlsToResourceId = new HashMap<>();
-
-    public Map<String, Integer> getUrlsToResourceId()
+    final List<String> list = new LinkedList<>();
+    for (final String eachUrl : requestsWithParams)
     {
-      return urlsToResourceId;
+      list.add(Utils.getUrlWithoutParams(eachUrl));
     }
-
-    @Override
-    public void onIntercepted(String url, int resourceId)
-    {
-      urlsToResourceId.put(url, resourceId);
-    }
+    return list;
   }
 
   private MockHttpClient request;
@@ -105,59 +87,16 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
     super.setUp();
   }
 
-  private List<String> getUrlsListWithoutParams(Collection<HttpRequest> requestsWithParams)
-  {
-    final List<String> list = new LinkedList<>();
-    for (final HttpRequest eachRequest : requestsWithParams)
-    {
-      list.add(Utils.getUrlWithoutParams(eachRequest.getUrl()));
-    }
-    return list;
-  }
-
-  private List<String> getUrlsListWithoutParams2(Collection<String> requestsWithParams)
-  {
-    final List<String> list = new LinkedList<>();
-    for (final String eachUrl : requestsWithParams)
-    {
-      list.add(Utils.getUrlWithoutParams(eachUrl));
-    }
-    return list;
-  }
-
-  private void reset()
-  {
-    preloadMap.clear();
-    request.requests.clear();
-    storage.getInterceptedUrls().clear();
-    wrapperListener.getUrlsToResourceId().clear();
-  }
-
-  protected int getUpdateRequestCount()
-  {
-    return request.requests.size() + storage.getInterceptedUrls().size();
-  }
-
-  protected String getUrlRequestJs(String url)
+  protected String getUrlRequestJs(final String url)
   {
     return "_webRequest.GET('" + url + "', {}, function(result) { } )";
   }
 
-  protected void updateSubscriptions()
-  {
-    updateSubscriptions(new String[]
-      {
-        AndroidHttpClientResourceWrapper.EASYLIST,
-        AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS,
-      },
-      true);
-  }
-
-  protected void updateSubscriptions(String[] urls, boolean wait)
+  protected void updateSubscriptions(final String[] urls, final boolean wait)
   {
     for (final String url : urls)
     {
-      jsEngine.evaluate(getUrlRequestJs(url));
+      jsEngine.evaluate(getUrlRequestJs(url)).dispose();
     }
 
     final int init = getUpdateRequestCount();
@@ -173,6 +112,19 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
         SystemClock.sleep(UPDATE_SUBSCRIPTIONS_WAIT_DELAY_MS / UPDATE_SUBSCRIPTIONS_WAIT_CHUNKS);
       }
     }
+  }
+
+  private void reset()
+  {
+    preloadMap.clear();
+    request.requests.clear();
+    storage.getInterceptedUrls().clear();
+    wrapperListener.getUrlsToResourceId().clear();
+  }
+
+  protected int getUpdateRequestCount()
+  {
+    return request.requests.size() + storage.getInterceptedUrls().size();
   }
 
   private void testIntercepted(final String preloadUrl, final int resourceId)
@@ -195,7 +147,7 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
     assertTrue(storage.getInterceptedUrls().contains(preloadUrl));
 
     assertTrue(wrapperListener.getUrlsToResourceId().size() >= 0);
-    List<String> notifiedInterceptedUrls = getUrlsListWithoutParams2(
+    final List<String> notifiedInterceptedUrls = getUrlsListWithoutParams2(
         wrapperListener.getUrlsToResourceId().keySet());
     assertTrue(notifiedInterceptedUrls.contains(preloadUrl));
     for (final String eachString : wrapperListener.getUrlsToResourceId().keySet())
@@ -205,6 +157,67 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
         assertEquals(resourceId, wrapperListener.getUrlsToResourceId().get(eachString).intValue());
         break;
       }
+    }
+  }
+
+  protected void updateSubscriptions()
+  {
+    updateSubscriptions(new String[]
+          {
+            AndroidHttpClientResourceWrapper.EASYLIST,
+            AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS,
+          },
+        true);
+  }
+
+  private void testNotIntercepted(final String interceptedUrl, final int resourceId,
+                                  final String notInterceptedUrl)
+  {
+    reset();
+    preloadMap.put(interceptedUrl, resourceId);
+    assertEquals(0, request.requests.size());
+    assertEquals(0, storage.getInterceptedUrls().size());
+    assertEquals(0, wrapperListener.getUrlsToResourceId().size());
+
+    updateSubscriptions();
+
+    assertEquals(1, request.requests.size());
+    final List<String> requestUrlsWithoutParams = getUrlsListWithoutParams(request.requests);
+    assertFalse(requestUrlsWithoutParams.contains(interceptedUrl));
+    assertTrue(requestUrlsWithoutParams.contains(notInterceptedUrl));
+    assertEquals(1, storage.getInterceptedUrls().size());
+    assertTrue(storage.getInterceptedUrls().contains(interceptedUrl));
+    assertFalse(storage.getInterceptedUrls().contains(notInterceptedUrl));
+    assertTrue(wrapperListener.getUrlsToResourceId().size() > 0);
+
+    for (final String eachString : wrapperListener.getUrlsToResourceId().keySet())
+    {
+      if (Utils.getUrlWithoutParams(eachString).equals(notInterceptedUrl))
+      {
+        fail();
+      }
+    }
+  }
+
+  private static final class TestStorage implements AndroidHttpClientResourceWrapper.Storage
+  {
+    private final Set<String> interceptedUrls = new HashSet<>();
+
+    public Set<String> getInterceptedUrls()
+    {
+      return interceptedUrls;
+    }
+
+    @Override
+    public synchronized void put(final String url)
+    {
+      interceptedUrls.add(url);
+    }
+
+    @Override
+    public synchronized boolean contains(final String url)
+    {
+      return interceptedUrls.contains(url);
     }
   }
 
@@ -258,32 +271,19 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
     assertEquals(0, wrapperListener.getUrlsToResourceId().size());
   }
 
-  private void testNotIntercepted(final String interceptedUrl, final int resourceId,
-                                  final String notInterceptedUrl)
+  private static final class TestWrapperListener implements AndroidHttpClientResourceWrapper.Listener
   {
-    reset();
-    preloadMap.put(interceptedUrl, resourceId);
-    assertEquals(0, request.requests.size());
-    assertEquals(0, storage.getInterceptedUrls().size());
-    assertEquals(0, wrapperListener.getUrlsToResourceId().size());
+    private final Map<String, Integer> urlsToResourceId = new HashMap<>();
 
-    updateSubscriptions();
-
-    assertEquals(1, request.requests.size());
-    List<String> requestUrlsWithoutParams = getUrlsListWithoutParams(request.requests);
-    assertFalse(requestUrlsWithoutParams.contains(interceptedUrl));
-    assertTrue(requestUrlsWithoutParams.contains(notInterceptedUrl));
-    assertEquals(1, storage.getInterceptedUrls().size());
-    assertTrue(storage.getInterceptedUrls().contains(interceptedUrl));
-    assertFalse(storage.getInterceptedUrls().contains(notInterceptedUrl));
-    assertTrue(wrapperListener.getUrlsToResourceId().size() > 0);
-
-    for (final String eachString : wrapperListener.getUrlsToResourceId().keySet())
+    public Map<String, Integer> getUrlsToResourceId()
     {
-      if (Utils.getUrlWithoutParams(eachString).equals(notInterceptedUrl))
-      {
-        fail();
-      }
+      return urlsToResourceId;
+    }
+
+    @Override
+    public void onIntercepted(final String url, final int resourceId)
+    {
+      urlsToResourceId.put(url, resourceId);
     }
   }
 

@@ -69,32 +69,25 @@ public class SubscriptionsManager
               AdblockHelper.get().getProvider().getEngine().getFilterEngine();
           final Subscription subscription = filterEngine.getSubscription(url);
 
-          try
+          if (intent.getAction().equals(ACTION_ADD))
           {
-            if (intent.getAction().equals(ACTION_ADD))
-            {
-              add(subscription);
-            }
-            else if (intent.getAction().equals(ACTION_REMOVE))
-            {
-              remove(subscription);
-            }
-            else if (intent.getAction().equals(ACTION_ENABLE))
-            {
-              enable(subscription);
-            }
-            else if (intent.getAction().equals(ACTION_DISABLE))
-            {
-              disable(subscription);
-            }
-            else if (intent.getAction().equals(ACTION_UPDATE))
-            {
-              update(subscription);
-            }
+            add(subscription);
           }
-          finally
+          else if (intent.getAction().equals(ACTION_REMOVE))
           {
-            subscription.dispose();
+            remove(subscription);
+          }
+          else if (intent.getAction().equals(ACTION_ENABLE))
+          {
+            enable(subscription);
+          }
+          else if (intent.getAction().equals(ACTION_DISABLE))
+          {
+            disable(subscription);
+          }
+          else if (intent.getAction().equals(ACTION_UPDATE))
+          {
+            update(subscription);
           }
         }
       }
@@ -187,15 +180,8 @@ public class SubscriptionsManager
         final List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
         for (final Subscription subscription : subscriptions)
         {
-          try
-          {
-            Timber.d( "%s is %s",
-                    subscription.toString(), (subscription.isDisabled() ? "disabled" : "enabled"));
-          }
-          finally
-          {
-            subscription.dispose();
-          }
+          Timber.d( "%s is %s",
+                  subscription.toString(), (subscription.isDisabled() ? "disabled" : "enabled"));
         }
       }
 
