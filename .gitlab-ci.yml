@@ -1,5 +1,6 @@
 image: "registry.gitlab.com/eyeo/docker/libadblockplus-android_gitlab-runner:202004.1"
 stages:
+  - lint
   - unit_test
   - build_dependencies
   - build
@@ -39,6 +40,25 @@ build_dependencies:
       - libadblockplus/
       - buildtools/
     policy: pull
+
+checkstyle:
+  stage: lint
+  image: registry.gitlab.com/eyeo/docker/gitlab-codequality:21.01
+  script:
+    # Run checkstyle with our config against all java files
+    - checkstyle --exclude=.git -c config/checkstyle/checkstyle.xml -f xml $(find . -name "*.java") -o checkstyle-report.xml || true
+    # Change the paths to relative in the output so gitlab can link them properly
+    - sed -i -e "s|$(pwd)/./||g" checkstyle-report.xml
+    # Convert the checkstyle output to code-climate format so gitlab can parse it
+    - |
+        violations-command-line \
+          -detail-level COMPACT \
+          -code-climate code-climate-report.json \
+          --violations "CHECKSTYLE" "$(pwd)" ".*checkstyle-report.xml" "Checkstyle"
+  artifacts:
+    reports:
+      codequality:
+        - code-climate-report.json
 
 gradle_unit_tests:
   stage: unit_test
