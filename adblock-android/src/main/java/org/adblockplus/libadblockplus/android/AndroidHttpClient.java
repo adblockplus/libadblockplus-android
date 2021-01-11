@@ -137,7 +137,10 @@ public class AndroidHttpClient extends HttpClient
 
         if (inputStream != null)
         {
-          if (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()))
+          // DP-579: We need to also check if stream is not empty before creating GZIP, for example
+          // this code throws: `new GZIPInputStream(new ByteArrayInputStream(new byte[0]))`
+          if (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()) &&
+              !isNoContentCode(responseStatus))
           {
             Timber.d("Setting inputStream to GZIPInputStream");
             inputStream = new GZIPInputStream(inputStream);
