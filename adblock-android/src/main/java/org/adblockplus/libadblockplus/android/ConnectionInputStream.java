@@ -31,6 +31,7 @@ public class ConnectionInputStream extends InputStream
 {
   private final InputStream inputStream;
   private final HttpURLConnection httpURLConnection;
+  private boolean closed = false;
 
   public ConnectionInputStream(final InputStream inputStream, final HttpURLConnection httpURLConnection)
   {
@@ -75,6 +76,7 @@ public class ConnectionInputStream extends InputStream
     {
       Timber.d("close()");
       inputStream.close();
+      closed = true;
     }
     finally
     {
@@ -98,5 +100,26 @@ public class ConnectionInputStream extends InputStream
   public boolean markSupported()
   {
     return inputStream.markSupported();
+  }
+
+  @Override
+  protected void finalize() throws Throwable
+  {
+    try
+    {
+      if (!closed)
+      {
+        Timber.d("close() from finalize");
+        httpURLConnection.disconnect();
+      }
+    }
+    catch(final Throwable t)
+    {
+      throw t;
+    }
+    finally
+    {
+      super.finalize();
+    }
   }
 }
