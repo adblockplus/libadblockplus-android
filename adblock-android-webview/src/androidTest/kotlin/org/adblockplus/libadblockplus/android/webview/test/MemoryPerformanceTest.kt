@@ -50,35 +50,10 @@ class MockStorage : AndroidHttpClientResourceWrapper.Storage {
     }
 }
 
-abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListResourceID: Int) {
+abstract class BenchmarkMemory() {
     @get:Rule
     val folder = TemporaryFolder()
-
-    // mapped all subscription url to the given subscription list because the runner of the test
-    // might run this in a different locale and this would result in a different easylist being
-    // downloaded this way any of the subscription list download results in the injection of
-    // our subscription list test file.
-    val resourcesList = mapOf(
-        // locale-specific
-        AndroidHttpClientResourceWrapper.EASYLIST to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_DUTCH to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_GERMAN to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_FRENCH to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN to subscriptionListResourceID,
-        AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN to subscriptionListResourceID,
-
-        // AA
-        AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS to exceptionListResourceID
-    )
-
+    val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
     init {
         if (Timber.treeCount() == 0) {
             Timber.plant(DebugTree())
@@ -87,12 +62,9 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
 
     @LargeTest
     @Test
-    fun benchmark() {
-        var results = benchmarkFilterList(resourcesList, folder.newFolder().absolutePath)
-        writeResultsOnFile(results)
-    }
+    abstract fun benchmark();
 
-    private fun stampMemory(): MutableMap<String, String> {
+    protected fun stampMemory(): MutableMap<String, String> {
         // calls gc to make results less volatile
         System.gc()
         val memInfoVar = Debug.MemoryInfo()
@@ -102,77 +74,17 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
         // for more information please read.
         // https://developer.android.com/reference/android/os/Debug.MemoryInfo
         val totalAccountedInAndroidStudio =
-            memInfoVar.totalPss -
-                memInfoVar.getMemoryStat("summary.private-other").toInt() -
-                memInfoVar.getMemoryStat("summary.system").toInt()
+                memInfoVar.totalPss -
+                        memInfoVar.getMemoryStat("summary.private-other").toInt() -
+                        memInfoVar.getMemoryStat("summary.system").toInt()
 
         return mutableMapOf("TOTAL PSS (KB)" to memInfoVar.totalPss.toString(),
-            "TOTAL_ANDROID_STUDIO (KB) " to totalAccountedInAndroidStudio.toString(),
-            "CODE (KB) " to memInfoVar.getMemoryStat("summary.code"),
-            "STACK (KB) " to memInfoVar.getMemoryStat("summary.stack"),
-            "GRAPHICS (KB) " to memInfoVar.getMemoryStat("summary.graphics"),
-            "JAVA-HEAP(KB) " to memInfoVar.getMemoryStat("summary.java-heap"),
-            "NATIVE-HEAP(KB) " to memInfoVar.getMemoryStat("summary.native-heap"))
-    }
-
-    /**
-     * Benchmarks memory by stamping the memory footprint at each stage of a normal
-     * usage of adblockwebview.
-     * First stamps init stage (without anything initialized)
-     * Second stamps after engine is created.
-     * Third stamps when all the filter lists are downloaded and ready
-     * Fourth stamps when the first adblockwebview has loaded with about:blank
-     * Fifth stamps after a cool off period of 5 seconds
-     */
-    private fun benchmarkFilterList(
-        localResources: Map<String, Int>,
-        folder: String): Map<String, Map<String, String>> {
-
-        var output = mutableMapOf<String, MutableMap<String, String>>()
-        output["INIT STAGE"] = stampMemory()
-
-        val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
-
-        val engineFactory = AdblockEngine
-            .builder(context, AppInfo.builder().build(), folder)
-            .preloadSubscriptions(context, localResources, MockStorage())
-            .setForceUpdatePreloadedSubscriptions(false)
-        val customEngineProvider = SingleInstanceEngineProvider(engineFactory)
-
-        assertTrue(customEngineProvider.retain(false))
-        output["ENGINE CREATED"] = stampMemory()
-        assertNotNull(customEngineProvider.engine)
-
-        // wait for all subscriptions to be loaded
-        while (!customEngineProvider.engine.filterEngine.listedSubscriptions.all {
-                it.getProperty("downloadStatus")?.asString() == "synchronize_ok"
-            }) {
-            SystemClock.sleep(SLEEP_TIME_MILLI)
-        }
-
-        output["FILTER LOADED"] = stampMemory()
-        val latch = CountDownLatch(1)
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val webview = AdblockWebView(context)
-            webview.setProvider(customEngineProvider)
-
-            webview.webViewClient = object : WebViewClient() {
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    latch.countDown()
-                    super.onPageFinished(view, url)
-                }
-            }
-            webview.loadUrl("about:blank")
-        }
-
-        assertTrue(latch.await(1, TimeUnit.MINUTES))
-        output["FIRST ADBLOCK WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory()
-        // added last stage the cool off period, looking at some measurements throughout the test
-        // it continues to change the memory usage after the loading of webview there is a pattern
-        // of a short rise and fall after the 4 seconds mark.
-        SystemClock.sleep(COOL_OFF_DURATION_MILLI)
-        output["5 seconds cool off"] = stampMemory()
-        return output
+                "TOTAL_ANDROID_STUDIO (KB) " to totalAccountedInAndroidStudio.toString(),
+                "CODE (KB) " to memInfoVar.getMemoryStat("summary.code"),
+                "STACK (KB) " to memInfoVar.getMemoryStat("summary.stack"),
+                "GRAPHICS (KB) " to memInfoVar.getMemoryStat("summary.graphics"),
+                "JAVA-HEAP(KB) " to memInfoVar.getMemoryStat("summary.java-heap"),
+                "NATIVE-HEAP(KB) " to memInfoVar.getMemoryStat("summary.native-heap"))
     }
 
     fun writeResultsOnFile(results: Map<String, Map<String, String>>) {
@@ -209,29 +121,195 @@ abstract class BenchMarkMemory(subscriptionListResourceID: Int, exceptionListRes
     }
 }
 
-class MemoryBenchmark_20_full_AA : BenchMarkMemory(R.raw.easy_20, R.raw.exceptionrules)
+/*
+    Benchmarks memory of system webview,
+    this is necessary to compare to our or solution.
+ */
+class SystemWebViewBenchmark() : BenchmarkMemory() {
+    override fun benchmark() {
+        var output = mutableMapOf<String, MutableMap<String, String>>()
+        output["INIT STAGE"] = stampMemory()
 
-class MemoryBenchmark_20_min_AA : BenchMarkMemory(R.raw.easy_20, R.raw.exceptionrules_min)
+        val latch = CountDownLatch(1)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val webview = WebView(context)
 
-class MemoryBenchmark_50_full_AA : BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules)
+            webview.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    latch.countDown()
+                    super.onPageFinished(view, url)
+                }
+            }
+            webview.loadUrl("about:blank")
+        }
+
+        assertTrue(latch.await(1, TimeUnit.MINUTES))
+        output["FIRST WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory()
+        // added last stage the cool off period, looking at some measurements throughout the test
+        // it continues to change the memory usage after the loading of webview there is a pattern
+        // of a short rise and fall after the 4 seconds mark.
+        SystemClock.sleep(COOL_OFF_DURATION_MILLI)
+        output["5 seconds cool off"] = stampMemory()
+        writeResultsOnFile(output)
+    }
+}
+
+abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
+                                             exceptionListResourceID: Int,
+                                             isAAenabled: Boolean = true) :
+
+    BenchmarkMemory() {
+    val isAAenabled = isAAenabled
+    // mapped all subscription url to the given subscription list because the runner of the test
+    // might run this in a different locale and this would result in a different easylist being
+    // downloaded this way any of the subscription list download results in the injection of
+    // our subscription list test file.
+    val resourcesList = mapOf(
+        // locale-specific
+        AndroidHttpClientResourceWrapper.EASYLIST to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_DUTCH to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_GERMAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_FRENCH to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN to subscriptionListResourceID,
+        AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN to subscriptionListResourceID,
+
+        // AA
+        AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS to exceptionListResourceID
+    )
+
+    @LargeTest
+    @Test
+    override fun benchmark() {
+        var results = benchmarkFilterList(resourcesList, folder.newFolder().absolutePath)
+        writeResultsOnFile(results)
+    }
+
+    /**
+     * Benchmarks memory by stamping the memory footprint at each stage of a normal
+     * usage of adblockwebview.
+     * First stamps init stage (without anything initialized)
+     * Second stamps after engine is created.
+     * Third stamps when all the filter lists are downloaded and ready
+     * Fourth stamps when the first adblockwebview has loaded with about:blank
+     * Fifth stamps after a cool off period of 5 seconds
+     */
+    private fun benchmarkFilterList(
+        localResources: Map<String, Int>,
+        folder: String): Map<String, Map<String, String>> {
+
+        var output = mutableMapOf<String, MutableMap<String, String>>()
+        output["INIT STAGE"] = stampMemory()
+
+        val engineFactory = AdblockEngine
+            .builder(context, AppInfo.builder().build(), folder)
+            .preloadSubscriptions(context, localResources, MockStorage())
+            .setForceUpdatePreloadedSubscriptions(false)
+
+        val customEngineProvider = SingleInstanceEngineProvider(engineFactory)
+
+        assertTrue(customEngineProvider.retain(false))
+        customEngineProvider.engine.isAcceptableAdsEnabled = isAAenabled;
+        output["ENGINE CREATED"] = stampMemory()
+        assertNotNull(customEngineProvider.engine)
+
+        // wait for all subscriptions to be loaded
+        while (!customEngineProvider.engine.filterEngine.listedSubscriptions.all {
+                it.synchronizationStatus == "synchronize_ok"
+            }) {
+            SystemClock.sleep(SLEEP_TIME_MILLI)
+        }
+
+        output["FILTER LOADED"] = stampMemory()
+        val latch = CountDownLatch(1)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val webview = AdblockWebView(context)
+            webview.setProvider(customEngineProvider)
+
+            webview.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    latch.countDown()
+                    super.onPageFinished(view, url)
+                }
+            }
+            webview.loadUrl("about:blank")
+        }
+
+        assertTrue(latch.await(1, TimeUnit.MINUTES))
+        output["FIRST ADBLOCK WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory()
+        // added last stage the cool off period, looking at some measurements throughout the test
+        // it continues to change the memory usage after the loading of webview there is a pattern
+        // of a short rise and fall after the 4 seconds mark.
+        SystemClock.sleep(COOL_OFF_DURATION_MILLI)
+        output["5 seconds cool off"] = stampMemory()
+        return output
+    }
+}
+/* AA on */
+class MemoryBenchmark_20_full_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules)
+
+class MemoryBenchmark_20_min_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules_min)
+
+class MemoryBenchmark_50_full_AA : AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules)
 
 class MemoryBenchmark_50_min_AA :
-    BenchMarkMemory(R.raw.easy_50, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules_min)
 
 class MemoryBenchmark_80_full_AA :
-    BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules)
+    AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules)
 
 class MemoryBenchmark_80_min_AA :
-    BenchMarkMemory(R.raw.easy_80, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules_min)
 
 class MemoryBenchmark_full_easy_full_AA :
-    BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules)
 
 class MemoryBenchmark_full_easy_min_AA :
-    BenchMarkMemory(R.raw.easylist, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min)
 
 class MemoryBenchmark_minDist_full_AA :
-    BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules)
 
 class MemoryBenchmark_minDist_min_AA :
-    BenchMarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min)
+    AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min)
+
+/** With AA off
+ Here we still set the AA subscriptions to either full or min because it even though it is
+ off the sdk still downloads the subscriptions and might loaded it, affecting its memory sage
+*/
+class MemoryBenchmark_20_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_20_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_50_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_50_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_80_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_80_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_full_easy_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_full_easy_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min, false)
+
+class MemoryBenchmark_minDist_full_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules, false)
+
+class MemoryBenchmark_minDist_min_AA_off :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min, false)

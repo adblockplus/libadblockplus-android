@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Pridėti arba pašalinti konkrečių kalbų filtrų sąrašus</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Priimtini skelbimai</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Norėtume svetaines paskatinti naudoti aiškias, neintervencines reklamas. Tam sudarėme griežtas Priimtinų skelbimų, kurie rodomi esant numatytiesiems nustatymams, identifikavimo gaires. Jei naršydami norite nematyti skelbimų, šį nustatymą galite bet kada išjungti.</string>
-  <string name="fragment_adblock_settings_wl_title">Į baltąjį sąrašą įtraukti domenai</string>
+  <string name="fragment_adblock_settings_al_title">Į baltąjį sąrašą įtraukti domenai</string>
   <string name="fragment_adblock_settings_wl_summary">Į šį sąrašą pridėkite svetaines, kurių skelbimus norite matyti</string>
   <string name="fragment_adblock_settings_add_domain">Pridėti domeną</string>
   <string name="fragment_adblock_settings_wl_domains">Į baltąjį sąrašą įtraukti domenai</string>

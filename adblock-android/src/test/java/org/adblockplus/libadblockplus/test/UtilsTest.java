@@ -177,18 +177,13 @@ public class UtilsTest
       put("http://spl.abcdef.com/path?someparam=somevalue", "spl.abcdef.com");
       put("file://home/user/document.pdf", "home");
       put("data://text/vnd-example+xyz;foo=bar;base64,R0lGODdh", "text");
+      put("https://www.amazon.com/rd/uedata?ld&v=0.214785.0&id=KSH69HG9F9SH1T8E4BWR&sw=360&sh=640&vw=360&vh=320&m=1&sc=KSH69HG9F9SH1T8E4BWR&ue=105&bb=425&ns=447&ne=539&cf=542&af=547&fn=547&be=830&pc=1084&tc=-1023&na_=-1023&ul_=-1605602566886&_ul=-1605602566886&rd_=-1605602566886&_rd=-1605602566886&fe_=-307&lk_=-305&_lk=-263&co_=-263&_co=-198&sc_=-239&rq_=-197&rs_=-30&_rs=708&dl_=-3&di_=916&de_=922&_de=924&_dc=1083&ld_=1083&_ld=-1605602566886&ntd=-2&ty=0&rc=0&hob=93&hoe=109&ld=1085&t=1605602567971&ctb=1&rt=cf:7-0-4-3-1-0-1_af:9-0-4-5-1-0-1_ld:23-8-4-7-2-0-0&ec=4&ecf=4&csmtags=aui|aui:aui_build_date:3.20.7-2020-11-12|gwImgNoCached|fls-na-amazon-com|netInfo:wifi|gwmNoCardHistory|awa:website|awa:wpn:unsupported|awa:wpn:unsupported:browser_no_support|adblk_yes&viz=visible:100&pty=exports-gateway-phone-web&spty=mobile&pti=mobile&tid=KSH69HG9F9SH1T8E4BWR&aftb=1",
+          "www.amazon.com");
     }};
 
     for (final Map.Entry<String, String> urlToDomainEntry : urlToDomainMap_OK.entrySet())
     {
-      try
-      {
         assertEquals(Utils.getDomain(urlToDomainEntry.getKey()), urlToDomainEntry.getValue());
-      }
-      catch (final URISyntaxException e)
-      {
-        fail(e.getMessage());
-      }
     }
 
     // Test failures
@@ -200,14 +195,9 @@ public class UtilsTest
 
     for (final String urlEntry : wrongUrls)
     {
-      try
+      if (Utils.getDomain(urlEntry) != null)
       {
-        Utils.getDomain(urlEntry);
-        fail("URISyntaxException is expected to be thrown");
-      }
-      catch (final URISyntaxException e)
-      {
-        // expected
+        fail("getDomain(" + urlEntry + ") is expected to be null");
       }
     }
   }

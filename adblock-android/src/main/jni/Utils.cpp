@@ -16,8 +16,20 @@
  */
 
 #include <string>
+#include <numeric>
 
 #include "Utils.h"
+#include "JniFilter.h"
+
+const std::string joinStringVector(const std::vector<std::string> &array, const std::string separator)
+{
+  return std::accumulate(std::begin(array), std::end(array),
+                         std::string(),
+                         [&separator](std::string &ss, const std::string &s)
+                         {
+                             return ss.empty() ? s : ss + separator + s;
+                         });
+}
 
 // precached in JNI_OnLoad and released in JNI_OnUnload
 JniGlobalReference<jclass>* arrayListClass;
@@ -40,13 +52,15 @@ void JniUtils_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
   arrayListCtor = env->GetMethodID(arrayListClass->Get(), "<init>", "()V");
 
   filterClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Filter")));
-  filterCtor = env->GetMethodID(filterClass->Get(), "<init>", "(J)V");
+  filterCtor = env->GetMethodID(filterClass->Get(), "<init>", "(" TYP("Filter$Type") "Ljava/lang/String;)V");
 
   subscriptionClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Subscription")));
-  subscriptionCtor = env->GetMethodID(subscriptionClass->Get(), "<init>", "(J)V");
+  subscriptionCtor = env->GetMethodID(subscriptionClass->Get(), "<init>",
+          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;" TYP("FilterEngine") ")V");
 
   emulationSelectorClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("FilterEngine$EmulationSelector")));
-  emulationSelectorCtor = env->GetMethodID(emulationSelectorClass->Get(), "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
+  emulationSelectorCtor = env->GetMethodID(emulationSelectorClass->Get(), "<init>",
+                                           "(Ljava/lang/String;Ljava/lang/String;)V");
 
   exceptionClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("AdblockPlusException")));
 }
@@ -192,14 +206,23 @@ static jobject NewJniObject(JNIEnv* env, T&& value, jclass clazz, jmethodID ctor
 
 jobject NewJniFilter(JNIEnv* env, AdblockPlus::Filter&& filter)
 {
-  return NewJniObject<AdblockPlus::Filter>(
-    env, std::move(filter), filterClass->Get(), filterCtor);
+    return env->NewObject(filterClass->Get(),
+                          filterCtor,
+                          GetJniTypeFromNativeType(env, filter.GetType()),
+                          JniStdStringToJava(env, filter.GetRaw()));
 }
 
-jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription)
+jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription, jobject filterEngine)
 {
-  return NewJniObject<AdblockPlus::Subscription>(
-    env, std::move(subscription), subscriptionClass->Get(), subscriptionCtor);
+
+  return env->NewObject(subscriptionClass->Get(),
+                        subscriptionCtor,
+                        env->NewStringUTF(subscription.GetUrl().c_str()),
+                        env->NewStringUTF(subscription.GetTitle().c_str()),
+                        env->NewStringUTF(subscription.GetHomepage().c_str()),
+                        env->NewStringUTF(subscription.GetAuthor().c_str()),
+                        env->NewStringUTF(joinStringVector(subscription.GetLanguages(), ",").c_str()),
+                        filterEngine);
 }
 
 jobject NewJniEmulationSelector(JNIEnv* env, const AdblockPlus::IFilterEngine::EmulationSelector& emulationSelector)

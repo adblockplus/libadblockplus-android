@@ -6,14 +6,14 @@
     <string name="fragment_adblock_settings_filter_lists_title">フィルターリスト</string>
     <string name="fragment_adblock_settings_filter_lists_summary">特定言語フィルターリストを追加または削除</string>
     <string name="fragment_adblock_settings_aa_enabled_title">控えめな広告</string>
-    <string name="fragment_adblock_settings_aa_enabled_summary">ウェブサイトでは、明確かつ控えめな広告を使用することを推薦しています。このため、初期設定で表示される受け入れ可能な広告を特定する厳しいガイドラインを作成しました。広告を表示しない場合は、いつでもこの設定を無効にできます。</string>
-    <string name="fragment_adblock_settings_wl_title">ホワイトリスト登録済みドメイン</string>
-    <string name="fragment_adblock_settings_wl_summary">広告を表示するウェブサイトをリストに登録します</string>
-    <string name="fragment_adblock_settings_add_domain">ドメインを追加</string>
-    <string name="fragment_adblock_settings_wl_domains">ホワイトリスト登録済みドメイン</string>
+    <string name="fragment_adblock_settings_aa_enabled_summary">控えめな広告とは、厳格な広告基準を遵守する邪魔にならない広告のことです。これらの広告はコンテンツ作成者の収入源となるとともに、ご覧になっているコンテンツに干渉しないようになっています。この機能はデフォルトで ON になっていますが、いつでも OFF にすることができます。</string>
+    <string name="fragment_adblock_settings_al_title">許可リスト</string>
+    <string name="fragment_adblock_settings_wl_summary">このリストにお気に入りのウェブサイトを追加して支援しましょう。広告が表示される場合があります。</string>
+    <string name="fragment_adblock_settings_add_domain">URL を入力してください</string>
+    <string name="fragment_adblock_settings_wl_domains">許可リスト</string>
     <string name="fragment_adblock_settings_allowed_connection_type">自動アップデートの設定</string>
-    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">定額制のWi-Fiネットワーク</string>
-    <string name="fragment_adblock_settings_allowed_connection_type_wifi">すべてのWi-Fiネットワーク</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi_non_metered">定額制の Wi-Fi ネットワーク</string>
+    <string name="fragment_adblock_settings_allowed_connection_type_wifi">すべての Wi-Fi ネットワーク</string>
     <string name="fragment_adblock_settings_allowed_connection_type_all">いつも</string>
 
 </resources>

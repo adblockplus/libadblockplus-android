@@ -20,8 +20,6 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,6 +35,9 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
 import org.adblockplus.libadblockplus.android.webview.WebViewCounters;
@@ -45,8 +46,8 @@ import timber.log.Timber;
 
 public class TabFragment extends Fragment
 {
-  // sitekeys can be used for whitelisting [Optional and have small negative impact on performance]
-  public static final boolean SITEKEYS_WHITELISTING = true;
+  // sitekeys can be used for allowlisting [Optional and have small negative impact on performance]
+  public static final boolean SITEKEYS_ALLOWLISTING = true;
 
   private static final String TITLE = "title";
   private static final String CUSTOM_INTERCEPT = "custom_intercept";
@@ -65,7 +66,7 @@ public class TabFragment extends Fragment
   private Button back;
   private Button forward;
   private TextView blockedCounter;
-  private TextView whitelistedCounter;
+  private TextView allowlistedCounter;
   private AdblockWebView webView;
 
   /**
@@ -132,7 +133,7 @@ public class TabFragment extends Fragment
     forward = rootView.findViewById(R.id.fragment_tab_forward);
     progress = rootView.findViewById(R.id.fragment_tab_progress);
     blockedCounter = rootView.findViewById(R.id.fragment_tab_blocked_counter);
-    whitelistedCounter = rootView.findViewById(R.id.fragment_tab_wl_counter);
+    allowlistedCounter = rootView.findViewById(R.id.fragment_tab_wl_counter);
     webView = rootView.findViewById(R.id.fragment_tab_webview);
   }
 
@@ -327,9 +328,9 @@ public class TabFragment extends Fragment
         }
 
         @Override
-        public void onWhitelistedChanged(final int newValue)
+        public void onAllowlistedChanged(final int newValue)
         {
-          whitelistedCounter.setText(String.valueOf(newValue));
+          allowlistedCounter.setText(String.valueOf(newValue));
         }
       });
     webView.setEventsListener(eventsListener);
@@ -357,14 +358,20 @@ public class TabFragment extends Fragment
     }
   }
 
+  public void setJsInIframesEnabled(final boolean enabled)
+  {
+    webView.enableJsInIframes(enabled);
+  }
+
   private void initAdblockWebView()
   {
     // use shared filters data (not to increase memory consumption)
     webView.setProvider(AdblockHelper.get().getProvider());
 
-    if (SITEKEYS_WHITELISTING)
+    if (SITEKEYS_ALLOWLISTING)
     {
       webView.setSiteKeysConfiguration(AdblockHelper.get().getSiteKeysConfiguration());
+      webView.enableJsInIframes(((MainActivity)getActivity()).elemHideInInframesEnabled());
     }
 
     this.navigate(navigateTo);

@@ -15,7 +15,9 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-console.log("injected JS started")
+let isMainframe = window.self === window.top;
+console.log("injected JS started for " + document.location.href + " (" + isMainframe + ")")
+
 var tryReceiveSiteKey = function()
 {
   // A bug in Android 6, when navigation starts from 'about:blank', which has empty html tag.
@@ -111,19 +113,21 @@ else
   }, false);
 }
 
-// the formula = i * i * 8
-const SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS = [0, (1 * 8), (4 * 8), (9 * 8), (16 * 8)];
-
-// we try to retrieve the sitekey right away (~20% success) and schedule retrieving sitekey
-// with the following intervals (ms): 0, 8, 32, 72, 128
-tryReceiveSiteKey();
-// we are using "for loop" to make it more simple and reliable
-for (let i = 0; i < SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS.length; i++)
+if (isMainframe)
 {
-  setTimeout(function()
-  {
-    tryReceiveSiteKey();
-  },(SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS[i]));
-}
+    // the formula = i * i * 8
+    const SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS = [0, (1 * 8), (4 * 8), (9 * 8), (16 * 8)];
 
+    // we try to retrieve the sitekey right away (~20% success) and schedule retrieving sitekey
+    // with the following intervals (ms): 0, 8, 32, 72, 128
+    tryReceiveSiteKey();
+    // we are using "for loop" to make it more simple and reliable
+    for (let i = 0; i < SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS.length; i++)
+    {
+      setTimeout(function()
+      {
+        tryReceiveSiteKey();
+      },(SITEKEY_RETRIEVAL_ATTEMPT_INTERVALS[i]));
+    }
+}
 console.log("injected JS finished");

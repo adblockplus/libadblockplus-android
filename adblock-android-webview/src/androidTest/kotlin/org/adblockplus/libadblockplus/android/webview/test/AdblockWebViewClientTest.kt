@@ -2,13 +2,14 @@ package org.adblockplus.libadblockplus.android.webview.test
 
 import android.webkit.WebViewClient
 import com.nhaarman.mockitokotlin2.anyOrNull
-import org.mockito.Mockito.verify
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import com.nhaarman.mockitokotlin2.eq
 import org.junit.Before
-import org.mockito.Mockito.times
 import org.mockito.Mockito
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.atMostOnce
 import timber.log.Timber
 
 class AdblockWebViewClientTest : BaseAdblockWebViewTest() {
@@ -68,13 +69,15 @@ class AdblockWebViewClientTest : BaseAdblockWebViewTest() {
 
             Timber.d("Start loading...")
             assertTrue("${indexPageUrl} exceeded loading timeout",
-                it.second.loadUrlAndWait(indexPageUrl))
+                it.second.loadUrlAndWait(indexPageUrl, indexRedirectedPageUrl))
+            Timber.d("Completed loading.")
 
             verify(it.first, times(1))
                 .onPageStarted(eq(it.second.webView), eq(indexPageUrl), anyOrNull())
             verify(it.first, times(1))
                 .onPageStarted(eq(it.second.webView), eq(indexRedirectedPageUrl), anyOrNull())
-            verify(it.first, times(0))
+            // Relaxed this check as this may or may not be reached, depending on how fast is device
+            verify(it.first, atMostOnce())
                 .onPageFinished(eq(it.second.webView), eq(indexPageUrl))
             verify(it.first, times(1))
                 .onPageFinished(eq(it.second.webView), eq(indexRedirectedPageUrl))

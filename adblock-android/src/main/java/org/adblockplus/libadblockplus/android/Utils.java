@@ -42,6 +42,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -57,6 +58,11 @@ public final class Utils
   private Utils()
   {
     //
+  }
+
+  public static boolean isNullOrEmpty(final Collection< ? > c)
+  {
+    return c == null || c.isEmpty();
   }
 
   public static String getTag(final Class<?> clazz)
@@ -182,43 +188,33 @@ public final class Utils
     return sb.toString();
   }
 
-  public static String getUrlWithoutAnchor(final String urlWithAnchor)
-  {
-    if (urlWithAnchor == null)
-    {
-      throw new IllegalArgumentException("URL can't be null");
-    }
-
-    return getStringBeforeChar(urlWithAnchor, '#');
-  }
-
-  public static String getDomain(final String url) throws URISyntaxException
+  public static String getDomain(final String url)
   {
     if (url == null)
     {
       throw new IllegalArgumentException("Url can't be null");
     }
-    return new URI(url).getHost();
+    try
+    {
+      return new URI(getStringBeforeChar(url, '?')).getHost();
+    }
+    catch (final URISyntaxException e)
+    {
+      return null;
+    }
   }
 
-  public static boolean isFirstPartyCookie(final String documentUrl, final String requestUrl, final String cookieString)
+  public static boolean isFirstPartyCookie(final String documentUrl, final String requestUrl,
+                                           final String cookieString)
   {
     if (documentUrl == null || requestUrl == null || cookieString == null)
     {
       throw new IllegalArgumentException("Arguments can't be null");
     }
-    String documentDomain;
-    try
+    final String documentDomain = getDomain(documentUrl);
+    if (documentDomain == null)
     {
-      documentDomain = getDomain(documentUrl);
-      if (documentDomain == null)
-      {
-        return false;
-      }
-    }
-    catch (final URISyntaxException e)
-    {
-      Timber.e(e, "Failed to getDomain(%s)", documentUrl);
+      Timber.e("isFirstPartyCookie: Failed to getDomain(%s)", documentUrl);
       return false;
     }
 
@@ -243,20 +239,17 @@ public final class Utils
     }
     catch (final IllegalArgumentException e)
     {
-      Timber.e(e, "Failed call to HttpCookie.parse()");
+      Timber.e(e, "isFirstPartyCookie: Failed call to HttpCookie.parse()");
       return false;
     }
 
     // Cookie does not specify "Domain" param, obtain the domain from url which sets the cookie
     if (cookieDomain == null || cookieDomain.isEmpty())
     {
-      try
+      cookieDomain = getDomain(requestUrl);
+      if (cookieDomain == null || cookieDomain.isEmpty())
       {
-        cookieDomain = getDomain(requestUrl);
-      }
-      catch (final URISyntaxException e)
-      {
-        Timber.e(e, "Failed to getDomain(%s)", requestUrl);
+        Timber.e("isFirstPartyCookie: Failed to getDomain(%s)", requestUrl);
         return false;
       }
     }
@@ -598,12 +591,12 @@ public final class Utils
   }
 
   /**
-   * Creates whitelisting filter for a given domain
+   * Creates allowlisting filter for a given domain
    * @param filterEngine Filtering engine
-   * @param domain Domain that needs to be white listed
-   * @return Whitelisting filter
+   * @param domain Domain that needs to be allow listed
+   * @return Allowlisting filter
    */
-  public static Filter createDomainWhitelistingFilter(final FilterEngine filterEngine,
+  public static Filter createDomainAllowlistingFilter(final FilterEngine filterEngine,
                                                       final String domain)
   {
     return filterEngine.getFilter("@@||" + domain + "^$document");

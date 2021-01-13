@@ -17,63 +17,161 @@
 
 package org.adblockplus.libadblockplus;
 
-public final class Subscription extends JsValue
+import java.lang.ref.WeakReference;
+
+public final class Subscription
 {
+  protected final WeakReference<FilterEngine> filterEngine;
+  protected final String url;
+
   static
   {
     System.loadLibrary(BuildConfig.nativeLibraryName);
     registerNatives();
   }
 
-  private Subscription(final long ptr)
+  private final String title;
+  private final String homepage;
+  private final String author;
+  private final String languages;
+
+  private Subscription(final String url,
+                       final String title,
+                       final String homepage,
+                       final String author,
+                       final String languages,
+                       final FilterEngine filterEngine)
   {
-    super(ptr);
+    this.url = url;
+    this.title = title;
+    this.homepage = homepage;
+    this.author = author;
+    this.languages = languages;
+    this.filterEngine = new WeakReference<>(filterEngine);
   }
 
   public boolean isDisabled()
   {
-    return isDisabled(this.ptr);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return true;
+    }
+    return isDisabled(engine.getNativePtr(), this.url);
   }
 
-  public void setDisabled(boolean disabled)
+  public void setDisabled(final boolean disabled)
   {
-    setDisabled(this.ptr, disabled);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return;
+    }
+    setDisabled(engine.getNativePtr(), disabled, this.url);
   }
 
+  //  @Deprecated. Use FilterEngine.getListedSubscriptions() combined with find instead.
   public boolean isListed()
   {
-    return isListed(this.ptr);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return false;
+    }
+    return engine.getListedSubscriptions().contains(this);
   }
 
+  //  @Deprecated. Use FilterEngine.addSubscription() instead.
   public void addToList()
   {
-    addToList(this.ptr);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return;
+    }
+    engine.addSubscription(this);
   }
 
+  //  @Deprecated. Use FilterEngine.removeSubscription() instead.
   public void removeFromList()
   {
-    removeFromList(this.ptr);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return;
+    }
+    engine.removeSubscription(this);
   }
 
   public void updateFilters()
   {
-    updateFilters(this.ptr);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return;
+    }
+    updateFilters(engine.getNativePtr(), this.url);
   }
 
   public boolean isUpdating()
   {
-    return isUpdating(this.ptr);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return false;
+    }
+    return isUpdating(engine.getNativePtr(), this.url);
   }
 
   public boolean isAcceptableAds()
   {
-    return isAcceptableAds(this.ptr);
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return false;
+    }
+    return isAcceptableAds(engine.getNativePtr(), this.url);
+  }
+
+  public String getTitle()
+  {
+    return this.title;
+  }
+
+  public String getUrl()
+  {
+    return this.url;
+  }
+
+  public String getHomepage()
+  {
+    return this.homepage;
+  }
+
+  public String getAuthor()
+  {
+    return this.author;
+  }
+
+  public String getLanguages()
+  {
+    return this.languages;
+  }
+
+  public String getSynchronizationStatus()
+  {
+    final FilterEngine engine = filterEngine.get();
+    if (engine == null)
+    {
+      return "Filter Engine destroyed";
+    }
+    return getSynchronizationStatus(engine.getNativePtr(), this.url);
   }
 
   @Override
   public int hashCode()
   {
-    return (int)(this.ptr >> 32) * (int)this.ptr;
+    return this.url.hashCode();
   }
 
   @Override
@@ -83,27 +181,21 @@ public final class Subscription extends JsValue
     {
       return false;
     }
-
-    return operatorEquals(this.ptr, ((Subscription)o).ptr);
+    return this.url.equals(((Subscription)o).url);
   }
 
   private static native void registerNatives();
 
-  private static native boolean isDisabled(long ptr);
+  private static native boolean isDisabled(long ptr, String url);
 
-  private static native void setDisabled(long ptr, boolean disabled);
+  private static native void setDisabled(long ptr, boolean disabled, String url);
 
-  private static native boolean isListed(long ptr);
+  private static native void updateFilters(long ptr, String url);
 
-  private static native void addToList(long ptr);
+  private static native boolean isUpdating(long ptr, String url);
 
-  private static native void removeFromList(long ptr);
+  private static native boolean isAcceptableAds(long ptr, String url);
 
-  private static native void updateFilters(long ptr);
+  private static native String getSynchronizationStatus(long ptr, String url);
 
-  private static native boolean isUpdating(long ptr);
-
-  private static native boolean operatorEquals(long ptr, long other);
-
-  private static native boolean isAcceptableAds(long ptr);
-}
+  }

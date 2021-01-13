@@ -40,6 +40,7 @@ public abstract class HttpClient
   public static final String HEADER_SITEKEY = "x-adblock-key";
   public static final String HEADER_CONTENT_TYPE = "content-type";
   public static final String HEADER_CONTENT_LENGTH = "content-length";
+  public static final String HEADER_CSP = "content-security-policy";
 
   static
   {
@@ -48,6 +49,7 @@ public abstract class HttpClient
   }
 
   public static final int STATUS_CODE_OK = 200;
+  public static final int STATUS_CODE_NO_CONTENT = 204;
 
   /**
    * Possible values for request method argument (see `request(..)` method)
@@ -94,6 +96,18 @@ public abstract class HttpClient
   public static boolean isSuccessCode(final int httpStatusCode)
   {
     return httpStatusCode >= STATUS_CODE_OK && httpStatusCode <= 299;
+  }
+
+  /**
+   * Checks if HTTP status code means no content.
+   * See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
+   * @param httpStatusCode HTTP status code to check.
+   * @return True for no content code.
+   */
+  public static boolean isNoContentCode(final int httpStatusCode)
+  {
+    return httpStatusCode == 204 || httpStatusCode == 304 ||
+        (httpStatusCode >= 100 && httpStatusCode <= 199);
   }
 
   /**

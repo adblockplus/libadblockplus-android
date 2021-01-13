@@ -251,28 +251,42 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   {
     jsEngine.evaluate(
         "let foo; _webRequest.GET('https://easylist-downloads.adblockplus.org/easylist.txt', {}, " +
-        "function(result) {foo = result;} )");
+            "function(result) {foo = result;} )").dispose();
 
     waitForDefined("foo");
 
-    final String response = jsEngine.evaluate("foo.responseText").asString();
+    final JsValue respText = jsEngine.evaluate("foo.responseText");
+    final String response = respText.asString();
+    respText.dispose();
     assertNotNull(response);
+    final JsValue fooStatus = jsEngine.evaluate("foo.status");
     assertEquals(
         ServerResponse.NsStatus.OK.getStatusCode(),
-        jsEngine.evaluate("foo.status").asLong());
-    assertEquals(HTTP_OK, jsEngine.evaluate("foo.responseStatus").asLong());
+        fooStatus.asLong());
+    fooStatus.dispose();
+    final JsValue fooRespStatus = jsEngine.evaluate("foo.responseStatus");
+    assertEquals(HTTP_OK, fooRespStatus.asLong());
+    fooRespStatus.dispose();
+    final JsValue respStatusSubstr = jsEngine.evaluate("foo.responseText.substr(0, 14)");
     assertEquals(
         "[Adblock Plus ",
-        jsEngine.evaluate("foo.responseText.substr(0, 14)").asString());
+        respStatusSubstr.asString());
+    respStatusSubstr.dispose();
     final JsValue jsHeaders = jsEngine.evaluate("foo.responseHeaders");
     assertNotNull(jsHeaders);
     assertFalse(jsHeaders.isUndefined());
     assertFalse(jsHeaders.isNull());
     assertTrue(jsHeaders.isObject());
+    jsHeaders.dispose();
+    JsValue evaluate = jsEngine.evaluate("foo.responseHeaders['content-type'].substr(0, 10)");
     assertEquals(
         "text/plain",
-        jsEngine.evaluate("foo.responseHeaders['content-type'].substr(0, 10)").asString());
-    assertTrue(jsEngine.evaluate("foo.responseHeaders['location']").isUndefined());
+        evaluate.asString());
+    evaluate.dispose();
+    evaluate = jsEngine.evaluate("foo.responseHeaders['location']");
+    assertTrue(evaluate.isUndefined());
+    evaluate.dispose();
+    jsHeaders.dispose();
   }
 
   @Test
@@ -335,16 +349,22 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   {
     jsEngine.evaluate(
         "let foo; _webRequest.GET('https://easylist-downloads.adblockplus.org/easylist_invalid.txt', {}, " +
-            "function(result) {foo = result;} )");
+            "function(result) {foo = result;} )").dispose();
 
     waitForDefined("foo");
 
-    final String response = jsEngine.evaluate("foo.responseText").asString();
+    JsValue evaluate = jsEngine.evaluate("foo.responseText");
+    final String response = evaluate.asString();
+    evaluate.dispose();
     assertNotNull(response);
+    evaluate = jsEngine.evaluate("foo.status");
     assertEquals(
         ServerResponse.NsStatus.ERROR_FAILURE.getStatusCode(),
-        jsEngine.evaluate("foo.status").asLong());
-    assertEquals(HTTP_NOT_FOUND, jsEngine.evaluate("foo.responseStatus").asLong());
+        evaluate.asLong());
+    evaluate.dispose();
+    evaluate = jsEngine.evaluate("foo.responseStatus");
+    assertEquals(HTTP_NOT_FOUND, evaluate.asLong());
+    evaluate.dispose();
   }
 
   @Test
@@ -352,23 +372,31 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   {
     jsEngine.evaluate(
         "var result;\n" +
-        "var request = new XMLHttpRequest();\n" +
-        "request.open('GET', 'https://easylist-downloads.adblockplus.org/easylist.txt');\n" +
-        "request.setRequestHeader('X', 'Y');\n" +
-        "request.setRequestHeader('X2', 'Y2');\n" +
-        "request.overrideMimeType('text/plain');\n" +
-        "request.addEventListener('load',function() {result=request.responseText;}, false);\n" +
-        "request.addEventListener('error',function() {result='error';}, false);\n" +
-        "request.send(null);");
+            "var request = new XMLHttpRequest();\n" +
+            "request.open('GET', 'https://easylist-downloads.adblockplus.org/easylist.txt');\n" +
+            "request.setRequestHeader('X', 'Y');\n" +
+            "request.setRequestHeader('X2', 'Y2');\n" +
+            "request.overrideMimeType('text/plain');\n" +
+            "request.addEventListener('load',function() {result=request.responseText;}, false);\n" +
+            "request.addEventListener('error',function() {result='error';}, false);\n" +
+            "request.send(null);").dispose();
 
     waitForDefined("result");
 
-    assertEquals(HTTP_OK, jsEngine.evaluate("request.status").asLong());
-    assertEquals("[Adblock Plus ", jsEngine.evaluate("result.substr(0, 14)").asString());
+    JsValue evaluate = jsEngine.evaluate("request.status");
+    assertEquals(HTTP_OK, evaluate.asLong());
+    evaluate.dispose();
+    evaluate = jsEngine.evaluate("result.substr(0, 14)");
+    assertEquals("[Adblock Plus ", evaluate.asString());
+    evaluate.dispose();
+    evaluate = jsEngine.evaluate("request.getResponseHeader('Content-Type').substr(0, 10)");
     assertEquals(
         "text/plain",
-        jsEngine.evaluate("request.getResponseHeader('Content-Type').substr(0, 10)").asString());
-    assertTrue(jsEngine.evaluate("request.getResponseHeader('Location')").isNull());
+        evaluate.asString());
+    evaluate.dispose();
+    evaluate = jsEngine.evaluate("request.getResponseHeader('Location')");
+    assertTrue(evaluate.isNull());
+    evaluate.dispose();
   }
 
   @Test

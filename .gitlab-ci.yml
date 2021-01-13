@@ -91,6 +91,7 @@ build_libadblockplus-android:all-and-test-release:
   only:
     - schedules
     - web
+    - tags
 
 # The remaining build_* jobs are only built on rc branches
 # They are run only to test that the build works, we dont use the artefacts
@@ -144,32 +145,42 @@ build_libadblockplus-android:without-jni:
 # @LargeTest tests are skipped in this job
 testobject_tests:
   stage: device_tests
+  variables:
+    # Space-separated list of devices to run tests against
+    TEST_DEVICES: "Samsung_Galaxy_S20_real Google_Pixel_5_real OnePlus_Nord_real"
   script:
     - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
-    - test -f /opt/ci/runner.jar || wget https://s3.amazonaws.com/saucelabs-runner/v1.8/runner.jar -O /opt/ci/runner.jar
+    - test -f /opt/ci/runner.jar || wget --no-verbose https://s3.amazonaws.com/saucelabs-runner/v1.8/runner.jar -O /opt/ci/runner.jar
     # Docs for running tests on testobject:
     # https://wiki.saucelabs.com/display/DOCS/Command+Reference+for+Sauce+Runner+for+Real+Devices
     # Note - we start all tests concurrently and `wait` for them to finish. Non-zero exit codes are preserved.
     - |
+      mkdir test-results
       pids=""
-      for APK in $(find . -name "*androidTest.apk")
-        do echo "Testing $APK"
-        java -jar /opt/ci/runner.jar espresso \
-          --test $APK \
-          --app ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk \
-          --testname ${CI_JOB_URL} \
-          --e notAnnotation androidx.test.filters.LargeTest \
-          --apikey ${TESTOBJ_PROJECT_KEY} --datacenter EU &
-        pids="$pids $!"
+      for TEST_DEVICE in $TEST_DEVICES
+        do for APK in $(find . -name "*androidTest.apk")
+          do echo "Testing $APK"
+          java -jar /opt/ci/runner.jar espresso \
+            --test $APK \
+            --app ./adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk \
+            --testname ${CI_JOB_URL} \
+            --e notAnnotation androidx.test.filters.LargeTest \
+            --device ${TEST_DEVICE} \
+            --xmlFolder test-results/${TEST_DEVICE}/ \
+            --apikey ${TESTOBJ_PROJECT_KEY} --datacenter EU &
+          pids="$pids $!"
+        done
       done
       wait $pids
   artifacts:
+    when: always
     reports:
-      junit: philll-adblockwebview-app-*.xml
+      junit: test-results/*/philll-adblockwebview-app-*.xml
 
 # automated regression tests using Appium
 regression_tests:
   stage: device_tests
+  retry: 1
   variables:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
@@ -184,35 +195,28 @@ regression_tests:
     # `./gradlew cucumber` launches cucumber executor that then launches Appium client
     - cd automation && ./gradlew cucumber
 
-# FilterEngine memory benchmarking
-# This job runs @LargeTest instrumented tests as well as all the others.
-memory_benchmark:
-  tags:
-    # This is a Raspberry PI with an attached rooted device that is located at the office.
-    - "android-pi"
-  stage: device_tests
-  script:
-    - chmod +x ./tools/run_benchmark.py && ./tools/run_benchmark.py
-    # performance tests: only the @PerformanceTest annotation
-    - adb shell am instrument -w -r \
-      -e debug false \
-      -e size large \
-      -e annotation org.adblockplus.libadblockplus.android.webview.PerformanceTest \
-      org.adblockplus.libadblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner
-  after_script:
-    - adb uninstall org.adblockplus.libadblockplus.android.webview.test
-    - adb kill-server
-  artifacts:
-      paths:
-        - adblock-android-webview/build/outputs/memory_benchmark/
-      reports:
-        metrics: metrics.txt
+# automated functional tests using Appium
+functional_tests:
   only:
     - schedules
     - web
+  stage: device_tests
+  variables:
+    # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
+    GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
+    # demo app debug apk
+    TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
+  script:
+    # TESTOBJ_PROJECT_KEY should exist, testing it
+    - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
+    # we are not using submodules, because automation is not a part of repository functionality
+    # its rather a standalone set of scripts
+    - git clone $GIT_AUTOMATION_REPO automation
+    # `./gradlew functional` launches cucumber executor that then launches Appium client and executes entire functional tests
+    - cd automation && ./gradlew functional
 
-# FilterEngine performance benchmarking
-performance_benchmark:
+# FilterEngine performance benchmarking and memory
+benchmark:
   tags:
     # This is a Raspberry PI with an attached rooted device that is located at the office.
     - "android-pi"
@@ -220,34 +224,58 @@ performance_benchmark:
   variables:
     LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
     BENCHMARK_PULL_DIR: "adblock-android-benchmark/build/outputs/connected_android_test_additional_output"
+  before_script:
+    # for publish benchmark
+    - pip3 install pygsheets
   script:
-    # Gradle feels heavy for Raspberry Pi
-    # so using "adb" commands directly instead of "gradlew ..." commands:
-    # (see https://developer.android.com/studio/profile/run-benchmarks-in-ci)
-    # ./gradlew lockClocks
-    - adb install adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
-    - adb push adblock-android-benchmark/scripts/lockClocks.sh $LOCK_CLOCK_FILE
-    - adb shell su - -c $LOCK_CLOCK_FILE
-    - adb shell rm $LOCK_CLOCK_FILE
-    # ./gradlew :adblock-android-benchmark:connectedCheck
-    - adb shell am instrument -w -r \
-      -e androidx.benchmark.suppressErrors LOW-BATTERY \
-      -e no-isolated-storage 1 \
-      -e androidx.benchmark.output.enable true \
-      org.adblockplus.libadblockplus.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner
-    # collect benchmarking results raw file
-    - mkdir -p $BENCHMARK_PULL_DIR
-    - adb pull /storage/emulated/0/Download/org.adblockplus.libadblockplus.benchmark.test-benchmarkData.json $BENCHMARK_PULL_DIR/benchmarkData.json
+    - export BENCHMARK_GSHEETS_TOKEN_FILE_DIR=$(pwd)
+    - cp $BENCHMARK_GSHEETS_TOKEN_FILE ./sheets.googleapis.com-python.json
+    - ./tools/performance_benchmark.py
+    - ./tools/memory_benchmark.py
+    - ./tools/storage_benchmark.py
+    - ./tools/publish_benchmark.py
   after_script:
-    - adb uninstall org.adblockplus.libadblockplus.benchmark.test
-    # ./gradle unlockClocks
+    # it will only trigger rolling window job
+    # if it is a scheduled job or is a tag job (release)
+    - ./tools/trigger_past_jobs.py
     - adb shell reboot
   artifacts:
+    when: always
     paths:
       - $BENCHMARK_PULL_DIR
+      - adblock-android-webview/build/outputs/memory_benchmark/
+    reports:
+        metrics: metrics.txt
   only:
     - schedules
     - web
+    - tags
+
+# Loads web_page_replay and launches tests targeted with it
+web_page_replay:
+  stage: device_tests
+  image: "registry.gitlab.com/eyeo/adblockplus/libadblockplus-android/web_page_replay"
+  variables:
+    ANDROID_DEVICE: "172.17.0.1:4444"
+  before_script:
+    - adb connect ${ANDROID_DEVICE}
+    # need to uninstall app do to and not exit on failure
+    - bash -c 'adb uninstall org.adblockplus.libadblockplus.android.webview.test || true'
+    - bash -c 'adb uninstall org.adblockplus.libadblockplus.benchmark.test || true'
+    - adb install -r adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk
+    - adb install -r adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
+  script:
+    - adb root && sleep 5
+    - cd ${GOPATH}/src/github.com/catapult/web_page_replay_go
+    # if root present its ok to fail
+    - bash -c 'go run src/wpr.go installroot --android_device_id ${ANDROID_DEVICE} || true'
+    - cd ${CI_PROJECT_DIR}/tools/web_page_replay_test/ && ./web_page_replay_runner.py --mode replay --index=indexer --wpr-path=$WEB_PAGE_REPLAY_GO --v=True
+  only:
+    - schedules
+    - web
+  after_script:
+    # remove root because if root already present it will fail on re-install
+    - cd ${GOPATH}/src/github.com/catapult/web_page_replay_go && go run src/wpr.go removeroot --android_device_id ${ANDROID_DEVICE}
 
 .publish_template: &publish_template
   stage: publish

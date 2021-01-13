@@ -71,7 +71,6 @@ public class WebViewInterceptRequestTest
   private final static Map<String, Integer> urls = new HashMap<String, Integer>()
   {{
     put("http://benefitssolver.com", 1);
-    put("http://myhealthvet.com", 1);
     put("http://iflychina.com", 1);
     put("http://megaloft.com/", 1);
     put("http://ww12.onoticioso.com/", 1);

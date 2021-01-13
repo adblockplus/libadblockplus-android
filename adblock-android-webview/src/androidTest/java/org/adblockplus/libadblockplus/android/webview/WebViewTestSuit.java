@@ -85,6 +85,7 @@ public class WebViewTestSuit<T extends WebView>
   private class WebViewWaitingClient extends WebViewClient
   {
     private String lastPageStartedUrl = "";
+    private String expectedUrl = null;
     private AtomicReference<Long> startTime = new AtomicReference<>(null);
     private final CountDownLatch countDownLatch;
     private final WebViewClient extWebViewClient;
@@ -95,6 +96,11 @@ public class WebViewTestSuit<T extends WebView>
       super();
       this.countDownLatch = countDownLatch;
       this.extWebViewClient = extWebViewClient;
+    }
+
+    public void setExpectedUrl(final String expectedUrl)
+    {
+      this.expectedUrl = expectedUrl;
     }
 
     public void resetTimer()
@@ -122,7 +128,10 @@ public class WebViewTestSuit<T extends WebView>
     {
       final Long startTimeValue = startTime.get();
       // When redirection happens there are several notifications so wee need to check if url matches
-      if (Utils.getUrlWithoutParams(url).startsWith(Utils.getUrlWithoutParams((lastPageStartedUrl)))
+      if ((url.equals(expectedUrl) ||
+          (expectedUrl == null &&
+              Utils.getUrlWithoutParams(url).startsWith(
+                  Utils.getUrlWithoutParams((lastPageStartedUrl)))))
           && startTimeValue != null)
       {
         final Long timeDelta = System.currentTimeMillis() - startTimeValue;
@@ -192,11 +201,15 @@ public class WebViewTestSuit<T extends WebView>
     countDownLatch.await();
   }
 
-  public boolean loadUrlAndWait(final String url) throws InterruptedException
+  public boolean loadUrlAndWait(final String url, final String expectedUrl) throws InterruptedException
   {
     final CountDownLatch countDownLatch = new CountDownLatch(1);
     final WebViewWaitingClient webViewClient = new WebViewWaitingClient(
         countDownLatch, extWebViewClient);
+    if (expectedUrl != null)
+    {
+      webViewClient.setExpectedUrl(expectedUrl);
+    }
     InstrumentationRegistry.getInstrumentation().runOnMainSync(new Runnable()
     {
       @Override
@@ -214,6 +227,11 @@ public class WebViewTestSuit<T extends WebView>
           url, (webView instanceof AdblockWebView ? "AdblockWebView" : "WebView"));
     }
     return hasFinished;
+  }
+
+  public boolean loadUrlAndWait(final String url) throws InterruptedException
+  {
+    return loadUrlAndWait(url, null);
   }
 
   public void measure(final String url) throws InterruptedException

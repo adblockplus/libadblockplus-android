@@ -16,8 +16,8 @@
  */
 
 {
-   {{DEBUG}} console.log('starting injecting css rules');
-   var styleSheet = {{BRIDGE}}.getElemhideStyleSheet();
+   {{DEBUG}} console.log('starting injecting eh css rules for ' + document.location.href);
+   var styleSheet = {{BRIDGE}}.getElemhideStyleSheet(document.location.href);
    {{DEBUG}} console.log('stylesheet length: ' + styleSheet.length);
    if (styleSheet)
    {

@@ -16,7 +16,10 @@
  */
 package org.adblockplus.libadblockplus.android.webview.test
 
-import com.nhaarman.mockitokotlin2.*
+
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
 import org.adblockplus.libadblockplus.android.webview.CombinedSiteKeyExtractor
 import org.adblockplus.libadblockplus.android.webview.HttpHeaderSiteKeyExtractor
 import org.junit.Assert.assertTrue

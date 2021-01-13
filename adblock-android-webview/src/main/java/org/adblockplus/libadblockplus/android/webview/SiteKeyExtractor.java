@@ -25,7 +25,6 @@ import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 
 /**
  * Extracts a <i>Site Key</i> from an {@link AdblockWebView}'s internals and verifies the Site Key
- * <p/>
  * What is expected from this class:
  * <ol>
  *   <li>Extract the <i>Site Key</i> from all available resources from {@link AdblockWebView}</li>
@@ -33,13 +32,10 @@ import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
  * </ol>
  * An instance of {@link org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier} is set to
  * `siteKeysConfiguration` property
- * <p/>
  * {@link AdblockWebView} accepts the extractor
  * by calling {@link AdblockWebView#setSiteKeyExtractor(SiteKeyExtractor)}
- * <p/>
  * For example, custom HTTP request can be made and resulting HTTP headers can be used to
  * extract the Site Key from the header
- * <p/>
  * Or Site Key might be extracted from <i>html</i> root tag by injecting
  * javascript into {@link AdblockWebView} and using JS handler to get the key back to WebView
  *
@@ -51,7 +47,6 @@ public interface SiteKeyExtractor
   /**
    * This method is called by the {@link AdblockWebView} during
    * {@link android.webkit.WebViewClient#shouldInterceptRequest(WebView, WebResourceRequest)}
-   * <p/>
    * This method must perform custom HTTP request or return one of states from
    * {@link AdblockWebView.WebResponseResult}
    *
@@ -72,17 +67,18 @@ public interface SiteKeyExtractor
    * Will be removed later in a favor of setting internal WebViewClient
    * for every SiteKeyExtractor
    *
-   * @param request from the
-   *                {@link android.webkit.WebViewClient#shouldInterceptRequest(WebView, WebResourceRequest)}
+   * @param url a request url which is held back by this call
+   * @param isMainFrame a boolean indicating whether this is a main or a subframe request
    * @return true if had to wait
    */
-  boolean waitForSitekeyCheck(final WebResourceRequest request);
+  boolean waitForSitekeyCheck(final String url, final boolean isMainFrame);
 
   /**
    * This method is called by the {@link AdblockWebView} during
    * {@link AdblockWebView#setSiteKeysConfiguration(SiteKeysConfiguration)}
-   * <p/>
    * You can later use siteKeysConfiguration in order to verify the sitekey
+   *
+   * @param siteKeysConfiguration the configuration to set
    */
   void setSiteKeysConfiguration(SiteKeysConfiguration siteKeysConfiguration);
 

@@ -19,12 +19,14 @@ package org.adblockplus.libadblockplus.test;
 
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
+import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.MockHttpClient;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -38,10 +40,10 @@ public class HttpClientTest extends BaseFilterEngineTest
   private static final int RESPONSE_STATUS = 123;
   private static final String HEADER_KEY = "Foo";
   private static final String HEADER_VALUE = "Bar";
-  private static final Charset CHARSET = Charset.forName("UTF-8");
+  private static final Charset CHARSET = StandardCharsets.UTF_8;
   private static final String RESPONSE = "(responseText)";
 
-  private MockHttpClient mockHttpClient = new MockHttpClient();
+  private final MockHttpClient mockHttpClient = new MockHttpClient();
 
   @Override
   public void setUp()
@@ -63,21 +65,31 @@ public class HttpClientTest extends BaseFilterEngineTest
   public void testSuccessfulRequest()
   {
     jsEngine.evaluate(
-        "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
+        "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )").dispose();
     waitForDefined("foo");
     assertTrue(mockHttpClient.called.get());
     assertNotNull(mockHttpClient.getSpecificRequest("http://example.com/", HttpClient.REQUEST_METHOD_GET));
-    assertFalse(jsEngine.evaluate("foo").isUndefined());
+    final JsValue foo = jsEngine.evaluate("foo");
+    assertFalse(foo.isUndefined());
+    foo.dispose();
+    final JsValue status = jsEngine.evaluate("foo.status");
     assertEquals(
         ServerResponse.NsStatus.OK.getStatusCode(),
-        jsEngine.evaluate("foo.status").asLong());
+        status.asLong());
+    status.dispose();
+    final JsValue responceStatus = jsEngine.evaluate("foo.responseStatus");
     assertEquals(
         Long.valueOf(RESPONSE_STATUS).longValue(),
-        jsEngine.evaluate("foo.responseStatus").asLong());
-    assertEquals(RESPONSE, jsEngine.evaluate("foo.responseText").asString());
+        responceStatus.asLong());
+    responceStatus.dispose();
+    final JsValue responceText = jsEngine.evaluate("foo.responseText");
+    assertEquals(RESPONSE, responceText.asString());
+    responceStatus.dispose();
+    final JsValue respHeaders = jsEngine.evaluate("JSON.stringify(foo.responseHeaders)");
     assertEquals(
         "{\"" + HEADER_KEY + "\":\"" + HEADER_VALUE + "\"}",
-        jsEngine.evaluate("JSON.stringify(foo.responseHeaders)").asString());
+        respHeaders.asString());
+    respHeaders.dispose();
   }
 
   @Test
@@ -86,13 +98,17 @@ public class HttpClientTest extends BaseFilterEngineTest
     mockHttpClient.exception.set(true);
 
     jsEngine.evaluate(
-        "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )");
+        "let foo; _webRequest.GET('http://example.com/', {X: 'Y'}, function(result) {foo = result;} )").dispose();
     waitForDefined("foo");
     assertTrue(mockHttpClient.called.get());
     assertNotNull(mockHttpClient.getSpecificRequest("http://example.com/", HttpClient.REQUEST_METHOD_GET));
-    assertFalse(jsEngine.evaluate("foo").isUndefined());
+    final JsValue foo = jsEngine.evaluate("foo");
+    assertFalse(foo.isUndefined());
+    foo.dispose();
+    final JsValue status = jsEngine.evaluate("foo.status");
     assertEquals(
         ServerResponse.NsStatus.ERROR_FAILURE.getStatusCode(),
-        jsEngine.evaluate("foo.status").asLong());
+        status.asLong());
+    status.dispose();
   }
 }

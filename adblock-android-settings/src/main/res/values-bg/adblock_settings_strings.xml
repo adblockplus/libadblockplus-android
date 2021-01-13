@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">Добави или премахни списъци с филтри за конкретни езици</string>
   <string name="fragment_adblock_settings_aa_enabled_title">Допустими реклами</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">Бихме искали да насърчим уебсайтовете да използват ясни, ненатрапчиви реклами. Затова създадохме стриктни правила за идентифициране на допустими реклами, които се показват в настройките по подразбиране. Ако искаш да преглеждаш, без да виждаш реклами, можеш да деактивираш тази настройка по всяко време.</string>
-  <string name="fragment_adblock_settings_wl_title">Домейни, добавени в белия списък</string>
+  <string name="fragment_adblock_settings_al_title">Домейни, добавени в белия списък</string>
   <string name="fragment_adblock_settings_wl_summary">Добави уебсайтове, на които искаш да виждаш реклами, към този списък</string>
   <string name="fragment_adblock_settings_add_domain">Добави домейн</string>
   <string name="fragment_adblock_settings_wl_domains">Домейни, добавени в белия списък</string>

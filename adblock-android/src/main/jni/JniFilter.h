@@ -20,8 +20,12 @@
 
 #include <jni.h>
 
-void JniFilter_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved);
+#include <AdblockPlus/Filter.h>
 
-void JniFilter_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved);
+void JniFilter_OnLoad(JavaVM *vm, JNIEnv *env, void *reserved);
+
+void JniFilter_OnUnload(JavaVM *vm, JNIEnv *env, void *reserved);
+
+jobject GetJniTypeFromNativeType(JNIEnv *pEnv, AdblockPlus::Filter::Type type);
 
 #endif /* JNIFILTER_H */

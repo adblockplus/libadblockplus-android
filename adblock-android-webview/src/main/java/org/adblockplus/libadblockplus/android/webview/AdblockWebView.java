@@ -25,8 +25,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Pair;
 import android.webkit.ConsoleMessage;
-import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
@@ -38,10 +38,10 @@ import android.webkit.WebViewClient;
 
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HttpClient;
-import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
+import org.adblockplus.libadblockplus.android.Subscription;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
 import org.adblockplus.libadblockplus.android.webview.content_type.HeadersContentTypeDetector;
@@ -53,13 +53,13 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -89,24 +89,49 @@ public class AdblockWebView extends WebView
   private Integer loadError;
   private ProxyWebChromeClient intWebChromeClient;
   private ProxyWebViewClient intWebViewClient;
+
+  /*
+   * url2Referrer map stores referrer mappings for the urls: url => its parent (referrer).
+   * This data is critical for ABP allowlisting feature (blocked requests don't have children
+   * subrequests hence this is logically important only for allowlisting features).
+   * Because of a limitations of the WebView API we are populating this collection only based on
+   * the "Referer" HTTP request header. But this header can be missing, most often due to the
+   * fact that "Referrer-Policy" is set to "no-referrer" value.
+   *
+   * Lifecycle:
+   * url2Referrer data is cleared on the following situations:
+   *  - onPageStarted callback is called
+   *  - goBack(), goForward(), reload(), load() WebView API methods are called.
+   *
+   *  We are adding entries to url2Referrer in the shouldAbpBlockRequest() method, and in the same
+   *  method url2Referrer is traversed to build frames hierarchy for the request. Here are important
+   *  things to remember:
+   *  - For requests of type FilterEngine.ContentType.SUBDOCUMENT we are adding two mappings:
+   *  requestUrl => referrer, Utils.getOrigin(url) => referrer (see DP-1621)
+   *  - As mentioned before, when "Referer" HTTP request header was missing for some request, we
+   *  will not be able to build a complete frames hierarchy. To mitigate this problem slightly, when
+   *  reading url2Referrer to build frames hierarchy we are making sure that root (navigation url)
+   *  is added to the frames hierarchy (see DP-1763)
+   *  - When reading entries we are making sure that there is no loop (see DP-184).
+   */
   private final Map<String, String> url2Referrer
           = Collections.synchronizedMap(new HashMap<String, String>());
+  /*
+   * Map with data: url => <elemhide selectors, elemhideemu selectors>.
+   * This data is collected only for main frame and subframes.
+   * Map is cleared when we detect a new page is being loaded or when ABP is disabled.
+   */
+  private final Map<String, Pair<String, String>> url2Stylesheets
+      = Collections.synchronizedMap(new HashMap<String, Pair<String, String>>());
   private final AtomicReference<String> navigationUrl = new AtomicReference<>();
   private String injectJs;
   private String elemhideBlockedJs;
-  private CountDownLatch elemHideLatch;
   private final AtomicReference<OptionalBoolean> adblockEnabled =
       new AtomicReference<>(OptionalBoolean.UNDEFINED);
-  private String elemHideSelectorsString;
-  private String elemHideEmuSelectorsString;
-  private final Object elemHideThreadLockObject = new Object();
-  private ElemHideThread elemHideThread;
   private boolean loading;
   private String elementsHiddenFlag;
   private String sitekeyExtractedFlag;
   private SiteKeyExtractor siteKeyExtractor;
-  private final AtomicBoolean acceptCookie = new AtomicBoolean(true);
-  private final AtomicBoolean acceptThirdPartyCookies = new AtomicBoolean(false);
 
   /**
    * Optional boolean value.
@@ -194,17 +219,17 @@ public class AdblockWebView extends WebView
     }
 
     /**
-     * Whitelisting reason:
+     * Allowlisting reason:
      */
-    enum WhitelistReason
+    enum AllowlistReason
     {
       /**
-       * Document is whitelisted
+       * Document is allowlisted
        */
       DOCUMENT,
 
       /**
-       * Domain is whitelisted by user
+       * Domain is allowlisted by user
        */
       DOMAIN,
 
@@ -215,21 +240,21 @@ public class AdblockWebView extends WebView
     }
 
     /**
-     * Immutable data-class containing an auxiliary information about whitelisted resource.
+     * Immutable data-class containing an auxiliary information about allowlisted resource.
      */
-    final class WhitelistedResourceInfo extends ResourceInfo
+    final class AllowlistedResourceInfo extends ResourceInfo
     {
-      private final WhitelistReason reason;
+      private final AllowlistReason reason;
 
-      public WhitelistedResourceInfo(final String requestUrl,
+      public AllowlistedResourceInfo(final String requestUrl,
                                      final List<String> parentFrameUrls,
-                                     final WhitelistReason reasons)
+                                     final AllowlistReason reasons)
       {
         super(requestUrl, parentFrameUrls);
         this.reason = reasons;
       }
 
-      public WhitelistReason getReason()
+      public AllowlistReason getReason()
       {
         return reason;
       }
@@ -253,19 +278,20 @@ public class AdblockWebView extends WebView
     void onResourceLoadingBlocked(final BlockedResourceInfo info);
 
     /**
-     * "Resource loading whitelisted" event.
+     * "Resource loading allowlisted" event.
      *
      * This method can be called on a background thread.
      * It should not block the thread for too long as it slows down resource loading.
      * @param info contains auxiliary information about a blocked resource.
      */
-    void onResourceLoadingWhitelisted(final WhitelistedResourceInfo info);
+    void onResourceLoadingAllowlisted(final AllowlistedResourceInfo info);
   }
 
   private final AtomicReference<EventsListener> eventsListenerAtomicReference
           = new AtomicReference<>();
   private final AtomicReference<SiteKeysConfiguration> siteKeysConfiguration =
       new AtomicReference<>();
+  private final AtomicBoolean jsInIframesEnabled = new AtomicBoolean(false);
   private final AdblockEngine.SettingsChangedListener engineSettingsChangedCb =
       new AdblockEngine.SettingsChangedListener()
   {
@@ -308,6 +334,11 @@ public class AdblockWebView extends WebView
     }
   };
 
+  public String getNavigationUrl()
+  {
+    return navigationUrl.get();
+  }
+
   public AdblockWebView(final Context context)
   {
     super(context);
@@ -343,6 +374,21 @@ public class AdblockWebView extends WebView
     return siteKeysConfiguration.get();
   }
 
+  public void enableJsInIframes(final boolean jsInIframesEnabled) throws IllegalStateException
+  {
+    if (jsInIframesEnabled == true && getSiteKeysConfiguration() == null)
+    {
+      throw new IllegalStateException(
+          "Site Keys configuration must be set (enabled) to use this feature!");
+    }
+    this.jsInIframesEnabled.set(jsInIframesEnabled);
+  }
+
+  public boolean getJsInIframesEnabled()
+  {
+    return jsInIframesEnabled.get() == true && getSiteKeysConfiguration() != null;
+  }
+
   /**
    * Sets an implementation of EventsListener which will receive ad blocking related events.
    *
@@ -375,6 +421,11 @@ public class AdblockWebView extends WebView
   public void setSiteKeyExtractor(final SiteKeyExtractor extractor)
   {
     this.siteKeyExtractor = extractor;
+  }
+
+  public String getInjectJs()
+  {
+    return injectJs;
   }
 
   @SuppressLint("SetJavaScriptEnabled")
@@ -522,6 +573,12 @@ public class AdblockWebView extends WebView
     url2Referrer.clear();
   }
 
+  private void clearStylesheets()
+  {
+    Timber.d("Clearing stylesheet");
+    url2Stylesheets.clear();
+  }
+
   private enum AbpShouldBlockResult
   {
     // FilterEngine is released or
@@ -559,6 +616,22 @@ public class AdblockWebView extends WebView
     AdblockWebViewClient(final WebViewClient extWebViewClient)
     {
       super(extWebViewClient);
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request)
+    {
+      Timber.d("shouldOverrideUrlLoading called for view.getUrl() %s", view.getUrl());
+      clearReferrers();
+      return super.shouldOverrideUrlLoading(view, request);
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(final WebView view, final String url)
+    {
+      Timber.d("shouldOverrideUrlLoading called for url %s", url);
+      clearReferrers();
+      return super.shouldOverrideUrlLoading(view, url);
     }
 
     @Override
@@ -634,9 +707,9 @@ public class AdblockWebView extends WebView
       final String urlWithoutFragment = Utils.getUrlWithoutFragment(url);
 
       final boolean isMainFrame = request.isForMainFrame();
-      boolean isWhitelisted = false;
+      boolean isAllowlisted = false;
       boolean canContainSitekey = false;
-      boolean isAcceptableAdsEnabled = true;
+      boolean sitekeyCheckEnabled;
 
       final String referrer = request.getRequestHeaders().get(HttpClient.HEADER_REFERRER);
 
@@ -696,7 +769,7 @@ public class AdblockWebView extends WebView
 
         if (referrer != null)
         {
-          Timber.d("Header referrer for " + url + " is " + referrer);
+          Timber.d("Header referrer for %s is %s", url , referrer);
           if (!url.equals(referrer))
           {
             url2Referrer.put(urlWithoutFragment, referrer);
@@ -711,37 +784,33 @@ public class AdblockWebView extends WebView
           Timber.w("No referrer header for %s", url);
         }
 
-        // reconstruct frames hierarchy
-        final List<String> referrerChain = new ArrayList<>();
-        String parent = urlWithoutFragment;
-        while ((parent = url2Referrer.get(parent)) != null)
+        sitekeyCheckEnabled = engine.isAcceptableAdsEnabled() || getJsInIframesEnabled();
+        if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
         {
-          if (referrerChain.contains(parent))
+          final Subscription[] listedSubscriptions = engine.getListedSubscriptions();
+          for (Subscription subscription : listedSubscriptions)
           {
-            Timber.w("Detected referrer loop, finished creating referrers list");
-            break;
+            if (subscription.url.contains("abp-testcase-subscription.txt"))
+            {
+              sitekeyCheckEnabled = true;
+              break;
+            }
           }
-          referrerChain.add(0, parent);
         }
-
-        isAcceptableAdsEnabled = engine.isAcceptableAdsEnabled();
         if (isMainFrame)
         {
           // never blocking main frame requests, just subrequests
           Timber.w("%s is main frame, allow loading", url);
-          siteKeyExtractor.setEnabled(isAcceptableAdsEnabled);
+          siteKeyExtractor.setEnabled(sitekeyCheckEnabled);
+          // For a main frame we don't need to check result of generateStylesheetForUrl as we still
+          // need to inject js for a site key (site key check is disabled in inject.js for subframes).
+          clearStylesheets();
+          generateStylesheetForUrl(urlWithoutFragment, true);
         }
         else
         {
-          // Here we discover if referrerChain is empty or incomplete (i.e. does not contain the
-          // navigation url) so we add at least the top referrer which is navigationUrl.
-          final String navigationUrlLocal = navigationUrl.get();
-          if (!TextUtils.isEmpty(navigationUrlLocal) && (referrerChain.isEmpty() ||
-              !referrerChain.contains(navigationUrlLocal)))
-          {
-            Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal, url);
-            referrerChain.add(0, navigationUrlLocal);
-          }
+          // reconstruct frames hierarchy
+          final List<String> referrerChain = buildFramesHierarchy(urlWithoutFragment);
 
           final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
           String siteKey = (siteKeysConfiguration != null
@@ -774,13 +843,13 @@ public class AdblockWebView extends WebView
             }
           }
 
-          // whitelisted
-          if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
+          // allowlisted
+          if (engine.isDocumentAllowlisted(url, referrerChain, siteKey))
           {
-            isWhitelisted = true;
-            Timber.w("%s document is whitelisted, allow loading", url);
-            notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
+            isAllowlisted = true;
+            Timber.w("%s document is allowlisted, allow loading", url);
+            notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
           }
           else
           {
@@ -796,7 +865,7 @@ public class AdblockWebView extends WebView
               final String parentUrl = referrerChain.get(0);
               final List<String> referrerChainForGenericblock = referrerChain.subList(1,
                   referrerChain.size());
-              specificOnly = engine.isGenericblockWhitelisted(parentUrl,
+              specificOnly = engine.isGenericblockAllowlisted(parentUrl,
                   referrerChainForGenericblock, siteKey);
               if (specificOnly)
               {
@@ -810,16 +879,16 @@ public class AdblockWebView extends WebView
                 url, FilterEngine.ContentType.maskOf(contentType),
                 referrerChain, siteKey, specificOnly);
 
-            if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
+            if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
             {
               Timber.i("Attempting to block request with AA on the first try: %s", url);
 
               // Need to run `waitForSitekeyCheck` to hold the actual check until
               // the sitekey is either obtained or not present
-              final boolean waitedForSitekey = siteKeyExtractor.waitForSitekeyCheck(request);
+              final boolean waitedForSitekey = siteKeyExtractor.waitForSitekeyCheck(url, isMainFrame);
               if (waitedForSitekey)
               {
-                // Request was held, start over to see if it's now whitelisted
+                // Request was held, start over to see if it's now allowlisted
                 Timber.i("Restarting the check having waited for the sitekey: %s", url);
 
                 siteKey = (siteKeysConfiguration != null
@@ -833,12 +902,12 @@ public class AdblockWebView extends WebView
                   return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
                 }
 
-                if (engine.isDocumentWhitelisted(url, referrerChain, siteKey))
+                if (engine.isDocumentAllowlisted(url, referrerChain, siteKey))
                 {
-                  isWhitelisted = true;
-                  Timber.w("%s document is whitelisted, allow loading", url);
-                  notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                      url, referrerChain, EventsListener.WhitelistReason.DOCUMENT));
+                  isAllowlisted = true;
+                  Timber.w("%s document is allowlisted, allow loading", url);
+                  notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                      url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
                 }
                 else
                 {
@@ -848,7 +917,7 @@ public class AdblockWebView extends WebView
                     final String parentUrl = referrerChain.get(0);
                     final List<String> referrerChainForGenericblock = referrerChain.subList(1,
                         referrerChain.size());
-                    specificOnly = engine.isGenericblockWhitelisted(parentUrl,
+                    specificOnly = engine.isGenericblockAllowlisted(parentUrl,
                         referrerChainForGenericblock, siteKey);
                     if (specificOnly)
                     {
@@ -862,38 +931,38 @@ public class AdblockWebView extends WebView
                       url, FilterEngine.ContentType.maskOf(contentType),
                       referrerChain, siteKey, specificOnly);
 
-                  if (result == AdblockEngine.MatchesResult.NOT_WHITELISTED)
+                  if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
                   {
-                    Timber.i("Blocked loading %s with AA %s", url,
-                        isAcceptableAdsEnabled ? "enabled" : "disabled");
+                    Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                        sitekeyCheckEnabled ? "enabled" : "disabled");
                     return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
                   }
-                  if (result == AdblockEngine.MatchesResult.WHITELISTED)
+                  if (result == AdblockEngine.MatchesResult.ALLOWLISTED)
                   {
-                    isWhitelisted = true;
-                    Timber.w("%s is whitelisted in matches()", url);
-                    notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                        url, referrerChain, EventsListener.WhitelistReason.FILTER));
+                    isAllowlisted = true;
+                    Timber.w("%s is allowlisted in matches()", url);
+                    notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                        url, referrerChain, EventsListener.AllowlistReason.FILTER));
                   }
                   Timber.d("Allowed loading %s", url);
                 }
               } // if (waitedForSitekey)
 
-              // This check is required because the resource could be whitelisted on the second
+              // This check is required because the resource could be allowlisted on the second
               // check after waiting for the sitekey check conclusion
-              if (!isWhitelisted)
+              if (!isAllowlisted)
               {
-                Timber.i("Blocked loading %s with AA %s", url,
-                    isAcceptableAdsEnabled ? "enabled" : "disabled");
+                Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                    sitekeyCheckEnabled ? "enabled" : "disabled");
                 return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
               }
             }
-            else if (result == AdblockEngine.MatchesResult.WHITELISTED)
+            else if (result == AdblockEngine.MatchesResult.ALLOWLISTED)
             {
-              isWhitelisted = true;
-              Timber.w("%s is whitelisted in matches()", url);
-              notifyResourceWhitelisted(new EventsListener.WhitelistedResourceInfo(
-                  url, referrerChain, EventsListener.WhitelistReason.FILTER));
+              isAllowlisted = true;
+              Timber.w("%s is allowlisted in matches()", url);
+              notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                  url, referrerChain, EventsListener.AllowlistReason.FILTER));
             }
             Timber.d("Allowed loading %s", url);
           }
@@ -908,7 +977,7 @@ public class AdblockWebView extends WebView
       // just reply that it's fine to load the resource
       final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
       if ((
-            isAcceptableAdsEnabled
+            sitekeyCheckEnabled
             ||
             (siteKeysConfiguration != null && siteKeysConfiguration.getForceChecks())
           )
@@ -916,11 +985,11 @@ public class AdblockWebView extends WebView
           (
             isMainFrame
             ||
-            (canContainSitekey && !isWhitelisted)
+            (canContainSitekey && !isAllowlisted)
           ))
       {
-        // if url is a main frame (whitelisted by default) or can contain by design a site key header
-        // (it content type is SUBDOCUMENT or OTHER) and it is not yet whitelisted then we need to
+        // if url is a main frame (allowlisted by default) or can contain by design a site key header
+        // (it content type is SUBDOCUMENT or OTHER) and it is not yet allowlisted then we need to
         // make custom HTTP get request to try to obtain a site key header.
         return AbpShouldBlockResult.ALLOW_LOAD;
       }
@@ -935,13 +1004,14 @@ public class AdblockWebView extends WebView
       if (request.isForMainFrame())
       {
         Timber.d("Updating navigationUrl to `%s`", request.getUrl().toString());
-        navigationUrl.set(request.getUrl().toString());
+        navigationUrl.set(Utils.getUrlWithoutFragment(request.getUrl().toString()));
       }
       final AbpShouldBlockResult abpBlockResult = shouldAbpBlockRequest(request);
 
       // if FilterEngine is unavailable or not enabled, just let it go (and skip sitekey check)
       if (AbpShouldBlockResult.NOT_ENABLED.equals(abpBlockResult))
       {
+        clearStylesheets();
         return WebResponseResult.ALLOW_LOAD;
       }
 
@@ -999,22 +1069,51 @@ public class AdblockWebView extends WebView
     }
   }
 
-  public boolean canAcceptCookie(final String requestUrl, final String cookieString)
+  private List<String> buildFramesHierarchy(final String urlWithoutFragment)
   {
-    final String documentUrl = navigationUrl.get();
-    if (documentUrl == null || requestUrl == null || cookieString == null)
+    final List<String> referrerChain = new ArrayList<>();
+    String parent = urlWithoutFragment;
+    while ((parent = url2Referrer.get(parent)) != null)
     {
-      return false;
+      if (referrerChain.contains(parent))
+      {
+        Timber.w("Detected referrer loop, finished creating referrers list");
+        break;
+      }
+      referrerChain.add(0, parent);
     }
-    if (!acceptCookie.get())
+
+    // Here we discover if referrerChain is empty or incomplete (i.e. does not contain the
+    // navigation url) so we add at least the top referrer which is navigationUrl.
+    final String navigationUrlLocal = navigationUrl.get();
+    if (TextUtils.isEmpty(navigationUrlLocal))
     {
-      return false;
+      return referrerChain; //early exit
     }
-    if (!acceptThirdPartyCookies.get())
+    final String navigationUrlDomain = Utils.getDomain(navigationUrlLocal);
+    if (TextUtils.isEmpty(navigationUrlDomain))
     {
-      return Utils.isFirstPartyCookie(documentUrl, requestUrl, cookieString);
+      Timber.e("buildFramesHierarchy() failed to obtain a domain from url " + navigationUrlLocal);
+      return referrerChain; //early exit
     }
-    return true;
+    boolean canAddTopLevelParent = false;
+    if (!referrerChain.isEmpty())
+    {
+      // Let's check if we already have a top level domain same as navigationUrlDomain, and if
+      // not then add a top level parent.
+      final String currentTopLevelDomain = Utils.getDomain(referrerChain.get(0));
+      if (!navigationUrlDomain.equals(currentTopLevelDomain))
+      {
+        canAddTopLevelParent = true;
+      }
+    }
+    if (referrerChain.isEmpty() || canAddTopLevelParent)
+    {
+      Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal,
+          urlWithoutFragment);
+      referrerChain.add(0, navigationUrlLocal);
+    }
+    return referrerChain;
   }
 
   // not a huge saving, but still nice to lazy init
@@ -1051,12 +1150,12 @@ public class AdblockWebView extends WebView
     }
   }
 
-  private void notifyResourceWhitelisted(final EventsListener.WhitelistedResourceInfo info)
+  private void notifyResourceAllowlisted(final EventsListener.AllowlistedResourceInfo info)
   {
     final EventsListener eventsListener = getEventsListener();
     if (eventsListener != null)
     {
-      eventsListener.onResourceLoadingWhitelisted(info);
+      eventsListener.onResourceLoadingAllowlisted(info);
     }
   }
 
@@ -1125,222 +1224,6 @@ public class AdblockWebView extends WebView
     sitekeyExtractedFlag = "abp" + Math.abs(random.nextLong());
   }
 
-  private class ElemHideThread extends Thread
-  {
-    private String stylesheetString;
-    private String emuSelectorsString;
-    private final CountDownLatch finishedLatch;
-    private final AtomicBoolean isFinished;
-    private final AtomicBoolean isCancelled;
-
-    public ElemHideThread(final CountDownLatch finishedLatch)
-    {
-      this.finishedLatch = finishedLatch;
-      isFinished = new AtomicBoolean(false);
-      isCancelled = new AtomicBoolean(false);
-    }
-
-    @Override
-    public void run()
-    {
-      final Lock lock = getProvider().getReadEngineLock();
-      lock.lock();
-
-      try
-      {
-        boolean isDisposed = false;
-        if (getProvider().getCounter() == 0)
-        {
-          isDisposed = true;
-        }
-        else
-        {
-          lock.unlock();
-          getProvider().waitForReady();
-          lock.lock();
-          if (getProvider().getCounter() == 0)
-          {
-            isDisposed = true;
-          }
-        }
-
-        // Apart from checking counter (getProvider().getCounter()) we also need to make sure
-        // that getProvider().getEngine() is already set.
-        // We check that under getProvider().getReadEngineLock(); so we are sure it will not be
-        // changed after this check.
-        if (isDisposed || getProvider().getEngine() == null)
-        {
-          Timber.w("FilterEngine already disposed");
-          stylesheetString = EMPTY_ELEMHIDE_STRING;
-          emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
-        }
-        else
-        {
-          final List<String> referrerChain = new ArrayList<>(1);
-          String parentUrl = navigationUrl.get();
-          referrerChain.add(parentUrl);
-          while ((parentUrl = url2Referrer.get(parentUrl)) != null)
-          {
-            if (referrerChain.contains(parentUrl))
-            {
-              Timber.w("Detected referrer loop, finished creating referrers list");
-              break;
-            }
-            referrerChain.add(0, parentUrl);
-          }
-
-          final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
-
-          final List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
-
-          try
-          {
-            Timber.d("Listed subscriptions: %d", subscriptions.size());
-            if (BuildConfig.DEBUG)
-            {
-              for (final Subscription eachSubscription : subscriptions)
-              {
-                Timber.d("Subscribed to "
-                  + (eachSubscription.isDisabled() ? "disabled" : "enabled")
-                  + " " + eachSubscription);
-              }
-            }
-          }
-          finally
-          {
-            for (final Subscription eachSubscription : subscriptions)
-            {
-              eachSubscription.dispose();
-            }
-          }
-
-          final String navigationUrlLocalRef = navigationUrl.get();
-          final String domain = filterEngine.getHostFromURL(navigationUrlLocalRef);
-          if (domain == null)
-          {
-            Timber.e("Failed to extract domain from %s", navigationUrlLocalRef);
-            stylesheetString = EMPTY_ELEMHIDE_STRING;
-            emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
-          }
-          else
-          {
-            // elemhide
-            Timber.d("Requesting elemhide selectors from AdblockEngine for %s in %s",
-                    navigationUrlLocalRef, this);
-
-            final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
-            final String siteKey = (siteKeysConfiguration != null
-              ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-                .getAny(referrerChain, ""))
-              : null);
-
-            final boolean specificOnly = filterEngine.matches(navigationUrlLocalRef,
-              FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
-              Collections.<String>emptyList(), null) != null;
-
-            if (specificOnly)
-            {
-              Timber.d("elemhide - specificOnly selectors");
-            }
-
-            stylesheetString = getProvider()
-              .getEngine()
-              .getElementHidingStyleSheet(navigationUrlLocalRef, domain, referrerChain, siteKey, specificOnly);
-
-            Timber.d("Finished requesting elemhide stylesheet, got %d symbols in %s",
-                    stylesheetString.length(), this);
-
-            // elemhideemu
-            Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s in %s",
-                    navigationUrlLocalRef, this);
-            final List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
-              .getEngine()
-              .getElementHidingEmulationSelectors(navigationUrlLocalRef, domain, referrerChain, siteKey);
-
-            Timber.d("Finished requesting elemhideemu selectors, got  got %d in %s",
-                    emuSelectors.size(), this);
-            emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
-          }
-        }
-      }
-      finally
-      {
-        lock.unlock();
-        if (isCancelled.get())
-        {
-          Timber.w("This thread is cancelled, exiting silently %s", this);
-        }
-        else
-        {
-          finish(stylesheetString, emuSelectorsString);
-        }
-      }
-
-    }
-
-    private void onFinished()
-    {
-      finishedLatch.countDown();
-      synchronized (finishedRunnableLockObject)
-      {
-        if (finishedRunnable != null)
-        {
-          finishedRunnable.run();
-        }
-      }
-    }
-
-    private void finish(final String selectorsString, final String emuSelectorsString)
-    {
-      isFinished.set(true);
-      Timber.d("Setting elemhide string %d bytes", selectorsString.length());
-      elemHideSelectorsString = selectorsString;
-
-      Timber.d("Setting elemhideemu string %d bytes", emuSelectorsString.length());
-      elemHideEmuSelectorsString = emuSelectorsString;
-
-      onFinished();
-    }
-
-    private final Object finishedRunnableLockObject = new Object();
-    private Runnable finishedRunnable;
-
-    public void setFinishedRunnable(final Runnable runnable)
-    {
-      synchronized (finishedRunnableLockObject)
-      {
-        this.finishedRunnable = runnable;
-      }
-    }
-
-    public void cancel()
-    {
-      Timber.w("Cancelling elemhide thread %s", this);
-      if (isFinished.get())
-      {
-        Timber.w("This thread is finished, exiting silently %s", this);
-      }
-      else
-      {
-        isCancelled.set(true);
-        finish(EMPTY_ELEMHIDE_STRING, EMPTY_ELEMHIDE_ARRAY_STRING);
-      }
-    }
-  }
-
-  private final Runnable elemHideThreadFinishedRunnable = new Runnable()
-  {
-    @Override
-    public void run()
-    {
-      synchronized (elemHideThreadLockObject)
-      {
-        Timber.w("elemHideThread set to null");
-        elemHideThread = null;
-      }
-    }
-  };
-
   private void ensureProvider()
   {
     // if AdblockWebView works as drop-in replacement for WebView 'provider' is not set.
@@ -1362,22 +1245,15 @@ public class AdblockWebView extends WebView
 
     if (newUrl != null)
     {
-      navigationUrl.compareAndSet(null, newUrl);
-
-      // elemhide and elemhideemu
-      elemHideLatch = new CountDownLatch(1);
-      synchronized (elemHideThreadLockObject)
+      final String urlWithoutFragment = Utils.getUrlWithoutFragment(newUrl);
+      if (navigationUrl.compareAndSet(null, urlWithoutFragment))
       {
-        elemHideThread = new ElemHideThread(elemHideLatch);
-        elemHideThread.setFinishedRunnable(elemHideThreadFinishedRunnable);
-        elemHideThread.start();
+        // If we get here it usually means that shouldInterceptRequest() was not called for the main
+        // frame so let's do it now
+        generateStylesheetForUrl(urlWithoutFragment, true);
+
       }
     }
-    else
-    {
-      elemHideLatch = null;
-    }
-    clearReferrers();
   }
 
   private void buildInjectJs()
@@ -1438,7 +1314,6 @@ public class AdblockWebView extends WebView
   @Override
   public void reload()
   {
-    checkCookieSettings();
     ensureProvider();
 
     if (loading)
@@ -1447,18 +1322,6 @@ public class AdblockWebView extends WebView
     }
 
     super.reload();
-  }
-
-  private void checkCookieSettings()
-  {
-    final boolean acceptCookies = CookieManager.getInstance().acceptCookie();
-    acceptCookie.set(acceptCookies);
-    // If cookies are disabled no need to check more
-    if (acceptCookies)
-    {
-      // acceptThirdPartyCookies() needs to be called from UI thread
-      acceptThirdPartyCookies.set(CookieManager.getInstance().acceptThirdPartyCookies(this));
-    }
   }
 
   @Override
@@ -1470,7 +1333,6 @@ public class AdblockWebView extends WebView
 
   private void loadUrlCommon()
   {
-    checkCookieSettings();
     ensureProvider();
 
     if (loading)
@@ -1523,68 +1385,149 @@ public class AdblockWebView extends WebView
 
     loading = false;
     clearReferrers();
+  }
 
-    synchronized (elemHideThreadLockObject)
+  public boolean generateStylesheetForUrl(final String urlWithoutFragment, final boolean isMainFrame)
+  {
+    final boolean isJsInIframesEnabled = getJsInIframesEnabled();
+    Timber.d("generateStylesheetForUrl() called for url %s, isMainFrame = %b, " +
+            "isJsInIframesEnabled == %b", urlWithoutFragment, isMainFrame, isJsInIframesEnabled);
+    if (!isMainFrame && !isJsInIframesEnabled)
     {
-      if (elemHideThread != null)
+      return false;
+    }
+
+    final String domain = Utils.getDomain(urlWithoutFragment);
+    if (TextUtils.isEmpty(domain))
+    {
+      Timber.e("Failed to extract domain from %s", urlWithoutFragment);
+      return false;
+    }
+
+    String stylesheetString = EMPTY_ELEMHIDE_STRING;
+    String emuSelectorsString = EMPTY_ELEMHIDE_ARRAY_STRING;
+
+    // Check if css was already generated
+    final Pair<String, String> stylesheets = url2Stylesheets.get(urlWithoutFragment);
+    if (stylesheets != null)
+    {
+      return !stylesheets.first.equals(EMPTY_ELEMHIDE_STRING) ||
+          !stylesheets.second.equals(EMPTY_ELEMHIDE_ARRAY_STRING);
+    }
+
+    final Lock lock = getProvider().getReadEngineLock();
+    lock.lock();
+
+    try
+    {
+      boolean isDisposed = false;
+      if (getProvider().getCounter() == 0)
       {
-        elemHideThread.cancel();
+        isDisposed = true;
+      }
+      else
+      {
+        lock.unlock();
+        getProvider().waitForReady();
+        lock.lock();
+        if (getProvider().getCounter() == 0)
+        {
+          isDisposed = true;
+        }
+      }
+
+      // Apart from checking counter (getProvider().getCounter()) we also need to make sure
+      // that getProvider().getEngine() is already set.
+      // We check that under getProvider().getReadEngineLock(); so we are sure it will not be
+      // changed after this check.
+      if (!isDisposed && getProvider().getEngine() != null)
+      {
+        final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
+
+        // elemhide
+        Timber.d("Requesting elemhide selectors from AdblockEngine for %s", domain);
+
+        final List<String> referrerChain = isMainFrame ?
+                new ArrayList<String>() : buildFramesHierarchy(urlWithoutFragment);
+        // Same as ABPChromium, for frames we include a frame itself as a parent
+        referrerChain.add(urlWithoutFragment);
+
+        final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
+        String siteKey = (siteKeysConfiguration != null
+            ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+            .getAny(referrerChain, ""))
+            : null);
+
+        if (!isMainFrame && siteKeysConfiguration != null && siteKey.isEmpty())
+        {
+          Timber.d("Waiting for a site key when handling %s", urlWithoutFragment);
+          final boolean waited = siteKeyExtractor.waitForSitekeyCheck(urlWithoutFragment, isMainFrame);
+          if (waited)
+          {
+            siteKey = PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+                .getAny(referrerChain, ""));
+          }
+        }
+
+        final boolean specificOnly = filterEngine.matches(urlWithoutFragment,
+            FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
+            referrerChain, siteKey) != null;
+        stylesheetString = getProvider()
+            .getEngine()
+            .getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain, siteKey, specificOnly);
+        Timber.d("Finished requesting elemhide stylesheet, got %d symbols" +
+                (specificOnly ? " (specificOnly)" : "") + " for %s", stylesheetString.length(),
+            domain);
+
+        // elemhideemu
+        Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s", domain);
+        final List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
+            .getEngine()
+            .getElementHidingEmulationSelectors(urlWithoutFragment, domain, referrerChain, siteKey);
+        Timber.d("Finished requesting elemhideemu selectors, got %d symbols for %s",
+            emuSelectors.size(), domain);
+        emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
       }
     }
+    finally
+    {
+      lock.unlock();
+      url2Stylesheets.put(urlWithoutFragment, new Pair<>(stylesheetString, emuSelectorsString));
+      // return true if elemhide OR elemhideemu data was provided
+      return !stylesheetString.equals(EMPTY_ELEMHIDE_STRING) ||
+          !emuSelectorsString.equals(EMPTY_ELEMHIDE_ARRAY_STRING);
+    }
+  }
+
+  private Pair<String, String> getStylesheetsForUrl(final String url)
+  {
+    return url2Stylesheets.get(Utils.getUrlWithoutFragment(url));
   }
 
   // warning: do not rename (used in injected JS by method name)
   @JavascriptInterface
-  public String getElemhideStyleSheet()
+  public String getElemhideStyleSheet(final String url)
   {
-    if (elemHideLatch == null)
+    final Pair<String, String> sylesheets = getStylesheetsForUrl(url);
+    if (sylesheets != null)
     {
-      return EMPTY_ELEMHIDE_STRING;
+      Timber.d("Elemhide selectors for `%s`, %d bytes", url, sylesheets.first.length());
+      return sylesheets.first;
     }
-    else
-    {
-      try
-      {
-        // elemhide selectors list getting is started in startAbpLoad() in background thread
-        Timber.d("Waiting for elemhide selectors to be ready");
-        elemHideLatch.await();
-        Timber.d("Elemhide selectors ready, %d bytes", elemHideSelectorsString.length());
-
-        return elemHideSelectorsString;
-      }
-      catch (final InterruptedException e)
-      {
-        Timber.w("Interrupted, returning empty selectors list");
-        return EMPTY_ELEMHIDE_STRING;
-      }
-    }
+    return EMPTY_ELEMHIDE_STRING;
   }
 
   // warning: do not rename (used in injected JS by method name)
   @JavascriptInterface
-  public String getElemhideEmulationSelectors()
+  public String getElemhideEmulationSelectors(final String url)
   {
-    if (elemHideLatch == null)
+    final Pair<String, String> sylesheets = getStylesheetsForUrl(url);
+    if (sylesheets != null)
     {
-      return EMPTY_ELEMHIDE_ARRAY_STRING;
+      Timber.d("Elemhideemu selectors for `%s`, %d bytes", url, sylesheets.second.length());
+      return sylesheets.second;
     }
-    else
-    {
-      try
-      {
-        // elemhideemu selectors list getting is started in startAbpLoad() in background thread
-        Timber.d("Waiting for elemhideemu selectors to be ready");
-        elemHideLatch.await();
-        Timber.d("Elemhideemu selectors ready, %d bytes", elemHideEmuSelectorsString.length() );
-
-        return elemHideEmuSelectorsString;
-      }
-      catch (final InterruptedException e)
-      {
-        Timber.w("Interrupted, returning empty elemhideemu selectors list");
-        return EMPTY_ELEMHIDE_ARRAY_STRING;
-      }
-    }
+    return EMPTY_ELEMHIDE_ARRAY_STRING;
   }
 
   private void doDispose()
@@ -1651,17 +1594,6 @@ public class AdblockWebView extends WebView
     stopLoading();
 
     final DisposeRunnable disposeRunnable = new DisposeRunnable(disposeFinished);
-    synchronized (elemHideThreadLockObject)
-    {
-      if (elemHideThread != null)
-      {
-        Timber.w("Busy with elemhide selectors, delayed disposing scheduled");
-        elemHideThread.setFinishedRunnable(disposeRunnable);
-      }
-      else
-      {
-        disposeRunnable.run();
-      }
-    }
+    disposeRunnable.run();
   }
 }

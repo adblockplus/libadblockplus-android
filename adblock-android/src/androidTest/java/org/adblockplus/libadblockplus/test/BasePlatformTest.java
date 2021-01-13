@@ -48,7 +48,7 @@ public abstract class BasePlatformTest extends BaseTest
 
   public static LogSystem buildThrowingLogSystem()
   {
-    LogSystem throwingLogSystem = mock(LogSystem.class);
+    final LogSystem throwingLogSystem = mock(LogSystem.class);
     Mockito
         .doThrow(buildThrowable())
         .when(throwingLogSystem)
@@ -63,34 +63,35 @@ public abstract class BasePlatformTest extends BaseTest
 
   public static HttpClient buildThrowingHttpClient()
   {
-    MockHttpClient throwingHttpClient = new MockHttpClient();
+    final MockHttpClient throwingHttpClient = new MockHttpClient();
     throwingHttpClient.exception.set(true);
     return throwingHttpClient;
   }
 
-  protected void setUpAppInfo(AppInfo appInfo)
+  protected void setUpAppInfo(final AppInfo appInfo)
   {
     setUpInfo.appInfo = appInfo;
   }
 
-  protected void setUpLogSystem(LogSystem logSystem)
+  protected void setUpLogSystem(final LogSystem logSystem)
   {
     setUpInfo.logSystem = logSystem;
   }
 
-  protected void setUpFileSystem(FileSystem fileSystem)
+  protected void setUpFileSystem(final FileSystem fileSystem)
   {
     setUpInfo.fileSystem = fileSystem;
   }
 
-  protected  void setUpHttpClient(HttpClient httpClient)
+  protected void setUpHttpClient(final HttpClient httpClient)
   {
     setUpInfo.httpClient = httpClient;
   }
 
   private void setUpPlatform()
   {
-    platform = new Platform(setUpInfo.logSystem, setUpInfo.fileSystem, setUpInfo.httpClient, basePath.getAbsolutePath());
+    platform = new Platform(setUpInfo.logSystem, setUpInfo.fileSystem, setUpInfo.httpClient,
+        basePath.getAbsolutePath());
   }
 
   @Override

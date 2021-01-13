@@ -31,7 +31,7 @@ public class AdblockSettings implements Serializable
   private volatile boolean adblockEnabled;
   private volatile boolean acceptableAdsEnabled;
   private List<Subscription> subscriptions;
-  private List<String> whitelistedDomains;
+  private List<String> allowlistedDomains;
   private ConnectionType allowedConnectionType;
 
   public boolean isAdblockEnabled()
@@ -64,14 +64,14 @@ public class AdblockSettings implements Serializable
     this.subscriptions = subscriptions;
   }
 
-  public List<String> getWhitelistedDomains()
+  public List<String> getAllowlistedDomains()
   {
-    return whitelistedDomains;
+    return allowlistedDomains;
   }
 
-  public void setWhitelistedDomains(List<String> whitelistedDomains)
+  public void setAllowlistedDomains(List<String> allowlistedDomains)
   {
-    this.whitelistedDomains = whitelistedDomains;
+    this.allowlistedDomains = allowlistedDomains;
   }
 
   public ConnectionType getAllowedConnectionType()
@@ -91,7 +91,7 @@ public class AdblockSettings implements Serializable
       "adblockEnabled=" + adblockEnabled +
       ", acceptableAdsEnabled=" + acceptableAdsEnabled +
       ", subscriptions:" + (subscriptions != null ? subscriptions.size() : 0) +
-      ", whitelistedDomains:" + (whitelistedDomains != null ? whitelistedDomains.size() : 0) +
+      ", allowlistedDomains:" + (allowlistedDomains != null ? allowlistedDomains.size() : 0) +
       ", allowedConnectionType=" + (allowedConnectionType != null ? allowedConnectionType.getValue() : "null") +
       '}';
   }

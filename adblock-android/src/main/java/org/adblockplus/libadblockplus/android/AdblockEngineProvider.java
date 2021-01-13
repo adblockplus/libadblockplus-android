@@ -17,7 +17,6 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public interface AdblockEngineProvider

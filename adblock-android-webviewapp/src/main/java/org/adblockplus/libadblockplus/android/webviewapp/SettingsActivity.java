@@ -18,7 +18,8 @@
 package org.adblockplus.libadblockplus.android.webviewapp;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SubscriptionsManager;
@@ -27,7 +28,7 @@ import org.adblockplus.libadblockplus.android.settings.AdblockSettings;
 import org.adblockplus.libadblockplus.android.settings.AdblockSettingsStorage;
 import org.adblockplus.libadblockplus.android.settings.BaseSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.GeneralSettingsFragment;
-import org.adblockplus.libadblockplus.android.settings.WhitelistedDomainsSettingsFragment;
+import org.adblockplus.libadblockplus.android.settings.AllowlistedDomainsSettingsFragment;
 
 import timber.log.Timber;
 
@@ -36,7 +37,7 @@ public class SettingsActivity
   implements
     BaseSettingsFragment.Provider,
     GeneralSettingsFragment.Listener,
-    WhitelistedDomainsSettingsFragment.Listener
+    AllowlistedDomainsSettingsFragment.Listener
 {
   private SubscriptionsManager subscriptionsManager;
 
@@ -65,14 +66,14 @@ public class SettingsActivity
       .commit();
   }
 
-  private void insertWhitelistedFragment()
+  private void insertAllowlistedFragment()
   {
     getSupportFragmentManager()
       .beginTransaction()
       .replace(
         android.R.id.content,
-        WhitelistedDomainsSettingsFragment.newInstance())
-      .addToBackStack(WhitelistedDomainsSettingsFragment.class.getSimpleName())
+        AllowlistedDomainsSettingsFragment.newInstance())
+      .addToBackStack(AllowlistedDomainsSettingsFragment.class.getSimpleName())
       .commit();
   }
 
@@ -137,13 +138,13 @@ public class SettingsActivity
   }
 
   @Override
-  public void onWhitelistedDomainsClicked(GeneralSettingsFragment fragment)
+  public void onAllowlistedDomainsClicked(GeneralSettingsFragment fragment)
   {
-    insertWhitelistedFragment();
+    insertAllowlistedFragment();
   }
 
   @Override
-  public boolean isValidDomain(WhitelistedDomainsSettingsFragment fragment,
+  public boolean isValidDomain(AllowlistedDomainsSettingsFragment fragment,
                                String domain,
                                AdblockSettings settings)
   {

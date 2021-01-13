@@ -7,7 +7,7 @@ It takes for an input environment variables:
 - Custom GSHEETS_SPREADSHEET_ID should contain the id of the spreadsheet.
 - Custom BENCHMARK_GSHEETS_CREDENTIALS_FILE should contain the name of the file with credentials
   JSON from https://developers.google.com/identity/protocols/oauth2/web-server#creatingcred
-- [Optional] Custom BENCHMARK_GSHEETS_TOKEN_FILE_DIR where the token will be saved, see below for 
+- [Optional] Custom BENCHMARK_GSHEETS_TOKEN_FILE_DIR where the token will be saved, see below for
   the default.
 
 Custom environment variables should be entered as vars and files through GitLab CI /settings/ci_cd
@@ -24,19 +24,31 @@ import os
 import pygsheets
 from dataclasses import dataclass
 from datetime import datetime
+import time
+import json
 
 BENCHMARK_GSHEETS_SPREADSHEET_ID = os.getenv('BENCHMARK_GSHEETS_SPREADSHEET_ID')
 BENCHMARK_GSHEETS_CREDENTIALS_FILE = os.getenv('BENCHMARK_GSHEETS_CREDENTIALS_FILE')
-BENCHMARK_GSHEETS_TOKEN_FILE_DIR = os.getenv('BENCHMARK_GSHEETS_TOKEN_FILE_DIR', '../../../')
+BENCHMARK_GSHEETS_TOKEN_FILE_DIR = os.getenv('BENCHMARK_GSHEETS_TOKEN_FILE_DIR')
+CI_COMMIT_TAG = os.getenv('CI_COMMIT_TAG', "")
+
+# when it is release we launch a TAG job
+# so it should be empty when it is not a release
+is_release = (CI_COMMIT_TAG != "")
+
+# where performance benchmark located
+BENCHMARK_PULL_DIR = os.getenv("BENCHMARK_PULL_DIR", \
+    "adblock-android-benchmark/build/outputs/connected_android_test_additional_output")
+
 CI_PROJECT_URL = os.getenv('CI_PROJECT_URL')
 
 OUTPUT_WORKSHEET_NAME = 'Data'
-WORKSHEET_FIXED_HEADERS_LIST = ["Branch/Tag", "Commit", "Pipeline", "Date/Time", "Device"]
+WORKSHEET_FIXED_HEADERS_LIST = ["Branch/Tag", "Commit", "Pipeline", "Date/Time", "Device", "Release"]
 
-GITLAB_BRANCH_FOLDER = '-/tree/'
-GITLAB_TAG_FOLDER = '-/tags/'
-GITLAB_COMMIT_FOLDER = '-/commit/'
-GITLAB_PIPELINE_FOLDER = '-/pipelines/'
+GITLAB_BRANCH_FOLDER = '/-/tree/'
+GITLAB_TAG_FOLDER = '/-/tags/'
+GITLAB_COMMIT_FOLDER = '/-/commit/'
+GITLAB_PIPELINE_FOLDER = '/-/pipelines/'
 
 
 class GSheetsClientProvider:
@@ -145,7 +157,12 @@ class Worksheet:
             CI_PROJECT_URL + GITLAB_PIPELINE_FOLDER + dataset.pipeline))
 
         cell_values.append(dataset.date_time.isoformat()[:-3] + 'Z')
+
         cell_values.append(dataset.device)
+        if is_release:
+            cell_values.append("Yes")
+        else:
+            cell_values.append("No")
 
         for key in self.__get_value_keys()[len(WORKSHEET_FIXED_HEADERS_LIST):]:
             cell_values.append(dataset.values[key] if key in dataset.values else '')
@@ -153,7 +170,7 @@ class Worksheet:
         self.worksheet.append_table(cell_values, overwrite=False)
 
     def __get_value_keys(self):
-        cells = self.worksheet.range('A1:Z1', 'cells')
+        cells = self.worksheet.range('A1:ZZ1', 'cells')
         headers = []
         for cell in cells[0]:
             if not cell.value == '':
@@ -178,17 +195,20 @@ class Worksheet:
                         val=key)
                 )
                 i += 1
+
         if add_keys:
+            new_cols = len(raw_keys) + len(add_keys) - self.worksheet.cols
+            if new_cols > 0:
+                self.worksheet.add_cols(new_cols)
+                print("Added {} columns".format(new_cols))
             self.worksheet.update_values(cell_list=add_keys)
 
 
 def format_title_with_hyperlink(title, url):
     return '=HYPERLINK("{}","{}")'.format(url, title)
 
-
 class GoogleWorksheetError(Exception):
     pass
-
 
 def check_inputs():
     if (not os.getenv('CI_COMMIT_SHA') or not os.getenv('CI_PIPELINE_ID')
@@ -203,14 +223,58 @@ def check_inputs():
     if not BENCHMARK_GSHEETS_CREDENTIALS_FILE:
         raise Exception("BENCHMARK_GSHEETS_CREDENTIALS_FILE env var is not set")
 
+def read_performance_benchmark():
+    _file = open(BENCHMARK_PULL_DIR + "/benchmarkData.json", "r")
+
+    parsed_data = json.load(_file)
+    device_fingerprint = parsed_data["context"]["build"]["fingerprint"]
+    benchmarks = parsed_data["benchmarks"]
+    values = {}
+    # dynamic load of key values
+    # column name on spreadsheet will be a derived from test name
+    for benchmark in benchmarks:
+        min_key    = benchmark["name"] + "_min_ns"
+        max_key    = benchmark["name"] + "_max_ns"
+        median_key = benchmark["name"] + "_median_ns"
+
+        values[min_key]    = benchmark["metrics"]["timeNs"]["minimum"]
+        values[max_key]    = benchmark["metrics"]["timeNs"]["maximum"]
+        values[median_key] = benchmark["metrics"]["timeNs"]["median"]
+
+    return values, device_fingerprint
+
+def read_metrics_benchmark():
+    # right now to read memory and storage values for each architecture we can read metrics.txt
+    # it contains average for minified lists AA in 10 runs with full easy
+    # and minified easy list, this will change soon to include max and min and median
+    # with that change we can skip producing metrics file and just read the csv
+    # produced by the benchmarks
+
+    _file = open("metrics.txt")
+    lines = _file.readlines()
+    values = {}
+    for line in lines:
+        splittedLine = line.split(" ")
+        if (len(splittedLine) < 2):
+            print("metrics file corrupted")
+            os._exit(1)
+        values[splittedLine[0]] = int(float(splittedLine[1]))
+
+    return values
 
 def main():
-    import time
 
     start = time.time()
 
-    check_inputs()
+    print("loading benchmark results ...")
+    performance_benchmark, device_fingerprint = read_performance_benchmark()
+    metrics_benchmark = read_metrics_benchmark()
 
+    # merge all
+    benchmarks = metrics_benchmark.copy()
+    benchmarks.update(performance_benchmark)
+
+    check_inputs()
     client = GSheetsClientProvider(BENCHMARK_GSHEETS_CREDENTIALS_FILE,
                                    BENCHMARK_GSHEETS_TOKEN_FILE_DIR).authenticate().get_client()
     print("Client authenticated.")
@@ -218,7 +282,7 @@ def main():
     sheet = Worksheet(client, BENCHMARK_GSHEETS_SPREADSHEET_ID, OUTPUT_WORKSHEET_NAME)
     print("Sheet is found and opened.")
 
-    ds = BenchmarkDataset(device='TEST', values={'key1': '1', 'key2': 2})
+    ds = BenchmarkDataset(device=device_fingerprint, values=benchmarks)
 
     sheet.put_dataset(ds)
 

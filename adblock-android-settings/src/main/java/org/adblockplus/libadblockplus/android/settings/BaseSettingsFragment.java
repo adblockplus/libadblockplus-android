@@ -18,18 +18,19 @@
 package org.adblockplus.libadblockplus.android.settings;
 
 import android.app.Activity;
-import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
-import timber.log.Timber;
+
+import androidx.preference.PreferenceFragmentCompat;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import timber.log.Timber;
+
 public abstract class BaseSettingsFragment
-  <ListenerClass extends BaseSettingsFragment.Listener>
-  extends PreferenceFragmentCompat
+    <ListenerClass extends BaseSettingsFragment.Listener>
+    extends PreferenceFragmentCompat
 {
   protected AdblockSettings settings;
   protected AdblockEngine engine;
@@ -67,10 +68,10 @@ public abstract class BaseSettingsFragment
   {
     if (!(activity instanceof Provider))
     {
-      String message = activity.getClass().getSimpleName()
-        + " should implement "
-        + clazz.getSimpleName()
-        + " interface";
+      final String message = activity.getClass().getSimpleName()
+          + " should implement "
+          + clazz.getSimpleName()
+          + " interface";
 
       Timber.e(message);
       throw new RuntimeException(message);

@@ -21,6 +21,7 @@ import android.opengl.Matrix
 import android.os.SystemClock
 import androidx.benchmark.junit4.BenchmarkRule
 import androidx.benchmark.junit4.measureRepeated
+import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import org.adblockplus.libadblockplus.FileSystem
 import org.adblockplus.libadblockplus.FilterEngine
@@ -30,20 +31,17 @@ import org.adblockplus.libadblockplus.android.AndroidHttpClient
 import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper
 import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper.Storage
 import org.adblockplus.libadblockplus.android.TimberLogSystem
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
 import timber.log.Timber
-import timber.log.Timber.DebugTree
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.system.measureTimeMillis
 
-fun randomDirectory() = File.createTempFile("adblock", ".tmpdir").also {
+fun randomDirectory():File = File.createTempFile("adblock", ".tmpdir").also {
     it.delete()
     it.mkdirs()
 }
@@ -120,7 +118,7 @@ class FilterEngineLoadTimeBenchmark {
             Timber.d("Current subscriptions: $subscriptions")
             while (subscriptions.size != 2 || // 2 = locale-specific + AA
                 !subscriptions.all {
-                    it.getProperty("downloadStatus")?.asString() == "synchronize_ok"
+                    it.synchronizationStatus == "synchronize_ok"
                 }) {
                 SystemClock.sleep(SLEEP_INTERVAL_MILLIS)
                 subscriptions = filterEngine.listedSubscriptions
@@ -169,6 +167,7 @@ class FilterEngineLoadTimeBenchmark {
     // an example for proper benchmarking sample, taken from:
     // https://cs.android.com/androidx/platform/frameworks/support/+/androidx-master-dev:benchmark/common/src/main/java/androidx/benchmark/ThrottleDetector.kt;l=47;drc=18266f9efb44e8e63a45e055ffd471dd11544c02
     @Test
+    @LargeTest
     fun measurePureCalculation() {
         val sourceMatrix = FloatArray(16) { System.nanoTime().toFloat() }
         val resultMatrix = FloatArray(16)
@@ -181,6 +180,7 @@ class FilterEngineLoadTimeBenchmark {
     }
 
     @Test
+    @LargeTest
     fun measureVeryFirstTime() {
         // "very first time" means the subscriptions data is going to be downloaded (actually loaded
         // from app resources), parsed and saved
@@ -191,6 +191,7 @@ class FilterEngineLoadTimeBenchmark {
     }
 
     @Test
+    @LargeTest    
     fun measureNotTheFirstTime() {
         // "not the first time" means subscriptions data is already downloaded and saved on SD
 

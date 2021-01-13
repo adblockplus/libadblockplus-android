@@ -124,11 +124,11 @@ abstract class BaseAdblockWebViewTest {
         }
 
         override fun startNewPage() {
-            extractor.startNewPage();
+            extractor.startNewPage()
         }
 
-        override fun waitForSitekeyCheck(request: WebResourceRequest?): Boolean {
-            return extractor.waitForSitekeyCheck(request)
+        override fun waitForSitekeyCheck(url: String, isMainFrame: Boolean): Boolean {
+            return extractor.waitForSitekeyCheck(url, isMainFrame)
         }
 
         override fun setEnabled(enabled: Boolean) {
@@ -214,9 +214,7 @@ abstract class BaseAdblockWebViewTest {
     protected fun addFilterRules(filterRules: List<String>) {
         filterRules.forEach { filterText ->
             val filter = adblockEngine.filterEngine.getFilter(filterText)
-            filter.autoDispose {
-                it.addToList()
-            }
+            adblockEngine.filterEngine.addFilter(filter)
         }
     }
 
@@ -235,9 +233,7 @@ abstract class BaseAdblockWebViewTest {
     private fun clearSubscriptions() {
         assertNotEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
         adblockEngine.filterEngine.listedSubscriptions.forEach { subscription ->
-            subscription.autoDispose {
-                it.removeFromList()
-            }
+            subscription.removeFromList()
         }
         assertEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
     }

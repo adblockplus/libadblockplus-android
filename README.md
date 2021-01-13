@@ -1,3 +1,7 @@
+ [ ![adblock-android](https://img.shields.io/bintray/v/adblockplus/maven/adblock-android?label=adblock-android) ](https://bintray.com/adblockplus/maven/adblock-android/_latestVersion)
+ [ ![adblock-android-webview](https://img.shields.io/bintray/v/adblockplus/maven/adblock-android-webview?label=adblock-android-webview) ](https://bintray.com/adblockplus/maven/adblock-android-webview/_latestVersion)
+ [ ![adblock-android-settings](https://img.shields.io/bintray/v/adblockplus/maven/adblock-android-settings?label=adblock-android-settings) ](https://bintray.com/adblockplus/maven/adblock-android-settings/_latestVersion)
+
 Adblock Android SDK
 ================================
 
@@ -11,9 +15,10 @@ before making any new commits to the repo.
 
 ## Dependencies
 
-Project dependencies are declared as git [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules),
+The majority of project dependencies are declared as git [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules),
 make sure your checkout contains submodules. For example `git clone --recurse-submodules` when
-initially cloning or `git submodule init && git submodule update` to update an existing clone.
+initially cloning or `git submodule update --recursive --init` to update an existing clone.
+There is also single `com.jakewharton.timber` Maven dependency.
 
 ## Library
 
@@ -26,7 +31,7 @@ Make sure you have `jcenter()` in the list of repositories and then add the foll
 
 ```groovy
 dependencies {
-    implementation 'org.adblockplus:adblock-android:3.0'
+    implementation 'org.adblockplus:adblock-android:+'
 }
 ```
 
@@ -37,8 +42,8 @@ In general case it's suggested to use the most recent version.
 #### Requirements
 
 * [The Android SDK](https://developer.android.com/sdk)
-* Android SDK Build tools 28.0.3
-* [The Android NDK, 16b](https://developer.android.com/ndk)
+* Android SDK Build tools 30.0.2
+* [The Android NDK, 16b](https://developer.android.com/ndk/downloads/older_releases#ndk-16b-downloads)
 
 Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
 
@@ -210,7 +215,7 @@ Make sure you have `jcenter()` in the list of repositories and then add the foll
 
 ```groovy
 dependencies {
-    implementation 'org.adblockplus:adblock-android-settings:3.0'
+    implementation 'org.adblockplus:adblock-android-settings:+'
 }
 ```
 
@@ -301,9 +306,9 @@ after initialized. If you want to have ad blocking as optional feature, you shou
       .setDisabledByDefault()
 ```
 
-In this case no background operations will be done once you will call `AdblockEngine.setEnabled(true)`. Please note that
-this method configures only default state. If user preference on enabled state is stored in settings, this value will be
-preferred.
+In this case no background operations will be done until you call `AdblockEngine.setEnabled(true)`. Please note that
+`setDisabledByDefault()` only configures the default state. If user preference on enabled state is stored in settings it will have
+priority.
 
 Other thing to take into account is synchronization time. If you have configured `setDisabledByDefault` and then enable
 engine, first synchronization will be done only after some time. You can combine configuration with
@@ -311,9 +316,9 @@ engine, first synchronization will be done only after some time. You can combine
 
 #### Preloaded subscriptions
 
-As mentioned, there is an option to set preloaded subscriptions. This means that at the application's first boot time, and every time the user clears the app's data, it will load the subscription lists that are bundled with the app. It will also set async calls to update these lists at once so that they are updated as soon as possible. Keep in mind that the ad-block engine will still ping periodically for updates on the subscriptions at an hourly interval.
+As mentioned previously, there is an option to set preloaded subscriptions. This means that at the application's first boot time, and every time the user clears the app's data, it will load the subscription lists that are bundled with the app. It will also set async calls to update these lists at once so that they are updated as soon as possible. Keep in mind that the ad-block engine will still periodically check for updates on the subscriptions at an hourly interval.
 
-The benefit of using this method is that it provides a better UX since the app does not have to wait for the subscription lists to be downloaded first, hence allowing the user to have an ad-blocking experience right away.
+The benefit of using this feature is that it provides a better UX since the app does not have to wait for the subscription lists to be downloaded first, allowing the user to have an ad-blocking experience right away.
 
 On the other hand, this is an opt-in feature that you have to set up. It also increases the footprint of the app by bundling the subscription lists with it, and you have to update the lists when building the apk. This is because subscription lists become outdated very fast. Ideally, you can set a gradle task for that, which is what we did.
 
@@ -329,7 +334,7 @@ map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 
 Note that in this example we use the general EasyList subscription. So for example, if you are using subscription lists for another locale, you need to change the URL and replace the file with the correct one. The effect is not the same without these preloaded subscriptions.
 
-Then, when using the adblockhelper for example, you can set it like:
+Then, when using the `AdblockHelper` for example, you can set it like:
 
 ``` java
 adblockHelper
@@ -369,7 +374,7 @@ Make sure you have `jcenter()` in the list of repositories and then add the foll
 
 ```groovy
 dependencies {
-    implementation 'org.adblockplus:adblock-android-webview:3.0'
+    implementation 'org.adblockplus:adblock-android-webview:4.1'
 }
 ```
 
@@ -432,6 +437,16 @@ If adblock engine provider is not set, it's created by AdblockWebView instance a
 Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
 This is optional but highly suggested. See `TabFragment.java` on usage example.
 
+Please note that the AdblockWebView does intercept some of the HTTP(S) requests done by the subclassed WebView and does them internally by means of `java.net.HttpURLConnection`. 
+For doing so AdblockWebView maintains the cookies in sync between the `java.net.CookieManager` and `android.webkit.CookieManager`. The sync is maintained by replacing the default `CookieHandler` by a `SharedCookieManager` which stores all the cookies in `android.webkit.CookieManager` storage.
+If a client code sets a cookie handler by calling `java.net.CookieHandler.setDefault()`, such a cookie handler will be later overwritten by our custom `SharedCookieManager` which is set by AdblockWebView when loading any url.
+
+Use `enableJsInIframes(true)` to enable element hiding and element hiding emulation for iframes in AdblockWebView.
+This feature does not support yet element hiding for blocked requests.
+This is optional feature which under the hood rewrites html content to inject before the `</body>` tag `<script nonce="..">..</script>` with our custom element hiding (emulation) JavaScript, and if necessary updates CSP HTTP response header adding our `nonce` string to execute the script.
+This feature also requires `setSiteKeysConfiguration(..)` to be called beforehand, otherwise an IllegalStateException is thrown.
+See `TabFragment.java` on usage example.
+
 Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and whitelisting events, eg.
 "resource loading blocked" or "resource loading whitelisted" event that can be used for stats.
 For the latter there is a convenience class `WebViewCounters` which can be bound to `EventsListener`
@@ -468,9 +483,9 @@ In the project root directory run:
 
 This will generate *.apk in the 'adblock-android-webviewapp/build/outputs/apk/' directory.
 
-### Proguard
+## Proguard
 
-## Required configuration changes
+### Required configuration changes
 
 Configure Proguard/R8 to skip Adblock Android SDK files (root package `org.adblockplus.libadblockplus`)
 from being modified for `Release` build of end-user application.
@@ -479,7 +494,7 @@ with Gradle, no actions are required - Gradle will use provided consumer Proguar
 See https://developer.android.com/studio/projects/android-library
 "A library module may include its own ProGuard configuration file" section for further information.
 
-## Reason
+### Reason
 
 Adblock Android SDK uses JNI behind the scene so Java classes and methods are accessed by full
 names from native code. If class names/members are modified by Proguard/R8 during `Release` build

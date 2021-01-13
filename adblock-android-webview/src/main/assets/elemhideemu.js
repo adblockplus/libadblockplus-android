@@ -1265,8 +1265,8 @@ class ElemHideEmulation
 
 
 // elemHidingEmulatedPatterns array definition is generated in adblock_bridge.cc
-
-let elemHidingEmulatedPatterns = JSON.parse({{BRIDGE}}.getElemhideEmulationSelectors());
+{{DEBUG}} console.log('starting injecting eh emu css rules for ' + document.location.href);
+let elemHidingEmulatedPatterns = JSON.parse({{BRIDGE}}.getElemhideEmulationSelectors(document.location.href));
 
 // adopted from applyElemHideEmulation function in:
 // https://gitlab.com/eyeo/adblockplus/adblockpluscore/blob/master/test/browser/elemHideEmulation.js

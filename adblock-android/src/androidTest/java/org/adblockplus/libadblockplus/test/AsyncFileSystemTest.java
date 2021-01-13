@@ -20,6 +20,7 @@ package org.adblockplus.libadblockplus.test;
 import android.os.SystemClock;
 
 import org.adblockplus.libadblockplus.MockFileSystem;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.BlockingQueue;
@@ -34,6 +35,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+//Ignored as the test is invalid as it uses own Executor instead of the ABP::Scheduler. See: DP-1958
+@Ignore
 public class AsyncFileSystemTest extends BaseJsEngineTest
 {
   protected final BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<>();
@@ -62,7 +65,7 @@ public class AsyncFileSystemTest extends BaseJsEngineTest
           startedLatch.countDown();
           unlockLatch.await();
         }
-        catch (InterruptedException e)
+        catch (final InterruptedException e)
         {
           // ignored
         }
@@ -81,7 +84,7 @@ public class AsyncFileSystemTest extends BaseJsEngineTest
     final CountDownLatch writeFinishedLatch = new CountDownLatch(1);
     mockFileSystem.nextOperationFinishedLatch = writeFinishedLatch;
 
-    jsEngine.evaluate("let error = true; _fileSystem.write('foo', 'bar', function(e) {error = e})");
+    jsEngine.evaluate("let error = true; _fileSystem.write('foo', 'bar', function(e) {error = e})").dispose();
 
     // make sure `write` scheduled by libadblockplus and put in tasks queue
     writeFinishedLatch.await();

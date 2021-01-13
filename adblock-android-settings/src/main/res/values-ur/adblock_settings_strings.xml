@@ -7,7 +7,7 @@
   <string name="fragment_adblock_settings_filter_lists_summary">زبان کے ساتھ مخصوص فلٹر والی فہرستیں اضافہ کریں یا ہٹائیں</string>
   <string name="fragment_adblock_settings_aa_enabled_title">قابل قبول اشتہارات</string>
   <string name="fragment_adblock_settings_aa_enabled_summary">ہم اس بات کی ترغیب دینا چاہیں گے کہ ویب سائٹیں راست، غیر مداخلتی اشتہارات استعمال کریں۔ یہی وجہ ہے کہ ہم نے قابل قبول اشتہارات کی شناخت کے لیے سخت ہدایات مرتب کی ہیں، جنہیں ڈیفالٹ ترتیبات میں دکھایا گیا ہے۔ اگر آپ اشتہارات سے پاک براؤزنگ کرنا چاہتے ہیں تو کسی بھی وقت اس ترتیب کو غیر فعال کر سکتے ہیں۔</string>
-  <string name="fragment_adblock_settings_wl_title">منظور شدہ فہرست میں داخل کردہ ڈومین</string>
+  <string name="fragment_adblock_settings_al_title">منظور شدہ فہرست میں داخل کردہ ڈومین</string>
   <string name="fragment_adblock_settings_wl_summary">اس فہرست میں ویب سائٹوں کا اضافہ کریں آپ جن کے اشتہارات دیکھنا چاہتے ہیں</string>
   <string name="fragment_adblock_settings_add_domain">ڈومین کا اضافہ کریں</string>
   <string name="fragment_adblock_settings_wl_domains">منظور شدہ فہرست میں داخل کردہ ڈومین</string>

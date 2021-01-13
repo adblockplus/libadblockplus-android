@@ -6,8 +6,8 @@
     android:layout_height="match_parent"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingTop="@dimen/fragment_adblock_wl_item_padding"
-    android:paddingBottom="@dimen/fragment_adblock_wl_item_padding">
+    android:paddingTop="@dimen/fragment_adblock_al_item_padding"
+    android:paddingBottom="@dimen/fragment_adblock_al_item_padding">
 
     <!-- Domain -->
     <TextView
@@ -16,6 +16,7 @@
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:paddingStart="0dp"
+        android:paddingLeft="0dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
         tools:text="http://www.google.com"/>
 
@@ -24,7 +25,8 @@
         android:id="@+id/fragment_adblock_wl_item_remove"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/fragment_adblock_whitelisted_domains_remove"
-        android:paddingStart="@dimen/fragment_adblock_wl_padding" />
+        android:src="@drawable/fragment_adblock_allowlisted_domains_remove"
+        android:paddingStart="@dimen/fragment_adblock_al_padding"
+        android:paddingLeft="@dimen/fragment_adblock_al_padding" />
 
 </LinearLayout>

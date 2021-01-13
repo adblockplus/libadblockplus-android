@@ -113,7 +113,7 @@ public class SiteKeyVerifier
         // verify signature and save public key to be used as sitekey for next requests
         try
         {
-          if (verify(Utils.getUrlWithoutAnchor(url),
+          if (verify(Utils.getUrlWithoutFragment(url),
                   requestHeadersMap.get(HEADER_USER_AGENT), header.getValue()))
           {
             Timber.d("Url %s public key verified successfully", url);
