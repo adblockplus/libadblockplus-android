@@ -324,18 +324,26 @@ On the other hand, this is an opt-in feature that you have to set up. It also in
 
 By running `./gradlew downloadSubscriptionLists`, you update the preloaded EasyList and exception list to the latest ones.
 
-To set it up in the code, you have to first map the URLs of the subscriptions to local files.
+To set it up in the code, you can either explicitly map all the possible locale specific subscriptions URLs to local files. Or you can set one general subscription file for all non AA and another for the AA subscription.
 
+Usage example in a simplified way where all blocking subscriptions (like "easylist.txt" or "easylistgermany+easylist.txt") are mapped to the same file R.raw.easylist:
+``` java
+adblockHelper
+    .get()
+    .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+    .preloadSubscriptions(R.raw.easylist, R.raw.exceptionrules)
+    .addEngineCreatedListener(engineCreatedListener)
+    .addEngineDisposedListener(engineDisposedListener)
+```
+To explicitly set which subscriptions to be preloaded use `preloadSubscriptions()` with a map argument:
 ``` java
 Map<String, Integer> map = new HashMap<String, Integer>();
 map.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
 map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 ```
-
 Note that in this example we use the general EasyList subscription. So for example, if you are using subscription lists for another locale, you need to change the URL and replace the file with the correct one. The effect is not the same without these preloaded subscriptions.
 
 Then, when using the `AdblockHelper` for example, you can set it like:
-
 ``` java
 adblockHelper
     .get()
@@ -344,7 +352,6 @@ adblockHelper
     .addEngineCreatedListener(engineCreatedListener)
     .addEngineDisposedListener(engineDisposedListener)
 ```
-
 
 ### Theme
 
