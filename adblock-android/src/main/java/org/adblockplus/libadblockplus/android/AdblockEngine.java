@@ -180,6 +180,18 @@ public final class AdblockEngine
     AdblockEngine build();
   }
 
+  /**
+   * Calls the platform's garbage collector
+   * Assuming the default implementation, V8 garbage collector will be called
+   */
+  public void onLowMemory()
+  {
+    if (platform != null && platform.getJsEngine() != null)
+    {
+      platform.getJsEngine().onLowMemory();
+    }
+  }
+
   public org.adblockplus.libadblockplus.android.Subscription[] getRecommendedSubscriptions()
   {
     final List<Subscription> subscriptions = this.filterEngine.fetchAvailableSubscriptions();
