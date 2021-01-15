@@ -20,6 +20,8 @@ package org.adblockplus.libadblockplus.android.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.RawRes;
+
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
@@ -35,6 +37,7 @@ import org.adblockplus.libadblockplus.sitekey.SiteKeyVerifier;
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 import org.adblockplus.libadblockplus.util.Base64Processor;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import timber.log.Timber;
@@ -286,6 +289,41 @@ public class AdblockHelper
         urlToResourceIdMap,
         new AndroidHttpClientResourceWrapper.SharedPrefsStorage(prefs));
     return this;
+  }
+
+  /**
+   * Sets preloaded subscriptions simplified. It sets a preloaded subscription to all possible
+   * default non AA subscriptions (based on locale). And a preload a subscription for the default
+   * acceptable ads subscription. This method does not directly inject the subscriptions into the
+   * engine, but rather will return this files at the first time the filter engine needs them.
+   * @param subscriptionResource resource id for non aa subscription
+   * @param acceptableAdsSubscriptionResource resource id for aa subscription
+   * @return this (for method chaining)
+   */
+  public AdblockHelper preloadSubscriptions(@RawRes final Integer subscriptionResource,
+                                            @RawRes final Integer acceptableAdsSubscriptionResource)
+  {
+    final Map<String, Integer> map = new HashMap<>();
+    // all non AA subscriptions
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_CHINESE, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_DUTCH, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_GERMAN, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_FRENCH, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_POLISH, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN, subscriptionResource);
+    map.put(AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN, subscriptionResource);
+    // single AA subscription
+    map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, acceptableAdsSubscriptionResource);
+    return preloadSubscriptions(PRELOAD_PREFERENCE_NAME, map);
   }
 
   /**

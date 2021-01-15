@@ -20,12 +20,8 @@ package org.adblockplus.libadblockplus.android.webviewapp;
 import android.content.Context;
 
 import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import timber.log.Timber;
 
@@ -65,23 +61,19 @@ public class Application extends android.app.Application
     if (!AdblockHelper.get().isInit())
     {
       // init Adblock
-      String basePath = getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
-
-      // provide preloaded subscriptions
-      Map<String, Integer> map = new HashMap<>();
-      map.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
-      map.put(AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN, R.raw.easylist);
-      map.put(AndroidHttpClientResourceWrapper.EASYLIST_CHINESE, R.raw.easylist);
-      map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
+      final String basePath = getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
 
       final AdblockHelper helper = AdblockHelper.get();
       helper
         .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
-        .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
+        .preloadSubscriptions(
+                R.raw.easylist,
+                R.raw.exceptionrules)
         .addEngineCreatedListener(engineCreatedListener)
         .addEngineDisposedListener(engineDisposedListener);
 
-      if (!BuildConfig.ADBLOCK_ENABLED) {
+      if (!BuildConfig.ADBLOCK_ENABLED)
+      {
         helper.setDisabledByDefault();
       }
 
