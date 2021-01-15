@@ -261,7 +261,7 @@ Make sure you deinitialize it when values used during initialization are no long
 
     AdblockHelper.get().deinit();
 
-Note one have to initialize it again to be used.
+Note: one have to initialize it again to be used.
 
 Implement the following interfaces in your settings activity:
 
@@ -292,7 +292,38 @@ Release Adblock instance in activity `onDestroy`:
 
 Insert `GeneralSettingsFragment` fragment instance in runtime to start showing settings UI.
 
+#### Memory management
+Adblock Engine sometimes might be extensive to memory consumption. In order to guard your process
+from being killed by the system, call `AdblockEngine#onLowMemory()` method in
+[ComponentCallbacks2#onTrimMemory(int)](https://developer.android.com/reference/android/content/ComponentCallbacks2#onTrimMemory(int)).
 
+```java
+  @Override
+  public void onTrimMemory(int level)
+  {
+    // ...
+    // if a system demands more memory, call the GC of the adblock engine to release some
+    // this can free up to ~60-70% of memory occupied by the engine
+    if (level == TRIM_MEMORY_RUNNING_CRITICAL && AdblockHelper.get().isInit())
+    {
+      AdblockHelper.get().getProvider().getEngine().onLowMemory();
+    }
+    // ...
+  }
+```
+
+If you are using `androidx.fragment.app.Fragment` or `androidx.appcompat.app.AppCompatActivity`,
+be sure to implement [[ComponentCallbacks2](https://developer.android.com/reference/android/content/ComponentCallbacks2)]
+and register it by calling `Context#registerComponentCallbacks(ComponentCallbacks2)`
+and then unregister when not needed with `Context#unregisterComponentCallbacks(ComponentCallbacks2)`
+
+If you are using old APIs, it's also possible to use any of `onLowMemory()` system callbacks:
+either `Activity#onLowMemory()` or `Fragment#onLowMemory()`.
+
+Please mind that if you are using `AdblockHelper` (which is in most cases), Adblock Filter Engine
+exists only in one instance. Having one instance means that you only have to implement one call to
+`AdblockHelper.get().getProvider().getEngine().onLowMemory();`. Thus it's recommended to do the call in `Activity`
+or somewhere else where you are sure you are not creating multiple instances (e.g. fragments).
 
 #### Background operations
 

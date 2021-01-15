@@ -143,6 +143,14 @@ static void JNICALL JniSetGlobalProperty(JNIEnv* env, jclass clazz, jlong ptr, j
   CATCH_AND_THROW(env)
 }
 
+static void JNICALL JniOnLowMemory(JNIEnv *env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    GetJsEngineRef(ptr).NotifyLowMemory();
+  }
+  CATCH_AND_THROW(env)
+}
 // TODO: List of functions that lack JNI bindings
 //JsValuePtr NewObject();
 //JsValuePtr NewCallback(v8::InvocationCallback callback);
@@ -161,7 +169,9 @@ static JNINativeMethod methods[] =
   { (char*)"newValue", (char*)"(JZ)" TYP("JsValue"), (void*)JniNewBooleanValue },
   { (char*)"newValue", (char*)"(JLjava/lang/String;)" TYP("JsValue"), (void*)JniNewStringValue },
 
-  { (char*)"setGlobalProperty", (char*)"(JLjava/lang/String;J)V", (void*)JniSetGlobalProperty }
+  { (char*)"setGlobalProperty", (char*)"(JLjava/lang/String;J)V", (void*)JniSetGlobalProperty },
+
+  { (char*)"onLowMemory", (char*)"(J)V", (void*)JniOnLowMemory }
 };
 
 extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_JsEngine_registerNatives(JNIEnv *env, jclass clazz)

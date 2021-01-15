@@ -71,6 +71,14 @@ public final class JsEngine
     triggerEvent(this.ptr, eventName, args);
   }
 
+  /**
+   * Notifies the engine about the need of reducing the amount of allocated memory
+   */
+  public void onLowMemory()
+  {
+    onLowMemory(this.ptr);
+  }
+
   public void triggerEvent(final String eventName)
   {
     triggerEvent(this.ptr, eventName, null);
@@ -108,4 +116,6 @@ public final class JsEngine
   private static native JsValue newValue(long ptr, String value);
 
   private static native void setGlobalProperty(long ptr, String property, long valuePtr);
+
+  private static native void onLowMemory(long ptr);
 }
