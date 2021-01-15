@@ -86,6 +86,15 @@ build_libadblockplus-android:all:
       - adblock-android/build/outputs/apk/androidTest/abi_all/debug/adblock-android-abi_all-debug-androidTest.apk
       - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
       - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
+      - adblock-android/build/outputs/aar/adblock-android-abi_x86-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_x86_64-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_arm64-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_arm-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_all-release.aar
+      - adblock-android-webview/build/outputs/aar/adblock-android-webview-release.aar
+      - adblock-android-settings/build/outputs/aar/adblock-android-settings-release.aar
+      - adblock-android-benchmark/build/outputs/aar/adblock-android-benchmark-release.aar
+
 
 # Builds additional release test apk for performance testing at nightly runs
 build_libadblockplus-android:all-and-test-release:
@@ -108,6 +117,15 @@ build_libadblockplus-android:all-and-test-release:
       - adblock-android-webview/build/outputs/apk/androidTest/debug/adblock-android-webview-debug-androidTest.apk
       - adblock-android-webviewapp/build/outputs/apk/androidTest/debug/adblock-android-webviewapp-debug-androidTest.apk
       - adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
+      - adblock-android/build/outputs/aar/adblock-android-abi_x86-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_x86_64-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_arm64-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_arm-release.aar
+      - adblock-android/build/outputs/aar/adblock-android-abi_all-release.aar
+      - adblock-android-webview/build/outputs/aar/adblock-android-webview-release.aar
+      - adblock-android-settings/build/outputs/aar/adblock-android-settings-release.aar
+      - adblock-android-benchmark/build/outputs/aar/adblock-android-benchmark-release.aar
+
   only:
     - schedules
     - web
