@@ -320,6 +320,11 @@ web_page_replay:
   <<: *cache_readonly
   script:
     - |
+      if [ -z "${BINTRAY_USERNAME}" ] || [ -z "${BINTRAY_KEY}" ] ; then
+        echo "BINTRAY_USERNAME and BINTRAY_KEY need to be set for publishing to work"
+        echo "Make sure this is running on a protected branch/tag to get those variables set"
+      fi
+    - |
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
         echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to bintray'
       fi
