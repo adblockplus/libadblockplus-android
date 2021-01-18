@@ -11,6 +11,7 @@ It
 import argparse
 import subprocess
 import sys
+import os
 
 TEST_PACKAGE = "org.adblockplus.libadblockplus.benchmark.test"
 TEST_APK = "adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk"
@@ -59,7 +60,7 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--device', type=str,
-                        help='Run this script on a specific device',
-                        default=None)
+                        help='Run this script on a specific device (defaults to use ANDROID_SERIAL)',
+                        default=os.environ.get('ANDROID_SERIAL'))
     args = parser.parse_args()
     main(args)

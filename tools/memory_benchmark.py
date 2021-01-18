@@ -195,8 +195,8 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--device', type=str,
-                        help='Run this script on a specific device',
-                        default=None)
+                        help='Run this script on a specific device (defaults to use ANDROID_SERIAL)',
+                        default=os.environ.get('ANDROID_SERIAL'))
     parser.add_argument("--v", type=bool, required=False, default=False, help="verbose")
 
     args = parser.parse_args()

@@ -260,6 +260,7 @@ benchmark:
     - "android-pi"
   stage: device_tests
   variables:
+    ANDROID_SERIAL: "bd207da1" # Use the ZTE device
     LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
     BENCHMARK_PULL_DIR: "adblock-android-benchmark/build/outputs/connected_android_test_additional_output"
   before_script:
