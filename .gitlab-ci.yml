@@ -223,6 +223,7 @@ regression_tests:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     GIT_AUTOMATION_BRANCH: "master"
+    TAGS: "@j0 @j1"
     # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
   script:
@@ -236,16 +237,21 @@ regression_tests:
     # Launch an instance of gradle for each bunch of tags we want to test
     - pids=""
     - |
-      for TAG in @j1 @j2
+      for TAG in $TAGS
         do echo Starting job for tag ${TAG}
-        nohup ./gradlew regressionParallel -P tags=${TAG} &> tag-${TAG}.log &
+        (nohup ./gradlew regressionParallel -P tags=${TAG} &> tag-${TAG}.log ; echo $? > result_${TAG}) &
         pids="$pids $!"
       done
     - wait $pids
+    # Check the exit codes of all processes were 0
+    - |
+      for TAG in $TAGS
+        do test $(cat result_${TAG}) = 0
+      done
   after_script:
     - cd automation
     - |
-      for TAG in @j1 @j2
+      for TAG in $TAGS
         do
         echo "**********************************"
         echo "Logs for tests with tag ${TAG}"
