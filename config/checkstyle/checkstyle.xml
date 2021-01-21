@@ -25,6 +25,7 @@
     <!-- Imports -->
     <module name="AvoidStarImport" />
     <module name="ImportOrder">
+      <property name="option" value="bottom" />
       <property name="groups" value="android,androidx,com,junit,net,org,java,javax" />
       <property name="separated" value="true" />
       <property name="sortStaticImportsAlphabetically" value="true" />
