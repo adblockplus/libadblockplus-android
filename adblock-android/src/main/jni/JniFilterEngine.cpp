@@ -54,17 +54,6 @@ namespace
   }
 }
 
-static jboolean JNICALL JniIsFirstRun(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  try
-  {
-    AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
-
-    return engine.IsFirstRun() ? JNI_TRUE : JNI_FALSE;
-  }
-  CATCH_THROW_AND_RETURN(env, JNI_FALSE);
-}
-
 static jobject JNICALL JniGetFilter(JNIEnv* env, jclass clazz, jlong ptr, jstring jText)
 {
   AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
@@ -240,12 +229,37 @@ static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
 
   try
   {
-    AdblockPlus::FilterPtr filter = engine.Matches(url, contentTypeMask, documentUrls, siteKey,
-                                                   jSpecificOnly == JNI_TRUE);
+    AdblockPlus::Filter filter = engine.Matches(url, contentTypeMask, documentUrls, siteKey,
+            jSpecificOnly == JNI_TRUE);
 
-    return ((filter != nullptr) ? NewJniFilter(env, std::move(*filter)) : 0);
+    return (filter.IsValid() ? NewJniFilter(env, std::move(filter)) : 0);
   }
   CATCH_THROW_AND_RETURN(env, 0)
+}
+
+static jboolean JNICALL JniIsContentAllowlisted(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl,
+    jobjectArray jContentTypes, jobject jReferrerChain, jstring jSiteKey)
+{
+    AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
+
+    std::string url = JniJavaToStdString(env, jUrl);
+
+    AdblockPlus::IFilterEngine::ContentTypeMask contentTypeMask = 0;
+    int contentTypesSize = env->GetArrayLength(jContentTypes);
+    for (int i = 0; i < contentTypesSize; i++)
+    {
+        contentTypeMask |= ConvertContentType(env, env->GetObjectArrayElement(jContentTypes, i));
+    }
+
+    std::string siteKey = JniJavaToStdString(env, jSiteKey);
+    std::vector<std::string> documentUrls = JavaStringListToStringVector(env, jReferrerChain);
+
+    try
+    {
+        return engine.IsContentAllowlisted(url, contentTypeMask, documentUrls, siteKey) ?
+            JNI_TRUE : JNI_FALSE;
+    }
+    CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
 
 static jboolean JNICALL JniIsDocumentAllowlisted(JNIEnv* env, jclass clazz, jlong ptr,
@@ -486,7 +500,6 @@ static void JNICALL JniRemoveFilter(JNIEnv *env, jclass clazz, jlong ptr, jstrin
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"isFirstRun", (char*)"(J)Z", (void*)JniIsFirstRun },
   { (char*)"getFilter", (char*)"(JLjava/lang/String;)" TYP("Filter"), (void*)JniGetFilter },
   { (char*)"getListedFilters", (char*)"(J)Ljava/util/List;", (void*)JniGetListedFilters },
   { (char*)"getSubscription", (char*)"(JLjava/lang/String;" TYP("FilterEngine") ")" TYP("Subscription"), (void*)JniGetSubscription },
@@ -497,6 +510,7 @@ static JNINativeMethod methods[] =
   { (char*)"getElementHidingStyleSheet", (char*)"(JLjava/lang/String;Z)Ljava/lang/String;", (void*)JniGetElementHidingStyleSheet },
   { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
   { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;Z)" TYP("Filter"), (void*)JniMatchesMany },
+  { (char*)"isContentAllowlisted", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsContentAllowlisted },
   { (char*)"isDocumentAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsDocumentAllowlisted },
   { (char*)"isGenericblockAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsGenericblockAllowlisted },
   { (char*)"isElemhideAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsElemhideAllowlisted },

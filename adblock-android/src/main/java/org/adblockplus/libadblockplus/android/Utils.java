@@ -599,6 +599,6 @@ public final class Utils
   public static Filter createDomainAllowlistingFilter(final FilterEngine filterEngine,
                                                       final String domain)
   {
-    return filterEngine.getFilter("@@||" + domain + "^$document");
+    return filterEngine.getFilter("@@||" + domain + "^$document,domain=" + domain);
   }
 }
