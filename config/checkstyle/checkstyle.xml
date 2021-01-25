@@ -21,6 +21,9 @@
     </module>
     <module name="EmptyCatchBlock" />
     <module name="NeedBraces" />
+    <module name="FinalLocalVariable">
+      <property name="tokens" value="VARIABLE_DEF,PARAMETER_DEF"/>
+    </module>
 
     <!-- Imports -->
     <module name="AvoidStarImport" />
