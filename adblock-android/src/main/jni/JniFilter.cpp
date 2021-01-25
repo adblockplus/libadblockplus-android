@@ -40,22 +40,22 @@ jobject GetJniTypeFromNativeType(JNIEnv *pEnv, AdblockPlus::Filter::Type type) {
   const char *enumName;
 
   switch (type) {
-    case AdblockPlus::Filter::TYPE_BLOCKING:
+    case AdblockPlus::IFilterImplementation::TYPE_BLOCKING:
       enumName = "BLOCKING";
           break;
-    case AdblockPlus::Filter::TYPE_COMMENT:
+    case AdblockPlus::IFilterImplementation::TYPE_COMMENT:
       enumName = "COMMENT";
           break;
-    case AdblockPlus::Filter::TYPE_ELEMHIDE:
+    case AdblockPlus::IFilterImplementation::TYPE_ELEMHIDE:
       enumName = "ELEMHIDE";
           break;
-    case AdblockPlus::Filter::TYPE_ELEMHIDE_EXCEPTION:
+    case AdblockPlus::IFilterImplementation::TYPE_ELEMHIDE_EXCEPTION:
       enumName = "ELEMHIDE_EXCEPTION";
           break;
-    case AdblockPlus::Filter::TYPE_ELEMHIDE_EMULATION:
+    case AdblockPlus::IFilterImplementation::TYPE_ELEMHIDE_EMULATION:
       enumName = "ELEMHIDE_EMULATION";
           break;
-    case AdblockPlus::Filter::TYPE_EXCEPTION:
+    case AdblockPlus::IFilterImplementation::TYPE_EXCEPTION:
       enumName = "EXCEPTION";
           break;
     default:

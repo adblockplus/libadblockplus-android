@@ -143,6 +143,7 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     private static final Pattern NONCE_PATTERN =
         Pattern.compile(String.format("%s[^;]*'(%s[^']+)'.*;", CSP_SCRIPT_SRC_PARAM, NONCE),
             Pattern.CASE_INSENSITIVE);
+    private static final String BODY_CLOSE_TAG = "</body>";
 
     private boolean containsValidUnsafeInline(final String cspHeaderValue)
     {
@@ -261,7 +262,16 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
               + "</script></body>";
         }
         Timber.d("injectJavascript() adds injectJs for `%s`", requestUrl);
-        htmlString = htmlString.replace("</body>", bodyEndWithScriptTag);
+        // Find and replace last occurrence of BODY_CLOSE_TAG
+        final int foundIndex = htmlString.lastIndexOf(BODY_CLOSE_TAG);
+        if (foundIndex > 0)
+        {
+          final StringBuilder builder = new StringBuilder();
+          builder.append(htmlString.substring(0, foundIndex));
+          builder.append(bodyEndWithScriptTag);
+          builder.append(htmlString.substring(foundIndex + BODY_CLOSE_TAG.length()));
+          htmlString = builder.toString();
+        }
         try
         {
           // Now set up back response input stream

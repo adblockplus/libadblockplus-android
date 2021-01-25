@@ -61,9 +61,9 @@ public final class AdblockEngine
   public enum MatchesResult
   {
     /**
-     * Not EXCEPTION filter is found
+     * Blocking filter is found
      */
-    NOT_ALLOWLISTED,
+    BLOCKED,
 
     /**
      * Exception filter is found
@@ -239,11 +239,6 @@ public final class AdblockEngine
       this.filterChangeCallback.dispose();
       this.filterChangeCallback = null;
     }
-  }
-
-  public boolean isFirstRun()
-  {
-    return this.filterEngine.isFirstRun();
   }
 
   public boolean isElemhideEnabled()
@@ -441,7 +436,20 @@ public final class AdblockEngine
     filterEngine.setAcceptableAdsEnabled(enabled);
   }
 
-  public MatchesResult matches(final String fullUrl, final Set<ContentType> contentTypes,
+  /**
+   * Checks whether the resource at the supplied URL has a blocking filter.
+   * For checking allowlisting filters use {@link AdblockEngine#isContentAllowlisted}.
+   *
+   * @param url URL of the resource
+   * @param contentTypes Set of content types for requested resource
+   * @param referrerChain Chain of URLs requesting the resource
+   * @param siteKey Public key provided by the document, can be empty
+   * @param specificOnly If `true` then we check only domain specific filters
+   * @return {@link MatchesResult#NOT_ENABLED} if FilterEngine is not enabled,
+   *         {@link MatchesResult#BLOCKED} when blocking filter was found or
+   *         {@link MatchesResult#NOT_FOUND} when blocking filter was not found.
+   */
+  public MatchesResult matches(final String url, final Set<ContentType> contentTypes,
                                final List<String> referrerChain, final String siteKey,
                                final boolean specificOnly)
   {
@@ -450,7 +458,7 @@ public final class AdblockEngine
       return MatchesResult.NOT_ENABLED;
     }
 
-    final Filter filter = this.filterEngine.matches(fullUrl, contentTypes, referrerChain,
+    final Filter filter = this.filterEngine.matches(url, contentTypes, referrerChain,
         siteKey, specificOnly);
 
     if (filter == null)
@@ -473,9 +481,11 @@ public final class AdblockEngine
       Timber.w(e);
     }
 
-    return filter.getType() != Filter.Type.EXCEPTION
-        ? MatchesResult.NOT_ALLOWLISTED
-        : MatchesResult.ALLOWLISTED;
+    Timber.d("Found filter `%s` for url `%s`", filter.getRaw(), url);
+
+    return filter.getType() == Filter.Type.BLOCKING
+        ? MatchesResult.BLOCKED
+        : MatchesResult.NOT_FOUND;
   }
 
   /**
@@ -489,25 +499,21 @@ public final class AdblockEngine
     this.filterEngine.addFilter(filter);
   }
 
-  public boolean isGenericblockAllowlisted(final String url,
-                                           final List<String> referrerChain,
-                                           final String sitekey)
+  /**
+   * Checks whether the resource at the supplied URL is allowlisted.
+   *
+   * @param url URL of the resource
+   * @param contentTypes Set of content types for requested resource
+   * @param referrerChain Chain of URLs requesting the resource
+   * @param siteKey Public key provided by the document, can be empty
+   * @return `true` if the URL is allowlisted
+   */
+  public boolean isContentAllowlisted(final String url,
+                                      final Set<ContentType> contentTypes,
+                                      final List<String> referrerChain,
+                                      final String siteKey)
   {
-    return this.filterEngine.isGenericblockAllowlisted(url, referrerChain, sitekey);
-  }
-
-  public boolean isDocumentAllowlisted(final String url,
-                                       final List<String> referrerChain,
-                                       final String sitekey)
-  {
-    return this.filterEngine.isDocumentAllowlisted(url, referrerChain, sitekey);
-  }
-
-  public boolean isElemhideAllowlisted(final String url,
-                                       final List<String> referrerChain,
-                                       final String sitekey)
-  {
-    return this.filterEngine.isElemhideAllowlisted(url, referrerChain, sitekey);
+    return this.filterEngine.isContentAllowlisted(url, contentTypes, referrerChain, siteKey);
   }
 
   public String getElementHidingStyleSheet(
@@ -533,8 +539,10 @@ public final class AdblockEngine
      */
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDocumentAllowlisted(url, referrerChain, sitekey)
-        || this.isElemhideAllowlisted(url, referrerChain, sitekey))
+        || this.isContentAllowlisted(url,
+            FilterEngine.ContentType.maskOf(ContentType.DOCUMENT), referrerChain, sitekey)
+        || this.isContentAllowlisted(url,
+            FilterEngine.ContentType.maskOf(ContentType.ELEMHIDE), referrerChain, sitekey))
     {
       return "";
     }
@@ -545,13 +553,15 @@ public final class AdblockEngine
   public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(
       final String url,
       final String domain,
-      final List<String> referrerChainArray,
+      final List<String> referrerChain,
       final String sitekey)
   {
     if (!this.enabled
         || !this.elemhideEnabled
-        || this.isDocumentAllowlisted(url, referrerChainArray, sitekey)
-        || this.isElemhideAllowlisted(url, referrerChainArray, sitekey))
+        || this.isContentAllowlisted(url,
+            FilterEngine.ContentType.maskOf(ContentType.DOCUMENT), referrerChain, sitekey)
+        || this.isContentAllowlisted(url,
+            FilterEngine.ContentType.maskOf(ContentType.ELEMHIDE), referrerChain, sitekey))
     {
       return new ArrayList<>();
     }

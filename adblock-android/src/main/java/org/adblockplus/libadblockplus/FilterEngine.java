@@ -40,11 +40,6 @@ public final class FilterEngine
 
   private static native void removeFilter(long ptr, String raw);
 
-  public boolean isFirstRun()
-  {
-    return isFirstRun(this.ptr);
-  }
-
   public Filter getFilter(final String text)
   {
     final Filter filter = getFilter(this.ptr, text);
@@ -153,6 +148,24 @@ public final class FilterEngine
   }
 
   /**
+   * Checks whether the resource at the supplied URL is allowlisted.
+   *
+   * @param url URL of the resource.
+   * @param contentTypes Set of content types for requested resource.
+   * @param documentUrls Chain of URLs requesting the resource
+   * @param siteKey public key provided by the document, can be empty.
+   * @return `true` if the URL is allowlisted.
+   */
+  public boolean isContentAllowlisted(final String url,
+                                      final Set<ContentType> contentTypes,
+                                      final List<String> documentUrls,
+                                      final String siteKey)
+  {
+    return isContentAllowlisted(this.ptr, url,
+        contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey);
+  }
+
+  /**
    * Checks if any active filter matches the supplied URL.
    * @param url URL to match which is actually first parent of URL for which we
    *            want to check a $genericblock filter.
@@ -163,7 +176,11 @@ public final class FilterEngine
    *                     top-level frame.
    * @param siteKey sitekey or null/empty string
    * @return `true` if the URL is allowlisted by $genericblock filter
+   *
+   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
+   *             {@link ContentType#GENERICBLOCK} instead.
    */
+  @Deprecated
   public boolean isGenericblockAllowlisted(final String url, final List<String> documentUrls,
                                            final String siteKey)
   {
@@ -178,7 +195,11 @@ public final class FilterEngine
    *                     the top-level frame.
    * @param siteKey sitekey or null/empty string
    * @return `true` if the URL is allowlisted
+   *
+   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
+   *             {@link ContentType#DOCUMENT} instead.
    */
+  @Deprecated
   public boolean isDocumentAllowlisted(final String url,
                                        final List<String> documentUrls,
                                        final String siteKey)
@@ -194,7 +215,11 @@ public final class FilterEngine
    *                     the top-level frame.
    * @param siteKey sitekey or null/empty string
    * @return `true` if element hiding is allowlisted for the supplied URL.
+   *
+   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
+   *             {@link ContentType#ELEMHIDE} instead.
    */
+  @Deprecated
   public boolean isElemhideAllowlisted(final String url,
                                        final List<String> documentUrls,
                                        final String siteKey)
@@ -290,8 +315,6 @@ public final class FilterEngine
 
   private static native void registerNatives();
 
-  private static native boolean isFirstRun(long ptr);
-
   private static native Filter getFilter(long ptr, String text);
 
   private static native List<Filter> getListedFilters(long ptr);
@@ -313,20 +336,23 @@ public final class FilterEngine
   private static native JsValue getPref(long ptr, String pref);
 
   private static native Filter matches(long ptr, String url, ContentType[] contentType,
-                                             List<String> referrerChain, String siteKey,
-                                             boolean specificOnly);
+                                       List<String> referrerChain, String siteKey,
+                                       boolean specificOnly);
+
+  private static native boolean isContentAllowlisted(long ptr, String url, ContentType[] contentType,
+                                                     List<String> referrerChain, String siteKey);
 
   private static native boolean isGenericblockAllowlisted(long ptr, String url,
                                                                 List<String> referrerChain,
                                                                 String siteKey);
 
   private static native boolean isDocumentAllowlisted(long ptr, String url,
-                                                            List<String> referrerChain,
-                                                            String siteKey);
+                                                      List<String> referrerChain,
+                                                      String siteKey);
 
   private static native boolean isElemhideAllowlisted(long ptr, String url,
-                                                            List<String> referrerChain,
-                                                            String siteKey);
+                                                      List<String> referrerChain,
+                                                      String siteKey);
 
   private static native void setPref(long ptr, String pref, long valuePtr);
 

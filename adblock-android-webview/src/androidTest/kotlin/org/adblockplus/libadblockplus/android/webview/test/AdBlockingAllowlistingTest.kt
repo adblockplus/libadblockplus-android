@@ -277,11 +277,6 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 1
         })
 
-        // subframe itself is allowlisted
-        assertNotNull(allowlistedResources.find {
-            it.requestUrl == "${wireMockRule.baseUrl()}/$subFrameHtml" && it.parentFrameUrls.size == 1
-        })
-
         // subframe resource is allowlisted
         assertNotNull(allowlistedResources.find {
             it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
@@ -291,43 +286,6 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
             .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
             // can't access subframe with JS so there is no [known at the moment] way
             // to assert subframe resource visibility
-    }
-
-    @Test
-    fun testUrlFragmentDoesNotBreakReferrerChain() {
-        val subFrameHtml = "subframe.html"
-
-        // allowlist root frame url
-        val allowlistingRule = "@@localhost"
-
-        wireMockRule
-            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "text/html")
-                    .withBody(
-                        """
-                        |<html>
-                        |<body>
-                        |  <img src="$greenImage"/>
-                        |</body>
-                        |</html>
-                        |""".trimMargin())))
-
-        val (_, allowlistedResources) = load(
-            listOf(allowlistingRule),
-            """
-            |<html>
-            |<body>
-            |  <iframe src="$subFrameHtml#fragment"/>
-            |</body>
-            |</html>
-            |""".trimMargin())
-
-        // subframe resource is allowlisted: it must have 2 referrers (subframe + main frame)
-        assertNotNull(allowlistedResources.find {
-            it.requestUrl == "${wireMockRule.baseUrl()}/$greenImage" && it.parentFrameUrls.size == 2
-        })
     }
 
     @Ignore //Depending on the setup this test may work or not => ignoring for now

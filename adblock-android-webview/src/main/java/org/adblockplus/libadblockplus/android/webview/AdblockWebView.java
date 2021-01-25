@@ -53,7 +53,6 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -844,7 +843,9 @@ public class AdblockWebView extends WebView
           }
 
           // allowlisted
-          if (engine.isDocumentAllowlisted(url, referrerChain, siteKey))
+          if (engine.isContentAllowlisted(url,
+              FilterEngine.ContentType.maskOf(FilterEngine.ContentType.DOCUMENT), referrerChain,
+              siteKey))
           {
             isAllowlisted = true;
             Timber.w("%s document is allowlisted, allow loading", url);
@@ -859,27 +860,22 @@ public class AdblockWebView extends WebView
               canContainSitekey = true;
             }
 
-            boolean specificOnly = false;
-            if (!referrerChain.isEmpty())
+            boolean specificOnly = engine.isContentAllowlisted(url,
+                FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICBLOCK),
+                referrerChain, siteKey);
+            if (specificOnly)
             {
-              final String parentUrl = referrerChain.get(0);
-              final List<String> referrerChainForGenericblock = referrerChain.subList(1,
-                  referrerChain.size());
-              specificOnly = engine.isGenericblockAllowlisted(parentUrl,
-                  referrerChainForGenericblock, siteKey);
-              if (specificOnly)
-              {
-                Timber.w("Found genericblock filter for url %s which parent is %s",
-                    url, parentUrl);
-              }
+              Timber.w("Found genericblock filter for url %s", url);
             }
 
             // check if we should block
-            AdblockEngine.MatchesResult result = engine.matches(
-                url, FilterEngine.ContentType.maskOf(contentType),
-                referrerChain, siteKey, specificOnly);
+            AdblockEngine.MatchesResult result =
+                engine.isContentAllowlisted(url, FilterEngine.ContentType.maskOf(contentType),
+                    referrerChain, siteKey) ? AdblockEngine.MatchesResult.ALLOWLISTED :
+                    engine.matches(url, FilterEngine.ContentType.maskOf(contentType), referrerChain,
+                        siteKey, specificOnly);
 
-            if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
+            if (result == AdblockEngine.MatchesResult.BLOCKED)
             {
               Timber.i("Attempting to block request with AA on the first try: %s", url);
 
@@ -902,7 +898,9 @@ public class AdblockWebView extends WebView
                   return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
                 }
 
-                if (engine.isDocumentAllowlisted(url, referrerChain, siteKey))
+                if (engine.isContentAllowlisted(url,
+                    FilterEngine.ContentType.maskOf(FilterEngine.ContentType.DOCUMENT),
+                    referrerChain, siteKey))
                 {
                   isAllowlisted = true;
                   Timber.w("%s document is allowlisted, allow loading", url);
@@ -911,27 +909,22 @@ public class AdblockWebView extends WebView
                 }
                 else
                 {
-                  specificOnly = false;
-                  if (!referrerChain.isEmpty())
+                  specificOnly = engine.isContentAllowlisted(url,
+                      FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICBLOCK),
+                      referrerChain, siteKey);
+                  if (specificOnly)
                   {
-                    final String parentUrl = referrerChain.get(0);
-                    final List<String> referrerChainForGenericblock = referrerChain.subList(1,
-                        referrerChain.size());
-                    specificOnly = engine.isGenericblockAllowlisted(parentUrl,
-                        referrerChainForGenericblock, siteKey);
-                    if (specificOnly)
-                    {
-                      Timber.w("Found genericblock filter for url %s which parent is %s",
-                          url, parentUrl);
-                    }
+                    Timber.w("Found genericblock filter for url %s", url);
                   }
 
                   // check if we should block
-                  result = engine.matches(
-                      url, FilterEngine.ContentType.maskOf(contentType),
-                      referrerChain, siteKey, specificOnly);
+                  result =
+                      engine.isContentAllowlisted(url, FilterEngine.ContentType.maskOf(contentType),
+                      referrerChain, siteKey) ? AdblockEngine.MatchesResult.ALLOWLISTED :
+                          engine.matches(url, FilterEngine.ContentType.maskOf(contentType),
+                              referrerChain, siteKey, specificOnly);
 
-                  if (result == AdblockEngine.MatchesResult.NOT_ALLOWLISTED)
+                  if (result == AdblockEngine.MatchesResult.BLOCKED)
                   {
                     Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
                         sitekeyCheckEnabled ? "enabled" : "disabled");
@@ -1080,7 +1073,7 @@ public class AdblockWebView extends WebView
         Timber.w("Detected referrer loop, finished creating referrers list");
         break;
       }
-      referrerChain.add(0, parent);
+      referrerChain.add(parent);
     }
 
     // Here we discover if referrerChain is empty or incomplete (i.e. does not contain the
@@ -1101,7 +1094,7 @@ public class AdblockWebView extends WebView
     {
       // Let's check if we already have a top level domain same as navigationUrlDomain, and if
       // not then add a top level parent.
-      final String currentTopLevelDomain = Utils.getDomain(referrerChain.get(0));
+      final String currentTopLevelDomain = Utils.getDomain(referrerChain.get(referrerChain.size()-1));
       if (!navigationUrlDomain.equals(currentTopLevelDomain))
       {
         canAddTopLevelParent = true;
@@ -1111,7 +1104,7 @@ public class AdblockWebView extends WebView
     {
       Timber.d("Adding top level referrer `%s` for `%s`", navigationUrlLocal,
           urlWithoutFragment);
-      referrerChain.add(0, navigationUrlLocal);
+      referrerChain.add(navigationUrlLocal);
     }
     return referrerChain;
   }
@@ -1449,9 +1442,8 @@ public class AdblockWebView extends WebView
 
         final List<String> referrerChain = isMainFrame ?
                 new ArrayList<String>() : buildFramesHierarchy(urlWithoutFragment);
-        // Same as ABPChromium, for frames we include a frame itself as a parent
-        referrerChain.add(urlWithoutFragment);
 
+        referrerChain.add(0, urlWithoutFragment);
         final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
         String siteKey = (siteKeysConfiguration != null
             ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
@@ -1468,13 +1460,15 @@ public class AdblockWebView extends WebView
                 .getAny(referrerChain, ""));
           }
         }
+        referrerChain.remove(0);
 
-        final boolean specificOnly = filterEngine.matches(urlWithoutFragment,
+        final boolean specificOnly = filterEngine.isContentAllowlisted(urlWithoutFragment,
             FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
-            referrerChain, siteKey) != null;
+            referrerChain, siteKey);
         stylesheetString = getProvider()
             .getEngine()
-            .getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain, siteKey, specificOnly);
+            .getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain, siteKey,
+                specificOnly);
         Timber.d("Finished requesting elemhide stylesheet, got %d symbols" +
                 (specificOnly ? " (specificOnly)" : "") + " for %s", stylesheetString.length(),
             domain);
