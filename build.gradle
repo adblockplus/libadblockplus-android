@@ -34,6 +34,56 @@ subprojects {
     maven { url 'https://jitpack.io' }
   }
 
+  // apply to all subprojects
+  // in order to check a subproject, run gradlew `:<subproj_name>:checkstyle`,
+  // for example: `gradlew :adblock-android-settings:checkstyle`
+  apply plugin: 'checkstyle'
+
+  checkstyle {
+    // assign the latest checkstyle version explicitly
+    // the default version is very old, like 5.9
+    toolVersion = Vers.checkstyle
+    // a reference checkstyle.xml is here:
+    // https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-8.39/src/main/resources/google_checks.xml
+    configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+  }
+
+  task checkstyleMain(type: Checkstyle) {
+    description 'Check code style of main source set'
+    group 'verification'
+    source 'src/main/java'
+    include '**/*.java'
+
+    // empty classpath
+    classpath = rootProject.files()
+  }
+
+  task checkstyleAndroidTest(type: Checkstyle) {
+    description 'Check code style of android connected tests'
+    group 'verification'
+    source 'src/androidTest/java'
+    include '**/*.java'
+
+    // empty classpath
+    classpath = rootProject.files()
+  }
+
+  task checkstyleTest(type: Checkstyle) {
+    description 'Check code style of tests source set'
+    group 'verification'
+    source 'src/androidTest/java'
+    include '**/*.java'
+
+    // empty classpath
+    classpath = rootProject.files()
+  }
+
+  tasks.register('checkstyle') {
+    dependsOn checkstyleMain
+    dependsOn checkstyleTest
+    dependsOn checkstyleAndroidTest
+  }
+
   task listAllDependencies(type: DependencyReportTask) {}
 
   // Configure bintray publication for selected sub-projects

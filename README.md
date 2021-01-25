@@ -7,11 +7,7 @@ Adblock Android SDK
 
 An Android library project, tests, settings fragments and demo application for AdblockWebView.
 
-## Git commits
 
-This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventions in the repo. It should
-be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
-before making any new commits to the repo.
 
 ## Dependencies
 
@@ -539,3 +535,70 @@ names from native code. If class names/members are modified by Proguard/R8 durin
 they can't be accessed from native code resulting into Runtime exceptions like follows:
 
     java.lang.NoSuchMethodError: no non-static method "Lorg/adblockplus/libadblockplus/JsValue;.<init>(J)V"
+
+## Contribute
+
+You are more then welcome to contribute! Please use *Building* 
+sections from corresponding submodules in order to set up build them and start developing.
+
+### Git commits
+
+This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventions in the repo. It should
+be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
+before making any new commits to the repo.
+
+### Code style
+We use [Eyeo Coding Style Convention](https://adblockplus.org/coding-style) as a base. 
+In general:
+
+* Follow the [Mozilla Coding Style](https://firefox-source-docs.mozilla.org/code-quality/coding-style/coding_style_java.html) general practices and its naming and formatting rules.
+* All files should have a license header, but no mode line comments.
+* Newline at end of file, otherwise no trailing whitespace.
+* Lines can be longer than the limit, if limiting line length would hurt readability in a particular case.
+* Opening braces always go on their own line.
+* No Hungarian notation, no special variable name prefixes or suffixes denoting type or scope. 
+* All variable names start with a lower case letter.
+* Don't comment code out, delete it.
+
+#### Java
+Overall it inherits basic code style rules above. More specific rules:
+* Spaces over tabs 
+* Indentation is in increment of two spaces.
+* Dedicated new line on opening opening brackets and closing brackets.
+```java
+// good 
+void doSomething()
+{
+  if (that())
+  {
+  }
+}
+// bad 
+void doSomething(){
+  if (that()) {
+  }
+}
+```
+* Inline comments leave space after marker 
+* Remove trailing white spaces 
+* Don’t exceed 120 characters per line
+* **else** should be followed with new line
+* Add new line at the end of file 
+* Variables, parameters and class members should be final where it is possible (they are not modified)
+
+We use [Checkstyle](https://checkstyle.sourceforge.io/) to verify syntax for Java. You can find the 
+config in `config\checkstyle\checkstyle.xml`
+
+You can verify the syntax in sevaral ways:
+1. [Gradle Checkstyle plugin](https://docs.gradle.org/current/userguide/checkstyle_plugin.html). 
+Just run `./gradlew checkstyle` and it will perform codestyle check over all the submodules, 
+including tests. Also
+    * you can run the check over a submodule (eg `./gradlew :adblock-android:checkstyle`)
+    * you can run the check on tests on main source files only: 
+    `./gradlew checkstyleMain` or `./gradlew checkstyleAndroidTest` or `./gradlew checkstyleAndroidTest`
+2. [Android Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea). Install
+the plugin and import the `config\checkstyle\checkstyle.xml`. Then it will be automatically checking
+the codestyle for you.
+3. Pre-commit hook. For installation and usage, please check the [Git commits section](#Git-commits).
+We use [github.com/gherynos/pre-commit-java](https://github.com/gherynos/pre-commit-java) hook for 
+checking codestyle. It will run on every commit if *pre-commit hooks* are installed.
