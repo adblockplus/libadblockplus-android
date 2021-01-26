@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.android;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -29,44 +30,63 @@ import timber.log.Timber;
  */
 public class ConnectionInputStream extends InputStream
 {
-  private final InputStream inputStream;
   private final HttpURLConnection httpURLConnection;
   private boolean closed = false;
+  private static final int CACHE_SIZE = 4096;
+  private final BufferedInputStream bufferedInputStream;
 
   public ConnectionInputStream(final InputStream inputStream, final HttpURLConnection httpURLConnection)
   {
-    this.inputStream = inputStream;
     this.httpURLConnection = httpURLConnection;
+    this.bufferedInputStream = new BufferedInputStream(inputStream, CACHE_SIZE);
+    try
+    {
+      // tries to read CACHE_SIZE preemptively
+      // it marks the current position, and keeps it valid for CACHE_SIZE + 1
+      // reads and internally keeps it buffered
+      // resets to the previously marked position
+      this.bufferedInputStream.mark(CACHE_SIZE + 1);
+      this.bufferedInputStream.read(new byte[CACHE_SIZE], 0, CACHE_SIZE);
+      this.bufferedInputStream.reset();
+    }
+    catch (final IOException e)
+    {
+      // no need to throw it
+      // it will throw again when webview tries to read
+      Timber.d("Error while reading cached buffer for url %s and error %s",
+              httpURLConnection.getURL(),
+              e.getMessage());
+    }
   }
 
   @Override
   public int read() throws IOException
   {
-    return inputStream.read();
+    return bufferedInputStream.read();
   }
 
   @Override
   public int read(byte b[]) throws IOException
   {
-    return inputStream.read(b);
+    return bufferedInputStream.read(b);
   }
 
   @Override
   public int read(byte b[], int off, int len) throws IOException
   {
-    return inputStream.read(b, off, len);
+    return bufferedInputStream.read(b, off, len);
   }
 
   @Override
   public long skip(long n) throws IOException
   {
-    return inputStream.skip(n);
+    return bufferedInputStream.skip(n);
   }
 
   @Override
   public int available() throws IOException
   {
-    return inputStream.available();
+    return bufferedInputStream.available();
   }
 
   @Override
@@ -75,7 +95,8 @@ public class ConnectionInputStream extends InputStream
     try
     {
       Timber.d("close()");
-      inputStream.close();
+      // will close inner stream
+      bufferedInputStream.close();
       closed = true;
     }
     finally
@@ -87,19 +108,19 @@ public class ConnectionInputStream extends InputStream
   @Override
   public synchronized void mark(int readlimit)
   {
-    inputStream.mark(readlimit);
+    bufferedInputStream.mark(readlimit);
   }
 
   @Override
   public synchronized void reset() throws IOException
   {
-    inputStream.reset();
+    bufferedInputStream.reset();
   }
 
   @Override
   public boolean markSupported()
   {
-    return inputStream.markSupported();
+    return bufferedInputStream.markSupported();
   }
 
   @Override

@@ -17,7 +17,6 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import timber.log.Timber;
 import android.net.TrafficStats;
 
 import org.adblockplus.libadblockplus.AdblockPlusException;
@@ -26,6 +25,7 @@ import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.ServerResponse.NsStatus;
+import static org.adblockplus.libadblockplus.android.Utils.readFromInputStream;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import static org.adblockplus.libadblockplus.android.Utils.readFromInputStream;
+import timber.log.Timber;
 
 public class AndroidHttpClient extends HttpClient
 {
