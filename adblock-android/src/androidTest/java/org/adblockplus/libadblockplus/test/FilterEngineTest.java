@@ -26,20 +26,17 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import static org.adblockplus.libadblockplus.FilterEngine.ContentType.maskOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.adblockplus.libadblockplus.FilterEngine.ContentType.maskOf;
 
 public class FilterEngineTest extends BaseFilterEngineTest
 {
-  private static final List<String> EMPTY_LIST = Collections.emptyList();
-  private static final String NO_SITEKEY = null;
   private static final String SITEKEY = "cNAQEBBQADSwAwSAJBAJRmzcpTevQqkWn6dJuX";
 
   @Override
@@ -243,47 +240,47 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("orgbanner.gif$domain=~example.com").addToList();
 
     final Filter match1 = filterEngine.matches("http://example.org/foobar.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), EMPTY_LIST, "");
+        maskOf(FilterEngine.ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "", false);
     assertNull(match1);
 
     final Filter match2 = filterEngine.matches("http://example.org/adbanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), EMPTY_LIST, "");
+        maskOf(FilterEngine.ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "",false);
     assertNotNull(match2);
     assertEquals(Filter.Type.BLOCKING, match2.getType());
 
     final Filter match5 = filterEngine.matches("http://example.org/tpbanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.org/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.org/", "", false);
     assertNull(match5);
 
     final Filter match6 = filterEngine.matches("http://example.org/fpbanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.org/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.org/", "", false);
     assertNotNull(match6);
     assertEquals(Filter.Type.BLOCKING, match6.getType());
 
     final Filter match7 = filterEngine.matches("http://example.org/tpbanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.com/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.com/", "", false);
     assertNotNull(match7);
     assertEquals(Filter.Type.BLOCKING, match7.getType());
 
     final Filter match8 = filterEngine.matches("http://example.org/fpbanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.com/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.com/", "", false);
     assertNull(match8);
 
     final Filter match9 = filterEngine.matches("http://example.org/combanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.com/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.com/", "", false);
     assertNotNull(match9);
     assertEquals(Filter.Type.BLOCKING, match9.getType());
 
     final Filter match10 = filterEngine.matches("http://example.org/combanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.org/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.org/", "", false);
     assertNull(match10);
 
     final Filter match11 = filterEngine.matches("http://example.org/orgbanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.com/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.com/", "", false);
     assertNull(match11);
 
     final Filter match12 = filterEngine.matches("http://example.org/orgbanner.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), Arrays.asList("http://example.org/"), "");
+        maskOf(FilterEngine.ContentType.IMAGE), "http://example.org/", "",false);
     assertNotNull(match12);
     assertEquals(Filter.Type.BLOCKING, match12.getType());
   }
@@ -301,7 +298,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
     final List<String> documentUrlsForGenericblock = new ArrayList<>();
     documentUrlsForGenericblock.add("http://testpages.adblockplus.org/testcasefiles/genericblock/frame.html");
     documentUrlsForGenericblock.add("http://testpages.adblockplus.org/en/exceptions/genericblock/");
-    final List<String> immediateParent = Arrays.asList(documentUrlsForGenericblock.get(0));
+    final String immediateParent = documentUrlsForGenericblock.get(0);
 
     // Go through all parent frames/refs to check if any of them has genericblock filter exception
     boolean specificOnly = filterEngine.isContentAllowlisted(firstParent,
@@ -348,11 +345,13 @@ public class FilterEngineTest extends BaseFilterEngineTest
     assertTrue(filterEngine.isContentAllowlisted(
         "http://example.com/add.png",
         maskOf(FilterEngine.ContentType.GENERICBLOCK),
-        Arrays.asList("http://example.com/frame.html", "http://example.com/index.html"), SITEKEY));
+        Arrays.asList("http://example.com/frame.html", "http://example.com/index.html"),
+        SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted(
         "http://example.com/add.png",
         maskOf(FilterEngine.ContentType.GENERICBLOCK),
-        Arrays.asList("http://example.com/frame.html", "http://baddomain.com/index.html"), SITEKEY));
+        Arrays.asList("http://example.com/frame.html", "http://baddomain.com/index.html"),
+        SITEKEY));
   }
 
   @Test
@@ -405,34 +404,35 @@ public class FilterEngineTest extends BaseFilterEngineTest
 
     assertNull("another url should not match",
         filterEngine.matches("http://example.org/foobar.gif",
-        maskOf(FilterEngine.ContentType.IMAGE), EMPTY_LIST, ""));
+        maskOf(FilterEngine.ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "",
+            false));
 
     assertNull("zero mask should not match (filter with some options)",
         filterEngine.matches("http://example.org/adbanner.gif.js",
-        /*mask*/ maskOf(), EMPTY_LIST,""));
+        maskOf(), FilterEngine.EMPTY_PARENT,"", false));
 
     assertNull("zero mask should not match (filter without any option)",
         filterEngine.matches("http://example.xxx/blockme",
-        /*mask*/ maskOf(), EMPTY_LIST,""));
+        maskOf(), FilterEngine.EMPTY_PARENT,"", false));
 
     assertNull("one arbitrary flag in mask should not match",
         filterEngine.matches("http://example.org/adbanner.gif.js",
-            maskOf(FilterEngine.ContentType.OBJECT), EMPTY_LIST, ""));
+            maskOf(FilterEngine.ContentType.OBJECT), FilterEngine.EMPTY_PARENT, "",
+            false));
 
     assertNotNull("one of flags in mask should match",
         filterEngine.matches("http://example.org/adbanner.gif.js",
             maskOf(
                 FilterEngine.ContentType.IMAGE,
                 FilterEngine.ContentType.OBJECT),
-            EMPTY_LIST,
-            ""));
+            FilterEngine.EMPTY_PARENT, "", false));
 
     assertNotNull("both flags in mask should match",
         filterEngine.matches("http://example.org/adbanner.gif.js",
             maskOf(
                 FilterEngine.ContentType.IMAGE,
                 FilterEngine.ContentType.SCRIPT),
-            EMPTY_LIST,""));
+            FilterEngine.EMPTY_PARENT,"", false));
 
     assertNotNull("both flags with another flag in mask should match",
         filterEngine.matches("http://example.org/adbanner.gif.js",
@@ -440,14 +440,14 @@ public class FilterEngineTest extends BaseFilterEngineTest
                 FilterEngine.ContentType.IMAGE,
                 FilterEngine.ContentType.SCRIPT,
                 FilterEngine.ContentType.OBJECT),
-            EMPTY_LIST,""));
+            FilterEngine.EMPTY_PARENT,"", false));
 
     assertNotNull("one of flags in mask should match",
         filterEngine.matches("http://example.org/adbanner.gif.js",
             maskOf(
                 FilterEngine.ContentType.SCRIPT,
                 FilterEngine.ContentType.OBJECT),
-            EMPTY_LIST,""));
+            FilterEngine.EMPTY_PARENT,"", false));
   }
 
   @Test
@@ -475,19 +475,19 @@ public class FilterEngineTest extends BaseFilterEngineTest
 
     assertTrue(filterEngine.isContentAllowlisted("http://example.org/ad.html",
         maskOf(FilterEngine.ContentType.DOCUMENT),
-        Arrays.asList("http://example.org/ad.html"), NO_SITEKEY));
+        Arrays.asList("http://example.org/ad.html"), FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.co.uk/ad.html",
         maskOf(FilterEngine.ContentType.DOCUMENT),
-        Arrays.asList("http://example.co.uk/ad.html"), NO_SITEKEY));
+        Arrays.asList("http://example.co.uk/ad.html"), FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.com/ad.html",
         maskOf(FilterEngine.ContentType.DOCUMENT),
-        EMPTY_LIST, NO_SITEKEY));
+        Arrays.asList(FilterEngine.EMPTY_PARENT), FilterEngine.EMPTY_SITEKEY));
     assertTrue(filterEngine.isContentAllowlisted("http://example.com/ad.html",
         maskOf(FilterEngine.ContentType.DOCUMENT),
-        Arrays.asList("http://example.com", "http://example.de"), NO_SITEKEY));
+        Arrays.asList("http://example.com", "http://example.de"), FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.co.uk/ad.html",
         maskOf(FilterEngine.ContentType.DOCUMENT),
-        Arrays.asList("http://example.co.uk", "http://example.de"), NO_SITEKEY));
+        Arrays.asList("http://example.co.uk", "http://example.de"), FilterEngine.EMPTY_SITEKEY));
   }
 
   @Test
@@ -497,17 +497,20 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("@@||example.com^$elemhide,domain=example.de").addToList();
 
     assertTrue(filterEngine.isContentAllowlisted("http://example.org/file",
-        maskOf(FilterEngine.ContentType.ELEMHIDE), Arrays.asList("http://example.org"), NO_SITEKEY));
+        maskOf(FilterEngine.ContentType.ELEMHIDE), Arrays.asList("http://example.org"),
+        FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.co.uk/file",
-        maskOf(FilterEngine.ContentType.ELEMHIDE), Arrays.asList("http://example.co.uk"), NO_SITEKEY));
+        maskOf(FilterEngine.ContentType.ELEMHIDE), Arrays.asList("http://example.co.uk"),
+        FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.com/file",
-        maskOf(FilterEngine.ContentType.ELEMHIDE), Arrays.asList("http://example.com"), NO_SITEKEY));
+        maskOf(FilterEngine.ContentType.ELEMHIDE), Arrays.asList("http://example.com"),
+        FilterEngine.EMPTY_SITEKEY));
     assertTrue(filterEngine.isContentAllowlisted("http://example.com/ad.html",
         maskOf(FilterEngine.ContentType.ELEMHIDE),
-        Arrays.asList("http://example.com", "http://example.de"), NO_SITEKEY));
+        Arrays.asList("http://example.com", "http://example.de"), FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.co.uk/ad.html",
         maskOf(FilterEngine.ContentType.ELEMHIDE),
-        Arrays.asList("http://example.co.uk", "http://example.de"), NO_SITEKEY));
+        Arrays.asList("http://example.co.uk", "http://example.de"), FilterEngine.EMPTY_SITEKEY));
   }
 
   @Test
@@ -520,24 +523,20 @@ public class FilterEngineTest extends BaseFilterEngineTest
     filterEngine.getFilter("@@$elemhide,sitekey=" + elemhideSiteKey).addToList();
 
     // normally the frame is not allowlisted
-    final List<String> documentUrls = Arrays.asList(
-        "http://example.com/");
+    final String immediateParent = "http://example.com/";
 
     // no sitekey
     final Filter matchResult = filterEngine.matches(
         "http://my-ads.com/adframe",
-        maskOf(FilterEngine.ContentType.SUBDOCUMENT),
-        documentUrls,
-        NO_SITEKEY);
+        maskOf(FilterEngine.ContentType.SUBDOCUMENT), immediateParent, FilterEngine.EMPTY_SITEKEY,
+        false);
     assertNotNull(matchResult);
     assertEquals(Filter.Type.BLOCKING, matchResult.getType());
 
     // random sitekey
     final Filter matchResult2 = filterEngine.matches(
         "http://my-ads.com/adframe",
-        maskOf(FilterEngine.ContentType.SUBDOCUMENT),
-        documentUrls,
-        SITEKEY);
+        maskOf(FilterEngine.ContentType.SUBDOCUMENT), immediateParent, SITEKEY, false);
     assertNotNull(matchResult2);
     assertEquals(Filter.Type.BLOCKING, matchResult2.getType());
 
@@ -548,9 +547,9 @@ public class FilterEngineTest extends BaseFilterEngineTest
 
     // no sitekey
     assertFalse(filterEngine.isContentAllowlisted("http://my-ads.com/adframe",
-        maskOf(FilterEngine.ContentType.DOCUMENT), documentUrls2, NO_SITEKEY));
+        maskOf(FilterEngine.ContentType.DOCUMENT), documentUrls2, FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://my-ads.com/adframe",
-        maskOf(FilterEngine.ContentType.ELEMHIDE), documentUrls2, NO_SITEKEY));
+        maskOf(FilterEngine.ContentType.ELEMHIDE), documentUrls2, FilterEngine.EMPTY_SITEKEY));
 
     // random sitekey and the correct sitekey
     assertFalse(filterEngine.isContentAllowlisted("http://my-ads.com/adframe",
@@ -570,9 +569,9 @@ public class FilterEngineTest extends BaseFilterEngineTest
 
     // no sitekey
     assertFalse(filterEngine.isContentAllowlisted("http://some-ads.com",
-        maskOf(FilterEngine.ContentType.DOCUMENT), documentUrls3, NO_SITEKEY));
+        maskOf(FilterEngine.ContentType.DOCUMENT), documentUrls3, FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://some-ads.com",
-        maskOf(FilterEngine.ContentType.ELEMHIDE), documentUrls3, NO_SITEKEY));
+        maskOf(FilterEngine.ContentType.ELEMHIDE), documentUrls3, FilterEngine.EMPTY_SITEKEY));
 
     // random sitekey and the correct sitekey
     assertFalse(filterEngine.isContentAllowlisted("http://some-ads.com",
@@ -953,12 +952,12 @@ public class FilterEngineTest extends BaseFilterEngineTest
     final String url = "https://aaxdetect.com/pxext.gif?&type=2&vn=1";
 
     // WARNING: order of referrers is important! Reverse order will return `null` as filter match
-    final List<String> referrerChain = Arrays.asList(
-       "https://aaxdetect.com/detect.html?&pub=AAXSFY9XU&svr=2019040811_2780&gdpr=0&gdprconsent=0&dn=http%3A%2F%2Faaxdemo.com"
-    );
+    final String immediateParent =
+       "https://aaxdetect.com/detect.html?&pub=AAXSFY9XU&svr=2019040811_2780&gdpr=0&gdprconsent=0&dn=http%3A%2F%2Faaxdemo.com";
 
     final Filter matchResult = filterEngine.matches(
-        url, maskOf(FilterEngine.ContentType.IMAGE), referrerChain, NO_SITEKEY);
+        url, maskOf(FilterEngine.ContentType.IMAGE), immediateParent, FilterEngine.EMPTY_SITEKEY,
+        false);
     assertNotNull(matchResult);
     assertEquals(Filter.Type.BLOCKING, matchResult.getType());
   }
