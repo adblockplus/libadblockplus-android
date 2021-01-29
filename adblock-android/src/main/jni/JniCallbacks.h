@@ -101,10 +101,14 @@ public:
     JniWebRequestCallback(JNIEnv* env, const AdblockPlus::Scheduler& scheduler, jobject callbackObject);
     void GET(const std::string& url,
              const AdblockPlus::HeaderList& requestHeaders,
-             const AdblockPlus::IWebRequest::GetCallback& getCallback) override;
-    void SyncGET(const std::string& url,
-             const AdblockPlus::HeaderList& requestHeaders,
-             const AdblockPlus::IWebRequest::GetCallback& getCallback);
+             const AdblockPlus::IWebRequest::RequestCallback& callback) override;
+    void HEAD(const std::string& url,
+              const AdblockPlus::HeaderList& requestHeaders,
+              const AdblockPlus::IWebRequest::RequestCallback& callback) override;
+    void SyncRequest(const std::string& method,
+              const std::string& url,
+              const AdblockPlus::HeaderList& requestHeaders,
+              const AdblockPlus::IWebRequest::RequestCallback& callback);
 
 private:
   static JniLocalReference<jobject> NewTuple(JNIEnv* env, const std::string& a, const std::string& b);
