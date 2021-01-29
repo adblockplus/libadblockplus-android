@@ -209,9 +209,8 @@ static std::vector<std::string> JavaStringListToStringVector(JNIEnv* env, jobjec
   return out;
 }
 
-static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
-    jstring jUrl, jobjectArray jContentTypes, jobject jReferrerChain, jstring jSiteKey,
-    jboolean jSpecificOnly)
+static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl,
+    jobjectArray jContentTypes, jobject jReferrerChain, jstring jSiteKey, jboolean jSpecificOnly)
 {
   AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
 
@@ -230,6 +229,33 @@ static jobject JNICALL JniMatchesMany(JNIEnv* env, jclass clazz, jlong ptr,
   try
   {
     AdblockPlus::Filter filter = engine.Matches(url, contentTypeMask, documentUrls, siteKey,
+            jSpecificOnly == JNI_TRUE);
+
+    return (filter.IsValid() ? NewJniFilter(env, std::move(filter)) : 0);
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
+static jobject JNICALL JniMatches(JNIEnv* env, jclass clazz, jlong ptr, jstring jUrl,
+    jobjectArray jContentTypes, jstring jparent, jstring jSiteKey, jboolean jSpecificOnly)
+{
+  AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
+
+  std::string url = JniJavaToStdString(env, jUrl);
+
+  AdblockPlus::IFilterEngine::ContentTypeMask contentTypeMask = 0;
+  int contentTypesSize = env->GetArrayLength(jContentTypes);
+  for (int i = 0; i < contentTypesSize; i++)
+  {
+    contentTypeMask |= ConvertContentType(env, env->GetObjectArrayElement(jContentTypes, i));
+  }
+
+  std::string parent = JniJavaToStdString(env, jparent);
+  std::string siteKey = JniJavaToStdString(env, jSiteKey);
+
+  try
+  {
+    AdblockPlus::Filter filter = engine.Matches(url, contentTypeMask, parent, siteKey,
             jSpecificOnly == JNI_TRUE);
 
     return (filter.IsValid() ? NewJniFilter(env, std::move(filter)) : 0);
@@ -510,6 +536,7 @@ static JNINativeMethod methods[] =
   { (char*)"getElementHidingStyleSheet", (char*)"(JLjava/lang/String;Z)Ljava/lang/String;", (void*)JniGetElementHidingStyleSheet },
   { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
   { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;Z)" TYP("Filter"), (void*)JniMatchesMany },
+  { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/lang/String;Ljava/lang/String;Z)" TYP("Filter"), (void*)JniMatches },
   { (char*)"isContentAllowlisted", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsContentAllowlisted },
   { (char*)"isDocumentAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsDocumentAllowlisted },
   { (char*)"isGenericblockAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsGenericblockAllowlisted },

@@ -442,7 +442,7 @@ public final class AdblockEngine
    *
    * @param url URL of the resource
    * @param contentTypes Set of content types for requested resource
-   * @param referrerChain Chain of URLs requesting the resource
+   * @param parent Immediate parent of the {@param url}.
    * @param siteKey Public key provided by the document, can be empty
    * @param specificOnly If `true` then we check only domain specific filters
    * @return {@link MatchesResult#NOT_ENABLED} if FilterEngine is not enabled,
@@ -450,7 +450,7 @@ public final class AdblockEngine
    *         {@link MatchesResult#NOT_FOUND} when blocking filter was not found.
    */
   public MatchesResult matches(final String url, final Set<ContentType> contentTypes,
-                               final List<String> referrerChain, final String siteKey,
+                               final String parent, final String siteKey,
                                final boolean specificOnly)
   {
     if (!enabled)
@@ -458,27 +458,12 @@ public final class AdblockEngine
       return MatchesResult.NOT_ENABLED;
     }
 
-    final Filter filter = this.filterEngine.matches(url, contentTypes, referrerChain,
-        siteKey, specificOnly);
+    final Filter filter = this.filterEngine.matches(url, contentTypes, parent, siteKey,
+        specificOnly);
 
     if (filter == null)
     {
       return MatchesResult.NOT_FOUND;
-    }
-
-    // hack: if there is no referrer, block only if filter is domain-specific
-    // (to re-enable in-app ads blocking, proposed on 12.11.2012 Monday meeting)
-    // (documentUrls contains the referrers on Android)
-    try
-    {
-      if (referrerChain.isEmpty() && filter.getRaw().contains("||"))
-      {
-        return MatchesResult.NOT_FOUND;
-      }
-    }
-    catch (final NullPointerException e)
-    {
-      Timber.w(e);
     }
 
     Timber.d("Found filter `%s` for url `%s`", filter.getRaw(), url);

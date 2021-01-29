@@ -313,7 +313,8 @@ public class AdblockWebView extends WebView
       }
     }
   };
-  private final AdblockEngineProvider.EngineCreatedListener engineCreatedCb = new AdblockEngineProvider.EngineCreatedListener()
+  private final AdblockEngineProvider.EngineCreatedListener engineCreatedCb
+      = new AdblockEngineProvider.EngineCreatedListener()
   {
     @Override
     public void onAdblockEngineCreated(final AdblockEngine engine)
@@ -659,7 +660,8 @@ public class AdblockWebView extends WebView
     }
 
     @Override
-    public void onReceivedError(final WebView view, final int errorCode, final String description, final String failingUrl)
+    public void onReceivedError(final WebView view, final int errorCode, final String description,
+                                final String failingUrl)
     {
       Timber.e("onReceivedError:" +
         " code=%d" +
@@ -673,7 +675,8 @@ public class AdblockWebView extends WebView
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
-    public void onReceivedError(final WebView view, final WebResourceRequest request, final WebResourceError error)
+    public void onReceivedError(final WebView view, final WebResourceRequest request,
+                                final WebResourceError error)
     {
       Timber.e("onReceivedError:" +
               " code=%d" +
@@ -697,6 +700,12 @@ public class AdblockWebView extends WebView
       notifyResourceBlocked(new EventsListener.BlockedResourceInfo(requestUrl,
           parentFrameUrls, contentType));
       return AbpShouldBlockResult.BLOCK_LOAD;
+    }
+
+    private String getFirstParent(final List<String> referrerChain)
+    {
+      return (referrerChain == null || referrerChain.size() == 0) ?
+          FilterEngine.EMPTY_PARENT : referrerChain.get(0);
     }
 
     private AbpShouldBlockResult shouldAbpBlockRequest(final WebResourceRequest request)
@@ -814,7 +823,7 @@ public class AdblockWebView extends WebView
           final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
           String siteKey = (siteKeysConfiguration != null
               ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-              .getAny(referrerChain, ""))
+              .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY))
               : null);
 
           // determine the content
@@ -872,8 +881,8 @@ public class AdblockWebView extends WebView
             AdblockEngine.MatchesResult result =
                 engine.isContentAllowlisted(url, FilterEngine.ContentType.maskOf(contentType),
                     referrerChain, siteKey) ? AdblockEngine.MatchesResult.ALLOWLISTED :
-                    engine.matches(url, FilterEngine.ContentType.maskOf(contentType), referrerChain,
-                        siteKey, specificOnly);
+                    engine.matches(url, FilterEngine.ContentType.maskOf(contentType),
+                        getFirstParent(referrerChain), siteKey, specificOnly);
 
             if (result == AdblockEngine.MatchesResult.BLOCKED)
             {
@@ -889,7 +898,7 @@ public class AdblockWebView extends WebView
 
                 siteKey = (siteKeysConfiguration != null
                     ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-                    .getAny(referrerChain, ""))
+                    .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY))
                     : null);
 
                 if (siteKey == null || siteKey.isEmpty())
@@ -922,7 +931,7 @@ public class AdblockWebView extends WebView
                       engine.isContentAllowlisted(url, FilterEngine.ContentType.maskOf(contentType),
                       referrerChain, siteKey) ? AdblockEngine.MatchesResult.ALLOWLISTED :
                           engine.matches(url, FilterEngine.ContentType.maskOf(contentType),
-                              referrerChain, siteKey, specificOnly);
+                              getFirstParent(referrerChain), siteKey, specificOnly);
 
                   if (result == AdblockEngine.MatchesResult.BLOCKED)
                   {
@@ -1447,7 +1456,7 @@ public class AdblockWebView extends WebView
         final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
         String siteKey = (siteKeysConfiguration != null
             ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-            .getAny(referrerChain, ""))
+            .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY))
             : null);
 
         if (!isMainFrame && siteKeysConfiguration != null && siteKey.isEmpty())
@@ -1457,10 +1466,9 @@ public class AdblockWebView extends WebView
           if (waited)
           {
             siteKey = PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-                .getAny(referrerChain, ""));
+                .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY));
           }
         }
-        referrerChain.remove(0);
 
         final boolean specificOnly = filterEngine.isContentAllowlisted(urlWithoutFragment,
             FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
