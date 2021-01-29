@@ -82,30 +82,42 @@ JniWebRequestCallback::JniWebRequestCallback(JNIEnv* env, const AdblockPlus::Sch
 
 void JniWebRequestCallback::GET(const std::string& url,
          const AdblockPlus::HeaderList& requestHeaders,
-         const AdblockPlus::IWebRequest::GetCallback& getCallback)
+         const AdblockPlus::IWebRequest::RequestCallback& callback)
 {
-  m_scheduler([this, url, requestHeaders, getCallback]()->void
+  m_scheduler([this, url, requestHeaders, callback]()->void
   {
-    SyncGET(url, requestHeaders, getCallback);
+    SyncRequest("GET", url, requestHeaders, callback);
   });
 }
 
-void JniWebRequestCallback::SyncGET(const std::string& url,
+void JniWebRequestCallback::HEAD(const std::string& url,
          const AdblockPlus::HeaderList& requestHeaders,
-         const AdblockPlus::IWebRequest::GetCallback& getCallback)
+         const AdblockPlus::IWebRequest::RequestCallback& callback)
+{
+  m_scheduler([this, url, requestHeaders, callback]()->void
+  {
+    SyncRequest("HEAD", url, requestHeaders, callback);
+  });
+}
+
+
+void JniWebRequestCallback::SyncRequest(const std::string& method,
+         const std::string& url,
+         const AdblockPlus::HeaderList& requestHeaders,
+         const AdblockPlus::IWebRequest::RequestCallback& callback)
 {
   JNIEnvAcquire env(GetJavaVM());
 
-  jmethodID method = env->GetMethodID(
+  jmethodID methodID = env->GetMethodID(
       *JniLocalReference<jclass>(*env, env->GetObjectClass(GetCallbackObject())),
       "request",
       "(" TYP("HttpRequest") TYP("HttpClient$Callback") ")V" );
 
-  if (method)
+  if (methodID)
   {
     JniLocalReference<jstring> jUrl{*env, JniStdStringToJava(*env, url)};
 
-    std::string stdRequestMethod = "GET";
+    std::string stdRequestMethod = method;
     JniLocalReference<jstring> jRequestMethod{*env, JniStdStringToJava(*env, stdRequestMethod)};
 
     JniLocalReference<jobject> jHeaders(*env, NewJniArrayList(*env));
@@ -126,15 +138,15 @@ void JniWebRequestCallback::SyncGET(const std::string& url,
     JniLocalReference<jobject> jCallback{*env, env->NewObject(
         webRequestCallbackClass->Get(),
         callbackClassCtor,
-        JniPtrToLong(new AdblockPlus::IWebRequest::GetCallback(getCallback)))};
+        JniPtrToLong(new AdblockPlus::IWebRequest::RequestCallback(callback)))};
 
-    env->CallVoidMethod(GetCallbackObject(), method, *jHttpRequest, *jCallback);
+    env->CallVoidMethod(GetCallbackObject(), methodID, *jHttpRequest, *jCallback);
 
     if (CheckAndLogJavaException(*env))
     {
       AdblockPlus::ServerResponse response;
       response.status = AdblockPlus::IWebRequest::NS_ERROR_FAILURE;
-      getCallback(response);
+      callback(response);
     }
   }
 }
@@ -202,14 +214,14 @@ static void JNICALL JniCallbackOnFinished(JNIEnv* env, jclass clazz, jlong ptr, 
       }
     }
 
-    (*JniLongToTypePtr<AdblockPlus::IWebRequest::GetCallback>(ptr))(sResponse);
+    (*JniLongToTypePtr<AdblockPlus::IWebRequest::RequestCallback>(ptr))(sResponse);
   }
   CATCH_AND_THROW(env)
 }
 
 static void JNICALL JniCallbackDtor(JNIEnv* env, jclass clazz, jlong ptr)
 {
-  delete JniLongToTypePtr<AdblockPlus::IWebRequest::GetCallback>(ptr);
+  delete JniLongToTypePtr<AdblockPlus::IWebRequest::RequestCallback>(ptr);
 }
 
 static JNINativeMethod methods[] =
