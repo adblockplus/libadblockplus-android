@@ -49,7 +49,6 @@ public abstract class HttpClient
   }
 
   public static final int STATUS_CODE_OK = 200;
-  public static final int STATUS_CODE_NO_CONTENT = 204;
 
   /**
    * Possible values for request method argument (see `request(..)` method)
