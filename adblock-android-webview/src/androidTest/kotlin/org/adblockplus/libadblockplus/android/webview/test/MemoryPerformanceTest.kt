@@ -52,6 +52,7 @@ class MockStorage : AndroidHttpClientResourceWrapper.Storage {
 }
 
 abstract class BenchmarkMemory {
+
     @get:Rule
     val folder = TemporaryFolder()
     val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
@@ -164,10 +165,19 @@ class SystemWebViewBenchmark : BenchmarkMemory() {
 
 abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
                                              exceptionListResourceID: Int,
-                                             isAAenabled: Boolean = true) :
+                                             isAAenabled: Boolean = true,
+                                             isAdblockEnabled: Boolean = true) :
 
     BenchmarkMemory() {
     val isAAenabled = isAAenabled
+    val isAdblockEnabled = isAdblockEnabled
+
+    init {
+        // if AA is enabled then adblock must be enable
+        if (isAAenabled) {
+            assertTrue(isAdblockEnabled)
+        }
+    }
     // mapped all subscription url to the given subscription list because the runner of the test
     // might run this in a different locale and this would result in a different easylist being
     // downloaded this way any of the subscription list download results in the injection of
@@ -225,6 +235,7 @@ abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
 
         assertTrue(customEngineProvider.retain(false))
         customEngineProvider.engine.isAcceptableAdsEnabled = isAAenabled
+        customEngineProvider.engine.isEnabled = isAdblockEnabled
         output["ENGINE CREATED"] = stampMemory(customEngineProvider)
         assertNotNull(customEngineProvider.engine)
 
@@ -294,32 +305,48 @@ class MemoryBenchmark_minDist_min_AA :
  Here we still set the AA subscriptions to either full or min because it even though it is
  off the sdk still downloads the subscriptions and might loaded it, affecting its memory sage
 */
-class MemoryBenchmark_20_full_AA_off :
+class MemoryBenchmark_20_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_20_min_AA_off :
+class MemoryBenchmark_20_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_50_full_AA_off :
+class MemoryBenchmark_50_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_50_min_AA_off :
+class MemoryBenchmark_50_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_80_full_AA_off :
+class MemoryBenchmark_80_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_80_min_AA_off :
+class MemoryBenchmark_80_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_full_easy_full_AA_off :
+class MemoryBenchmark_full_easy_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_full_easy_min_AA_off :
+class MemoryBenchmark_full_easy_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_minDist_full_AA_off :
+class MemoryBenchmark_minDist_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_minDist_min_AA_off :
+class MemoryBenchmark_minDist_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min, false)
+
+/** With Adblock disable
+The purpose of these benchmarks is to measure bare memory cost of adblockwebview without adblock
+enable. It should come close to systemwebview, also removed some of the partial lists 20, 50, 80.
+*/
+class MemoryBenchmark_full_easy_full_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules, false, false)
+
+class MemoryBenchmark_full_easy_min_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min, false, false)
+
+class MemoryBenchmark_minDist_full_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules, false, false)
+
+class MemoryBenchmark_minDist_min_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min, false, false)
