@@ -61,7 +61,13 @@ class HttpHeaderSiteKeyExtractorTest2 {
             }
         }
 
-        private const val MIME_TYPE_IMAGE_JPEG = "image/jpeg"
+        private val MIME_TYPES_BINARY = arrayOf(
+                "image/jpeg",
+                "application/octet-stream",
+                "video/mp4",
+                "font/woff",
+                "audio/mpeg"
+        )
         private const val RESPONSE_BODY = "hello, world"
         private const val UTF_8 = "utf-8"
         private val uri = Uri.parse("http://domain.com")
@@ -219,22 +225,26 @@ class HttpHeaderSiteKeyExtractorTest2 {
     }
 
     @Test
-    fun testEncodingIsRemovedForImages() {
-        fun test(contentType: String) {
+    fun testEncodingIsRemovedForBinaryTypes() {
+        fun test(contentTypeHeader: String, testedResultMime: String) {
             val response = extract {
                 responseHeaders = listOf(
-                    HeaderEntry(HttpClient.HEADER_CONTENT_TYPE, contentType)
+                    HeaderEntry(HttpClient.HEADER_CONTENT_TYPE, contentTypeHeader)
                 )
                 responseStatus = HttpClient.STATUS_CODE_OK
                 inputStream = RESPONSE_BODY.byteInputStream()
             }
-            assertEquals(MIME_TYPE_IMAGE_JPEG, response.mimeType) // set explicitly
-            assertNull(response.encoding) // removed!
+            assertEquals(testedResultMime, response.mimeType) // set explicitly
+            assertNull("Response encoding is not set to `null` for ${response.mimeType}",
+                    response.encoding) // removed!
         }
 
-        test("$MIME_TYPE_IMAGE_JPEG; charset=utf-8")
-        test("$MIME_TYPE_IMAGE_JPEG;")
-        test("$MIME_TYPE_IMAGE_JPEG")
+        for (mime: String in MIME_TYPES_BINARY) {
+            test("$mime; charset=utf-8", mime)
+            test("$mime;", mime)
+            test(mime, mime)
+        }
+
     }
 
     @Test

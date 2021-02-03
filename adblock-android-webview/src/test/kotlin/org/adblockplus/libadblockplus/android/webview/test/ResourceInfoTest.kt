@@ -18,6 +18,7 @@ package org.adblockplus.libadblockplus.android.webview.test
 
 import org.adblockplus.libadblockplus.android.webview.HttpHeaderSiteKeyExtractor.ResourceInfo
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -28,6 +29,20 @@ class ResourceInfoTest {
         val resourceInfo = ResourceInfo.parse(null)
         assertNull(resourceInfo.encoding)
         assertNull(resourceInfo.mimeType)
+        assertFalse(resourceInfo.isBinary)
+    }
+
+    @Test
+    fun testBrokenContentTypeHeader() {
+        fun test(contentType: String) {
+            val resourceInfo = ResourceInfo.parse(contentType)
+            assertNull("Tested content-type: ".plus(contentType), resourceInfo.encoding)
+            assertNull("Tested content-type: ".plus(contentType), resourceInfo.mimeType)
+            assertFalse("Tested content-type: ".plus(contentType), resourceInfo.isBinary)
+        }
+        test(";charset=UTF-8")
+        test(";")
+        test(";html")
     }
 
     @Test
