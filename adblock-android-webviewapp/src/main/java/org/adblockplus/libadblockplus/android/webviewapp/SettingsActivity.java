@@ -26,9 +26,9 @@ import org.adblockplus.libadblockplus.android.SubscriptionsManager;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.settings.AdblockSettings;
 import org.adblockplus.libadblockplus.android.settings.AdblockSettingsStorage;
+import org.adblockplus.libadblockplus.android.settings.AllowlistedDomainsSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.BaseSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.GeneralSettingsFragment;
-import org.adblockplus.libadblockplus.android.settings.AllowlistedDomainsSettingsFragment;
 
 import timber.log.Timber;
 
@@ -42,7 +42,7 @@ public class SettingsActivity
   private SubscriptionsManager subscriptionsManager;
 
   @Override
-  protected void onCreate(Bundle savedInstanceState)
+  protected void onCreate(final Bundle savedInstanceState)
   {
     // retaining AdblockEngine asynchronously
     AdblockHelper.get().getProvider().retain(true);
@@ -132,21 +132,21 @@ public class SettingsActivity
   // listener
 
   @Override
-  public void onAdblockSettingsChanged(BaseSettingsFragment fragment)
+  public void onAdblockSettingsChanged(final BaseSettingsFragment fragment)
   {
     Timber.d("AdblockHelper setting changed:\n%s" , fragment.getSettings().toString());
   }
 
   @Override
-  public void onAllowlistedDomainsClicked(GeneralSettingsFragment fragment)
+  public void onAllowlistedDomainsClicked(final GeneralSettingsFragment fragment)
   {
     insertAllowlistedFragment();
   }
 
   @Override
-  public boolean isValidDomain(AllowlistedDomainsSettingsFragment fragment,
-                               String domain,
-                               AdblockSettings settings)
+  public boolean isValidDomain(final AllowlistedDomainsSettingsFragment fragment,
+                               final String domain,
+                               final AdblockSettings settings)
   {
     // show error here if domain is invalid
     return domain != null && domain.length() > 0;

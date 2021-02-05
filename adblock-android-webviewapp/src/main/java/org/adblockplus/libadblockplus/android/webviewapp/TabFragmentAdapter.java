@@ -29,12 +29,12 @@ public class TabFragmentAdapter extends FragmentPagerAdapter
 
   public TabFragmentAdapter(final FragmentManager fragmentManager, final List<TabFragment> fragments)
   {
-    super(fragmentManager);
+    super(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
     this.fragments = fragments;
   }
 
   @Override
-  public Fragment getItem(int position)
+  public Fragment getItem(final int position)
   {
     return fragments.get(position);
   }
@@ -46,7 +46,7 @@ public class TabFragmentAdapter extends FragmentPagerAdapter
   }
 
   @Override
-  public CharSequence getPageTitle(int position)
+  public CharSequence getPageTitle(final int position)
   {
     return fragments.get(position).getTitle();
   }

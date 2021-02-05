@@ -31,7 +31,7 @@ public class Application extends android.app.Application
     new SingleInstanceEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void onAdblockEngineCreated(AdblockEngine engine)
+    public void onAdblockEngineCreated(final AdblockEngine engine)
     {
       // put your Adblock FilterEngine init here
     }
@@ -43,7 +43,7 @@ public class Application extends android.app.Application
     @Override
     public void onAdblockEngineDisposed()
     {
-      // put your Adblock FilterEngine deinit here
+      // put your Adblock FilterEngine de-initialization here
     }
   };
 
