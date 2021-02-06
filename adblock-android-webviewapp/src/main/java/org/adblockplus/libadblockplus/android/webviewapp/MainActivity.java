@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   private static final String SAVED_RESTORE_TABS_CHECK = "saved_tabs_checkbox";
   private static final String SAVED_RESTORE_TABS_COUNT = "saved_tabs_count";
   private static final String SAVED_IFRAMES_EH = "saved_iframes_eh";
-  private final String testPageSubscriptionUrl =
+  private static final String testPageSubscriptionUrl =
           "https://dp-testpages.adblockplus.org/en/abp-testcase-subscription.txt";
   private Button addTab;
   private Button settings;
@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   }
 
   @Override
-  public void onTrimMemory(int level)
+  public void onTrimMemory(final int level)
   {
     // if a system demands more memory, call the GC of the adblock engine to release some
     // this can free up to ~60-70% of memory occupied by the engine
@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     AdblockHelper.get().getProvider().retain(true);
     final FilterEngine fe = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
     final Subscription subscription = fe.getSubscription(testPageSubscriptionUrl);
-    String message = "error";
+    String message;
     if (subscription.isListed())
     {
       if (subscription.isDisabled())
