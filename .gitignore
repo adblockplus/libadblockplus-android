@@ -12,3 +12,4 @@ upload.py
 !.gitlab-ci.yml
 !.gitignore
 !.pre-commit-config.yaml
+/adblock-android-settings/src/main/res/raw/subscriptions.json

@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.android.settings;
 
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 
 import org.adblockplus.libadblockplus.android.ConnectionType;
@@ -32,8 +33,9 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
 {
   private static final String SETTINGS_ENABLED_KEY = "enabled";
   private static final String SETTINGS_AA_ENABLED_KEY = "aa_enabled";
-  private static final String SETTINGS_SUBSCRIPTIONS_KEY = "subscriptions";
-  private static final String SETTINGS_SUBSCRIPTION_KEY = "subscription";
+  private static final String SETTINGS_SELECTED_SUBSCRIPTION_ITEM_KEY = "subscription";
+  private static final String SETTINGS_AVAILABLE_SUBSCRIPTION_ITEM_KEY = "availableSubscription";
+  private static final String SETTINGS_SUBSCRIPTION_COUNT_KEY_SUFFIX = "s";
   private static final String SETTINGS_SUBSCRIPTION_URL_KEY = "url";
   private static final String SETTINGS_SUBSCRIPTION_PREFIXES_KEY = "prefixes";
   private static final String SETTINGS_SUBSCRIPTION_TITLE_KEY = "title";
@@ -41,10 +43,10 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
   private static final String SETTINGS_AL_DOMAIN_KEY = "domain";
   private static final String SETTINGS_ALLOWED_CONNECTION_TYPE_KEY = "allowed_connection_type";
 
-  private SharedPreferences prefs;
+  private final SharedPreferences prefs;
   private boolean commit = true;
 
-  public SharedPrefsStorage(SharedPreferences prefs)
+  public SharedPrefsStorage(final SharedPreferences prefs)
   {
     this.prefs = prefs;
   }
@@ -59,7 +61,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
    *
    * @param commit `true` to commit, `false`
    */
-  public void setCommit(boolean commit)
+  public void setCommit(final boolean commit)
   {
     this.commit = commit;
   }
@@ -73,87 +75,101 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       return null;
     }
 
-    AdblockSettings settings = new AdblockSettings();
+    final AdblockSettings settings = new AdblockSettings();
     settings.setAdblockEnabled(prefs.getBoolean(SETTINGS_ENABLED_KEY, true));
     settings.setAcceptableAdsEnabled(prefs.getBoolean(SETTINGS_AA_ENABLED_KEY, true));
-    String connectionType = prefs.getString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY, null);
+    final String connectionType = prefs.getString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY, null);
     settings.setAllowedConnectionType(ConnectionType.findByValue(connectionType));
 
-    loadSubscriptions(settings);
+    List<Subscription> subscriptions = loadSubscriptions(SETTINGS_SELECTED_SUBSCRIPTION_ITEM_KEY);
+    if (subscriptions != null)
+    {
+      settings.setSelectedSubscriptions(subscriptions);
+    }
+    subscriptions = loadSubscriptions(SETTINGS_AVAILABLE_SUBSCRIPTION_ITEM_KEY);
+    if (subscriptions != null)
+    {
+      settings.setAvailableSubscriptions(subscriptions);
+    }
+
     loadAllowlistedDomains(settings);
 
     return settings;
   }
 
-  private void loadAllowlistedDomains(AdblockSettings settings)
+  private void loadAllowlistedDomains(final AdblockSettings settings)
   {
     if (prefs.contains(SETTINGS_AL_DOMAINS_KEY))
     {
       // count
-      int allowlistedDomainsCount = prefs.getInt(SETTINGS_AL_DOMAINS_KEY, 0);
+      final int allowlistedDomainsCount = prefs.getInt(SETTINGS_AL_DOMAINS_KEY, 0);
 
       // each domain
-      List<String> allowlistedDomains = new LinkedList<>();
+      final List<String> allowlistedDomains = new LinkedList<>();
       for (int i = 0; i < allowlistedDomainsCount; i++)
       {
-        String allowlistedDomain = prefs.getString(getArrayItemKey(i, SETTINGS_AL_DOMAIN_KEY), "");
+        final String allowlistedDomain = prefs.getString(getArrayItemKey(i, SETTINGS_AL_DOMAIN_KEY), "");
         allowlistedDomains.add(allowlistedDomain);
       }
       settings.setAllowlistedDomains(allowlistedDomains);
     }
   }
 
-  private void loadSubscriptions(AdblockSettings settings)
+  private List<Subscription> loadSubscriptions(final String subscriptionItemKey)
   {
-    if (prefs.contains(SETTINGS_SUBSCRIPTIONS_KEY))
+    if (!prefs.contains(getCountKey(subscriptionItemKey)))
     {
-      // count
-      int subscriptionsCount = prefs.getInt(SETTINGS_SUBSCRIPTIONS_KEY, 0);
-
-      // each subscription
-      List<Subscription> subscriptions = new LinkedList<>();
-      for (int i = 0; i < subscriptionsCount; i++)
-      {
-        subscriptions.add(new Subscription(
-            prefs.getString(getSubscriptionTitleKey(i), ""),
-            prefs.getString(getSubscriptionURLKey(i), ""),
-            prefs.getString(getSubscriptionPrefixesKey(i), ""),"", ""));
-      }
-      settings.setSubscriptions(subscriptions);
+      return null;
     }
+    final int subscriptionsCount = prefs.getInt(getCountKey(subscriptionItemKey), 0);
+    final List<Subscription> subscriptions = new LinkedList<>();
+    for (int i = 0; i < subscriptionsCount; i++)
+    {
+      subscriptions.add(new Subscription(
+        prefs.getString(getSubscriptionTitleKey(subscriptionItemKey, i), ""),
+        prefs.getString(getSubscriptionURLKey(subscriptionItemKey, i), ""),
+        prefs.getString(getSubscriptionPrefixesKey(subscriptionItemKey, i), ""), "", ""));
+    }
+    return subscriptions;
   }
 
-  private String getArrayItemKey(int index, String entity)
+  private static String getArrayItemKey(final int index, final String entity)
   {
     // f.e. "domain0"
     return entity + index;
   }
 
-  private String getArrayItemKey(int index, String entity, String field)
+  private static String getCountKey(final String subscriptionItemKey)
+  {
+    return subscriptionItemKey + SETTINGS_SUBSCRIPTION_COUNT_KEY_SUFFIX;
+  }
+
+  private String getSubscriptionItemKey(final String subscriptionKey, final int index, final String field)
   {
     // f.e. `subscription0.field`
-    return getArrayItemKey(index, entity) + "." + field;
+    return getArrayItemKey(index, subscriptionKey) + "." + field;
   }
 
-  private String getSubscriptionTitleKey(int index)
+  private String getSubscriptionTitleKey(final String subscriptionKey, final int index)
   {
-    return getArrayItemKey(index, SETTINGS_SUBSCRIPTION_KEY, SETTINGS_SUBSCRIPTION_TITLE_KEY);
+    return getSubscriptionItemKey(subscriptionKey, index, SETTINGS_SUBSCRIPTION_TITLE_KEY);
   }
 
-  private String getSubscriptionURLKey(int index)
+  private String getSubscriptionURLKey(final String subscriptionKey, final int index)
   {
-    return getArrayItemKey(index, SETTINGS_SUBSCRIPTION_KEY, SETTINGS_SUBSCRIPTION_URL_KEY);
+    return getSubscriptionItemKey(subscriptionKey, index, SETTINGS_SUBSCRIPTION_URL_KEY);
   }
 
-  private String getSubscriptionPrefixesKey(int index)
+  private String getSubscriptionPrefixesKey(final String subscriptionKey, final int index)
   {
-    return getArrayItemKey(index, SETTINGS_SUBSCRIPTION_KEY, SETTINGS_SUBSCRIPTION_PREFIXES_KEY);
+    return getSubscriptionItemKey(subscriptionKey, index, SETTINGS_SUBSCRIPTION_PREFIXES_KEY);
   }
 
+  @SuppressLint("ApplySharedPref")
   @Override
-  public void save(AdblockSettings settings)
+  public void save(final AdblockSettings settings)
   {
-    SharedPreferences.Editor editor = prefs
+    final SharedPreferences.Editor editor = prefs
       .edit()
       .clear()
       .putBoolean(SETTINGS_ENABLED_KEY, settings.isAdblockEnabled())
@@ -164,7 +180,8 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       editor.putString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY, settings.getAllowedConnectionType().getValue());
     }
 
-    saveSubscriptions(settings, editor);
+    saveSubscriptions(editor, settings.getSelectedSubscriptions(), SETTINGS_SELECTED_SUBSCRIPTION_ITEM_KEY);
+    saveSubscriptions(editor, settings.getAvailableSubscriptions(), SETTINGS_AVAILABLE_SUBSCRIPTION_ITEM_KEY);
     saveAllowlistedDomains(settings, editor);
 
     if (commit)
@@ -178,7 +195,7 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     }
   }
 
-  private void saveAllowlistedDomains(AdblockSettings settings, SharedPreferences.Editor editor)
+  private void saveAllowlistedDomains(final AdblockSettings settings, final SharedPreferences.Editor editor)
   {
     if (settings.getAllowlistedDomains() != null)
     {
@@ -188,28 +205,29 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       // each domain
       for (int i = 0; i < settings.getAllowlistedDomains().size(); i++)
       {
-        String eachDomain = settings.getAllowlistedDomains().get(i);
+        final String eachDomain = settings.getAllowlistedDomains().get(i);
         editor.putString(getArrayItemKey(i, SETTINGS_AL_DOMAIN_KEY), eachDomain);
       }
     }
   }
 
-  private void saveSubscriptions(AdblockSettings settings, SharedPreferences.Editor editor)
+  private void saveSubscriptions(final SharedPreferences.Editor editor, final List<Subscription> subscriptions,
+                                 final String subscriptionItemKey)
   {
-    if (settings.getSubscriptions() != null)
+    if (subscriptions != null)
     {
       // count
-      editor.putInt(SETTINGS_SUBSCRIPTIONS_KEY, settings.getSubscriptions().size());
+      editor.putInt(getCountKey(subscriptionItemKey), subscriptions.size());
 
       // each subscription
-      for (int i = 0; i < settings.getSubscriptions().size(); i++)
+      for (int i = 0; i < subscriptions.size(); i++)
       {
-        Subscription eachSubscription = settings.getSubscriptions().get(i);
+        final Subscription eachSubscription = subscriptions.get(i);
 
         // warning: saving `title`, `url` and `prefixes` fields only
-        editor.putString(getSubscriptionTitleKey(i), eachSubscription.title);
-        editor.putString(getSubscriptionURLKey(i), eachSubscription.url);
-        editor.putString(getSubscriptionPrefixesKey(i), eachSubscription.prefixes);
+        editor.putString(getSubscriptionTitleKey(subscriptionItemKey, i), eachSubscription.title);
+        editor.putString(getSubscriptionURLKey(subscriptionItemKey, i), eachSubscription.url);
+        editor.putString(getSubscriptionPrefixesKey(subscriptionItemKey, i), eachSubscription.prefixes);
       }
     }
   }

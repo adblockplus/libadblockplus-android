@@ -21,6 +21,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SubscriptionsManager;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
@@ -29,6 +30,8 @@ import org.adblockplus.libadblockplus.android.settings.AdblockSettingsStorage;
 import org.adblockplus.libadblockplus.android.settings.AllowlistedDomainsSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.BaseSettingsFragment;
 import org.adblockplus.libadblockplus.android.settings.GeneralSettingsFragment;
+
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import timber.log.Timber;
 
@@ -91,42 +94,39 @@ public class SettingsActivity
     return AdblockHelper.get().getStorage();
   }
 
-  private ProgressFragment progressFragment = null;
-
   @Override
-  public void onLoadStarted()
+  public AdblockEngine lockEngine()
   {
-    Timber.d("Loading started");
-    checkAndShowProgress();
-  }
+    final AdblockEngineProvider adblockEngineProvider = getAdblockEngineProvider();
+    final ReentrantReadWriteLock.ReadLock lock = adblockEngineProvider.getReadEngineLock();
+    final boolean locked = lock.tryLock();
 
-  private void checkAndShowProgress()
-  {
-    if (progressFragment != null)
+    if (!locked)
     {
-      return;
+      return null;
     }
 
-    progressFragment = new ProgressFragment();
-    progressFragment.show(getSupportFragmentManager(), "progress");
-  }
-
-  @Override
-  public void onLoadFinished()
-  {
-    Timber.d("Loading finished");
-    checkAndHideProgress();
-  }
-
-  private void checkAndHideProgress()
-  {
-    if (progressFragment == null)
+    final AdblockEngine adblockEngine = adblockEngineProvider.getEngine();
+    if (adblockEngine != null)
     {
-      return;
+      return adblockEngine;
     }
 
-    progressFragment.dismissAllowingStateLoss();
-    progressFragment = null;
+    if (locked)
+    {
+      lock.unlock();
+    }
+    return null;
+  }
+
+  /**
+   * Should only be called if prior call to lockEngine returned a non-null reference
+   * If the current thread does not hold this lock then IllegalMonitorStateException is thrown.
+   */
+  @Override
+  public void unlockEngine()
+  {
+    getAdblockEngineProvider().getReadEngineLock().unlock();
   }
 
   // listener
@@ -158,6 +158,5 @@ public class SettingsActivity
     super.onDestroy();
     subscriptionsManager.dispose();
     AdblockHelper.get().getProvider().release();
-    checkAndHideProgress();
   }
 }

@@ -169,7 +169,7 @@ public class GeneralSettingsFragment
 
   private void checkReadyAndInit()
   {
-    if (engine != null && settings != null)
+    if (settings != null)
     {
       initViewModel();
     }
@@ -181,7 +181,6 @@ public class GeneralSettingsFragment
         new SettingsViewModelFactory(
             getActivity().getApplication(),
             settings,
-            engine,
             provider)).get(SettingsViewModel.class);
 
     initFilterLists();
