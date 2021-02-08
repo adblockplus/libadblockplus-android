@@ -4,6 +4,20 @@ All notable changes to Adblock Android SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] - 2021-02-09 - [!482](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/482)
+### Fixed
+ - Fixed user counting [!475](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/475)
+ - Navigation performance gets significaly slower with 10+ tabs opened [!471](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/471)
+ - Preloaded subscriptions feature does not work (in most cases) [!442](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/442)
+
+### Changed
+ - Updated FilterEngine.Matches() API after libabp update from DP-1806 [!472](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/472)
+ - Passing a document url instead of parent for genericblock rule [!447](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/447)
+ - Added support for other content types in HttpHeaderSitekeyExtractor [!468](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/468)
+
+### Added
+ - Adblock settings decoupled from FilterEngine and settings module [!470](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/470)
+
 ## [4.2.0] - 2021-01-15 - [!452](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/452)
 ### Fixed
  - Fixed race condition [!431](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/431)
