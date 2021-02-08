@@ -4,12 +4,22 @@ crowdin.yaml
 **/build
 **/local.properties
 **/buildtools
-.idea
-*.iml
 upload.py
 .DS_Store
-.*
 !.gitlab-ci.yml
 !.gitignore
 !.pre-commit-config.yaml
 /adblock-android-settings/src/main/res/raw/subscriptions.json
+
+# IDEA/Android Studio ignores
+*.iml
+*.ipr
+*.iws
+.gradle
+/.idea/*
+
+# IDEA/Android Studio Ignore exceptions
+!/.idea/vcs.xml
+!/.idea/inspectionProfiles/
+!/.idea/codeStyles/
+!/.idea/copyright/
