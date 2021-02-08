@@ -17,14 +17,36 @@
 
 package org.adblockplus.libadblockplus.android.settings;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 
+import org.adblockplus.libadblockplus.android.Subscription;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.Set;
+
+import static android.text.TextUtils.isEmpty;
 
 public class Utils
 {
+  public static final String SUBSCRIPTION_FIELD_URL = "url";
+  public static final String SUBSCRIPTION_FIELD_LANGUAGES = "languages";
+  public static final String SUBSCRIPTION_FIELD_TITLE = "title";
+  @SuppressLint("ConstantLocale") // This is used only on fresh start
+  public static final String LOCALE = Locale.getDefault().toString().replace('_', '-')
+    .replaceAll("^iw-", "he-");
+
   public static Map<String, String> getLocaleToTitleMap(final Context context)
   {
     final Resources resources = context.getResources();
@@ -41,4 +63,157 @@ public class Utils
     }
     return localeToTitle;
   }
+
+  public static String parseLanguages(final JSONArray languagesArray)
+  {
+    if (languagesArray == null || languagesArray.length() < 1)
+    {
+      return "";
+    }
+    final StringBuilder sb = new StringBuilder();
+    String language;
+    for (int i = 0; i < languagesArray.length(); i++)
+    {
+      try
+      {
+        language = languagesArray.getString(i);
+      }
+      catch (final JSONException e)
+      {
+        return "";
+      }
+      sb.append(sb.length() == 0 ? language : "," + language);
+    }
+    return sb.toString();
+  }
+
+  public static Subscription parseSubscription(final JSONObject jsonObject)
+  {
+    final Subscription subscription = new Subscription();
+
+    subscription.title = jsonObject.optString(SUBSCRIPTION_FIELD_TITLE);
+    subscription.url = jsonObject.optString(SUBSCRIPTION_FIELD_URL);
+    subscription.prefixes = parseLanguages(jsonObject.optJSONArray(SUBSCRIPTION_FIELD_LANGUAGES));
+
+    if (isEmpty(subscription.title) || isEmpty(subscription.url))
+    {
+      return null;
+    }
+
+    return subscription;
+  }
+
+  public static List<Subscription> getSubscriptionsFromResourceStream(final InputStream stream)
+  {
+    final List<Subscription> subscriptions = new LinkedList<>();
+
+    if (stream == null)
+    {
+      return subscriptions;
+    }
+
+    final Scanner scanner = new Scanner(stream).useDelimiter("\\A");
+    if (!scanner.hasNext())
+    {
+      return subscriptions;
+    }
+
+    final JSONArray array;
+    try
+    {
+      array = new JSONArray(scanner.next());
+    }
+    catch (final JSONException e)
+    {
+      return subscriptions;
+    }
+
+    for (int i = 0; i < array.length(); i++)
+    {
+      final Subscription subscription;
+      try
+      {
+        subscription = parseSubscription(array.getJSONObject(i));
+      }
+      catch (final JSONException e)
+      {
+        continue;
+      }
+      if (subscription != null)
+      {
+        subscriptions.add(subscription);
+      }
+    }
+    return subscriptions;
+  }
+
+  // The following two methods just copy the ones from the Core: libadblockplus\\lib\\utils.js
+
+  public static String checkLocaleLanguageMatch(final String languages)
+  {
+    final String[] languageList = languages.split(",");
+    for (final String language : languageList)
+    {
+      if (LOCALE.matches("^" + language + "\\b.+"))
+      {
+        return language;
+      }
+    }
+    return null;
+  }
+
+  public static Subscription chooseDefaultSubscription(final List<Subscription> subscriptions)
+  {
+    Subscription selectedSubscription = null;
+    String selectedLanguage = null;
+    int matchCount = 0;
+    final Random rand = new Random();
+    for (Subscription subscription : subscriptions)
+    {
+      if (selectedSubscription == null)
+      {
+        selectedSubscription = subscription;
+      }
+      final String language = checkLocaleLanguageMatch(subscription.prefixes);
+      if (language == null)
+      {
+        continue;
+      }
+      if (selectedLanguage == null || selectedLanguage.length() < language.length())
+      {
+        selectedSubscription = subscription;
+        selectedLanguage = language;
+        matchCount = 1;
+      }
+      else if (selectedLanguage.length() == language.length())
+      {
+        matchCount++;
+        // If multiple items have a matching language of the same length,
+        // Select one of the items randomly, probability should be the same
+        // for all items. So we replace the previous match here with
+        // probability 1/N (N being the number of matches).
+        if (rand.nextInt(matchCount) == 0)
+        {
+          selectedSubscription = subscription;
+          selectedLanguage = language;
+        }
+      }
+    }
+    return selectedSubscription;
+  }
+
+  public static List<Subscription> chooseSelectedSubscriptions(final List<Subscription> subscriptions,
+                                                               final Set<String> selectedTitles)
+  {
+    final List<Subscription> selectedSubscriptions = new LinkedList<>();
+    for (final Subscription eachSubscription : subscriptions)
+    {
+      if (selectedTitles.contains(eachSubscription.url))
+      {
+        selectedSubscriptions.add(eachSubscription);
+      }
+    }
+    return selectedSubscriptions;
+  }
+
 }

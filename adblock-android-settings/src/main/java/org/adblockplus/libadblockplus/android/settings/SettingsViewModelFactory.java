@@ -23,23 +23,18 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
-
 public class SettingsViewModelFactory implements ViewModelProvider.Factory
 {
   final private Application application;
   final private AdblockSettings settings;
-  final private AdblockEngine engine;
   final private BaseSettingsFragment.Provider provider;
 
   public SettingsViewModelFactory(final Application application,
                                   final AdblockSettings settings,
-                                  final AdblockEngine engine,
                                   final BaseSettingsFragment.Provider provider)
   {
     this.application = application;
     this.settings = settings;
-    this.engine = engine;
     this.provider = provider;
   }
 
@@ -47,6 +42,6 @@ public class SettingsViewModelFactory implements ViewModelProvider.Factory
   @Override
   public <T extends ViewModel> T create(@NonNull final Class<T> modelClass)
   {
-    return (T) new SettingsViewModel(application, settings, engine, provider);
+    return (T) new SettingsViewModel(application, settings, provider);
   }
 }

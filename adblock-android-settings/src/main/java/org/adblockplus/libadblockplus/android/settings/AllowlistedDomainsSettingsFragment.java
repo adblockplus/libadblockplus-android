@@ -111,13 +111,12 @@ public class AllowlistedDomainsSettingsFragment
   private void checkAndInitControls()
   {
     // domain != null is used as just as a way to check that the controls are bound.
-    if (settings != null && provider != null && domain != null && engine != null)
+    if (settings != null && provider != null && domain != null)
     {
       settingsViewModel = new ViewModelProvider(requireActivity(),
           new SettingsViewModelFactory(
               getActivity().getApplication(),
               settings,
-              engine,
               provider)).get(SettingsViewModel.class);
       initControls();
     }
@@ -130,7 +129,7 @@ public class AllowlistedDomainsSettingsFragment
     listView = rootView.findViewById(R.id.fragment_adblock_wl_listview);
   }
 
-  // Holder for listview items
+  // Holder for ListView items
   private class Holder
   {
     final TextView domain;

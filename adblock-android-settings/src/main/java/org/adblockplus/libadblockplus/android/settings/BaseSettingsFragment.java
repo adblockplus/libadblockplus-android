@@ -24,16 +24,13 @@ import androidx.preference.PreferenceFragmentCompat;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import timber.log.Timber;
 
 public abstract class BaseSettingsFragment
-    <ListenerClass extends BaseSettingsFragment.Listener>
-    extends PreferenceFragmentCompat
+  <ListenerClass extends BaseSettingsFragment.Listener>
+  extends PreferenceFragmentCompat
 {
   protected AdblockSettings settings;
-  protected AdblockEngine engine;
   protected Provider provider;
   protected ListenerClass listener;
 
@@ -44,10 +41,12 @@ public abstract class BaseSettingsFragment
   public interface Provider
   {
     AdblockEngineProvider getAdblockEngineProvider();
+
     AdblockSettingsStorage getAdblockSettingsStorage();
 
-    void onLoadStarted();
-    void onLoadFinished();
+    AdblockEngine lockEngine();
+
+    void unlockEngine();
   }
 
   /**
@@ -64,14 +63,14 @@ public abstract class BaseSettingsFragment
     void onAdblockSettingsChanged(BaseSettingsFragment fragment);
   }
 
-  protected <T> T castOrThrow(Activity activity, Class<T> clazz)
+  protected <T> T castOrThrow(final Activity activity, final Class<T> clazz)
   {
     if (!(activity instanceof Provider))
     {
       final String message = activity.getClass().getSimpleName()
-          + " should implement "
-          + clazz.getSimpleName()
-          + " interface";
+        + " should implement "
+        + clazz.getSimpleName()
+        + " interface";
 
       Timber.e(message);
       throw new RuntimeException(message);
@@ -83,102 +82,36 @@ public abstract class BaseSettingsFragment
   protected abstract void onSettingsReady();
 
   private final AdblockEngineProvider.EngineCreatedListener engineCreatedListener = new
-      AdblockEngineProvider.EngineCreatedListener()
+    AdblockEngineProvider.EngineCreatedListener()
+    {
+      @Override
+      public void onAdblockEngineCreated(final AdblockEngine engine)
       {
-        @Override
-        public void onAdblockEngineCreated(final AdblockEngine engine)
-        {
-          onAdblockEngineReadyInternal(engine);
-        }
-      };
+        onAdblockEngineReadyInternal();
+      }
+    };
 
   protected abstract void onAdblockEngineReady();
 
-  private void onAdblockEngineReadyInternal(final AdblockEngine engine)
+  private void onAdblockEngineReadyInternal()
   {
-    this.engine = engine;
-    checkLoadingFinished();
     onAdblockEngineReady();
-    initSettings();
-  }
-
-  private void initSettings()
-  {
-    if (settings == null)
-    {
-      settings = AdblockSettingsStorage.getDefaultSettings(engine);
-      checkLoadingFinished();
-      onSettingsReady();
-    }
   }
 
   private void startLoadSettings()
   {
-    provider.onLoadStarted();
     settings = provider.getAdblockSettingsStorage().load();
     if (settings == null)
     {
       // null because it was not saved yet
       Timber.w("No adblock settings, yet. Using default ones from adblock engine");
+      settings = AdblockSettingsStorage.getDefaultSettings(getActivity());
     }
-    else
-    {
-      checkLoadingFinished();
-      onSettingsReady();
-    }
-
-    if (engine == null)
-    {
-      startGetAdblockEngine();
-    }
-    else
-    {
-      initSettings();
-    }
-  }
-
-  private void checkLoadingFinished()
-  {
-    if (settings != null && engine != null)
-    {
-      provider.onLoadFinished();
-    }
-  }
-
-  private void startGetAdblockEngine()
-  {
-    final AdblockEngineProvider adblockEngineProvider = provider.getAdblockEngineProvider();
-    final ReentrantReadWriteLock.ReadLock lock = adblockEngineProvider.getReadEngineLock();
-    final boolean locked = lock.tryLock();
-
-    try
-    {
-      final AdblockEngine adblockEngine = adblockEngineProvider.getEngine();
-      if (adblockEngine != null)
-      {
-        this.onAdblockEngineReadyInternal(adblockEngine);
-      }
-      else
-      {
-        adblockEngineProvider.addEngineCreatedListener(engineCreatedListener);
-      }
-    }
-    finally
-    {
-      if (locked)
-      {
-        lock.unlock();
-      }
-    }
-  }
-
-  private void stopLoadSettings()
-  {
-    provider.getAdblockEngineProvider().removeEngineCreatedListener(engineCreatedListener);
+    onSettingsReady();
   }
 
   @Override
-  public void onAttach(Activity activity)
+  public void onAttach(final Activity activity)
   {
     super.onAttach(activity);
     provider = castOrThrow(activity, Provider.class);
@@ -188,13 +121,14 @@ public abstract class BaseSettingsFragment
   public void onResume()
   {
     super.onResume();
+    provider.getAdblockEngineProvider().addEngineCreatedListener(engineCreatedListener);
     startLoadSettings();
   }
 
   @Override
   public void onPause()
   {
-    stopLoadSettings();
+    provider.getAdblockEngineProvider().removeEngineCreatedListener(engineCreatedListener);
     super.onPause();
   }
 
