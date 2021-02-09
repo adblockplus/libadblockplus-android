@@ -71,7 +71,6 @@ public class WebViewLoadPerformanceUrlUsingJsTest
       "https://www.youtube.com/results?search_query=casey+neistat",
       "https://en.wikipedia.org/wiki/Neodymium_magnet",
       "https://www.imdb.com/title/tt0119654/",
-      "https://cn.hao123.com/",
       "https://www.ndtv.com/world-news/pentagon-readies-talks-with-russia-on-syria-operations-1224527",
       "https://www.zomato.com/lublin/mandragora-lublin",
       "https://dir.indiamart.com/search.mp?ss=iphone&prdsrc=1&mcatid=23429&catid=213",
