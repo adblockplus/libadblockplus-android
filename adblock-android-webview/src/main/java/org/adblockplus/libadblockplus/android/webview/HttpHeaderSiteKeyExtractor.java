@@ -33,7 +33,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -71,8 +70,19 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     private static final String CHARSET = "charset=";
     private static final int CHARSET_LENGTH = CHARSET.length();
 
+    // this is very limited list
+    private static final String[] BINARY_MIMES = new String[]
+    {
+      "image",
+      "application/octet-stream",
+      "video",
+      "font",
+      "audio"
+    };
+
     private String mimeType;
     private String encoding;
+    private boolean isBinary = false;
 
     public String getMimeType()
     {
@@ -84,14 +94,30 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
       return encoding;
     }
 
-    public void setMimeType(String mimeType)
+    public void setMimeType(final String mimeType)
     {
       this.mimeType = mimeType;
     }
 
-    public void setEncoding(String encoding)
+    public void setEncoding(final String encoding)
     {
       this.encoding = encoding;
+    }
+
+    /**
+     * Tells if header's mime type is binary
+     * This detection is far from being precise, it makes a guess based on first part of MIME
+     * (image, video, audio etc)
+     *
+     * It does not take into account all the variety of `application/..` types
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+     * This is preparsed during `parse` phase
+     * @return true if mime type is binary
+     */
+    public boolean isBinary()
+    {
+      return isBinary;
     }
 
     // if `contentType` is null the fields will be `null` too
@@ -115,6 +141,19 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
         else if (contentType.indexOf("/") > 0)
         {
           resourceInfo.mimeType = contentType;
+        }
+
+        if (resourceInfo.mimeType != null)
+        {
+          // we have to loop over the array in order to call startsWith on each
+          for (final String binaryMime : BINARY_MIMES)
+          {
+            if (resourceInfo.mimeType.startsWith(binaryMime))
+            {
+              resourceInfo.isBinary = true;
+              break;
+            }
+          }
         }
       }
 
@@ -143,15 +182,16 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     private static final Pattern NONCE_PATTERN =
         Pattern.compile(String.format("%s[^;]*'(%s[^']+)'.*;", CSP_SCRIPT_SRC_PARAM, NONCE),
             Pattern.CASE_INSENSITIVE);
+    private static final String BODY_CLOSE_TAG = "</body>";
 
     private boolean containsValidUnsafeInline(final String cspHeaderValue)
     {
-      int scriptSrcIndex = cspHeaderValue.indexOf(CSP_SCRIPT_SRC_PARAM);
+      final int scriptSrcIndex = cspHeaderValue.indexOf(CSP_SCRIPT_SRC_PARAM);
       if (scriptSrcIndex < 0)
       {
         return false;
       }
-      int unsafeInlineIndex = cspHeaderValue.indexOf(CSP_UNSAFE_INLINE, scriptSrcIndex);
+      final int unsafeInlineIndex = cspHeaderValue.indexOf(CSP_UNSAFE_INLINE, scriptSrcIndex);
       if (unsafeInlineIndex < 0)
       {
         return false;
@@ -208,8 +248,7 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
     {
       final Scanner scanner = new Scanner(inputStream, WebResponseResult.RESPONSE_CHARSET_NAME)
           .useDelimiter("\\A");
-      final String htmlString = scanner.hasNext() ? scanner.next() : "";
-      return htmlString;
+      return scanner.hasNext() ? scanner.next() : "";
     }
 
     // Return true on success or when no-op, false on error
@@ -223,8 +262,8 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
       {
         return true;
       }
-      byte[] rawBytes;
-      String htmlString = "";
+      final byte[] rawBytes;
+      String htmlString;
       try
       {
         rawBytes = Utils.toByteArray(response.getInputStream());
@@ -261,7 +300,16 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
               + "</script></body>";
         }
         Timber.d("injectJavascript() adds injectJs for `%s`", requestUrl);
-        htmlString = htmlString.replace("</body>", bodyEndWithScriptTag);
+        // Find and replace last occurrence of BODY_CLOSE_TAG
+        final int foundIndex = htmlString.lastIndexOf(BODY_CLOSE_TAG);
+        if (foundIndex > 0)
+        {
+          final StringBuilder builder = new StringBuilder();
+          builder.append(htmlString.substring(0, foundIndex));
+          builder.append(bodyEndWithScriptTag);
+          builder.append(htmlString.substring(foundIndex + BODY_CLOSE_TAG.length()));
+          htmlString = builder.toString();
+        }
         try
         {
           // Now set up back response input stream
@@ -305,7 +353,7 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
         specify a character encoding. Content without a defined character encoding
         (for example image resources) should pass null for encoding.
        */
-        if (responseInfo.getEncoding() != null && responseInfo.getMimeType().startsWith("image"))
+        if (responseInfo.getEncoding() != null && responseInfo.isBinary())
         {
           Timber.d("Setting responseEncoding to null for contentType == %s",
               responseInfo.getMimeType());
@@ -323,7 +371,6 @@ public class HttpHeaderSiteKeyExtractor extends BaseSiteKeyExtractor
         try
         {
           // we are catching NPE so disabling lint
-          //noinspection ConstantConditions
           contentLength = Integer.parseInt(
               responseHeaders.get(HttpClient.HEADER_CONTENT_LENGTH).trim()
           );

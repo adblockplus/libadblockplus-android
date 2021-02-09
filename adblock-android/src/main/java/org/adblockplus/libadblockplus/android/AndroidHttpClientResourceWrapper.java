@@ -64,6 +64,8 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     "https://easylist-downloads.adblockplus.org/liste_ar+liste_fr+easylist.txt";
   public static final String EASYLIST_FRENCH =
     "https://easylist-downloads.adblockplus.org/liste_fr+easylist.txt";
+  public static final String EASYLIST_POLISH =
+      "https://easylist-downloads.adblockplus.org/easylistpolish+easylist.txt";
   public static final String EASYLIST_ROMANIAN =
     "https://easylist-downloads.adblockplus.org/rolist+easylist.txt";
   public static final String EASYLIST_RUSSIAN =
@@ -130,8 +132,12 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
       }
       else
       {
-        Timber.d("Skip intercepting");
+        Timber.d("Already intercepted request for %s", urlWithoutParams);
       }
+    }
+    else
+    {
+      Timber.d("Skip intercepting request for %s", urlWithoutParams);
     }
 
     // delegate to wrapper request

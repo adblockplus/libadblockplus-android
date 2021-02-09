@@ -48,7 +48,7 @@ public class AdblockSettingsTest
     {
       subscriptions.add(new Subscription("Title" + (i + 1), "URL" + (i + 1), "", "", ""));
     }
-    settings.setSubscriptions(subscriptions);
+    settings.setSelectedSubscriptions(subscriptions);
 
     final List<String> domains = new LinkedList<>();
     for (int i = 0; i < allowlistedDomainsCount; i++)
@@ -66,12 +66,12 @@ public class AdblockSettingsTest
     assertEquals(expected.isAcceptableAdsEnabled(), actual.isAcceptableAdsEnabled());
     assertEquals(expected.getAllowedConnectionType(), actual.getAllowedConnectionType());
 
-    assertNotNull(actual.getSubscriptions());
-    assertEquals(expected.getSubscriptions().size(), actual.getSubscriptions().size());
-    for (int i = 0; i < expected.getSubscriptions().size(); i++)
+    assertNotNull(actual.getSelectedSubscriptions());
+    assertEquals(expected.getSelectedSubscriptions().size(), actual.getSelectedSubscriptions().size());
+    for (int i = 0; i < expected.getSelectedSubscriptions().size(); i++)
     {
-      assertEquals(expected.getSubscriptions().get(i).title, actual.getSubscriptions().get(i).title);
-      assertEquals(expected.getSubscriptions().get(i).url, actual.getSubscriptions().get(i).url);
+      assertEquals(expected.getSelectedSubscriptions().get(i).title, actual.getSelectedSubscriptions().get(i).title);
+      assertEquals(expected.getSelectedSubscriptions().get(i).url, actual.getSelectedSubscriptions().get(i).url);
     }
 
     assertNotNull(actual.getAllowlistedDomains());
@@ -122,7 +122,7 @@ public class AdblockSettingsTest
     for (int i = 0; i < 3; i++)
     {
       final AdblockSettings settings = buildModel(i, 1);
-      assertEquals(i, settings.getSubscriptions().size());
+      assertEquals(i, settings.getSelectedSubscriptions().size());
     }
   }
 

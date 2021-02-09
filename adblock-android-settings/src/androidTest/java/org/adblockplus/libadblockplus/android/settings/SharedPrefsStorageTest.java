@@ -73,7 +73,7 @@ public class SharedPrefsStorageTest
       subscription.url = "URL" + (i + 1);
       subscriptions.add(subscription);
     }
-    settings.setSubscriptions(subscriptions);
+    settings.setSelectedSubscriptions(subscriptions);
 
     final List<String> domains = new LinkedList<>();
     for (int i = 0; i < allowlistedDomainsCount; i++)
@@ -91,12 +91,12 @@ public class SharedPrefsStorageTest
     assertEquals(expected.isAcceptableAdsEnabled(), actual.isAcceptableAdsEnabled());
     assertEquals(expected.getAllowedConnectionType(), actual.getAllowedConnectionType());
 
-    assertNotNull(actual.getSubscriptions());
-    assertEquals(expected.getSubscriptions().size(), actual.getSubscriptions().size());
-    for (int i = 0; i < expected.getSubscriptions().size(); i++)
+    assertNotNull(actual.getSelectedSubscriptions());
+    assertEquals(expected.getSelectedSubscriptions().size(), actual.getSelectedSubscriptions().size());
+    for (int i = 0; i < expected.getSelectedSubscriptions().size(); i++)
     {
-      assertEquals(expected.getSubscriptions().get(i).title, actual.getSubscriptions().get(i).title);
-      assertEquals(expected.getSubscriptions().get(i).url, actual.getSubscriptions().get(i).url);
+      assertEquals(expected.getSelectedSubscriptions().get(i).title, actual.getSelectedSubscriptions().get(i).title);
+      assertEquals(expected.getSelectedSubscriptions().get(i).url, actual.getSelectedSubscriptions().get(i).url);
     }
 
     assertNotNull(actual.getAllowlistedDomains());
@@ -177,11 +177,11 @@ public class SharedPrefsStorageTest
   {
     final AdblockSettings savedSettings = new AdblockSettings();
     savedSettings.setAdblockEnabled(true);
-    assertNull(savedSettings.getSubscriptions());
+    assertNull(savedSettings.getSelectedSubscriptions());
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNull(loadedSettings.getSubscriptions());
+    assertNull(loadedSettings.getSelectedSubscriptions());
   }
 
   @Test
@@ -189,12 +189,12 @@ public class SharedPrefsStorageTest
   {
     final AdblockSettings savedSettings = new AdblockSettings();
     savedSettings.setAdblockEnabled(true);
-    savedSettings.setSubscriptions(Collections.<Subscription>emptyList());
+    savedSettings.setSelectedSubscriptions(Collections.<Subscription>emptyList());
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getSubscriptions());
-    assertEquals(0, loadedSettings.getSubscriptions().size());
+    assertNotNull(loadedSettings.getSelectedSubscriptions());
+    assertEquals(0, loadedSettings.getSelectedSubscriptions().size());
   }
 
   @Test
@@ -209,14 +209,14 @@ public class SharedPrefsStorageTest
     savedSubscription.url = "URL";
     subscriptions.add(savedSubscription);
 
-    savedSettings.setSubscriptions(subscriptions);
+    savedSettings.setSelectedSubscriptions(subscriptions);
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getSubscriptions());
-    assertEquals(1, loadedSettings.getSubscriptions().size());
+    assertNotNull(loadedSettings.getSelectedSubscriptions());
+    assertEquals(1, loadedSettings.getSelectedSubscriptions().size());
 
-    final Subscription loadedSubscription = loadedSettings.getSubscriptions().get(0);
+    final Subscription loadedSubscription = loadedSettings.getSelectedSubscriptions().get(0);
     assertEquals(savedSubscription.title, loadedSubscription.title);
     assertEquals(savedSubscription.url, loadedSubscription.url);
 
@@ -235,14 +235,14 @@ public class SharedPrefsStorageTest
     savedSubscription.url = "URL";
     subscriptions.add(savedSubscription);
 
-    savedSettings.setSubscriptions(subscriptions);
+    savedSettings.setSelectedSubscriptions(subscriptions);
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getSubscriptions());
-    assertEquals(1, loadedSettings.getSubscriptions().size());
+    assertNotNull(loadedSettings.getSelectedSubscriptions());
+    assertEquals(1, loadedSettings.getSelectedSubscriptions().size());
 
-    final Subscription loadedSubscription = loadedSettings.getSubscriptions().get(0);
+    final Subscription loadedSubscription = loadedSettings.getSelectedSubscriptions().get(0);
     assertEquals(savedSubscription.title, loadedSubscription.title);
     assertEquals(savedSubscription.url, loadedSubscription.url);
 
@@ -261,14 +261,14 @@ public class SharedPrefsStorageTest
     savedSubscription.url = "http://почта.рф";  // non-English characters
     subscriptions.add(savedSubscription);
 
-    savedSettings.setSubscriptions(subscriptions);
+    savedSettings.setSelectedSubscriptions(subscriptions);
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getSubscriptions());
-    assertEquals(1, loadedSettings.getSubscriptions().size());
+    assertNotNull(loadedSettings.getSelectedSubscriptions());
+    assertEquals(1, loadedSettings.getSelectedSubscriptions().size());
 
-    final Subscription loadedSubscription = loadedSettings.getSubscriptions().get(0);
+    final Subscription loadedSubscription = loadedSettings.getSelectedSubscriptions().get(0);
     assertEquals(savedSubscription.title, loadedSubscription.title);
     assertEquals(savedSubscription.url, loadedSubscription.url);
 
@@ -292,18 +292,53 @@ public class SharedPrefsStorageTest
     savedSubscription2.url = "URL2";
     subscriptions.add(savedSubscription2);
 
-    savedSettings.setSubscriptions(subscriptions);
+    savedSettings.setSelectedSubscriptions(subscriptions);
     storage.save(savedSettings);
 
     final AdblockSettings loadedSettings = storage.load();
-    assertNotNull(loadedSettings.getSubscriptions());
-    assertEquals(2, loadedSettings.getSubscriptions().size());
+    assertNotNull(loadedSettings.getSelectedSubscriptions());
+    assertEquals(2, loadedSettings.getSelectedSubscriptions().size());
 
-    final Subscription loadedSubscription1 = loadedSettings.getSubscriptions().get(0);
+    final Subscription loadedSubscription1 = loadedSettings.getSelectedSubscriptions().get(0);
     assertEquals(savedSubscription1.title, loadedSubscription1.title);
     assertEquals(savedSubscription1.url, loadedSubscription1.url);
 
-    final Subscription loadedSubscription2 = loadedSettings.getSubscriptions().get(1);
+    final Subscription loadedSubscription2 = loadedSettings.getSelectedSubscriptions().get(1);
+    assertEquals(savedSubscription2.title, loadedSubscription2.title);
+    assertEquals(savedSubscription2.url, loadedSubscription2.url);
+  }
+
+  @Test
+  public void testSubscriptions_Selected_vs_Available()
+  {
+    AdblockSettings savedSettings = new AdblockSettings();
+    savedSettings.setAdblockEnabled(true);
+
+    final List<Subscription> selectedSubscriptions = new LinkedList<>();
+    final Subscription savedSubscription1 = new Subscription();
+    savedSubscription1.title = "Title1";
+    savedSubscription1.url = "URL1";
+    selectedSubscriptions.add(savedSubscription1);
+
+    final List<Subscription> availableSubscriptions = new LinkedList<>();
+    final Subscription savedSubscription2 = new Subscription();
+    savedSubscription2.title = "Title2";
+    savedSubscription2.url = "URL2";
+    availableSubscriptions.add(savedSubscription2);
+
+    savedSettings.setSelectedSubscriptions(selectedSubscriptions);
+    savedSettings.setAvailableSubscriptions(availableSubscriptions);
+    storage.save(savedSettings);
+
+    final AdblockSettings loadedSettings = storage.load();
+    assertNotNull(loadedSettings.getSelectedSubscriptions());
+    assertEquals(1, loadedSettings.getSelectedSubscriptions().size());
+
+    final Subscription loadedSubscription1 = loadedSettings.getSelectedSubscriptions().get(0);
+    assertEquals(savedSubscription1.title, loadedSubscription1.title);
+    assertEquals(savedSubscription1.url, loadedSubscription1.url);
+
+    final Subscription loadedSubscription2 = loadedSettings.getAvailableSubscriptions().get(0);
     assertEquals(savedSubscription2.title, loadedSubscription2.title);
     assertEquals(savedSubscription2.url, loadedSubscription2.url);
   }

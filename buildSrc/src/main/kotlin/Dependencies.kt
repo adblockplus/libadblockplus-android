@@ -20,6 +20,11 @@ private object Versions {
     }
 }
 
+// externally exposed version of "Versions" class
+object Vers {
+    const val checkstyle = "8.39"
+}
+
 @Suppress("unused")
 object Deps {
     const val androidx_benchmark_gradle_plugin = "androidx.benchmark:benchmark-gradle-plugin:${Versions.AndroidX.benchmark}"

@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.android.webviewapp;
 
+import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -43,13 +44,13 @@ import java.util.List;
 
 import timber.log.Timber;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity implements ComponentCallbacks2
 {
   private static final String SAVED_SETTINGS = "saved_settings";
   private static final String SAVED_RESTORE_TABS_CHECK = "saved_tabs_checkbox";
   private static final String SAVED_RESTORE_TABS_COUNT = "saved_tabs_count";
   private static final String SAVED_IFRAMES_EH = "saved_iframes_eh";
-  private final String testPageSubscriptionUrl =
+  private static final String testPageSubscriptionUrl =
           "https://dp-testpages.adblockplus.org/en/abp-testcase-subscription.txt";
   private Button addTab;
   private Button settings;
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity
   {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-
+    registerComponentCallbacks(this);
     bindControls();
     initControls();
 
@@ -91,6 +92,7 @@ public class MainActivity extends AppCompatActivity
   {
     final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
     sharedPreferences.edit().putBoolean(SAVED_IFRAMES_EH, iframesEhCheckbox.isChecked()).apply();
+    unregisterComponentCallbacks(this);
     super.onDestroy();
   }
 
@@ -163,12 +165,24 @@ public class MainActivity extends AppCompatActivity
     navigateIfUrlIntent(tabs.get(0), intent);
   }
 
+  @Override
+  public void onTrimMemory(final int level)
+  {
+    // if a system demands more memory, call the GC of the adblock engine to release some
+    // this can free up to ~60-70% of memory occupied by the engine
+    if (level == TRIM_MEMORY_RUNNING_CRITICAL && AdblockHelper.get().isInit())
+    {
+      AdblockHelper.get().getProvider().getEngine().onLowMemory();
+      Timber.w("Lacking memory! Notifying AdBlock about memory constraint");
+    }
+  }
+
   private void setTestPageSubscription()
   {
     AdblockHelper.get().getProvider().retain(true);
     final FilterEngine fe = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
     final Subscription subscription = fe.getSubscription(testPageSubscriptionUrl);
-    String message = "error";
+    String message;
     if (subscription.isListed())
     {
       if (subscription.isDisabled())

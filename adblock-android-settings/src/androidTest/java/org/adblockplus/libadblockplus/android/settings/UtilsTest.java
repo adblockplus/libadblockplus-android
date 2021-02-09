@@ -19,14 +19,30 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.content.Context;
 
+import org.adblockplus.libadblockplus.android.Subscription;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import static org.adblockplus.libadblockplus.android.settings.Utils.LOCALE;
+import static org.adblockplus.libadblockplus.android.settings.Utils.SUBSCRIPTION_FIELD_LANGUAGES;
+import static org.adblockplus.libadblockplus.android.settings.Utils.SUBSCRIPTION_FIELD_TITLE;
+import static org.adblockplus.libadblockplus.android.settings.Utils.SUBSCRIPTION_FIELD_URL;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class UtilsTest
 {
@@ -40,4 +56,103 @@ public class UtilsTest
     final String actualEnglishTitle = localeToTitle.get("en");
     assertTrue("English".equalsIgnoreCase(actualEnglishTitle));
   }
+
+  @Test
+  public void testParseLanguages()
+  {
+    assertEquals("", Utils.parseLanguages(null));
+
+    final JSONArray emptyArray = new JSONArray();
+    assertEquals("", Utils.parseLanguages(emptyArray));
+
+    try
+    {
+      assertEquals("", Utils.parseLanguages(new JSONArray("[]")));
+      assertEquals("en", Utils.parseLanguages(new JSONArray("[\"en\"]")));
+      assertEquals("en,fr", Utils.parseLanguages(new JSONArray("[\"en\",\"fr\"]")));
+    }
+    catch (final org.json.JSONException e)
+    {
+      fail();
+    }
+  }
+
+  @Test
+  public void testParseSubscription()
+  {
+    assertNull(Utils.parseSubscription(new JSONObject()));
+    try
+    {
+      String json = "{\"" + SUBSCRIPTION_FIELD_TITLE + "\":\"" + SUBSCRIPTION_FIELD_TITLE + "\"," +
+          "\"" + SUBSCRIPTION_FIELD_URL + "\":\"" + SUBSCRIPTION_FIELD_URL + "\"," +
+          "\"" + SUBSCRIPTION_FIELD_LANGUAGES + "\":[\"en\",\"fr\"]}";
+      assertNotNull(Utils.parseSubscription(new JSONObject(json)));
+      assertEquals(SUBSCRIPTION_FIELD_TITLE, Utils.parseSubscription(new JSONObject(json)).title);
+      assertEquals(SUBSCRIPTION_FIELD_URL, Utils.parseSubscription(new JSONObject(json)).url);
+      assertEquals("en,fr", Utils.parseSubscription(new JSONObject(json)).prefixes);
+
+      json = "{\"" + SUBSCRIPTION_FIELD_URL + "\":\"" + SUBSCRIPTION_FIELD_URL + "\"," +
+          "\"" + SUBSCRIPTION_FIELD_LANGUAGES + "\":[\"en\"]}";
+      assertNull(Utils.parseSubscription(new JSONObject(json)));
+      json = "{\"" + SUBSCRIPTION_FIELD_TITLE + "\":\"" + SUBSCRIPTION_FIELD_TITLE + "\"," +
+          "\"" + SUBSCRIPTION_FIELD_LANGUAGES + "\":[\"en\"]}";
+      assertNull(Utils.parseSubscription(new JSONObject(json)));
+    }
+    catch (final org.json.JSONException e)
+    {
+      fail();
+    }
+  }
+
+  @SuppressWarnings("SpellCheckingInspection")
+  @Test
+  public void testGetSubscriptionsFromResourceStream()
+  {
+    assertEquals(Utils.getSubscriptionsFromResourceStream(null), new LinkedList<Subscription>());
+
+    InputStream stream = new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8));
+    assertEquals(Utils.getSubscriptionsFromResourceStream(stream), new LinkedList<Subscription>());
+
+    stream = new ByteArrayInputStream(("[\n" +
+        "  {\n" +
+        "    \"type\": \"ads\",\n" +
+        "    \"languages\": [\n" +
+        "      \"id\",\n" +
+        "      \"ms\"\n" +
+        "    ],\n" +
+        "    \"title\": \"ABPindo+EasyList\",\n" +
+        "    \"url\": \"https://easylist-downloads.adblockplus.org/abpindo+easylist.txt\",\n" +
+        "    \"homepage\": \"http://abpindo.blogspot.com/\"\n" +
+        "  },\n" +
+        "  {\n" +
+        "    \"type\": \"ads\",\n" +
+        "    \"languages\": [\n" +
+        "      \"vi\"\n" +
+        "    ],\n" +
+        "    \"title\": \"ABPVN List+EasyList\",\n" +
+        "    \"url\": \"https://easylist-downloads.adblockplus.org/abpvn+easylist.txt\",\n" +
+        "    \"homepage\": \"http://abpvn.com/\"\n" +
+        "  }" +
+        "]").getBytes(StandardCharsets.UTF_8));
+    final List<Subscription> subs = Utils.getSubscriptionsFromResourceStream(stream);
+    assertNotEquals(subs, new LinkedList<Subscription>());
+    assertEquals(2, subs.size());
+    Subscription sub = subs.get(0);
+    assertEquals(sub.title, "ABPindo+EasyList");
+    assertEquals(sub.url, "https://easylist-downloads.adblockplus.org/abpindo+easylist.txt");
+    assertEquals(sub.prefixes, "id,ms");
+    sub = subs.get(1);
+    assertEquals(sub.title, "ABPVN List+EasyList");
+    assertEquals(sub.url, "https://easylist-downloads.adblockplus.org/abpvn+easylist.txt");
+    assertEquals(sub.prefixes, "vi");
+  }
+
+  @Test
+  public void testCheckLocaleLanguageMatch()
+  {
+    assertTrue(LOCALE.matches("[a-z]{2}-[A-Z]{2}")); // Could fail for very special cases of locale e.g. ja_JP_JP
+    assertEquals("en", Utils.checkLocaleLanguageMatch("fr,en,de"));
+    assertNull(Utils.checkLocaleLanguageMatch("fr,ru"));
+  }
+
 }

@@ -37,7 +37,6 @@ import org.adblockplus.libadblockplus.android.webview.AdblockWebView
 import org.adblockplus.libadblockplus.android.webview.SiteKeyExtractor
 import org.adblockplus.libadblockplus.android.webview.WebViewActivity
 import org.adblockplus.libadblockplus.android.webview.WebViewTestSuit
-import org.adblockplus.libadblockplus.android.webview.autoDispose
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
 import org.junit.After
 import org.junit.Assert.assertEquals

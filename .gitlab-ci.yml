@@ -1,5 +1,6 @@
 image: "registry.gitlab.com/eyeo/docker/libadblockplus-android_gitlab-runner:202004.1"
 stages:
+  - lint
   - unit_test
   - build_dependencies
   - build
@@ -39,6 +40,25 @@ build_dependencies:
       - libadblockplus/
       - buildtools/
     policy: pull
+
+checkstyle:
+  stage: lint
+  image: registry.gitlab.com/eyeo/docker/gitlab-codequality:21.01
+  script:
+    # Run checkstyle with our config against all java files
+    - checkstyle --exclude=.git -c config/checkstyle/checkstyle.xml -f xml $(find . -name "*.java") -o checkstyle-report.xml || true
+    # Change the paths to relative in the output so gitlab can link them properly
+    - sed -i -e "s|$(pwd)/./||g" checkstyle-report.xml
+    # Convert the checkstyle output to code-climate format so gitlab can parse it
+    - |
+        violations-command-line \
+          -detail-level COMPACT \
+          -code-climate code-climate-report.json \
+          --violations "CHECKSTYLE" "$(pwd)" ".*checkstyle-report.xml" "Checkstyle"
+  artifacts:
+    reports:
+      codequality:
+        - code-climate-report.json
 
 gradle_unit_tests:
   stage: unit_test
@@ -202,6 +222,8 @@ regression_tests:
   variables:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
+    GIT_AUTOMATION_BRANCH: "master"
+    REGRESSION_TAGS: "@j1 @j2"
     # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
   script:
@@ -210,8 +232,36 @@ regression_tests:
     # we are not using submodules, because automation is not a part of repository functionality
     # its rather a standalone set of scripts
     - git clone $GIT_AUTOMATION_REPO automation
-    # `./gradlew cucumber` launches cucumber executor that then launches Appium client
-    - cd automation && ./gradlew cucumber
+    - cd automation
+    - git checkout ${GIT_AUTOMATION_BRANCH:-master}
+    # Launch an instance of gradle for each bunch of tags we want to test
+    - pids=""
+    - |
+      for TAG in $REGRESSION_TAGS
+        do echo Starting job for tag ${TAG}
+        (nohup ./gradlew regressionParallel -P tags=${TAG} &> tag-${TAG}.log ; echo $? > result_${TAG}) &
+        pids="$pids $!"
+      done
+    - wait $pids
+    # Check the exit codes of all processes were 0
+    - |
+      for TAG in $REGRESSION_TAGS
+        do test $(cat result_${TAG}) = 0
+      done
+  after_script:
+    - cd automation
+    - |
+      for TAG in $REGRESSION_TAGS
+        do
+        echo "**********************************"
+        echo "Logs for tests with tag ${TAG}"
+        echo "**********************************"
+        cat tag-${TAG}.log
+      done
+  artifacts:
+    expire_in: 6 months
+    reports:
+      junit: "automation/target/cucumber-reports/*.xml"
 
 # automated functional tests using Appium
 functional_tests:
@@ -240,6 +290,7 @@ benchmark:
     - "android-pi"
   stage: device_tests
   variables:
+    ANDROID_SERIAL: "bd207da1" # Use the ZTE device
     LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
     BENCHMARK_PULL_DIR: "adblock-android-benchmark/build/outputs/connected_android_test_additional_output"
   before_script:
@@ -248,8 +299,8 @@ benchmark:
   script:
     - export BENCHMARK_GSHEETS_TOKEN_FILE_DIR=$(pwd)
     - cp $BENCHMARK_GSHEETS_TOKEN_FILE ./sheets.googleapis.com-python.json
+    - ./tools/memory_benchmark.py --v=True
     - ./tools/performance_benchmark.py
-    - ./tools/memory_benchmark.py
     - ./tools/storage_benchmark.py
     - ./tools/publish_benchmark.py
   after_script:
@@ -299,6 +350,11 @@ web_page_replay:
   stage: publish
   <<: *cache_readonly
   script:
+    - |
+      if [ -z "${BINTRAY_USERNAME}" ] || [ -z "${BINTRAY_KEY}" ] ; then
+        echo "BINTRAY_USERNAME and BINTRAY_KEY need to be set for publishing to work"
+        echo "Make sure this is running on a protected branch/tag to get those variables set"
+      fi
     - |
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
         echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to bintray'

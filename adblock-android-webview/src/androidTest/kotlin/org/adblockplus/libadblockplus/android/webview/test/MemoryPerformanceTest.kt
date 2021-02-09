@@ -23,21 +23,22 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import org.adblockplus.libadblockplus.AppInfo
 import org.adblockplus.libadblockplus.android.AdblockEngine
+import org.adblockplus.libadblockplus.android.AdblockEngineProvider
 import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView
-import org.adblockplus.libadblockplus.AppInfo
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import timber.log.Timber
 import timber.log.Timber.DebugTree
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 const val SLEEP_TIME_MILLI = 100L
 const val COOL_OFF_DURATION_MILLI = 5000L
@@ -50,7 +51,8 @@ class MockStorage : AndroidHttpClientResourceWrapper.Storage {
     }
 }
 
-abstract class BenchmarkMemory() {
+abstract class BenchmarkMemory {
+
     @get:Rule
     val folder = TemporaryFolder()
     val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
@@ -62,11 +64,18 @@ abstract class BenchmarkMemory() {
 
     @LargeTest
     @Test
-    abstract fun benchmark();
+    abstract fun benchmark()
 
-    protected fun stampMemory(): MutableMap<String, String> {
+    protected fun stampMemory(engineProvider: AdblockEngineProvider?): MutableMap<String, String> {
         // calls gc to make results less volatile
         System.gc()
+
+        // calling V8's garbage collector
+        engineProvider?.engine?.onLowMemory()
+
+        // measure; at this point GC usually frees up to ~70% of memory,
+        // also making measurements less volatile, so its suggested to use this measurement
+        // as a reference
         val memInfoVar = Debug.MemoryInfo()
         Debug.getMemoryInfo(memInfoVar)
         // if using android studio profiler the total does not match the total pss,
@@ -125,10 +134,10 @@ abstract class BenchmarkMemory() {
     Benchmarks memory of system webview,
     this is necessary to compare to our or solution.
  */
-class SystemWebViewBenchmark() : BenchmarkMemory() {
+class SystemWebViewBenchmark : BenchmarkMemory() {
     override fun benchmark() {
-        var output = mutableMapOf<String, MutableMap<String, String>>()
-        output["INIT STAGE"] = stampMemory()
+        val output = mutableMapOf<String, MutableMap<String, String>>()
+        output["INIT STAGE"] = stampMemory(null)
 
         val latch = CountDownLatch(1)
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -144,22 +153,31 @@ class SystemWebViewBenchmark() : BenchmarkMemory() {
         }
 
         assertTrue(latch.await(1, TimeUnit.MINUTES))
-        output["FIRST WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory()
+        output["FIRST WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory(null)
         // added last stage the cool off period, looking at some measurements throughout the test
         // it continues to change the memory usage after the loading of webview there is a pattern
         // of a short rise and fall after the 4 seconds mark.
         SystemClock.sleep(COOL_OFF_DURATION_MILLI)
-        output["5 seconds cool off"] = stampMemory()
+        output["5 seconds cool off"] = stampMemory(null)
         writeResultsOnFile(output)
     }
 }
 
 abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
                                              exceptionListResourceID: Int,
-                                             isAAenabled: Boolean = true) :
+                                             isAAenabled: Boolean = true,
+                                             isAdblockEnabled: Boolean = true) :
 
     BenchmarkMemory() {
     val isAAenabled = isAAenabled
+    val isAdblockEnabled = isAdblockEnabled
+
+    init {
+        // if AA is enabled then adblock must be enable
+        if (isAAenabled) {
+            assertTrue(isAdblockEnabled)
+        }
+    }
     // mapped all subscription url to the given subscription list because the runner of the test
     // might run this in a different locale and this would result in a different easylist being
     // downloaded this way any of the subscription list download results in the injection of
@@ -188,7 +206,7 @@ abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
     @LargeTest
     @Test
     override fun benchmark() {
-        var results = benchmarkFilterList(resourcesList, folder.newFolder().absolutePath)
+        val results = benchmarkFilterList(resourcesList, folder.newFolder().absolutePath)
         writeResultsOnFile(results)
     }
 
@@ -205,8 +223,8 @@ abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
         localResources: Map<String, Int>,
         folder: String): Map<String, Map<String, String>> {
 
-        var output = mutableMapOf<String, MutableMap<String, String>>()
-        output["INIT STAGE"] = stampMemory()
+        val output = mutableMapOf<String, MutableMap<String, String>>()
+        output["INIT STAGE"] = stampMemory(null)
 
         val engineFactory = AdblockEngine
             .builder(context, AppInfo.builder().build(), folder)
@@ -216,8 +234,9 @@ abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
         val customEngineProvider = SingleInstanceEngineProvider(engineFactory)
 
         assertTrue(customEngineProvider.retain(false))
-        customEngineProvider.engine.isAcceptableAdsEnabled = isAAenabled;
-        output["ENGINE CREATED"] = stampMemory()
+        customEngineProvider.engine.isAcceptableAdsEnabled = isAAenabled
+        customEngineProvider.engine.isEnabled = isAdblockEnabled
+        output["ENGINE CREATED"] = stampMemory(customEngineProvider)
         assertNotNull(customEngineProvider.engine)
 
         // wait for all subscriptions to be loaded
@@ -227,7 +246,7 @@ abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
             SystemClock.sleep(SLEEP_TIME_MILLI)
         }
 
-        output["FILTER LOADED"] = stampMemory()
+        output["FILTER LOADED"] = stampMemory(customEngineProvider)
         val latch = CountDownLatch(1)
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             val webview = AdblockWebView(context)
@@ -243,12 +262,14 @@ abstract class AdblockWebViewBenchmarkMemory(subscriptionListResourceID: Int,
         }
 
         assertTrue(latch.await(1, TimeUnit.MINUTES))
-        output["FIRST ADBLOCK WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory()
+        output["FIRST ADBLOCK WEBVIEW CREATED AND LOADED ABOUT:BLANK"] = stampMemory(customEngineProvider)
+
         // added last stage the cool off period, looking at some measurements throughout the test
         // it continues to change the memory usage after the loading of webview there is a pattern
         // of a short rise and fall after the 4 seconds mark.
         SystemClock.sleep(COOL_OFF_DURATION_MILLI)
-        output["5 seconds cool off"] = stampMemory()
+        output["5 seconds cool off"] = stampMemory(customEngineProvider)
+
         return output
     }
 }
@@ -284,32 +305,48 @@ class MemoryBenchmark_minDist_min_AA :
  Here we still set the AA subscriptions to either full or min because it even though it is
  off the sdk still downloads the subscriptions and might loaded it, affecting its memory sage
 */
-class MemoryBenchmark_20_full_AA_off :
+class MemoryBenchmark_20_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_20_min_AA_off :
+class MemoryBenchmark_20_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_20, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_50_full_AA_off :
+class MemoryBenchmark_50_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_50_min_AA_off :
+class MemoryBenchmark_50_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_50, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_80_full_AA_off :
+class MemoryBenchmark_80_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_80_min_AA_off :
+class MemoryBenchmark_80_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easy_80, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_full_easy_full_AA_off :
+class MemoryBenchmark_full_easy_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_full_easy_min_AA_off :
+class MemoryBenchmark_full_easy_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min, false)
 
-class MemoryBenchmark_minDist_full_AA_off :
+class MemoryBenchmark_minDist_full_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules, false)
 
-class MemoryBenchmark_minDist_min_AA_off :
+class MemoryBenchmark_minDist_min_AA_AA_disabled :
         AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min, false)
+
+/** With Adblock disable
+The purpose of these benchmarks is to measure bare memory cost of adblockwebview without adblock
+enable. It should come close to systemwebview, also removed some of the partial lists 20, 50, 80.
+*/
+class MemoryBenchmark_full_easy_full_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules, false, false)
+
+class MemoryBenchmark_full_easy_min_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist, R.raw.exceptionrules_min, false, false)
+
+class MemoryBenchmark_minDist_full_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules, false, false)
+
+class MemoryBenchmark_minDist_min_AA_adblock_disabled :
+        AdblockWebViewBenchmarkMemory(R.raw.easylist_min_uc, R.raw.exceptionrules_min, false, false)

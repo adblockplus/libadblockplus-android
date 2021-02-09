@@ -17,6 +17,7 @@
 
 package org.adblockplus.libadblockplus.android;
 
+import org.adblockplus.libadblockplus.AdblockPlusException;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.ServerResponse;
@@ -40,12 +41,12 @@ public class AndroidHttpClientEngineStateWrapper extends HttpClient
   public void request(final HttpRequest request, final Callback callback)
   {
     final AdblockEngine engine = engineRef.get();
+    final ServerResponse response = new ServerResponse();
 
     if (engine != null && !engine.isEnabled())
     {
       Timber.d("Connection refused: engine is disabled");
 
-      final ServerResponse response = new ServerResponse();
       response.setResponseStatus(0);
       response.setStatus(ServerResponse.NsStatus.ERROR_CONNECTION_REFUSED);
 
@@ -53,6 +54,19 @@ public class AndroidHttpClientEngineStateWrapper extends HttpClient
       return;
     }
 
-    httpClient.request(request, callback);
+    try
+    {
+      httpClient.request(request, callback);
+    }
+    catch (final AdblockPlusException e)
+    {
+      Timber.e(e, "WebRequest failed");
+
+      response.setResponseStatus(500);
+      response.setStatus(ServerResponse.NsStatus.ERROR_FAILURE);
+
+      callback.onFinished(response);
+    }
+
   }
 }

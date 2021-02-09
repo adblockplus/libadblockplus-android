@@ -21,6 +21,7 @@ memory_benchmark_adblockwebview_test = ["MemoryBenchmark_full_easy",
     "MemoryBenchmark_minDist"]
 memory_benchmark_system_webview_test = "SystemWebViewBenchmark"
 
+TEST_APK = "./adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk"
 TEST_PACKAGE = "org.adblockplus.libadblockplus.android.webview.test"
 CSV_FOLDER = os.path.join("adblock-android-webview", "build", "outputs", "memory_benchmark")
 DEVICE_BENCHMARK_CSV = "/storage/emulated/0/Download/memory_benchmark.csv"
@@ -32,23 +33,52 @@ FILE_METRICS = "metrics.txt"
 
 # this maps internal classpath of test to viewer name
 # ultimately its what is shown to observer
-testname_to_metrics = {
-    "MemoryBenchmark_full_easy_min_AA"      : "MIN_EASY_MIN_AA_KB",
-    "MemoryBenchmark_full_easy_full_AA"     : "MIN_EASY_MIN_AA_KB",
-    "MemoryBenchmark_minDist_min_AA"        : "FULL_EASY_MIN_AA_KB",
-    "MemoryBenchmark_minDist_full_AA"       : "FULL_EASY_MIN_AA_KB",
-    "MemoryBenchmark_full_easy_min_AA_off"  : "MIN_EASY_MIN_AA_OFF_KB",
-    "MemoryBenchmark_full_easy_full_AA_off" : "MIN_EASY_MIN_AA_OFF_KB",
-    "MemoryBenchmark_minDist_min_AA_off"    : "FULL_EASY_MIN_AA_OFF_KB",
-    "MemoryBenchmark_minDist_full_AA_off"   : "FULL_EASY_MIN_AA_OFF_KB",
-    "SystemWebViewBenchmark"                : "SYSTEM_WEBVIEW_KB"
-}
+# the rest of this variable is filled by fill_map_classpath_metric
+classpath_to_metric = { "SystemWebViewBenchmark" : "SYSTEM_WEBVIEW_KB" }
+# fills the classpath to metric dictionary
+# since it is possible to do so
+def fill_map_classpath_metric():
+    init = "MemoryBenchmark"
+    end = "_KB"
+
+    easylist_subscription_types = {
+        "full_easy" : "FULL_EASY",
+        "minDist" : "MIN_EASY"
+    }
+    aa_subscription_types = {
+        "min_AA" : "MIN_AA",
+        "full_AA" : "FULL_AA"
+    }
+    options = {
+        "" : "",
+        "AA_disabled" : "AA_DISABLED",
+        "adblock_disabled" : "ADBLOCK_DISABLED"
+    }
+
+    for easylist_subscripteasyion_type in easylist_subscription_types.keys():
+        for aa_subscription_type in aa_subscription_types.keys():
+            for option in options.keys():
+
+                classpath = "_".join([
+                    init,
+                    easylist_subscripteasyion_type,
+                    aa_subscription_type,
+                    option])
+                metric = "_".join([
+                    easylist_subscription_types[easylist_subscripteasyion_type],
+                    aa_subscription_types[aa_subscription_type],
+                    options[option]])
+
+                if option != "":
+                    classpath_to_metric[classpath] = metric + end
+                else:
+                    classpath_to_metric[classpath[:-1]] = metric[:-1] + end
 
 
 def map_to_metrics_name(testname, metric):
-    assert (testname in testname_to_metrics.keys()), "invalid test name, \
-    please corresponding 'show' value on testname_to_metrics variable"
-    return metric.upper() + "_" + testname_to_metrics[testname]
+    assert (testname in classpath_to_metric.keys()), "invalid test name, \
+    please corresponding 'show' value on classpath_to_metric variable"
+    return metric.upper() + "_" + classpath_to_metric[testname]
 
 
 def exit_with(message):
@@ -69,6 +99,10 @@ def run_command(command, exit_on_error=True):
     child = subprocess.run(command, shell=True, stdout=fnull)
     if child.returncode != 0:
         if exit_on_error:
+            print("If it fails retrieving the file it might be a permissions "+\
+                "issue in newer versions of android you might need to go: "   +\
+                "developer options -> (Security settings) allow granting "    +\
+                "permissions")
             exit_with(command + " failed!")
         else:
             print(command + " failed!")
@@ -150,15 +184,14 @@ def main(args):
     if args.device is not None:
         adb_device += " -s {}".format(args.device)
 
-    run_command("{} logcat -c".format(adb_device))
+    run_command("{} logcat -c".format(adb_device), False)
 
     print("Preparing to run benchmark tests for: {}".format(TEST_PACKAGE))
 
     run_command("{} uninstall {}".format(adb_device, TEST_PACKAGE), False)
-    run_command("{} install -r \
-      adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk"
-                .format(adb_device))
-
+    run_command("{} install -r {} ".format(adb_device, TEST_APK))
+    # in newer versions of android you might need to go:
+    # developer options -> (Security settings) allow granting permissions
     run_command("{} shell pm grant {} android.permission.READ_EXTERNAL_STORAGE".format(adb_device,
                                                                                        TEST_PACKAGE))
     run_command("{} shell pm grant {} android.permission.WRITE_EXTERNAL_STORAGE".format(adb_device,
@@ -174,8 +207,9 @@ def main(args):
     # benchmark with adblockwebview
     for test in memory_benchmark_adblockwebview_test:
         for aa_subscription_list in ["_full_AA", "_min_AA"]:
-            for aa_off_on in ["", "_off"]:
-                test_name = test + aa_subscription_list + aa_off_on
+            # AA on or off and adblock disabled tests
+            for option in ["_adblock_disabled", "_AA_disabled", ""]:
+                test_name = test + aa_subscription_list + option
                 launch_tests_and_collect(NUM_TESTS, adb_device, test_name)
                 max, average, median, min = calc_stats(test_name, NUM_TESTS)
                 store_metrics_file(test_name, max, average, median, min)
@@ -188,15 +222,15 @@ def main(args):
 
     save_logcat(adb_device)
 
-
 if __name__ == "__main__":
+    fill_map_classpath_metric()
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('--device', type=str,
-                        help='Run this script on a specific device',
-                        default=None)
+                        help='Run this script on a specific device (defaults to use ANDROID_SERIAL)',
+                        default=os.environ.get('ANDROID_SERIAL'))
     parser.add_argument("--v", type=bool, required=False, default=False, help="verbose")
 
     args = parser.parse_args()

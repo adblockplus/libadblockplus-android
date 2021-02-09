@@ -17,22 +17,23 @@
 
 package org.adblockplus.libadblockplus.android;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.BroadcastReceiver;
-import timber.log.Timber;
-
-import java.util.List;
 
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
+import java.util.List;
+
+import timber.log.Timber;
+
 public class SubscriptionsManager
 {
   private static final String ACTION_PREFIX =
-      "org.adblockplus.libadblockplus.android.intent.action.SUBSCRIPTION_";
+    "org.adblockplus.libadblockplus.android.intent.action.SUBSCRIPTION_";
   private static final String ACTION_LIST = ACTION_PREFIX + "LIST";
   private static final String ACTION_ADD = ACTION_PREFIX + "ADD";
   private static final String ACTION_ENABLE = ACTION_PREFIX + "ENABLE";
@@ -66,7 +67,7 @@ public class SubscriptionsManager
           final String url = intent.getStringExtra(EXTRA_URL);
           Timber.d("Subscription = %s", url);
           final FilterEngine filterEngine =
-              AdblockHelper.get().getProvider().getEngine().getFilterEngine();
+            AdblockHelper.get().getProvider().getEngine().getFilterEngine();
           final Subscription subscription = filterEngine.getSubscription(url);
 
           if (intent.getAction().equals(ACTION_ADD))
@@ -176,12 +177,12 @@ public class SubscriptionsManager
       private void list()
       {
         final FilterEngine filterEngine =
-            AdblockHelper.get().getProvider().getEngine().getFilterEngine();
+          AdblockHelper.get().getProvider().getEngine().getFilterEngine();
         final List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
         for (final Subscription subscription : subscriptions)
         {
-          Timber.d( "%s is %s",
-                  subscription.toString(), (subscription.isDisabled() ? "disabled" : "enabled"));
+          Timber.d("%s is %s",
+            subscription.toString(), (subscription.isDisabled() ? "disabled" : "enabled"));
         }
       }
 

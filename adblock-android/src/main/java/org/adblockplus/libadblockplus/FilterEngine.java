@@ -23,6 +23,8 @@ import java.util.Set;
 
 public final class FilterEngine
 {
+  public static final String EMPTY_PARENT = "";
+  public static final String EMPTY_SITEKEY = "";
   protected final long ptr;
 
   static
@@ -39,11 +41,6 @@ public final class FilterEngine
   private static native void addFilter(long ptr, String raw);
 
   private static native void removeFilter(long ptr, String raw);
-
-  public boolean isFirstRun()
-  {
-    return isFirstRun(this.ptr);
-  }
 
   public Filter getFilter(final String text)
   {
@@ -115,12 +112,16 @@ public final class FilterEngine
    *                     top-level frame.
    * @param siteKey sitekey or null/empty string
    * @return Matching filter, or a `null` if there was no match.
+   *
+   * @deprecated Use {@link FilterEngine#matches) which takes a single parent as a String instead of
+   * {@param documentUrls} and {@param specificOnly} argument.
    */
+  @Deprecated
   public Filter matches(final String url, final Set<ContentType> contentTypes,
                         final List<String> documentUrls, final String siteKey)
   {
-    final Filter filter = matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-        documentUrls, siteKey, false);
+    final Filter filter = matches(this.ptr, url,
+        contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey, false);
     if (filter != null)
     {
       filter.setFilterEngine(this); // this is a hack to support deprecated functions
@@ -138,18 +139,63 @@ public final class FilterEngine
    * @param siteKey sitekey or null/empty string
    * @param specificOnly if set to `true` then skips generic filters
    * @return Matching filter, or a `null` if there was no match.
+   *
+   * @deprecated Use {@link FilterEngine#matches) which takes a single parent as a String instead of
+   * {@param documentUrls}.
    */
+  @Deprecated
   public Filter matches(final String url, final Set<ContentType> contentTypes,
                         final List<String> documentUrls, final String siteKey,
                         final boolean specificOnly)
   {
-    final Filter filter = matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-        documentUrls, siteKey, specificOnly);
+    final Filter filter = matches(this.ptr, url,
+        contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey,
+        specificOnly);
     if (filter != null)
     {
       filter.setFilterEngine(this); // this is a hack to support deprecated functions
     }
     return filter;
+  }
+
+  /**
+   * Checks if any active filter matches the supplied URL.
+   * @param url url URL to match.
+   * @param contentTypes Content type mask of the requested resource.
+   * @param parent immediate parent of the {@param url}.
+   * @param siteKey sitekey or null/empty string
+   * @param specificOnly if set to `true` then skips generic filters
+   * @return Matching filter, or a `null` if there was no match.
+   */
+  public Filter matches(final String url, final Set<ContentType> contentTypes,
+                        final String parent, final String siteKey,
+                        final boolean specificOnly)
+  {
+    final Filter filter = matches(this.ptr, url,
+        contentTypes.toArray(new ContentType[contentTypes.size()]), parent, siteKey, specificOnly);
+    if (filter != null)
+    {
+      filter.setFilterEngine(this); // this is a hack to support deprecated functions
+    }
+    return filter;
+  }
+
+  /**
+   * Checks whether the resource at the supplied URL is allowlisted.
+   *
+   * @param url URL of the resource.
+   * @param contentTypes Set of content types for requested resource.
+   * @param documentUrls Chain of URLs requesting the resource
+   * @param siteKey public key provided by the document, can be empty.
+   * @return `true` if the URL is allowlisted.
+   */
+  public boolean isContentAllowlisted(final String url,
+                                      final Set<ContentType> contentTypes,
+                                      final List<String> documentUrls,
+                                      final String siteKey)
+  {
+    return isContentAllowlisted(this.ptr, url,
+        contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey);
   }
 
   /**
@@ -163,7 +209,11 @@ public final class FilterEngine
    *                     top-level frame.
    * @param siteKey sitekey or null/empty string
    * @return `true` if the URL is allowlisted by $genericblock filter
+   *
+   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
+   *             {@link ContentType#GENERICBLOCK} instead.
    */
+  @Deprecated
   public boolean isGenericblockAllowlisted(final String url, final List<String> documentUrls,
                                            final String siteKey)
   {
@@ -178,7 +228,11 @@ public final class FilterEngine
    *                     the top-level frame.
    * @param siteKey sitekey or null/empty string
    * @return `true` if the URL is allowlisted
+   *
+   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
+   *             {@link ContentType#DOCUMENT} instead.
    */
+  @Deprecated
   public boolean isDocumentAllowlisted(final String url,
                                        final List<String> documentUrls,
                                        final String siteKey)
@@ -194,7 +248,11 @@ public final class FilterEngine
    *                     the top-level frame.
    * @param siteKey sitekey or null/empty string
    * @return `true` if element hiding is allowlisted for the supplied URL.
+   *
+   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
+   *             {@link ContentType#ELEMHIDE} instead.
    */
+  @Deprecated
   public boolean isElemhideAllowlisted(final String url,
                                        final List<String> documentUrls,
                                        final String siteKey)
@@ -290,8 +348,6 @@ public final class FilterEngine
 
   private static native void registerNatives();
 
-  private static native boolean isFirstRun(long ptr);
-
   private static native Filter getFilter(long ptr, String text);
 
   private static native List<Filter> getListedFilters(long ptr);
@@ -313,20 +369,27 @@ public final class FilterEngine
   private static native JsValue getPref(long ptr, String pref);
 
   private static native Filter matches(long ptr, String url, ContentType[] contentType,
-                                             List<String> referrerChain, String siteKey,
-                                             boolean specificOnly);
+                                       List<String> referrerChain, String siteKey,
+                                       boolean specificOnly);
+
+  private static native Filter matches(long ptr, String url, ContentType[] contentType,
+                                       String parent, String siteKey,
+                                       boolean specificOnly);
+
+  private static native boolean isContentAllowlisted(long ptr, String url, ContentType[] contentType,
+                                                     List<String> referrerChain, String siteKey);
 
   private static native boolean isGenericblockAllowlisted(long ptr, String url,
                                                                 List<String> referrerChain,
                                                                 String siteKey);
 
   private static native boolean isDocumentAllowlisted(long ptr, String url,
-                                                            List<String> referrerChain,
-                                                            String siteKey);
+                                                      List<String> referrerChain,
+                                                      String siteKey);
 
   private static native boolean isElemhideAllowlisted(long ptr, String url,
-                                                            List<String> referrerChain,
-                                                            String siteKey);
+                                                      List<String> referrerChain,
+                                                      String siteKey);
 
   private static native void setPref(long ptr, String pref, long valuePtr);
 

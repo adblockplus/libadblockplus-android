@@ -7,11 +7,7 @@ Adblock Android SDK
 
 An Android library project, tests, settings fragments and demo application for AdblockWebView.
 
-## Git commits
 
-This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventions in the repo. It should
-be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
-before making any new commits to the repo.
 
 ## Dependencies
 
@@ -261,7 +257,7 @@ Make sure you deinitialize it when values used during initialization are no long
 
     AdblockHelper.get().deinit();
 
-Note one have to initialize it again to be used.
+Note: one have to initialize it again to be used.
 
 Implement the following interfaces in your settings activity:
 
@@ -292,7 +288,38 @@ Release Adblock instance in activity `onDestroy`:
 
 Insert `GeneralSettingsFragment` fragment instance in runtime to start showing settings UI.
 
+#### Memory management
+Adblock Engine sometimes might be extensive to memory consumption. In order to guard your process
+from being killed by the system, call `AdblockEngine#onLowMemory()` method in
+[ComponentCallbacks2#onTrimMemory(int)](https://developer.android.com/reference/android/content/ComponentCallbacks2#onTrimMemory(int)).
 
+```java
+  @Override
+  public void onTrimMemory(int level)
+  {
+    // ...
+    // if a system demands more memory, call the GC of the adblock engine to release some
+    // this can free up to ~60-70% of memory occupied by the engine
+    if (level == TRIM_MEMORY_RUNNING_CRITICAL && AdblockHelper.get().isInit())
+    {
+      AdblockHelper.get().getProvider().getEngine().onLowMemory();
+    }
+    // ...
+  }
+```
+
+If you are using `androidx.fragment.app.Fragment` or `androidx.appcompat.app.AppCompatActivity`,
+be sure to implement [[ComponentCallbacks2](https://developer.android.com/reference/android/content/ComponentCallbacks2)]
+and register it by calling `Context#registerComponentCallbacks(ComponentCallbacks2)`
+and then unregister when not needed with `Context#unregisterComponentCallbacks(ComponentCallbacks2)`
+
+If you are using old APIs, it's also possible to use any of `onLowMemory()` system callbacks:
+either `Activity#onLowMemory()` or `Fragment#onLowMemory()`.
+
+Please mind that if you are using `AdblockHelper` (which is in most cases), Adblock Filter Engine
+exists only in one instance. Having one instance means that you only have to implement one call to
+`AdblockHelper.get().getProvider().getEngine().onLowMemory();`. Thus it's recommended to do the call in `Activity`
+or somewhere else where you are sure you are not creating multiple instances (e.g. fragments).
 
 #### Background operations
 
@@ -324,18 +351,26 @@ On the other hand, this is an opt-in feature that you have to set up. It also in
 
 By running `./gradlew downloadSubscriptionLists`, you update the preloaded EasyList and exception list to the latest ones.
 
-To set it up in the code, you have to first map the URLs of the subscriptions to local files.
+To set it up in the code, you can either explicitly map all the possible locale specific subscriptions URLs to local files. Or you can set one general subscription file for all non AA and another for the AA subscription.
 
+Usage example in a simplified way where all blocking subscriptions (like "easylist.txt" or "easylistgermany+easylist.txt") are mapped to the same file R.raw.easylist:
+``` java
+adblockHelper
+    .get()
+    .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+    .preloadSubscriptions(R.raw.easylist, R.raw.exceptionrules)
+    .addEngineCreatedListener(engineCreatedListener)
+    .addEngineDisposedListener(engineDisposedListener)
+```
+To explicitly set which subscriptions to be preloaded use `preloadSubscriptions()` with a map argument:
 ``` java
 Map<String, Integer> map = new HashMap<String, Integer>();
 map.put(AndroidHttpClientResourceWrapper.EASYLIST, R.raw.easylist);
 map.put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, R.raw.exceptionrules);
 ```
-
 Note that in this example we use the general EasyList subscription. So for example, if you are using subscription lists for another locale, you need to change the URL and replace the file with the correct one. The effect is not the same without these preloaded subscriptions.
 
 Then, when using the `AdblockHelper` for example, you can set it like:
-
 ``` java
 adblockHelper
     .get()
@@ -344,7 +379,6 @@ adblockHelper
     .addEngineCreatedListener(engineCreatedListener)
     .addEngineDisposedListener(engineDisposedListener)
 ```
-
 
 ### Theme
 
@@ -501,3 +535,70 @@ names from native code. If class names/members are modified by Proguard/R8 durin
 they can't be accessed from native code resulting into Runtime exceptions like follows:
 
     java.lang.NoSuchMethodError: no non-static method "Lorg/adblockplus/libadblockplus/JsValue;.<init>(J)V"
+
+## Contribute
+
+You are more then welcome to contribute! Please use *Building* 
+sections from corresponding submodules in order to set up build them and start developing.
+
+### Git commits
+
+This repo uses [pre-commit](https://pre-commit.com) to maintain agreed conventions in the repo. It should
+be [installed](https://pre-commit.com/#installation) (tldr; `pip install pre-commit` then `pre-commit install`)
+before making any new commits to the repo.
+
+### Code style
+We use [Eyeo Coding Style Convention](https://adblockplus.org/coding-style) as a base. 
+In general:
+
+* Follow the [Mozilla Coding Style](https://firefox-source-docs.mozilla.org/code-quality/coding-style/coding_style_java.html) general practices and its naming and formatting rules.
+* All files should have a license header, but no mode line comments.
+* Newline at end of file, otherwise no trailing whitespace.
+* Lines can be longer than the limit, if limiting line length would hurt readability in a particular case.
+* Opening braces always go on their own line.
+* No Hungarian notation, no special variable name prefixes or suffixes denoting type or scope. 
+* All variable names start with a lower case letter.
+* Don't comment code out, delete it.
+
+#### Java
+Overall it inherits basic code style rules above. More specific rules:
+* Spaces over tabs 
+* Indentation is in increment of two spaces.
+* Dedicated new line on opening opening brackets and closing brackets.
+```java
+// good 
+void doSomething()
+{
+  if (that())
+  {
+  }
+}
+// bad 
+void doSomething(){
+  if (that()) {
+  }
+}
+```
+* Inline comments leave space after marker 
+* Remove trailing white spaces 
+* Don’t exceed 120 characters per line
+* **else** should be followed with new line
+* Add new line at the end of file 
+* Variables, parameters and class members should be final where it is possible (they are not modified)
+
+We use [Checkstyle](https://checkstyle.sourceforge.io/) to verify syntax for Java. You can find the 
+config in `config\checkstyle\checkstyle.xml`
+
+You can verify the syntax in sevaral ways:
+1. [Gradle Checkstyle plugin](https://docs.gradle.org/current/userguide/checkstyle_plugin.html). 
+Just run `./gradlew checkstyle` and it will perform codestyle check over all the submodules, 
+including tests. Also
+    * you can run the check over a submodule (eg `./gradlew :adblock-android:checkstyle`)
+    * you can run the check on tests on main source files only: 
+    `./gradlew checkstyleMain` or `./gradlew checkstyleAndroidTest` or `./gradlew checkstyleAndroidTest`
+2. [Android Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea). Install
+the plugin and import the `config\checkstyle\checkstyle.xml`. Then it will be automatically checking
+the codestyle for you.
+3. Pre-commit hook. For installation and usage, please check the [Git commits section](#Git-commits).
+We use [github.com/gherynos/pre-commit-java](https://github.com/gherynos/pre-commit-java) hook for 
+checking codestyle. It will run on every commit if *pre-commit hooks* are installed.

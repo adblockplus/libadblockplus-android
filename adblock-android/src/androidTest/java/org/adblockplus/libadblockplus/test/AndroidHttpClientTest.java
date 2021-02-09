@@ -100,7 +100,8 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     ServerResponse response;
   }
 
-  private ServerResponse makeHttpRequest(final String url, final boolean followRedirect)
+  private ServerResponse makeHttpRequest(final String url, final String method, final boolean followRedirect,
+                                         final boolean skipInputStreamReading)
   {
     final ResponseHolder responseHolder = new ResponseHolder();
     final CountDownLatch latch = new CountDownLatch(1);
@@ -117,7 +118,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
     try
     {
       final List<HeaderEntry> headersList = new ArrayList<>();
-      final HttpRequest request = new HttpRequest(url, HttpClient.REQUEST_METHOD_GET, headersList, followRedirect, true);
+      final HttpRequest request = new HttpRequest(url, method, headersList, followRedirect, skipInputStreamReading);
       androidHttpClient.request(request, callback);
     }
     catch (final AdblockPlusException e)
@@ -140,13 +141,14 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   @Test
   public void testAdblockWebViewHttpRequest()
   {
-    final ServerResponse response = makeHttpRequest("https://easylist-downloads.adblockplus.org/exceptionrules.txt", true);
+    final ServerResponse response = makeHttpRequest("https://easylist-downloads.adblockplus.org/exceptionrules.txt",
+        HttpClient.REQUEST_METHOD_GET, true, true);
     assertNotNull(response);
 
     assertEquals(HTTP_OK, response.getResponseStatus());
     assertNotNull(response.getInputStream());
 
-    final ConnectionInputStream connectionInputStream = (ConnectionInputStream)(response.getInputStream());
+    final ConnectionInputStream connectionInputStream = (ConnectionInputStream) (response.getInputStream());
 
     final Scanner scanner = new Scanner(connectionInputStream).useDelimiter("\\A");
     final String result = scanner.hasNext() ? scanner.next() : "";
@@ -163,10 +165,31 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   }
 
   @Test
+  public void testCoreHttpGetHeadRequest()
+  {
+    final ServerResponse response = makeHttpRequest("https://easylist-downloads.adblockplus.org/exceptionrules.txt",
+        HttpClient.REQUEST_METHOD_GET, true, false);
+    assertNotNull(response);
+
+    assertEquals(HTTP_OK, response.getResponseStatus());
+  }
+
+  @Test
+  public void testCoreHttpHeadHeadRequest()
+  {
+    final ServerResponse response = makeHttpRequest("https://easylist-downloads.adblockplus.org/exceptionrules.txt",
+        HttpClient.REQUEST_METHOD_HEAD, true, false);
+    assertNotNull(response);
+
+    assertEquals(HTTP_OK, response.getResponseStatus());
+  }
+
+  @Test
   public void testFollowingRedirectedHttpRequest()
   {
     // https://d.android.com is a redirect site to https://developer.android.com/
-    final ServerResponse response = makeHttpRequest("https://d.android.com", true);
+    final ServerResponse response = makeHttpRequest("https://d.android.com", HttpClient.REQUEST_METHOD_GET, true,
+        true);
     assertNotNull(response);
 
     assertEquals(HTTP_OK, response.getResponseStatus());
@@ -211,9 +234,9 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
 
       wireMockServer
           .stubFor(any(urlPathEqualTo(initialResource))
-          .willReturn(aResponse()
-            .withStatus(HttpStatus.SC_TEMPORARY_REDIRECT)
-            .withHeader(HttpClient.HEADER_LOCATION, redirectedResource)));
+              .willReturn(aResponse()
+                  .withStatus(HttpStatus.SC_TEMPORARY_REDIRECT)
+                  .withHeader(HttpClient.HEADER_LOCATION, redirectedResource)));
 
       wireMockServer
           .stubFor(any(urlPathEqualTo(redirectedResource))
@@ -222,7 +245,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
                   .withHeader(HttpClient.HEADER_CONTENT_TYPE, "text/plain")
                   .withBody(redirectedContent)));
 
-      final ServerResponse response = makeHttpRequest(initialUrl, true);
+      final ServerResponse response = makeHttpRequest(initialUrl, HttpClient.REQUEST_METHOD_GET, true, true);
 
       assertNotNull(response);
       assertEquals(redirectedUrl, response.getFinalUrl());
@@ -239,7 +262,8 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
   public void testNotFollowingRedirectedHttpRequest()
   {
     // https://d.android.com is a redirect site to https://developer.android.com/
-    final ServerResponse response = makeHttpRequest("https://d.android.com", false);
+    final ServerResponse response = makeHttpRequest("https://d.android.com", HttpClient.REQUEST_METHOD_GET, false,
+        true);
     assertNotNull(response);
 
     assertEquals(HTTP_MOVED_PERM, response.getResponseStatus());
@@ -418,8 +442,8 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
 
     assertNotNull(serverResponse);
     assertEquals(
-            ServerResponse.NsStatus.ERROR_MALFORMED_URI,
-            serverResponse.getStatus());
+        ServerResponse.NsStatus.ERROR_MALFORMED_URI,
+        serverResponse.getStatus());
   }
 
   @Test
@@ -443,7 +467,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
 
     assertNotNull(serverResponse);
     assertEquals(
-            ServerResponse.NsStatus.ERROR_UNKNOWN_HOST,
-            serverResponse.getStatus());
+        ServerResponse.NsStatus.ERROR_UNKNOWN_HOST,
+        serverResponse.getStatus());
   }
 }

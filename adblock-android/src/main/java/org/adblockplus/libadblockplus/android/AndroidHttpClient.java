@@ -17,7 +17,6 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import timber.log.Timber;
 import android.net.TrafficStats;
 
 import org.adblockplus.libadblockplus.AdblockPlusException;
@@ -26,6 +25,7 @@ import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.ServerResponse.NsStatus;
+import static org.adblockplus.libadblockplus.android.Utils.readFromInputStream;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import static org.adblockplus.libadblockplus.android.Utils.readFromInputStream;
+import timber.log.Timber;
 
 public class AndroidHttpClient extends HttpClient
 {
@@ -65,9 +65,10 @@ public class AndroidHttpClient extends HttpClient
   @Override
   public void request(final HttpRequest request, final Callback callback)
   {
-    if (!request.getMethod().equalsIgnoreCase(REQUEST_METHOD_GET))
+    if (!(request.getMethod().equalsIgnoreCase(REQUEST_METHOD_GET) ||
+        request.getMethod().equalsIgnoreCase(REQUEST_METHOD_HEAD)))
     {
-      throw new UnsupportedOperationException("Only GET method is supported");
+      throw new UnsupportedOperationException("Only GET and HEAD methods are supported");
     }
 
     final ServerResponse response = new ServerResponse();
@@ -142,8 +143,14 @@ public class AndroidHttpClient extends HttpClient
           if (compressedStream && ENCODING_GZIP.equals(connection.getContentEncoding()) &&
               !isNoContentCode(responseStatus))
           {
-            Timber.d("Setting inputStream to GZIPInputStream");
-            inputStream = new GZIPInputStream(inputStream);
+            if (request.getMethod().equalsIgnoreCase(REQUEST_METHOD_GET))
+            {
+              inputStream = new GZIPInputStream(inputStream);
+            }
+            else if (request.getMethod().equalsIgnoreCase(REQUEST_METHOD_HEAD))
+            {
+              Timber.i("A payload body within a HEAD method must be empty.  URL %s", url);
+            }
           }
 
           /**

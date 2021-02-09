@@ -17,10 +17,12 @@
 
 package org.adblockplus.libadblockplus.android.settings;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.ConnectionType;
+import android.content.Context;
+
 import org.adblockplus.libadblockplus.android.Subscription;
 
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -48,33 +50,26 @@ public abstract class AdblockSettingsStorage
   /**
    * Get default settings
    *
-   * @param adblockEngine adblock engine
+   * @param context application environment for getting resources
    * @return not null default settings
    */
-  public static AdblockSettings getDefaultSettings(AdblockEngine adblockEngine)
+  public static AdblockSettings getDefaultSettings(final Context context)
   {
-    AdblockSettings settings = new AdblockSettings();
+    final AdblockSettings settings = new AdblockSettings();
 
-    // read actual values from adblock engine
-    settings.setAdblockEnabled(adblockEngine.isEnabled());
-    settings.setAcceptableAdsEnabled(adblockEngine.isAcceptableAdsEnabled());
-    String allowedConnectionTypeValue = adblockEngine.getFilterEngine().getAllowedConnectionType();
-    settings.setAllowedConnectionType(ConnectionType.findByValue(allowedConnectionTypeValue));
+    settings.setAdblockEnabled(true);
+    settings.setAcceptableAdsEnabled(true);
+    settings.setAllowedConnectionType(null);
 
-    // we need to filter out exceptions subscription to show languages subscriptions only
-    Subscription[] listedSubscriptions = adblockEngine.getListedSubscriptions();
-    List<Subscription> subscriptionsWithoutAA = new LinkedList<>();
-    String acceptableAdsURL = adblockEngine.getAcceptableAdsSubscriptionURL();
+    final InputStream inputStream = context.getResources().openRawResource(R.raw.subscriptions);
+    final List<Subscription> defaultSubscriptions = Utils.getSubscriptionsFromResourceStream(inputStream);
+    settings.setAvailableSubscriptions(defaultSubscriptions);
 
-    for (Subscription eachListedSubscription : listedSubscriptions)
-    {
-      if (!eachListedSubscription.url.equals(acceptableAdsURL))
-      {
-        subscriptionsWithoutAA.add(eachListedSubscription);
-      }
-    }
-
-    settings.setSubscriptions(subscriptionsWithoutAA);
+    final Subscription selectedSubscription = Utils.chooseDefaultSubscription(defaultSubscriptions);
+    settings.setSelectedSubscriptions(
+        selectedSubscription != null
+            ? new LinkedList<>(Collections.singletonList(selectedSubscription))
+            : new LinkedList<Subscription>());
 
     return settings;
   }

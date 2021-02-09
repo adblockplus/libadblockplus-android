@@ -23,6 +23,10 @@ android {
 
   useLibrary 'android.test.runner'
   useLibrary 'android.test.base'
+
+  gradle.projectsEvaluated {
+    preBuild.dependsOn(copyDefaultSubscriptions)
+  }
 }
 
 bintray {
@@ -40,4 +44,16 @@ dependencies {
   androidTestImplementation Deps.androidx_test_core
   androidTestImplementation Deps.androidx_test_runner
   androidTestImplementation Deps.androidx_test_ext_junit
+}
+
+task copyDefaultSubscriptions (type: org.gradle.api.tasks.Copy) {
+  from "$rootDir/libadblockplus/adblockpluscore/data/"
+  into "./src/main/res/raw/"
+  include "subscriptions.json"
+}
+
+gradle.taskGraph.afterTask { task ->
+  if(task.state.noSource && task.name == 'copyDefaultSubscriptions'){
+    throw new GradleException("${task.path} failed. Please check that libadblockplus\\adblockpluscore is checked out.")
+  }
 }
