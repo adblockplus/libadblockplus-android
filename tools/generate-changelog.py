@@ -142,13 +142,11 @@ def main(args):
         for issue in changelog["Bug"]:
             print(f" - {issue}")
 
+    print(f"\n### Changed/Added")
     if "Task" in changelog.keys():
-        print(f"\n### Changed")
         for issue in changelog["Task"]:
             print(f" - {issue}")
-
     if "Story" in changelog.keys():
-        print(f"\n### Added")
         for issue in changelog["Story"]:
             print(f" - {issue}")
 
