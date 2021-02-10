@@ -5,16 +5,25 @@ It
 1) Installs the release version of apk ( assumes it is already built )
 2) locks cpu on device to achieve reliable metrics
 3) runs the benchmark
-4) gets benchmarkdata.json from device into $BENCHMARK_PULL_DIR
+4) gets benchmarkData.json from device into $BENCHMARK_PULL_DIR
+5) creates enrichedBenchmarkData.json from benchmarkData.json
+6) Adds id (i. e. pipeline id) and time (i. e. number of seconds passed since epoch) to enrichedBenchmarkData.json
 """
 
 import argparse
 import subprocess
 import sys
 import os
+import json
+import shutil
+import time
 
 TEST_PACKAGE = "org.adblockplus.libadblockplus.benchmark.test"
 TEST_APK = "adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk"
+
+# performance benchmark location
+BENCHMARK_PULL_DIR = os.getenv("BENCHMARK_PULL_DIR",
+                               "adblock-android-benchmark/build/outputs/connected_android_test_additional_output")
 
 def exit_with(message):
     print(message)
@@ -53,6 +62,18 @@ def main(args):
     run_command("mkdir -p $BENCHMARK_PULL_DIR")
     run_command("{} pull \
         /storage/emulated/0/Download/org.adblockplus.libadblockplus.benchmark.test-benchmarkData.json $BENCHMARK_PULL_DIR/benchmarkData.json".format(adb_device))
+
+    shutil.copyfile("{}/{}".format(BENCHMARK_PULL_DIR, "benchmarkData.json"),
+                    "{}/{}".format(BENCHMARK_PULL_DIR, "enrichedBenchmarkData.json"))
+
+    with open("{}/{}".format(BENCHMARK_PULL_DIR, "enrichedBenchmarkData.json"), 'r+') as json_file:
+        data = json.load(json_file)
+        info = {'id': os.getenv('CI_PIPELINE_ID', ''), 'time': time.time()}
+        data['info'] = info
+
+        json_file.seek(0)
+        json.dump(data, json_file, indent=4)
+        json_file.truncate()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
