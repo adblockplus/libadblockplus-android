@@ -412,6 +412,27 @@ static jstring JNICALL JniGetAllowedConnectionType(JNIEnv* env, jclass clazz, jl
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
+static void JNICALL JniSetEnabled(JNIEnv* env, jclass clazz, jlong ptr, jboolean jIsEnabled)
+{
+  AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
+
+  try
+  {
+    engine.SetEnabled(jIsEnabled == JNI_TRUE);
+  }
+  CATCH_AND_THROW(env)
+}
+
+static jboolean JNICALL JniIsEnabled(JNIEnv* env, jclass clazz, jlong ptr)
+{
+  try
+  {
+    AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
+    return engine.IsEnabled() ? JNI_TRUE : JNI_FALSE;
+  }
+  CATCH_THROW_AND_RETURN(env, 0)
+}
+
 static void JNICALL JniSetAcceptableAdsEnabled(JNIEnv* env, jclass clazz, jlong ptr, jboolean jvalue)
 {
   AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
@@ -546,6 +567,8 @@ static JNINativeMethod methods[] =
   { (char*)"getHostFromURL", (char*)"(JLjava/lang/String;)Ljava/lang/String;", (void *) JniGetHostFromURL},
   { (char*)"setAllowedConnectionType", (char*)"(JLjava/lang/String;)V", (void *) JniSetAllowedConnectionType},
   { (char*)"getAllowedConnectionType", (char*)"(J)Ljava/lang/String;", (void *) JniGetAllowedConnectionType},
+  { (char*)"setEnabled", (char*)"(JZ)V", (void *) JniSetEnabled},
+  { (char*)"isEnabled", (char*)"(J)Z", (void *) JniIsEnabled},
   { (char*)"setAcceptableAdsEnabled", (char*)"(JZ)V", (void *) JniSetAcceptableAdsEnabled},
   { (char*)"isAcceptableAdsEnabled", (char*)"(J)Z", (void *) JniIsAcceptableAdsEnabled},
   { (char*)"getAcceptableAdsSubscriptionURL", (char*)"(J)Ljava/lang/String;", (void *) JniGetAcceptableAdsSubscriptionURL},
