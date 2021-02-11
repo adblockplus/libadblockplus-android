@@ -151,7 +151,9 @@ public class SiteKeyVerifier
     {
       uri = new URI(url);
       if (uri.getHost() == null)
+      {
         throw new URISyntaxException(url, "Can't extract host from URI");
+      }
     }
     catch (final URISyntaxException cause)
     {

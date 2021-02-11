@@ -19,7 +19,6 @@ package org.adblockplus.libadblockplus.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import timber.log.Timber;
 
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
@@ -32,6 +31,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import timber.log.Timber;
 
 /**
  * HttpClient wrapper to return request response from android resources for selected URLs
@@ -102,7 +103,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     return listener;
   }
 
-  public void setListener(Listener listener)
+  public void setListener(final Listener listener)
   {
     this.listener = listener;
   }
@@ -111,15 +112,15 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
   public void request(final HttpRequest request, final Callback callback)
   {
     // since parameters may vary we need to ignore them
-    String urlWithoutParams = Utils.getUrlWithoutParams(request.getUrl());
-    Integer resourceId = urlToResourceIdMap.get(urlWithoutParams);
+    final String urlWithoutParams = Utils.getUrlWithoutParams(request.getUrl());
+    final Integer resourceId = urlToResourceIdMap.get(urlWithoutParams);
 
     if (resourceId != null)
     {
       if (!storage.contains(urlWithoutParams))
       {
         Timber.w("Intercepting request for %s with resource #%d", request.getUrl(), resourceId);
-        ServerResponse response = buildResourceContentResponse(resourceId);
+        final ServerResponse response = buildResourceContentResponse(resourceId);
         storage.put(urlWithoutParams);
 
         callback.onFinished(response);
@@ -144,7 +145,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     httpClient.request(request, callback);
   }
 
-  protected ByteBuffer readResourceContent(int resourceId) throws IOException
+  protected ByteBuffer readResourceContent(final int resourceId) throws IOException
   {
     Timber.d("Reading from resource ...");
 
@@ -164,16 +165,16 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     }
   }
 
-  protected ServerResponse buildResourceContentResponse(int resourceId)
+  protected ServerResponse buildResourceContentResponse(final int resourceId)
   {
-    ServerResponse response = new ServerResponse();
+    final ServerResponse response = new ServerResponse();
     try
     {
       response.setResponse(readResourceContent(resourceId));
       response.setResponseStatus(HttpClient.STATUS_CODE_OK);
       response.setStatus(ServerResponse.NsStatus.OK);
     }
-    catch (IOException e)
+    catch (final IOException e)
     {
       Timber.e(e, "Error injecting response");
       response.setStatus(ServerResponse.NsStatus.ERROR_FAILURE);
@@ -196,6 +197,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
   public interface Storage
   {
     void put(String url);
+
     boolean contains(String url);
   }
 
@@ -209,14 +211,14 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     private SharedPreferences prefs;
     private Set<String> urls;
 
-    public SharedPrefsStorage(SharedPreferences prefs)
+    public SharedPrefsStorage(final SharedPreferences prefs)
     {
       this.prefs = prefs;
       this.urls = prefs.getStringSet(URLS, new HashSet<String>());
     }
 
     @Override
-    public synchronized void put(String url)
+    public synchronized void put(final String url)
     {
       urls.add(url);
 
@@ -227,7 +229,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     }
 
     @Override
-    public synchronized boolean contains(String url)
+    public synchronized boolean contains(final String url)
     {
       return urls.contains(url);
     }

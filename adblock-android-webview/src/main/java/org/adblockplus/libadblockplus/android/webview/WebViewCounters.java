@@ -19,6 +19,7 @@ package org.adblockplus.libadblockplus.android.webview;
 
 import android.os.Handler;
 import android.os.Looper;
+
 import java.lang.ref.WeakReference;
 
 /**

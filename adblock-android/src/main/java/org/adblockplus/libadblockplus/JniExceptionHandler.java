@@ -17,10 +17,13 @@
 
 package org.adblockplus.libadblockplus;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import org.adblockplus.libadblockplus.android.Utils;
 import android.annotation.SuppressLint;
 import android.util.Log;
+
+import org.adblockplus.libadblockplus.android.Utils;
+
+import java.util.concurrent.LinkedBlockingQueue;
+
 import timber.log.Timber;
 
 public final class JniExceptionHandler

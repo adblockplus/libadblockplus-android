@@ -17,9 +17,9 @@
 
 package org.adblockplus.libadblockplus.android;
 
-import org.adblockplus.libadblockplus.LogSystem;
-
 import android.util.Log;
+
+import org.adblockplus.libadblockplus.LogSystem;
 
 public class AndroidLogSystem implements LogSystem
 {

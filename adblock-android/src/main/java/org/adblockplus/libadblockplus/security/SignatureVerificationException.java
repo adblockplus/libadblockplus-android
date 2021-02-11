@@ -19,12 +19,12 @@ package org.adblockplus.libadblockplus.security;
 
 public class SignatureVerificationException extends Exception
 {
-  public SignatureVerificationException(String message)
+  public SignatureVerificationException(final String message)
   {
     super(message);
   }
 
-  public SignatureVerificationException(Throwable cause)
+  public SignatureVerificationException(final Throwable cause)
   {
     super(cause);
   }

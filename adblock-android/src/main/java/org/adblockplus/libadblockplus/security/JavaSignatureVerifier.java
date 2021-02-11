@@ -44,7 +44,7 @@ public class JavaSignatureVerifier implements SignatureVerifier
       final KeyFactory keyFactory = KeyFactory.getInstance(keyAlgorithm);
       return keyFactory.generatePublic(new X509EncodedKeySpec(publicKeyBytes));
     }
-    catch (Throwable cause)
+    catch (final Throwable cause)
     {
       throw new SignatureVerificationException(cause);
     }
@@ -73,7 +73,7 @@ public class JavaSignatureVerifier implements SignatureVerifier
       signature.update(data);
       return signature.verify(signatureBytes);
     }
-    catch (Throwable cause)
+    catch (final Throwable cause)
     {
       throw new SignatureVerificationException(cause);
     }

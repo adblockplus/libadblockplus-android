@@ -70,14 +70,14 @@ public class AllowlistedDomainsSettingsFragment
   }
 
   @Override
-  public void onAttach(Activity activity)
+  public void onAttach(final Activity activity)
   {
     super.onAttach(activity);
     listener = castOrThrow(activity, Listener.class);
   }
 
   @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+  public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState)
   {
     final View rootView = inflater.inflate(
         R.layout.fragment_adblock_allowlisted_domains_settings,
@@ -91,7 +91,7 @@ public class AllowlistedDomainsSettingsFragment
   }
 
   @Override
-  public void onCreatePreferences(Bundle bundle, String key)
+  public void onCreatePreferences(final Bundle bundle, final String key)
   {
     // nothing
   }
@@ -122,7 +122,7 @@ public class AllowlistedDomainsSettingsFragment
     }
   }
 
-  private void bindControls(View rootView)
+  private void bindControls(final View rootView)
   {
     domain = rootView.findViewById(R.id.fragment_adblock_wl_add_label);
     addDomainButton = rootView.findViewById(R.id.fragment_adblock_wl_add_button);
@@ -135,7 +135,7 @@ public class AllowlistedDomainsSettingsFragment
     final TextView domain;
     final ImageView removeButton;
 
-    Holder(View rootView)
+    Holder(final View rootView)
     {
       domain = rootView.findViewById(R.id.fragment_adblock_wl_item_title);
       removeButton = rootView.findViewById(R.id.fragment_adblock_wl_item_remove);
@@ -168,31 +168,31 @@ public class AllowlistedDomainsSettingsFragment
     }
 
     @Override
-    public Object getItem(int position)
+    public Object getItem(final int position)
     {
       return settingsViewModel.getAllowlistedDomain(position);
     }
 
     @Override
-    public long getItemId(int position)
+    public long getItemId(final int position)
     {
       return getItem(position).hashCode();
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent)
+    public View getView(final int position, View convertView, final ViewGroup parent)
     {
       if (convertView == null)
       {
-        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        final LayoutInflater inflater = LayoutInflater.from(getActivity());
         convertView = inflater.inflate(R.layout.fragment_adblock_allowlisted_domain_item,
             parent, false);
         convertView.setTag(new Holder(convertView));
       }
 
-      String domain = (String) getItem(position);
+      final String domain = (String) getItem(position);
 
-      Holder holder = (Holder) convertView.getTag();
+      final Holder holder = (Holder) convertView.getTag();
       holder.domain.setText(domain);
 
       holder.removeButton.setOnClickListener(removeDomainClickListener);
@@ -207,7 +207,7 @@ public class AllowlistedDomainsSettingsFragment
     addDomainButton.setOnClickListener(new View.OnClickListener()
     {
       @Override
-      public void onClick(View v)
+      public void onClick(final View v)
       {
         final String preparedDomain = settingsViewModel.prepareDomain(
             domain.getText().toString());

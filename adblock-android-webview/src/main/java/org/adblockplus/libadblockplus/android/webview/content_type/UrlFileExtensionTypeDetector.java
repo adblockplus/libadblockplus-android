@@ -20,7 +20,6 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 import android.webkit.WebResourceRequest;
 
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -25,7 +25,6 @@ import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.HttpRequest;
 import org.adblockplus.libadblockplus.ServerResponse;
 import org.adblockplus.libadblockplus.ServerResponse.NsStatus;
-import static org.adblockplus.libadblockplus.android.Utils.readFromInputStream;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -38,6 +37,8 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import timber.log.Timber;
+
+import static org.adblockplus.libadblockplus.android.Utils.readFromInputStream;
 
 public class AndroidHttpClient extends HttpClient
 {
@@ -103,7 +104,7 @@ public class AndroidHttpClient extends HttpClient
       {
         Timber.d("Received header fields");
 
-        List<HeaderEntry> responseHeaders = new LinkedList<>();
+        final List<HeaderEntry> responseHeaders = new LinkedList<>();
         for (Map.Entry<String, List<String>> eachEntry : connection.getHeaderFields().entrySet())
         {
           for (String eachValue : eachEntry.getValue())

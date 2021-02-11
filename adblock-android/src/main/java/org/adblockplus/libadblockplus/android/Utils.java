@@ -72,7 +72,7 @@ public final class Utils
 
   public static String stringListToJsonArray(final List<String> list)
   {
-    JSONArray array = new JSONArray();
+    final JSONArray array = new JSONArray();
 
     if (list != null)
     {
@@ -90,7 +90,7 @@ public final class Utils
 
   public static String emulationSelectorListToJsonArray(final List<FilterEngine.EmulationSelector> list)
   {
-    JSONArray array = new JSONArray();
+    final JSONArray array = new JSONArray();
 
     if (list != null)
     {
@@ -100,12 +100,12 @@ public final class Utils
         {
           try
           {
-            JSONObject selectorObj = new JSONObject();
+            final JSONObject selectorObj = new JSONObject();
             selectorObj.put("selector", selector.selector);
             selectorObj.put("text", selector.text);
             array.put(selectorObj);
           }
-          catch (JSONException e)
+          catch (final JSONException e)
           {
             Timber.e(e, "Failed to create JSON object");
           }
@@ -135,7 +135,7 @@ public final class Utils
         {
           is.close();
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
           // ignored
         }
@@ -145,7 +145,7 @@ public final class Utils
 
   private static String getStringBeforeChar(final String str, final char c)
   {
-    int pos = str.indexOf(c);
+    final int pos = str.indexOf(c);
     return (pos >= 0 ? str.substring(0, pos) : str);
   }
 
@@ -289,13 +289,13 @@ public final class Utils
     // in each new allocated buffer are available for reading from the stream.
     for (int bufSize = BUFFER_SIZE; totalLen < MAX_ARRAY_LEN; bufSize *= 2)
     {
-      byte[] buf = new byte[Math.min(bufSize, MAX_ARRAY_LEN - totalLen)];
+      final byte[] buf = new byte[Math.min(bufSize, MAX_ARRAY_LEN - totalLen)];
       bufs.add(buf);
       int off = 0;
       while (off < buf.length)
       {
         // always OK to fill buf; its size plus the rest of bufs is never more than MAX_ARRAY_LEN
-        int r = in.read(buf, off, buf.length - off);
+        final int r = in.read(buf, off, buf.length - off);
         if (r == -1)
         {
           return combineBuffers(bufs, totalLen);
@@ -332,13 +332,13 @@ public final class Utils
   /**  This is an auxiliary method for toByteArrayInternal and one should not make it public. */
   private static byte[] combineBuffers(final Deque<byte[]> bufs, final int totalLen)
   {
-    byte[] result = new byte[totalLen];
+    final byte[] result = new byte[totalLen];
     int remaining = totalLen;
     while (remaining > 0)
     {
-      byte[] buf = bufs.removeFirst();
-      int bytesToCopy = Math.min(remaining, buf.length);
-      int resultOffset = totalLen - remaining;
+      final byte[] buf = bufs.removeFirst();
+      final int bytesToCopy = Math.min(remaining, buf.length);
+      final int resultOffset = totalLen - remaining;
       System.arraycopy(buf, 0, result, resultOffset, bytesToCopy);
       remaining -= bytesToCopy;
     }
@@ -459,7 +459,7 @@ public final class Utils
   public static ByteBuffer stringToByteBuffer(final String string, final Charset charset)
   {
     final byte[] bytes = string.getBytes(charset);
-    ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bytes.length);
+    final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bytes.length);
     byteBuffer.put(bytes);
     return byteBuffer;
   }
@@ -532,7 +532,7 @@ public final class Utils
     final StringBuilder sb = new StringBuilder();
     for (int i = 0; i < line.length(); i++)
     {
-      char c = line.charAt(i);
+      final char c = line.charAt(i);
       switch (c)
       {
         case '"':

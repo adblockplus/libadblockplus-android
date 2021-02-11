@@ -19,39 +19,40 @@ package org.adblockplus.libadblockplus.android;
 
 import android.net.ConnectivityManager;
 
-public enum ConnectionType {
+public enum ConnectionType
+{
 
   // All WiFi networks
   WIFI("wifi")
-  {
-    @Override
-    public boolean isRequiredConnection(ConnectivityManager manager)
     {
-      return manager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI;
-    }
-  },
+      @Override
+      public boolean isRequiredConnection(final ConnectivityManager manager)
+      {
+        return manager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI;
+      }
+    },
 
   // Non-metered WiFi networks
   WIFI_NON_METERED("wifi_non_metered")
-  {
-    @Override
-    public boolean isRequiredConnection(ConnectivityManager manager)
     {
-      return
-        manager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI &&
-        !manager.isActiveNetworkMetered(); // make minSdkVersion 16
-    }
-  },
+      @Override
+      public boolean isRequiredConnection(final ConnectivityManager manager)
+      {
+        return
+          manager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI &&
+            !manager.isActiveNetworkMetered(); // make minSdkVersion 16
+      }
+    },
 
   // Any connection
   ANY("any")
-  {
-    @Override
-    public boolean isRequiredConnection(ConnectivityManager manager)
     {
-      return true;
-    }
-  };
+      @Override
+      public boolean isRequiredConnection(final ConnectivityManager manager)
+      {
+        return true;
+      }
+    };
 
   private String value;
 
@@ -63,12 +64,12 @@ public enum ConnectionType {
   // check if current device connection type is equal to this concrete connection type
   public abstract boolean isRequiredConnection(ConnectivityManager manager);
 
-  ConnectionType(String value)
+  ConnectionType(final String value)
   {
     this.value = value;
   }
 
-  public static ConnectionType findByValue(String value)
+  public static ConnectionType findByValue(final String value)
   {
     if (value == null)
     {

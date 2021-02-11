@@ -100,7 +100,7 @@ public class JsValue implements Disposable
 
   protected long[] convertToPtrArray(final List<JsValue> params)
   {
-    long[] paramPtrs = new long[params.size()];
+    final long[] paramPtrs = new long[params.size()];
     for (int i = 0; i < params.size(); i++)
     {
       paramPtrs[i] = params.get(i).ptr;

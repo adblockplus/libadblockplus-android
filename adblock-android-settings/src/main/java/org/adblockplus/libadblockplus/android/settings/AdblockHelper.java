@@ -71,9 +71,9 @@ public class AdblockHelper
     new SingleInstanceEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void onAdblockEngineCreated(AdblockEngine engine)
+    public void onAdblockEngineCreated(final AdblockEngine engine)
     {
-      AdblockSettings settings = storage.load();
+      final AdblockSettings settings = storage.load();
       if (settings != null)
       {
         Timber.d("Applying saved adblock settings to adblock engine");
@@ -85,7 +85,7 @@ public class AdblockHelper
 
         // allowed connection type is saved by filter engine but we need to override it
         // as filter engine can be not created when changing
-        String connectionType = (settings.getAllowedConnectionType() != null
+        final String connectionType = (settings.getAllowedConnectionType() != null
           ? settings.getAllowedConnectionType().getValue()
           : null);
         engine.getFilterEngine().setAllowedConnectionType(connectionType);
@@ -249,10 +249,10 @@ public class AdblockHelper
     provider.addEngineDisposedListener(engineDisposedListener);
   }
 
-  private void initStorage(Context context, String settingsPreferenceName)
+  private void initStorage(final Context context, final String settingsPreferenceName)
   {
     // read and apply current settings
-    SharedPreferences settingsPrefs = context.getSharedPreferences(
+    final SharedPreferences settingsPrefs = context.getSharedPreferences(
       settingsPreferenceName,
       Context.MODE_PRIVATE);
 
@@ -363,7 +363,7 @@ public class AdblockHelper
    * @deprecated The method is deprecated: use .getProvider().retain() instead
    */
   @Deprecated
-  public boolean retain(boolean asynchronous)
+  public boolean retain(final boolean asynchronous)
   {
     return provider.retain(asynchronous);
   }
