@@ -40,7 +40,7 @@ public class AdblockSettings implements Serializable
     return adblockEnabled;
   }
 
-  public void setAdblockEnabled(boolean adblockEnabled)
+  public void setAdblockEnabled(final boolean adblockEnabled)
   {
     this.adblockEnabled = adblockEnabled;
   }
@@ -50,7 +50,7 @@ public class AdblockSettings implements Serializable
     return acceptableAdsEnabled;
   }
 
-  public void setAcceptableAdsEnabled(boolean acceptableAdsEnabled)
+  public void setAcceptableAdsEnabled(final boolean acceptableAdsEnabled)
   {
     this.acceptableAdsEnabled = acceptableAdsEnabled;
   }
@@ -80,7 +80,7 @@ public class AdblockSettings implements Serializable
     return allowlistedDomains;
   }
 
-  public void setAllowlistedDomains(List<String> allowlistedDomains)
+  public void setAllowlistedDomains(final List<String> allowlistedDomains)
   {
     this.allowlistedDomains = allowlistedDomains;
   }
@@ -90,7 +90,7 @@ public class AdblockSettings implements Serializable
     return allowedConnectionType;
   }
 
-  public void setAllowedConnectionType(ConnectionType allowedConnectionType)
+  public void setAllowedConnectionType(final ConnectionType allowedConnectionType)
   {
     this.allowedConnectionType = allowedConnectionType;
   }

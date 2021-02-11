@@ -14,9 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.adblockplus.libadblockplus.android;
 
-import timber.log.Timber;
+package org.adblockplus.libadblockplus.android;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,6 +25,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import timber.log.Timber;
 
 /**
  * Provides single instance of AdblockEngine shared between registered clients
@@ -85,14 +86,14 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   }
 
   @Override
-  public SingleInstanceEngineProvider addEngineCreatedListener(EngineCreatedListener listener)
+  public SingleInstanceEngineProvider addEngineCreatedListener(final EngineCreatedListener listener)
   {
     this.engineCreatedListeners.add(listener);
     return this;
   }
 
   @Override
-  public void removeEngineCreatedListener(EngineCreatedListener listener)
+  public void removeEngineCreatedListener(final EngineCreatedListener listener)
   {
     this.engineCreatedListeners.remove(listener);
   }
@@ -104,14 +105,14 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   }
 
   @Override
-  public SingleInstanceEngineProvider addBeforeEngineDisposedListener(BeforeEngineDisposedListener listener)
+  public SingleInstanceEngineProvider addBeforeEngineDisposedListener(final BeforeEngineDisposedListener listener)
   {
     this.beforeEngineDisposedListeners.add(listener);
     return this;
   }
 
   @Override
-  public void removeBeforeEngineDisposedListener(BeforeEngineDisposedListener listener)
+  public void removeBeforeEngineDisposedListener(final BeforeEngineDisposedListener listener)
   {
     this.beforeEngineDisposedListeners.remove(listener);
   }
@@ -123,14 +124,14 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   }
 
   @Override
-  public SingleInstanceEngineProvider addEngineDisposedListener(EngineDisposedListener listener)
+  public SingleInstanceEngineProvider addEngineDisposedListener(final EngineDisposedListener listener)
   {
     this.engineDisposedListeners.add(listener);
     return this;
   }
 
   @Override
-  public void removeEngineDisposedListener(EngineDisposedListener listener)
+  public void removeEngineDisposedListener(final EngineDisposedListener listener)
   {
     this.engineDisposedListeners.remove(listener);
   }

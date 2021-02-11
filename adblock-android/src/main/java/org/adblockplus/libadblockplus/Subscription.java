@@ -181,7 +181,7 @@ public final class Subscription
     {
       return false;
     }
-    return this.url.equals(((Subscription)o).url);
+    return this.url.equals(((Subscription) o).url);
   }
 
   private static native void registerNatives();
@@ -198,4 +198,4 @@ public final class Subscription
 
   private static native String getSynchronizationStatus(long ptr, String url);
 
-  }
+}
