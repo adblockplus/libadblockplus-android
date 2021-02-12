@@ -349,7 +349,7 @@ The benefit of using this feature is that it provides a better UX since the app 
 
 On the other hand, this is an opt-in feature that you have to set up. It also increases the footprint of the app by bundling the subscription lists with it, and you have to update the lists when building the apk. This is because subscription lists become outdated very fast. Ideally, you can set a gradle task for that, which is what we did.
 
-By running `./gradlew downloadSubscriptionLists`, you update the preloaded EasyList and exception list to the latest ones.
+By running `./gradlew downloadSubscriptionLists`, you update the preloaded subscriptions with the latest [minified EasyList](https://easylist-downloads.adblockplus.org/easylist-minified.txt) and [minimal exception list](https://easylist-downloads.adblockplus.org/exceptionrules-minimal.txt).
 
 To set it up in the code, you can either explicitly map all the possible locale specific subscriptions URLs to local files. Or you can set one general subscription file for all non AA and another for the AA subscription.
 
