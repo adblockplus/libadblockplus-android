@@ -47,7 +47,7 @@ public class WebViewTestSuit<T extends WebView>
   public T webView;
   public WebViewClient extWebViewClient;
   public final Map<String, Long> results = new HashMap<>();
-  public WebViewClient client = null;
+  public final WebViewClient client = null;
 
   public void setUp()
   {
@@ -128,11 +128,12 @@ public class WebViewTestSuit<T extends WebView>
     {
       final Long startTimeValue = startTime.get();
       // When redirection happens there are several notifications so wee need to check if url matches
-      if ((url.equals(expectedUrl) ||
-          (expectedUrl == null &&
-              Utils.getUrlWithoutParams(url).startsWith(
-                  Utils.getUrlWithoutParams((lastPageStartedUrl)))))
-          && startTimeValue != null)
+      // Empty expectedUrl could be fed to allow to work with any URL
+      final Boolean urlIsOkay = expectedUrl == null
+        ? Utils.getUrlWithoutParams(url).startsWith(Utils.getUrlWithoutParams((lastPageStartedUrl)))
+        : url.equals(expectedUrl) || expectedUrl.isEmpty();
+
+      if (urlIsOkay && startTimeValue != null)
       {
         final Long timeDelta = System.currentTimeMillis() - startTimeValue;
         Timber.d("onPageFinished called for urls %s after %d ms (%s)", url, timeDelta,

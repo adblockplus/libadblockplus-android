@@ -21,6 +21,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -1006,10 +1007,20 @@ public class AdblockWebView extends WebView
     @Override
     public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request)
     {
+      final Uri url = request.getUrl();
+      final String urlString = url.toString();
+
       if (request.isForMainFrame())
       {
-        Timber.d("Updating navigationUrl to `%s`", request.getUrl().toString());
-        navigationUrl.set(Utils.getUrlWithoutFragment(request.getUrl().toString()));
+        Timber.d("Updating navigationUrl to `%s`", urlString);
+        navigationUrl.set(Utils.getUrlWithoutFragment(urlString));
+        if (BuildConfig.DEBUG)
+        {
+          if (RequestInterceptor.isBlockedByHandlingDebugURLQuery(view, getProvider(), url))
+          {
+            return WebResponseResult.BLOCK_LOAD;
+          }
+        }
       }
       final AbpShouldBlockResult abpBlockResult = shouldAbpBlockRequest(request);
 
@@ -1027,7 +1038,6 @@ public class AdblockWebView extends WebView
       }
 
       final Map<String, String> requestHeaders = request.getRequestHeaders();
-      final String url = request.getUrl().toString();
 
       final WebViewClient extWebViewClient = getExtWebViewClient();
       if (extWebViewClient != null)
@@ -1044,7 +1054,7 @@ public class AdblockWebView extends WebView
           if (!AbpShouldBlockResult.ALLOW_LOAD_NO_SITEKEY_CHECK.equals(abpBlockResult))
           {
             Timber.d("Verifying site keys with external shouldInterceptRequest response");
-            getSiteKeysConfiguration().getSiteKeyVerifier().verifyInHeaders(url,
+            getSiteKeysConfiguration().getSiteKeyVerifier().verifyInHeaders(urlString,
               requestHeaders,
               externalResponse.getResponseHeaders());
             Timber.d("Finished verifying, returning external response and stop");
@@ -1447,7 +1457,8 @@ public class AdblockWebView extends WebView
       // changed after this check.
       if (!isDisposed && getProvider().getEngine() != null)
       {
-        final FilterEngine filterEngine = getProvider().getEngine().getFilterEngine();
+        final AdblockEngine adblockEngine = getProvider().getEngine();
+        final FilterEngine filterEngine = adblockEngine.getFilterEngine();
 
         // elemhide
         Timber.d("Requesting elemhide selectors from AdblockEngine for %s", domain);
@@ -1474,23 +1485,20 @@ public class AdblockWebView extends WebView
         }
 
         final boolean specificOnly = filterEngine.isContentAllowlisted(urlWithoutFragment,
-          FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
-          referrerChain, siteKey);
-        stylesheetString = getProvider()
-          .getEngine()
-          .getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain, siteKey,
-            specificOnly);
+            FilterEngine.ContentType.maskOf(FilterEngine.ContentType.GENERICHIDE),
+            referrerChain, siteKey);
+        stylesheetString = adblockEngine.getElementHidingStyleSheet(urlWithoutFragment, domain, referrerChain,
+          siteKey, specificOnly);
         Timber.d("Finished requesting elemhide stylesheet, got %d symbols" +
-            (specificOnly ? " (specificOnly)" : "") + " for %s", stylesheetString.length(),
-          domain);
+                (specificOnly ? " (specificOnly)" : "") + " for %s", stylesheetString.length(),
+            domain);
 
         // elemhideemu
         Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s", domain);
-        final List<FilterEngine.EmulationSelector> emuSelectors = getProvider()
-          .getEngine()
-          .getElementHidingEmulationSelectors(urlWithoutFragment, domain, referrerChain, siteKey);
+        final List<FilterEngine.EmulationSelector> emuSelectors = adblockEngine.getElementHidingEmulationSelectors(
+          urlWithoutFragment, domain, referrerChain, siteKey);
         Timber.d("Finished requesting elemhideemu selectors, got %d symbols for %s",
-          emuSelectors.size(), domain);
+            emuSelectors.size(), domain);
         emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
       }
     }
