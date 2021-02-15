@@ -67,8 +67,8 @@ public class Application extends android.app.Application
       helper
         .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
         .preloadSubscriptions(
-                R.raw.easylist,
-                R.raw.exceptionrules)
+                R.raw.easylist_minified,
+                R.raw.exceptionrules_minimal)
         .addEngineCreatedListener(engineCreatedListener)
         .addEngineDisposedListener(engineDisposedListener);
 

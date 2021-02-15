@@ -1,6 +1,6 @@
 [Adblock Plus 2.0]
-! Checksum: hNyseYElIhbyw5InjjL2WA
-! Version: 202101131442
+! Checksum: +T2u3EVCSTw0UJ3xHjRsOA
+! Version: 202102121122
 ! Title: Allow nonintrusive advertising (minimal)
 ! Expires: 1 days
 ! Homepage: https://acceptableads.com/
@@ -120,6 +120,9 @@
 @@||thunderdom-v1.sftapi.com^$script,xmlhttprequest,third-party,domain=sft-staging.com|softonic.com|softoniclabs.com|ghacks.net|filehippo.com
 @@||thunderdom-v1.sftapi.com/px.gif?ch=1&rn=*$domain=windowsreport.com|toucharger.com|lelogicielgratuit.com|sft-staging.com|softonic.com|softoniclabs.com|ghacks.net|filehippo.com
 ||thunderdom-v1.sftapi.com/px.gif?ch=2&rn=*$domain=windowsreport.com|toucharger.com|lelogicielgratuit.com|sft-staging.com|softonic.com|softoniclabs.com|ghacks.net|filehippo.com
+@@||spn-v1.revampcdn.com^$script,xmlhttprequest,third-party,domain=sft-staging.com|softonic.com|softoniclabs.com|ghacks.net|filehippo.com
+@@||spn-v1.revampcdn.com/px.gif?ch=1&rn=*$domain=windowsreport.com|toucharger.com|lelogicielgratuit.com|sft-staging.com|softonic.com|softoniclabs.com|ghacks.net|filehippo.com
+||spn-v1.revampcdn.com/px.gif?ch=2&rn=*$domain=windowsreport.com|toucharger.com|lelogicielgratuit.com|sft-staging.com|softonic.com|softoniclabs.com|ghacks.net|filehippo.com
 @@||allthetests.com^$csp=script-src 'self' * blob: data:,domain=allthetests.com
 @@||twt-assets.washtimes.com/js/twt_app.$script,domain=washingtontimes.com
 @@||twt-assets.washtimes.com/v4/js/ads/config/story.$script,domain=washingtontimes.com
@@ -201,9 +204,9 @@ mein-schoener-garten.de,twinfinite.net,resetera.com,sharemods.com,blic.rs,arstec
 mein-schoener-garten.de,twinfinite.net,resetera.com,sharemods.com,blic.rs,arstechnica.com,filehorse.com,telefonino.net,spikeybits.com,speedtest.net,247wallst.com,reddit.com,dvdsreleasedates.com,gamepress.gg,seattletimes.com,ccm.net,boredpanda.com,novini.bg,footballfancast.com,seekingalpha.com,mediafire.com,magazinedelledonne.it,www.motorsport.com,convertunits.com,hollywoodreporter.com,fr.shopping.rakuten.com,inquisitr.com,Rideapart.com,Insideevs.com,Insideevs.fr,Insideevs.it,Motor1.com,omnifurgone.it,en.softonic.com,titantv.com,allthetests.com,majorgeeks.com,searchenginejournal.com,Omnimoto.it,ebay-kleinanzeigen.de,washingtontimes.com,stuff.co.nz,sammobile.com,Songsterr.com,thestudentroom.co.uk,charlieintel.com,fortniteintel.com,biggeekdad.com,index.hr,bolavip.com,gamepur.com,dotesports.com,pleated-jeans.com,billboard.com,allkpop.com,legacy.com,mashable.com,musescore.com,ultimate-guitar.com,lacuerda.net,ezgif.com#@#.adsbygoogle
 twinfinite.net,resetera.com,sharemods.com,blic.rs,arstechnica.com,filehorse.com,telefonino.net,spikeybits.com,speedtest.net,247wallst.com,reddit.com,dvdsreleasedates.com,gamepress.gg,seattletimes.com,ccm.net,boredpanda.com,novini.bg,footballfancast.com,seekingalpha.com,mediafire.com,magazinedelledonne.it,www.motorsport.com,convertunits.com,hollywoodreporter.com,fr.shopping.rakuten.com,inquisitr.com,Rideapart.com,Insideevs.com,Insideevs.fr,Insideevs.it,Motor1.com,omnifurgone.it,en.softonic.com,titantv.com,allthetests.com,majorgeeks.com,searchenginejournal.com,Omnimoto.it,ebay-kleinanzeigen.de,washingtontimes.com,stuff.co.nz,sammobile.com,Songsterr.com,thestudentroom.co.uk,charlieintel.com,fortniteintel.com,biggeekdad.com,index.hr,bolavip.com,gamepur.com,dotesports.com,pleated-jeans.com,billboard.com,allkpop.com,legacy.com,mashable.com,musescore.com,ultimate-guitar.com,lacuerda.net,ezgif.com#@#.adsbygoogle > [id^="aswift_"]
 twinfinite.net,resetera.com,sharemods.com,blic.rs,arstechnica.com,filehorse.com,telefonino.net,spikeybits.com,speedtest.net,247wallst.com,reddit.com,dvdsreleasedates.com,gamepress.gg,seattletimes.com,ccm.net,boredpanda.com,novini.bg,footballfancast.com,seekingalpha.com,mediafire.com,magazinedelledonne.it,www.motorsport.com,convertunits.com,hollywoodreporter.com,fr.shopping.rakuten.com,inquisitr.com,Rideapart.com,Insideevs.com,Insideevs.fr,Insideevs.it,Motor1.com,omnifurgone.it,en.softonic.com,titantv.com,allthetests.com,majorgeeks.com,searchenginejournal.com,Omnimoto.it,ebay-kleinanzeigen.de,washingtontimes.com,stuff.co.nz,sammobile.com,Songsterr.com,thestudentroom.co.uk,charlieintel.com,fortniteintel.com,biggeekdad.com,index.hr,bolavip.com,gamepur.com,dotesports.com,pleated-jeans.com,billboard.com,allkpop.com,legacy.com,mashable.com,musescore.com,ultimate-guitar.com,lacuerda.net,ezgif.com#@#div > .adsbygoogle
-@@||pagead2.googlesyndication.com/pagead/$script,domain=mein-schoener-garten.de|ezgif.com|twinfinite.net|resetera.com|sharemods.com|blic.rs|arstechnica.com|filehorse.com|telefonino.net|spikeybits.com|lacuerda.net|speedtest.net|247wallst.com|reddit.com|dvdsreleasedates.com|gamepress.gg|seattletimes.com|ccm.net|boredpanda.com|novini.bg|footballfancast.com|seekingalpha.com|mediafire.com|related.ultimate-guitar.com|magazinedelledonne.it|www.motorsport.com|convertunits.com|hollywoodreporter.com|fr.shopping.rakuten.com|inquisitr.com|Rideapart.com|Insideevs.com|Insideevs.fr|Insideevs.it|Motor1.com|omnifurgone.it|en.softonic.com|titantv.com|allthetests.com|majorgeeks.com|searchenginejournal.com|Omnimoto.it|ebay-kleinanzeigen.de|washingtontimes.com|stuff.co.nz|sammobile.com|Songsterr.com|thestudentroom.co.uk|charlieintel.com|fortniteintel.com|biggeekdad.com|index.hr|bolavip.com|gamepur.com|dotesports.com|pleated-jeans.com|billboard.com|allkpop.com|legacy.com|mashable.com|musescore.com|ultimate-guitar.com
-@@||adservice.google.*/adsid/integrator.js$domain=mein-schoener-garten.de|ezgif.com|twinfinite.net|resetera.com|sharemods.com|blic.rs|arstechnica.com|filehorse.com|telefonino.net|spikeybits.com|lacuerda.net|speedtest.net|247wallst.com|reddit.com|dvdsreleasedates.com|gamepress.gg|seattletimes.com|ccm.net|boredpanda.com|novini.bg|footballfancast.com|seekingalpha.com|mediafire.com|related.ultimate-guitar.com|magazinedelledonne.it|www.motorsport.com|convertunits.com|hollywoodreporter.com|fr.shopping.rakuten.com|inquisitr.com|Rideapart.com|Insideevs.com|Insideevs.fr|Insideevs.it|Motor1.com|omnifurgone.it|en.softonic.com|titantv.com|allthetests.com|majorgeeks.com|searchenginejournal.com|Omnimoto.it|ebay-kleinanzeigen.de|washingtontimes.com|stuff.co.nz|sammobile.com|Songsterr.com|thestudentroom.co.uk|charlieintel.com|fortniteintel.com|biggeekdad.com|index.hr|bolavip.com|gamepur.com|dotesports.com|pleated-jeans.com|billboard.com|allkpop.com|legacy.com|mashable.com|musescore.com|ultimate-guitar.com
-@@||g.doubleclick.net/pagead/ads^*client=ca-pub-8655001720710332^$subdocument,document,domain=mein-schoener-garten.de|ezgif.com|twinfinite.net|resetera.com|sharemods.com|blic.rs|arstechnica.com|filehorse.com|telefonino.net|spikeybits.com|lacuerda.net|speedtest.net|247wallst.com|reddit.com|dvdsreleasedates.com|gamepress.gg|seattletimes.com|ccm.net|boredpanda.com|novini.bg|footballfancast.com|seekingalpha.com|mediafire.com|related.ultimate-guitar.com|magazinedelledonne.it|www.motorsport.com|convertunits.com|hollywoodreporter.com|fr.shopping.rakuten.com|inquisitr.com|Rideapart.com|Insideevs.com|Insideevs.fr|Insideevs.it|Motor1.com|omnifurgone.it|en.softonic.com|titantv.com|allthetests.com|majorgeeks.com|searchenginejournal.com|Omnimoto.it|ebay-kleinanzeigen.de|washingtontimes.com|stuff.co.nz|sammobile.com|Songsterr.com|thestudentroom.co.uk|charlieintel.com|fortniteintel.com|biggeekdad.com|index.hr|bolavip.com|gamepur.com|dotesports.com|pleated-jeans.com|billboard.com|allkpop.com|legacy.com|mashable.com|musescore.com|ultimate-guitar.com
+@@||pagead2.googlesyndication.com/pagead/$script,domain=mein-schoener-garten.de|ezgif.com|twinfinite.net|resetera.com|sharemods.com|blic.rs|arstechnica.com|filehorse.com|telefonino.net|spikeybits.com|lacuerda.net|speedtest.net|247wallst.com|reddit.com|dvdsreleasedates.com|gamepress.gg|seattletimes.com|ccm.net|boredpanda.com|novini.bg|footballfancast.com|seekingalpha.com|mediafire.com|magazinedelledonne.it|www.motorsport.com|convertunits.com|hollywoodreporter.com|fr.shopping.rakuten.com|inquisitr.com|Rideapart.com|Insideevs.com|Insideevs.fr|Insideevs.it|Motor1.com|omnifurgone.it|en.softonic.com|titantv.com|allthetests.com|majorgeeks.com|searchenginejournal.com|Omnimoto.it|ebay-kleinanzeigen.de|washingtontimes.com|stuff.co.nz|sammobile.com|Songsterr.com|thestudentroom.co.uk|charlieintel.com|fortniteintel.com|biggeekdad.com|index.hr|bolavip.com|gamepur.com|dotesports.com|pleated-jeans.com|billboard.com|allkpop.com|legacy.com|mashable.com|musescore.com|ultimate-guitar.com
+@@||adservice.google.*/adsid/integrator.js$domain=mein-schoener-garten.de|ezgif.com|twinfinite.net|resetera.com|sharemods.com|blic.rs|arstechnica.com|filehorse.com|telefonino.net|spikeybits.com|lacuerda.net|speedtest.net|247wallst.com|reddit.com|dvdsreleasedates.com|gamepress.gg|seattletimes.com|ccm.net|boredpanda.com|novini.bg|footballfancast.com|seekingalpha.com|mediafire.com|magazinedelledonne.it|www.motorsport.com|convertunits.com|hollywoodreporter.com|fr.shopping.rakuten.com|inquisitr.com|Rideapart.com|Insideevs.com|Insideevs.fr|Insideevs.it|Motor1.com|omnifurgone.it|en.softonic.com|titantv.com|allthetests.com|majorgeeks.com|searchenginejournal.com|Omnimoto.it|ebay-kleinanzeigen.de|washingtontimes.com|stuff.co.nz|sammobile.com|Songsterr.com|thestudentroom.co.uk|charlieintel.com|fortniteintel.com|biggeekdad.com|index.hr|bolavip.com|gamepur.com|dotesports.com|pleated-jeans.com|billboard.com|allkpop.com|legacy.com|mashable.com|musescore.com|ultimate-guitar.com
+@@||g.doubleclick.net/pagead/ads^*client=ca-pub-8655001720710332^$subdocument,document,domain=mein-schoener-garten.de|ezgif.com|twinfinite.net|resetera.com|sharemods.com|blic.rs|arstechnica.com|filehorse.com|telefonino.net|spikeybits.com|lacuerda.net|speedtest.net|247wallst.com|reddit.com|dvdsreleasedates.com|gamepress.gg|seattletimes.com|ccm.net|boredpanda.com|novini.bg|footballfancast.com|seekingalpha.com|mediafire.com|magazinedelledonne.it|www.motorsport.com|convertunits.com|hollywoodreporter.com|fr.shopping.rakuten.com|inquisitr.com|Rideapart.com|Insideevs.com|Insideevs.fr|Insideevs.it|Motor1.com|omnifurgone.it|en.softonic.com|titantv.com|allthetests.com|majorgeeks.com|searchenginejournal.com|Omnimoto.it|ebay-kleinanzeigen.de|washingtontimes.com|stuff.co.nz|sammobile.com|Songsterr.com|thestudentroom.co.uk|charlieintel.com|fortniteintel.com|biggeekdad.com|index.hr|bolavip.com|gamepur.com|dotesports.com|pleated-jeans.com|billboard.com|allkpop.com|legacy.com|mashable.com|musescore.com|ultimate-guitar.com
 @@||g.doubleclick.net/pagead/ads^*client=ca-pub-9595286865800821^$subdocument,document,domain=reddit.com
 @@||pagead2.googlesyndication.com/getconfig$xmlhttprequest,domain=ultimate-guitar.com|billboard.com
 @@||tpc.googlesyndication.com/sodar^$script,domain=ultimate-guitar.com|billboard.com
@@ -212,17 +215,23 @@ twinfinite.net,resetera.com,sharemods.com,blic.rs,arstechnica.com,filehorse.com,
 ||speedtest.net/javascript/adscript.js$domain=speedtest.net
 ||speedtest.net/javascript/adsjs.js$script,domain=speedtest.net
 ||cdn2.downdetector.com^*/javascript/adsjs.js$script,domain=downdetector.ae|downdetector.ca|downdetector.cl|downdetector.co.nz|downdetector.co.uk|downdetector.co.za|downdetector.com|downdetector.com.ar|downdetector.com.au|downdetector.com.br|downdetector.com.co|downdetector.cz|downdetector.dk|downdetector.ec|downdetector.es|downdetector.fi|downdetector.fr|downdetector.gr|downdetector.hk|downdetector.hr|downdetector.hu|downdetector.id|downdetector.ie|downdetector.in|downdetector.it|downdetector.jp|downdetector.mx|downdetector.my|downdetector.no|downdetector.pe|downdetector.ph|downdetector.pk|downdetector.pl|downdetector.pt|downdetector.ro|downdetector.se|downdetector.sg|downdetector.sk|downdetector.web.tr|downdetector.ru|allestoringen.nl|allestoerungen.at|allestoringen.be|allestoerungen.ch|allestoerungen.de|xn--allestrungen-9ib.de
+||redditstatic.com/desktop2x/js/xads.js$domain=reddit.com
 @@||thunderdom-v1.sftapi.com/publishers/windowsreport.js$domain=windowsreport.com
 @@||thunderdom-v1.sftapi.com/publishers/lelogicielgratuit.js$domain=lelogicielgratuit.com
 @@||thunderdom-v1.sftapi.com/publishers/toucharger.js$domain=toucharger.com
+@@||spn-v1.revampcdn.com/publishers/windowsreport.js$domain=windowsreport.com
+@@||spn-v1.revampcdn.com/publishers/lelogicielgratuit.js$domain=lelogicielgratuit.com
+@@||spn-v1.revampcdn.com/publishers/toucharger.js$domain=toucharger.com
 /javascript/ad.js$script,~third-party,domain=timesofindia.indiatimes.com|economictimes.indiatimes.com|navbharattimes.indiatimes.com|vijaykarnataka.com|maharashtratimes.com|iamgujarat.com|eisamay.indiatimes.com|malayalam.samayam.com|tamil.samayam.com|telugu.samayam.com
 @@||cdn.atf-tagmanager.de/dist/prebid.js$domain=bunte.de
 @@||cdn.jsdelivr.net/gh/prebid/currency-file@1/latest.json$domain=bunte.de
 @@||acdn.adnxs.com/prebid/c/9779_zeta/pb.js$domain=sport.es
+@@||twt-assets.washtimes.com/v4/js/ads/config$domain=washingtontimes.com
+@@/ad-api/*$domain=menshealth.com|menshealth.assistpub.com|delish.com|delish.assistpub.com
 ! @@||totalmedia2.ynet.co.il/gpt/gpt_script_yns_ynv.js$script,domain=vesty.co.il
 ! test for samsung internet
 @@||securepubads.g.doubleclick.net/gampad/ads^*%26aax_pub%
-@@/loadads.js$script,domain=cmf.qa2.chron.com|chron.com|chron.assistpub.com
+@@/loadads.js$script,domain=chron.com|chron.assistpub.com
 ! temp
 @@||sharethrough.com^$domain=redditad.com
 @@||doubleclick.net^$domain=redditad.com
@@ -288,15 +297,15 @@ agame.com,gamesgames.com,gry.pl,jetztspielen.de,juegos.com,spelletjes.nl#@##sgAd
 mashable.com#@##sticky-spacer
 legacy.com#@#.BannerAd
 legacy.com#@#.GalleryViewerAdSuppress
-frontpage.pch.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com,koutsompolio.gr#@#.MediumRectangleAdPanel
+pcmag.com,gtplanet.net,hellhorror.com,factsherald.com,frontpage.pch.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com,koutsompolio.gr#@#.MediumRectangleAdPanel
 legacy.com#@#.NGOLocalFooterAd
 legacy.com#@#.ObitBottomWideAd
 legacy.com#@#.PremiumObitAdBar
 legacy.com#@#.aa_Table
 searchenginejournal.com#@#.absolute-banner
-xn--allestrungen-9ib.de,allestoerungen.de,allestoerungen.ch,allestoerungen.at,allestoringen.be,allestoringen.nl,downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.ru,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr,avclub.com,billboard.com,clickhole.com,deadspin.com,gizmodo.com,hollywoodreporter.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,seattletimes.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.ad
+gtplanet.net,xn--allestrungen-9ib.de,allestoerungen.de,allestoerungen.ch,allestoerungen.at,allestoringen.be,allestoringen.nl,downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.ru,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr,avclub.com,billboard.com,clickhole.com,deadspin.com,gizmodo.com,hollywoodreporter.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,seattletimes.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.ad
 xn--allestrungen-9ib.de,allestoerungen.de,allestoerungen.ch,allestoerungen.at,allestoringen.be,allestoringen.nl,downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.ru,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr#@##ad-leaderboard
-xn--allestrungen-9ib.de,allestoerungen.de,allestoerungen.ch,allestoerungen.at,allestoringen.be,allestoringen.nl,downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.ru,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr#@#.bottom-ad
+pcmag.com,xn--allestrungen-9ib.de,allestoerungen.de,allestoerungen.ch,allestoerungen.at,allestoringen.be,allestoringen.nl,downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.ru,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr#@#.bottom-ad
 filehippo.com,sft-staging.com#@#.ad--leaderboard
 filehippo.com,sft-staging.com#@#.ad--mpu
 charliekirk.com,charliekirk.assistpub.com,firstpost.com,keno.pch.com,keno.qa.pch.com#@#.ad-300x250
@@ -322,7 +331,7 @@ washingtontimes.com#@#.ad-slot
 biggeekdad.com#@#.ad-tag
 avclub.com,clickhole.com,deadspin.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.ad-top
 avclub.com,clickhole.com,deadspin.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.ad-top-banner
-avclub.com,clickhole.com,deadspin.com,forbes.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.ad-unit
+hellhorror.com,avclub.com,clickhole.com,deadspin.com,forbes.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.ad-unit
 avclub.com,clickhole.com,deadspin.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.ad-wide
 firstpost.com#@#.ad728x90
 twinfinite.net#@#.adDiv
@@ -339,10 +348,10 @@ arsdev.net,arstechnica.com#@#.ad_xrail_top
 speedtest.net#@#.ads-column
 speedtest.net#@#.ads-left
 speedtest.net#@#.ads-right
-boredpanda.com#@#.adsbox
+thedirect.com,boredpanda.com#@#.adsbox
 mein-schoener-garten.de#@#.adtag
 searchenginejournal.com#@#.adv-label
-frontpage.pch.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com,koutsompolio.gr#@#.adv_left
+pcmag.com,gtplanet.net,hellhorror.com,factsherald.com,frontpage.pch.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com,koutsompolio.gr#@#.adv_left
 gamesgames.com,gry.pl,jetztspielen.de,juegos.com,spelletjes.nl#@#.advert
 xlrforum.com#@#.afs_ads
 motor1.com#@#.ap
@@ -352,7 +361,7 @@ futbolcentroamerica.com#@#.banner_160x600
 hannity.com#@#.banner_ad
 capebretonpost.com,journalpioneer.com,theguardian.pe.ca#@#.billboard-ad
 247wallst.com,capebretonpost.com,journalpioneer.com,saltwire.com,thechronicleherald.ca,theguardian.pe.ca,thetelegram.com,xlrforum.com#@#.box-ad
-frontpage.pch.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com,koutsompolio.gr#@#.browse-banner_ad
+pcmag.com,gtplanet.net,hellhorror.com,factsherald.com,frontpage.pch.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com,koutsompolio.gr#@#.browse-banner_ad
 arsdev.net,arstechnica.com#@#.cns-ads-stage
 avclub.com,clickhole.com,deadspin.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.contained-ad-container
 avclub.com,clickhole.com,deadspin.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#.contained-ad-shaft
@@ -379,15 +388,15 @@ billboard.com#@#.rail-ad
 agame.com,gamesgames.com,gry.pl,jetztspielen.de,juegos.com,spelletjes.nl#@#.sgAd
 allthetests.com#@#.squareAd
 adtechdaily.com#@#.td-a-rec
-bjpenn.com#@#.td-a-rec-id-custom_ad_1
-charlieintel.com,fortniteintel.com#@#.td-a-rec-id-custom_ad_2
+factsherald.com,bjpenn.com#@#.td-a-rec-id-custom_ad_1
+factsherald.com,charlieintel.com,fortniteintel.com#@#.td-a-rec-id-custom_ad_2
 bjpenn.com#@#.td-a-rec-id-custom_ad_3
 bjpenn.com#@#.td-a-rec-id-custom_ad_4
 bjpenn.com#@#.td-a-rec-id-custom_ad_5
-charlieintel.com,fortniteintel.com#@#.td-header-ad-wrap
+factsherald.com,charlieintel.com,fortniteintel.com#@#.td-header-ad-wrap
 boredpanda.com,comingsoon.net#@#.text-ad
-wingsnation.com,allwrestling.com,planb.mx,grabien.com,hindi.filmibeat.com,krishijagran.com,khaleejtimes.com,canucksarmy.com,hockeyfights.com,puckpedia.com,cmujer.com.mx,descubro.mx,news.grabien.com,telugu.nativeplanet.com,tamil.nativeplanet.com,mykhel.com,hindi.nativeplanet.com,careerindia.com,boldsky.com,malayalam.filmibeat.com,malayalam.nativeplanet.com,indiawest.com,cryptoglobe.com,codinginfinite.com,codeconquest.com,punjabi.krishijagran.com,weregeek.com,screengeek.net,enanyang.my,protrumpnews.com,thehindubusinessline.com,gizbot.com,thephoblographer.com,siasat.com,vikatan.com,theaviationist.com,dunyanews.tv,wegotthiscovered.com,americanthinker.com,gulte.com,telugu.greatandhra.com,welovetrump.com,tamiltwistya.com,manilatimes.net,noqreport.com,blackenterprise.com,dunya.com.pk,telugu.filmibeat.com,issuu.com,worldtimeserver.com,yucatan.com.mx,drivespark.com,tamilcrowstab.com,studyfinds.org,prajavani.net,noahreport.com,goodreturns.in,pythonforbeginners.com,oneindia.com,heroichollywood.com,oilersnation.com,conservativeplaylist.com,rollingout.com,tamil.filmibeat.com,wnd.com,conservativebrief.com,myjoyonline.com,altpress.com,hiphoplately.com,dailyfaceoff.com,tupaki.com,adomonline.com,bitcoinist.com,thescoop.us,order-order.com,hancinema.net,deccanherald.com,100percentfedup.com,alabamanow.com,natchezdemocrat.com,nbc-2.com,sportsmole.co.uk,lfg.co,abc-7.com,leasticoulddo.com,joblo.com,mixi.media,prowrestling.com,timesofsandiego.com,wimp.com#@#.vuukle-ads
-wingsnation.com,allwrestling.com,planb.mx,grabien.com,hindi.filmibeat.com,krishijagran.com,khaleejtimes.com,canucksarmy.com,hockeyfights.com,puckpedia.com,cmujer.com.mx,descubro.mx,news.grabien.com,telugu.nativeplanet.com,tamil.nativeplanet.com,mykhel.com,hindi.nativeplanet.com,careerindia.com,boldsky.com,malayalam.filmibeat.com,malayalam.nativeplanet.com,indiawest.com,cryptoglobe.com,codinginfinite.com,codeconquest.com,punjabi.krishijagran.com,weregeek.com,screengeek.net,enanyang.my,protrumpnews.com,thehindubusinessline.com,gizbot.com,thephoblographer.com,siasat.com,vikatan.com,theaviationist.com,dunyanews.tv,wegotthiscovered.com,americanthinker.com,gulte.com,telugu.greatandhra.com,welovetrump.com,tamiltwistya.com,manilatimes.net,noqreport.com,blackenterprise.com,dunya.com.pk,telugu.filmibeat.com,issuu.com,worldtimeserver.com,yucatan.com.mx,drivespark.com,tamilcrowstab.com,studyfinds.org,prajavani.net,noahreport.com,goodreturns.in,pythonforbeginners.com,oneindia.com,heroichollywood.com,oilersnation.com,conservativeplaylist.com,rollingout.com,tamil.filmibeat.com,wnd.com,conservativebrief.com,myjoyonline.com,altpress.com,hiphoplately.com,dailyfaceoff.com,tupaki.com,adomonline.com,bitcoinist.com,thescoop.us,m.timesofindia.com,djhungama.net,famously-dead.com,famouslyarrested.com,famouslyscandalous.com,gamrreview.com,lolcounter.com,rodalenews.com,timesofindia.com,weathernationtv.com,webmaster-source.com,timesofindia.indiatimes.com,economictimes.indiatimes.com,related.economictimes.indiatimes.com,m.economictimes.com,related.economictimes.com,xn--allestrungen-9ib.de,allestoerungen.ch,order-order.com,hancinema.net,deccanherald.com,100percentfedup.com,alabamanow.com,natchezdemocrat.com,allestoerungen.at,related.downdetector.com,allestoerungen.de,allestoringen.be,allestoringen.nl,downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.ru,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr,nbc-2.com,sportsmole.co.uk,lfg.co,abc-7.com,leasticoulddo.com,aax.demo.oriel.io,agame.com,allkpop.com,boredpanda.com,capebretonpost.com,convertunits.com,cplusplus.com,firstpost.com,footballfancast.com,footballtransfertavern.com,fortniteintel.com,fr.shopping.rakuten.com,homesteadingtoday.com,intermediair.nl,joblo.com,journalpioneer.com,koutsompolio.gr,lacuerda.net,mashable.com,mediafire.com,michigan-sportsman.com,mixi.media,novini.bg,pch.com,pminteg.fr,prowrestling.com,saltwire.com,seattletimes.com,speedtest.net,sportal.bg,sportalbg.dev.smakmedia.com,thechronicleherald.ca,theguardian.pe.ca,thetelegram.com,timesofsandiego.com,titantv.com,washingtontimes.com,wimp.com#@#div[id^="div-gpt-ad"]
+player.one,latintimes.com,ibtimes.co.uk,thelibertyloft.com,thesource.com,joebidenisnotmypresident.news,harianaceh.co.id,dkoding.in,beckernews.com,1tamilcrow.com,manoramaonline.com,allhiphop.com,americanlookout.com,asianage.com,deccanchronicle.com,weregeek.com,healthbuzzline.com,vikatan.com,thescoop.us,tamilcrowstab.com,prousanews.com,ibtimes.com,conservativeplaylist.com,conservativebrief.com,medicaldaily.com,dailytruthreport.com,wingsnation.com,allwrestling.com,planb.mx,grabien.com,hindi.filmibeat.com,krishijagran.com,khaleejtimes.com,canucksarmy.com,hockeyfights.com,puckpedia.com,cmujer.com.mx,descubro.mx,telugu.nativeplanet.com,tamil.nativeplanet.com,mykhel.com,hindi.nativeplanet.com,careerindia.com,boldsky.com,malayalam.filmibeat.com,malayalam.nativeplanet.com,indiawest.com,cryptoglobe.com,codinginfinite.com,codeconquest.com,weregeek.com,screengeek.net,enanyang.my,protrumpnews.com,thehindubusinessline.com,gizbot.com,thephoblographer.com,siasat.com,vikatan.com,theaviationist.com,dunyanews.tv,wegotthiscovered.com,americanthinker.com,gulte.com,telugu.greatandhra.com,welovetrump.com,tamiltwistya.com,manilatimes.net,noqreport.com,blackenterprise.com,dunya.com.pk,telugu.filmibeat.com,issuu.com,worldtimeserver.com,yucatan.com.mx,drivespark.com,tamilcrowstab.com,studyfinds.org,prajavani.net,noahreport.com,goodreturns.in,pythonforbeginners.com,oneindia.com,heroichollywood.com,oilersnation.com,conservativeplaylist.com,rollingout.com,tamil.filmibeat.com,wnd.com,conservativebrief.com,myjoyonline.com,altpress.com,hiphoplately.com,dailyfaceoff.com,tupaki.com,adomonline.com,bitcoinist.com,thescoop.us,order-order.com,hancinema.net,deccanherald.com,100percentfedup.com,alabamanow.com,natchezdemocrat.com,nbc-2.com,sportsmole.co.uk,lfg.co,abc-7.com,leasticoulddo.com,joblo.com,mixi.media,prowrestling.com,timesofsandiego.com,wimp.com#@#.vuukle-ads
+player.one,latintimes.com,ibtimes.co.uk,thelibertyloft.com,thesource.com,joebidenisnotmypresident.news,harianaceh.co.id,dkoding.in,beckernews.com,1tamilcrow.com,manoramaonline.com,allhiphop.com,americanlookout.com,asianage.com,deccanchronicle.com,weregeek.com,healthbuzzline.com,vikatan.com,thescoop.us,tamilcrowstab.com,prousanews.com,ibtimes.com,conservativeplaylist.com,conservativebrief.com,medicaldaily.com,dailytruthreport.com,pcmag.com,wingsnation.com,allwrestling.com,planb.mx,grabien.com,hindi.filmibeat.com,krishijagran.com,khaleejtimes.com,canucksarmy.com,hockeyfights.com,puckpedia.com,cmujer.com.mx,descubro.mx,telugu.nativeplanet.com,tamil.nativeplanet.com,mykhel.com,hindi.nativeplanet.com,careerindia.com,boldsky.com,malayalam.filmibeat.com,malayalam.nativeplanet.com,indiawest.com,cryptoglobe.com,codinginfinite.com,codeconquest.com,weregeek.com,screengeek.net,enanyang.my,protrumpnews.com,thehindubusinessline.com,gizbot.com,thephoblographer.com,siasat.com,vikatan.com,theaviationist.com,dunyanews.tv,wegotthiscovered.com,americanthinker.com,gulte.com,telugu.greatandhra.com,welovetrump.com,tamiltwistya.com,manilatimes.net,noqreport.com,blackenterprise.com,dunya.com.pk,telugu.filmibeat.com,issuu.com,worldtimeserver.com,yucatan.com.mx,drivespark.com,tamilcrowstab.com,studyfinds.org,prajavani.net,noahreport.com,goodreturns.in,pythonforbeginners.com,oneindia.com,heroichollywood.com,oilersnation.com,conservativeplaylist.com,rollingout.com,tamil.filmibeat.com,wnd.com,conservativebrief.com,myjoyonline.com,altpress.com,hiphoplately.com,dailyfaceoff.com,tupaki.com,adomonline.com,bitcoinist.com,thescoop.us,djhungama.net,famously-dead.com,famouslyarrested.com,famouslyscandalous.com,gamrreview.com,lolcounter.com,rodalenews.com,timesofindia.com,weathernationtv.com,webmaster-source.com,timesofindia.indiatimes.com,economictimes.indiatimes.com,m.economictimes.com,related.economictimes.com,xn--allestrungen-9ib.de,allestoerungen.ch,order-order.com,hancinema.net,deccanherald.com,100percentfedup.com,alabamanow.com,natchezdemocrat.com,allestoerungen.at,allestoerungen.de,allestoringen.be,allestoringen.nl,downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.ru,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr,nbc-2.com,sportsmole.co.uk,lfg.co,abc-7.com,leasticoulddo.com,aax.demo.oriel.io,agame.com,allkpop.com,boredpanda.com,capebretonpost.com,convertunits.com,cplusplus.com,firstpost.com,footballfancast.com,footballtransfertavern.com,fortniteintel.com,fr.shopping.rakuten.com,homesteadingtoday.com,intermediair.nl,joblo.com,journalpioneer.com,koutsompolio.gr,lacuerda.net,mashable.com,mediafire.com,michigan-sportsman.com,mixi.media,novini.bg,pch.com,pminteg.fr,prowrestling.com,saltwire.com,seattletimes.com,speedtest.net,sportal.bg,sportalbg.dev.smakmedia.com,thechronicleherald.ca,theguardian.pe.ca,thetelegram.com,timesofsandiego.com,titantv.com,washingtontimes.com,wimp.com#@#div[id^="div-gpt-ad"]
 comingsoon.net,gamerevolution.com,mandatory.com#@#.widget_evolve_ad_gpt_widget
 drydock-394-web.zdtc.global,drydock-755-web.zdtc.global,pcmag.com#@#.zmgad-full-width
 drydock-394-web.zdtc.global,drydock-755-web.zdtc.global,pcmag.com#@#.zmgad-right-rail
@@ -395,7 +404,7 @@ pcmag.com#@#[data-ad-unit-path]
 searchenginejournal.com#@#aside[id^="SEJ_300x250_"]
 allthetests.com#@#div > iframe:first-child
 adtechdaily.com#@#div[class*="td-a-rec-id-"]
-thestudentroom.co.uk#@#div[data-adunit]
+pcmag.com,thestudentroom.co.uk#@#div[data-adunit]
 reddit.com#@#div[data-before-content="advertisement"]
 searchenginejournal.com#@#div[id^="SEJ_300x250_"]
 avclub.com,clickhole.com,deadspin.com,gizmodo.com,jalopnik.com,jezebel.com,kotaku.com,lifehacker.com,splinternews.com,theinventory.com,theonion.com,theroot.com,thetakeout.com#@#div[id^="dfp-ad-"]
@@ -409,7 +418,7 @@ firstpost.com#@#iframe[id^="google_ads_iframe"]
 boredpanda.com#@#.post-ads
 softonic.com#@#.sam-slot
 ooreka.fr#@#div[data-iab-tag]
-cmf.qa2.chron.com,chron.com,chron.assistpub.com#@#.featured_ad
+chron.com,chron.assistpub.com#@#.featured_ad
 checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com,chess.assistpub.com,chron.com,chron.assistpub.com#@#.adBanner
 chron.com,chron.assistpub.com#@#.adModule
 lfpress.com,lfpress.assistpub.com,stage.postmedia.digital,dev.postmedia.digital#@#.ad__container
@@ -458,10 +467,10 @@ lfpress.com,lfpress.assistpub.com,stage.postmedia.digital,dev.postmedia.digital#
 lfpress.com,lfpress.assistpub.com,stage.postmedia.digital,dev.postmedia.digital#@#.ad__placeholder
 lfpress.com,lfpress.assistpub.com,stage.postmedia.digital,dev.postmedia.digital#@#.ad-refresh
 gamepress.gg#@#.top-ad-desktop
-chess.com#@#.banner_slot
-chess.com#@#.postad
-reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com#@#.adLeaderboard
-reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com#@##adBanner
+gamepur.com,chess.com#@#.banner_slot
+gamepur.com,chess.com#@#.postad
+typing.com,nitrotype.com,thedirect.com,gtplanet.net,hellhorror.com,factsherald.com,fortnitecreativehq.com,thegreggjarrett.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com#@#.adLeaderboard
+gtplanet.net,hellhorror.com,factsherald.com,reelgood.com,checkmategaming.com,checkmategaming.assistpub.com,charliekirk.com,charliekirk.assistpub.com,chess.com#@##adBanner
 chess.com#@##content-ad
 chess.com#@#.short-sidebar-ad-bottom
 chess.com#@#.short-sidebar-ad-component
@@ -476,7 +485,7 @@ chess.assistpub.com,chess.com#@#.index-content-ad-wrapper
 motorsport.com#@#.ms-apb-dmpu
 timesofindia.indiatimes.com#@#.ad-widget
 djhungama.net,famously-dead.com,famouslyarrested.com,famouslyscandalous.com,gamrreview.com,lolcounter.com,rodalenews.com,timesofindia.com,weathernationtv.com,webmaster-source.com#@#.ad1
-charliekirk.com,charliekirk.assistpub.com#@#div[id^="rc-widget-"]
+thegreggjarrett.com,charliekirk.com,charliekirk.assistpub.com#@#div[id^="rc-widget-"]
 checkmategaming.com,checkmategaming.assistpub.com#@#.right-ad
 sammobile.com#@#.g-39
 sammobile.com#@#.g-32
@@ -491,6 +500,26 @@ searchenginejournal.com#@#.avert-text
 searchenginejournal.com#@#.img-mmax-100
 searchenginejournal.com#@#.sss_slot
 pch.com#@#div[class^="div-gpt-ad"]
+hellhorror.com#@#.c-ad
+thegreggjarrett.com#@#.ads-wrapper
+thegreggjarrett.com#@#.ads_code
+thedirect.com#@#.pw-ph-sky
+thedirect.com#@#.pw-ph-leaderboard
+thedirect.com#@#.ads_container
+opex360.com,opex360.assistpub.com#@##header-ads
+typing.com#@#.js-skyscraper-ad
+typing.com#@#.js-ad-buttons
+menshealth.com,menshealth.assistpub.com,delish.com,delish.assistpub.com,typing.com#@#.advert--square
+cars.com#@#.cubeAd
+travelandleisure.com,parents.com#@#.ad-wrapper
+travelandleisure.com,parents.com#@#.desktop-ad
+travelandleisure.com#@#.ad-title
+travelandleisure.com,parents.com#@#.ad-sticky-container
+menshealth.com,menshealth.assistpub.com,delish.com,delish.assistpub.com#@#.vertical-ad
+menshealth.com,menshealth.assistpub.com,delish.com,delish.assistpub.com#@#.right-rail-ad
+menshealth.com,menshealth.assistpub.com,delish.com,delish.assistpub.com#@#.listicle--ad-rail
+windowsreport.com#@#div[data-insertion]
+downdetector.ae,downdetector.ca,downdetector.cl,downdetector.co.nz,downdetector.co.uk,downdetector.co.za,downdetector.com,downdetector.com.ar,downdetector.com.au,downdetector.com.br,downdetector.com.co,downdetector.cz,downdetector.dk,downdetector.ec,downdetector.es,downdetector.fi,downdetector.fr,downdetector.gr,downdetector.hk,downdetector.hr,downdetector.hu,downdetector.id,downdetector.ie,downdetector.in,downdetector.it,downdetector.jp,downdetector.mx,downdetector.my,downdetector.no,downdetector.pe,downdetector.ph,downdetector.pk,downdetector.pl,downdetector.pt,downdetector.ro,downdetector.se,downdetector.sg,downdetector.sk,downdetector.web.tr,downdetector.ru,allestoringen.nl,allestoerungen.at,allestoringen.be,allestoerungen.ch,allestoerungen.de,xn--allestrungen-9ib.de#@#.leaderboard.ad
 ! vesty.co.il#@#.top-ad
 ! FT-1489
 @@||forbes.com^$generichide
@@ -565,12 +594,11 @@ forbes.com##.pub_300x250
 @@||ssl-images-amazon.com^*/ape/sf/whitelisted/desktop/$subdocument,document,domain=amazon.co.jp|amazon.co.uk|amazon.com|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.ca|amazon.cn|amazon.com.mx|amazon.com.au|amazon.ae|amazon.sa
 @@||d1lxz4vuik53pc.cloudfront.net/w/*/inner.html$subdocument,document,domain=amazon.com|amazon.co.jp|amazon.co.uk|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.ca|amazon.cn|amazon.com.mx|amazon.com.au|amazon.ae|amazon.sa
 @@||d1lxz4vuik53pc.cloudfront.net/w/*/inner-host.min.js$domain=amazon.com|amazon.co.jp|amazon.co.uk|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.ca|amazon.cn|amazon.com.mx|amazon.com.au|amazon.ae|amazon.sa
+@@||cloudfront.net/transcode/storyTeller/$media,domain=amazon.ae|amazon.ca|amazon.cn|amazon.co.jp|amazon.co.uk|amazon.com|amazon.com.au|amazon.com.mx|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.sa
 @@||amazon-adsystem.com/e/xsp/getAdj?*&slot=auto-$script,domain=amazon.com|amazon.co.jp|amazon.co.uk|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.ca|amazon.cn|amazon.com.mx|amazon.com.au|amazon.ae|amazon.sa
 @@||amazon-adsystem.com/e/xsp/imp?$image,domain=amazon.com|amazon.co.jp|amazon.co.uk|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.ca|amazon.cn|amazon.com.mx|amazon.com.au|amazon.ae|amazon.sa
 @@||amazon-adsystem.com/x/px/$image,domain=amazon.com|amazon.co.jp|amazon.co.uk|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.ca|amazon.cn|amazon.com.mx|amazon.com.au|amazon.ae|amazon.sa
 @@||amazon-adsystem.com/iu3$subdocument,third-party
-!
-||d1f0esyb34c1g2.cloudfront.net/transcode/storyTeller/$media,domain=amazon.co.jp|amazon.co.uk|amazon.com|amazon.de|amazon.es|amazon.fr|amazon.in|amazon.it|amazon.ca|amazon.cn|amazon.com.mx|amazon.com.au|amazon.ae|amazon.sa
 !:partner_token=Google
 !:partner_id=1771032db7d723d7
 !:type=partner
@@ -1106,6 +1134,8 @@ forbes.com##.pub_300x250
 !A30
 @@||google.com/uds/$script,subdocument,document,domain=alot.com|alothome.com|alotresults.com|bargainmatch.com|lyricmatcher.com|alotfinance.com|alothealth.com|alotlocal.com|alottravel.com
 @@||google.com/ads$domain=alot.com|alothome.com|alotresults.com|bargainmatch.com|lyricmatcher.com|alotfinance.com|alothealth.com|alotlocal.com|alottravel.com
+@@||alothome.com/search^$elemhide
+@@||alot.com/search^$elemhide
 !A32
 @@||atlanticbb.net/search/$elemhide
 @@||bajabroadband.net^$elemhide
@@ -3498,8 +3528,8 @@ search.yahoo.com#@##right > div:first-child:last-child > [id]:first-child:last-c
 @@||fashiola.ph^$elemhide
 @@||fashiola.ae^$elemhide
 @@||fashiola.cz^$elemhide
-@@||google.com/uds/$script,subdocument,document,domain=kleding.nl|fashiola.de|fashiola.co.uk|fashiola.es|fashiola.fr|fashiola.se|fashiola.it|fashiola.pl|fashiola.pt|fashiola.com.br|fashiola.at|fashiola.ch|fashiola.be|fashiola.be|fashiola.dk|fashiola.mx|fashiola.com.au|fashiola.no|fashiola.fi|fashiola.com|fashiola.ca|fashiola.com.tr|fashiola.in|fashiola.ph|fashiola.ae|fashiola.cz
-@@||google.com/ads$domain=kleding.nl|fashiola.de|fashiola.co.uk|fashiola.es|fashiola.fr|fashiola.se|fashiola.it|fashiola.pl|fashiola.pt|fashiola.com.br|fashiola.at|fashiola.ch|fashiola.be|fashiola.be|fashiola.dk|fashiola.mx|fashiola.com.au|fashiola.no|fashiola.fi|fashiola.com|fashiola.ca|fashiola.com.tr|fashiola.in|fashiola.ph|fashiola.ae|fashiola.cz
+@@||google.com/uds/$script,subdocument,document,domain=kleding.nl|fashiola.de|fashiola.co.uk|fashiola.es|fashiola.fr|fashiola.se|fashiola.it|fashiola.pl|fashiola.pt|fashiola.com.br|fashiola.at|fashiola.ch|fashiola.be|fashiola.dk|fashiola.mx|fashiola.com.au|fashiola.no|fashiola.fi|fashiola.com|fashiola.ca|fashiola.com.tr|fashiola.in|fashiola.ph|fashiola.ae|fashiola.cz
+@@||google.com/ads$domain=kleding.nl|fashiola.de|fashiola.co.uk|fashiola.es|fashiola.fr|fashiola.se|fashiola.it|fashiola.pl|fashiola.pt|fashiola.com.br|fashiola.at|fashiola.ch|fashiola.be|fashiola.dk|fashiola.mx|fashiola.com.au|fashiola.no|fashiola.fi|fashiola.com|fashiola.ca|fashiola.com.tr|fashiola.in|fashiola.ph|fashiola.ae|fashiola.cz
 !A119
 @@||bestreviews.guide^$elemhide
 @@||cybermondaydeals.online^$elemhide
@@ -3822,7 +3852,7 @@ engadget.com#@##gemini-right-rail-thumbnails
 !:forum=https://adblockplus.org/forum/viewtopic.php?p=105622#p105622
 ! Small text ad with static image below navigation on left side
 @@||yimg.com/rq/darla/*/html/r-sf.html$subdocument,domain=yahoo.com|mail.yahoo.com
-@@||yimg.com/rq/darla/*/html/r-sf.html$subdocument,document,domain=uk.finance.yahoo.com
+@@||yimg.com/rq/darla/*/html/r-sf.html$subdocument,document,domain=finance.yahoo.com
 @@||ads.yahoo.com^*^ad_size=120x45^$script,domain=s.yimg.com
 @@||ads.yahoo.com^*^Z=120x45^$script,domain=s.yimg.com|yahoo.com
 @@||pr.ybp.yahoo.com/ab/secure/true/imp/$script,domain=s.yimg.com|yahoo.com
@@ -3865,6 +3895,19 @@ yahoo.com#@##my-adsLREC4-base
 @@||yimg.com/nn/lib/metro/g/sda/$domain=yahoo.com
 @@||yimg.com/aaq/wf/wf-darla-*-modern.js$domain=yahoo.com
 @@||atwola.com/adcount*$image,domain=yahoo.com
+@@||yahoo.com/sdarla/php/fc.php^$subdocument,document,domain=yahoo.com
+@@||yimg.com/rq/darla/*/html/r-sf.html$subdocument,document,domain=yahoo.com
+@@||yahoo.com/lib/metro/g/myy/advertisement_*.js$domain=yahoo.com
+@@||yimg.com/nn/lib/metro/g/myy/advertisement_*.js$domain=yahoo.com
+yahoo.com##[id^="sda-LREC"]:not(.uba-container):not([id$="iframe"])
+yahoo.com###sda-LDRB:not(.uba-container)
+yahoo.com#@##my-adsLREC
+yahoo.com##div[id^="my-ads"]:not(.uba-container):not([id$="-base"]):not([id$="-iframe"])
+yahoo.com#@##my-adsLREC2
+yahoo.com#@#.darla-lrec-ad
+yahoo.com##.darla-lrec-ad:not(.uba-container)
+yahoo.com#@##sda-LDRB
+yahoo.com#@##sda-LDRB:not(.uba-container)
 s.yimg.com#@#.ad_slug_table
 s.yimg.com#@#.CAN_ad
 yahoo.com#@##sticky-lrec2-footer
@@ -3885,18 +3928,6 @@ mail.yahoo.com##a[data-test-id="pencil-ad-messageList"]
 mail.yahoo.com#@#div[data-test-id="ad-viewability-tracker"]
 ! Hidden for compliance
 mail.yahoo.com###sb_rel_tgtLREC4.darla
-!:partner_token=tumblr.com
-!:partner_id=79d1eac8b97e2141
-!:type=partner
-!:forum=https://adblockplus.org/forum/viewtopic.php?f=12&t=47913
-! tumblr.com ads
-||tumblr.com/assets/scripts/tumblr/dashboard/px.js?ch=2$domain=tumblr.com
-@@||tumblr.com/assets/scripts/tumblr/dashboard/px.js?ch=1$domain=tumblr.com
-tumblr.com#@#.standalone-ad-container
-@@||s.yimg.com/av/$domain=tumblr.com
-@@||pix.ny.us.criteo.net/img$domain=tumblr.com
-@@||assets.tumblr.com/images/sponsored_post_sprite_new.png$domain=tumblr.com
-@@||assets.tumblr.com/images/sponsored_post_sprite_new_2x.png$domain=tumblr.com
 !:partner_token=Microsoft
 !:partner_id=c7cdd2fa8a3d0b2a
 !:type=partner
@@ -3967,42 +3998,42 @@ tumblr.com#@#.standalone-ad-container
 !:type=partner
 !:forum=https://adblockplus.org/forum/viewtopic.php?f=12&t=25991
 ! Taboola ads
-thestartmagazine.com,samsung.com#@#.trc-content-sponsoredUB
-thestartmagazine.com,samsung.com#@#.trc-content-sponsored
-thestartmagazine.com,samsung.com#@#a[href^="http://bs.serving-sys.com/"]
-thestartmagazine.com,samsung.com#@#a[href^="https://bs.serving-sys.com"]
-thestartmagazine.com,samsung.com#@#.trc_rbox_div .syndicatedItem
-thestartmagazine.com,samsung.com#@#.trc_rbox_div .syndicatedItemUB
-thestartmagazine.com,samsung.com#@#.trc_rbox .syndicatedItem
-thestartmagazine.com,samsung.com#@#.trc_rbox_border_elm .syndicatedItem
-thestartmagazine.com,samsung.com#@#a[href^="https://dsct1.com/"]
-thestartmagazine.com,samsung.com#@#a[href^="http://ad.doubleclick.net/"]
-thestartmagazine.com,samsung.com#@#a[href^="https://ad.doubleclick.net/"]
-thestartmagazine.com,samsung.com#@#.trc_related_container div[data-item-syndicated="true"]
-thestartmagazine.com,samsung.com#@#a[target="_blank"][href^="http://api.taboola.com/"]
-thestartmagazine.com,samsung.com#@#a[href^="http://track.adform.net/"]
-thestartmagazine.com,samsung.com#@#a[href^="https://track.adform.net/"]
-thestartmagazine.com,samsung.com#@#a[href^="https://ad.atdmt.com/"]
-thestartmagazine.com,samsung.com#@#a[href*="/cmd.php?ad="]
-thestartmagazine.com,samsung.com#@#a[href^="https://plarium.com/"]
-thestartmagazine.com,samsung.com#@#a[href^="http://popup.taboola.com/"]
-thestartmagazine.com,samsung.com#@#a[href^="https://tracking.truthfinder.com/?a="]
-thestartmagazine.com,samsung.com##.bx-creative a[target="_blank"][href^="http://api.taboola.com/"]
-thestartmagazine.com,samsung.com##.banner_ad
-thestartmagazine.com,samsung.com##.sponsored_ad
-thestartmagazine.com,samsung.com#@#a[href*=".smartadserver.com"]
-@@||taboola.com^$script,domain=thestartmagazine.com|samsung.com
-@@||images.*.criteo.net/img/img?c=*&u=$image,domain=thestartmagazine.com|samsung.com
-@@||pix.*.criteo.net/img/img?c=*&u=$image,domain=thestartmagazine.com|samsung.com
-@@||images.taboola.com/taboola/image/fetch/$image,domain=thestartmagazine.com|samsung.com
-@@&publisherID=$popup,domain=thestartmagazine.com|samsung.com
-@@||doubleclick.net/ddm/$popup,domain=thestartmagazine.com|samsung.com
-@@||track.adform.net^$popup,domain=thestartmagazine.com|samsung.com
-@@||ads.youniversalmedia.com^$popup,domain=thestartmagazine.com|samsung.com
-@@||plarium.com^*&adPixel=taboola_$popup,domain=thestartmagazine.com|samsung.com
-@@||serving-sys.com/BurstingPipe/adServer.bs?$popup,domain=thestartmagazine.com|samsung.com
-@@^utm_source=taboola^$popup,domain=thestartmagazine.com|samsung.com
-@@^utm_source=taboola_$popup,domain=thestartmagazine.com|samsung.com
+taboolanews.com,thestartmagazine.com,samsung.com#@#.trc-content-sponsoredUB
+taboolanews.com,thestartmagazine.com,samsung.com#@#.trc-content-sponsored
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="http://bs.serving-sys.com/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="https://bs.serving-sys.com"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#.trc_rbox_div .syndicatedItem
+taboolanews.com,thestartmagazine.com,samsung.com#@#.trc_rbox_div .syndicatedItemUB
+taboolanews.com,thestartmagazine.com,samsung.com#@#.trc_rbox .syndicatedItem
+taboolanews.com,thestartmagazine.com,samsung.com#@#.trc_rbox_border_elm .syndicatedItem
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="https://dsct1.com/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="http://ad.doubleclick.net/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="https://ad.doubleclick.net/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#.trc_related_container div[data-item-syndicated="true"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[target="_blank"][href^="http://api.taboola.com/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="http://track.adform.net/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="https://track.adform.net/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="https://ad.atdmt.com/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href*="/cmd.php?ad="]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="https://plarium.com/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="http://popup.taboola.com/"]
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href^="https://tracking.truthfinder.com/?a="]
+taboolanews.com,thestartmagazine.com,samsung.com##.bx-creative a[target="_blank"][href^="http://api.taboola.com/"]
+taboolanews.com,thestartmagazine.com,samsung.com##.banner_ad
+taboolanews.com,thestartmagazine.com,samsung.com##.sponsored_ad
+taboolanews.com,thestartmagazine.com,samsung.com#@#a[href*=".smartadserver.com"]
+@@||taboola.com^$script,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||images.*.criteo.net/img/img?c=*&u=$image,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||pix.*.criteo.net/img/img?c=*&u=$image,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||images.taboola.com/taboola/image/fetch/$image,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@&publisherID=$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||doubleclick.net/ddm/$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||track.adform.net^$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||ads.youniversalmedia.com^$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||plarium.com^*&adPixel=taboola_$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@||serving-sys.com/BurstingPipe/adServer.bs?$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@^utm_source=taboola^$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
+@@^utm_source=taboola_$popup,domain=taboolanews.com|thestartmagazine.com|samsung.com
 ! *** exceptions:exceptionrules/exceptionrules-minimal-no-third-party-tracking.txt ***
 !:partner_token=Google
 !:partner_id=1771032db7d723d7
