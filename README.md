@@ -357,7 +357,7 @@ Usage example in a simplified way where all blocking subscriptions (like "easyli
 ``` java
 adblockHelper
     .get()
-    .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+    .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
     .preloadSubscriptions(R.raw.easylist, R.raw.exceptionrules)
     .addEngineCreatedListener(engineCreatedListener)
     .addEngineDisposedListener(engineDisposedListener)
@@ -374,7 +374,7 @@ Then, when using the `AdblockHelper` for example, you can set it like:
 ``` java
 adblockHelper
     .get()
-    .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+    .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
     .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
     .addEngineCreatedListener(engineCreatedListener)
     .addEngineDisposedListener(engineDisposedListener)

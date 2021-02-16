@@ -100,7 +100,7 @@ public class WebViewInterceptRequestTest
       AdblockHelper
           .get()
           .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
-          .retain(true);
+          .getProvider().retain(true);
     }
   }
 
