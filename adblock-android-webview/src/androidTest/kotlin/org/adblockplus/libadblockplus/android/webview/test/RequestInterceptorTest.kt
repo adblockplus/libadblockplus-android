@@ -26,7 +26,7 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
 
     @Test
     fun testInvalidCommand() {
-        assertTrue("$BASE_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(BASE_URL, ""))
+        assertTrue("$BASE_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(BASE_URL, RESPONSE_INVALID_COMMAND))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_INVALID_COMMAND)
         }
@@ -34,11 +34,11 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
 
     @Test
     fun testAddRemoveErrorWithoutPayload() {
-        assertTrue("$ADD_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(ADD_URL, ""))
+        assertTrue("$ADD_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(ADD_URL, RESPONSE_INVALID_PAYLOAD))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_INVALID_PAYLOAD)
         }
-        assertTrue("$REMOVE_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(REMOVE_URL, ""))
+        assertTrue("$REMOVE_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(REMOVE_URL, RESPONSE_INVALID_PAYLOAD))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_INVALID_PAYLOAD)
         }
@@ -54,14 +54,14 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
         assertEquals(AdblockHelper.get().provider.engine.filterEngine.listedFilters.size, 0)
 
         // Test add
-        assertTrue("$addUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(addUrl, ""))
+        assertTrue("$addUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(addUrl, RESPONSE_OK))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_OK)
         }
         assertEquals(AdblockHelper.get().provider.engine.filterEngine.listedFilters.size, 2)
 
         // Test duplicate
-        assertTrue("$addUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(addUrl, ""))
+        assertTrue("$addUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(addUrl, RESPONSE_OK))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_OK)
         }
@@ -71,28 +71,28 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
 
         // Test remove
         val removeUrl = REMOVE_URL + BASE64_QUERY_PARAM_NAME + base64.encodeToString(filter.toByteArray())
-        assertTrue("$removeUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(removeUrl, ""))
+        assertTrue("$removeUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(removeUrl, RESPONSE_OK))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_OK)
         }
         assertEquals(AdblockHelper.get().provider.engine.filterEngine.listedFilters.size, 1)
 
         // Test repeated remove
-        assertTrue("$removeUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(removeUrl, ""))
+        assertTrue("$removeUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(removeUrl, RESPONSE_OK))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_OK)
         }
         assertEquals(AdblockHelper.get().provider.engine.filterEngine.listedFilters.size, 1)
 
         // Test duplicate
-        assertTrue("$addUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(addUrl, ""))
+        assertTrue("$addUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(addUrl, RESPONSE_OK))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_OK)
         }
         assertEquals(AdblockHelper.get().provider.engine.filterEngine.listedFilters.size, 2)
 
         // Test clear
-        assertTrue("$CLEAR_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(CLEAR_URL, ""))
+        assertTrue("$CLEAR_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(CLEAR_URL, RESPONSE_OK))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_OK)
         }
