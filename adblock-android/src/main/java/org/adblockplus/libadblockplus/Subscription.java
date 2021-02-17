@@ -21,19 +21,18 @@ import java.lang.ref.WeakReference;
 
 public final class Subscription
 {
+  public final String url;
+  public final String title;
+  public final String homepage;
+  public final String author;
+  public final String languages;
   protected final WeakReference<FilterEngine> filterEngine;
-  protected final String url;
 
   static
   {
     System.loadLibrary(BuildConfig.nativeLibraryName);
     registerNatives();
   }
-
-  private final String title;
-  private final String homepage;
-  private final String author;
-  private final String languages;
 
   private Subscription(final String url,
                        final String title,
@@ -70,39 +69,6 @@ public final class Subscription
     setDisabled(engine.getNativePtr(), disabled, this.url);
   }
 
-  //  @Deprecated. Use FilterEngine.getListedSubscriptions() combined with find instead.
-  public boolean isListed()
-  {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return false;
-    }
-    return engine.getListedSubscriptions().contains(this);
-  }
-
-  //  @Deprecated. Use FilterEngine.addSubscription() instead.
-  public void addToList()
-  {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return;
-    }
-    engine.addSubscription(this);
-  }
-
-  //  @Deprecated. Use FilterEngine.removeSubscription() instead.
-  public void removeFromList()
-  {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return;
-    }
-    engine.removeSubscription(this);
-  }
-
   public void updateFilters()
   {
     final FilterEngine engine = filterEngine.get();
@@ -131,31 +97,6 @@ public final class Subscription
       return false;
     }
     return isAcceptableAds(engine.getNativePtr(), this.url);
-  }
-
-  public String getTitle()
-  {
-    return this.title;
-  }
-
-  public String getUrl()
-  {
-    return this.url;
-  }
-
-  public String getHomepage()
-  {
-    return this.homepage;
-  }
-
-  public String getAuthor()
-  {
-    return this.author;
-  }
-
-  public String getLanguages()
-  {
-    return this.languages;
   }
 
   public String getSynchronizationStatus()

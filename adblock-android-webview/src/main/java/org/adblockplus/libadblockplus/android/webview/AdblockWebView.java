@@ -38,11 +38,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
-import org.adblockplus.libadblockplus.android.Subscription;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
 import org.adblockplus.libadblockplus.android.webview.content_type.HeadersContentTypeDetector;
@@ -799,7 +799,7 @@ public class AdblockWebView extends WebView
         sitekeyCheckEnabled = engine.isAcceptableAdsEnabled() || getJsInIframesEnabled();
         if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
         {
-          final Subscription[] listedSubscriptions = engine.getListedSubscriptions();
+          final List<Subscription> listedSubscriptions = engine.getListedSubscriptions();
           for (Subscription subscription : listedSubscriptions)
           {
             if (subscription.url.contains("abp-testcase-subscription.txt"))

@@ -77,7 +77,8 @@ public class AllowlistedDomainsSettingsFragment
   }
 
   @Override
-  public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState)
+  public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
+                           final Bundle savedInstanceState)
   {
     final View rootView = inflater.inflate(
         R.layout.fragment_adblock_allowlisted_domains_settings,

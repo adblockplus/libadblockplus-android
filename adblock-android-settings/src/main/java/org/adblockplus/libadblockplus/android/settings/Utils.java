@@ -21,7 +21,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 
-import org.adblockplus.libadblockplus.android.Subscription;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,13 +43,15 @@ public class Utils
   public static final String SUBSCRIPTION_FIELD_LANGUAGES = "languages";
   public static final String SUBSCRIPTION_FIELD_TITLE = "title";
   @SuppressLint("ConstantLocale") // This is used only on fresh start
-  public static final String LOCALE = Locale.getDefault().toString().replace('_', '-')
+  public static final String LOCALE = Locale.getDefault().toString()
+      .replace('_', '-')
     .replaceAll("^iw-", "he-");
 
   public static Map<String, String> getLocaleToTitleMap(final Context context)
   {
     final Resources resources = context.getResources();
-    final String[] locales = resources.getStringArray(R.array.fragment_adblock_general_locale_title);
+    final String[] locales = resources.getStringArray(
+        R.array.fragment_adblock_general_locale_title);
     final String separator = resources.getString(R.string.fragment_adblock_general_separator);
     final Map<String, String> localeToTitle = new HashMap<>(locales.length);
     for (final String localeAndTitlePair : locales)
@@ -87,25 +88,23 @@ public class Utils
     return sb.toString();
   }
 
-  public static Subscription parseSubscription(final JSONObject jsonObject)
+  public static SubscriptionInfo parseSubscription(final JSONObject jsonObject)
   {
-    final Subscription subscription = new Subscription();
+    final String url = jsonObject.optString(SUBSCRIPTION_FIELD_URL);
+    final String title = jsonObject.optString(SUBSCRIPTION_FIELD_TITLE);
+    final String languages = parseLanguages(jsonObject.optJSONArray(SUBSCRIPTION_FIELD_LANGUAGES));
 
-    subscription.title = jsonObject.optString(SUBSCRIPTION_FIELD_TITLE);
-    subscription.url = jsonObject.optString(SUBSCRIPTION_FIELD_URL);
-    subscription.prefixes = parseLanguages(jsonObject.optJSONArray(SUBSCRIPTION_FIELD_LANGUAGES));
-
-    if (isEmpty(subscription.title) || isEmpty(subscription.url))
+    if (isEmpty(url) || isEmpty(title))
     {
       return null;
     }
 
-    return subscription;
+    return new SubscriptionInfo(url, title, languages, "", "");
   }
 
-  public static List<Subscription> getSubscriptionsFromResourceStream(final InputStream stream)
+  public static List<SubscriptionInfo> getSubscriptionsFromResourceStream(final InputStream stream)
   {
-    final List<Subscription> subscriptions = new LinkedList<>();
+    final List<SubscriptionInfo> subscriptions = new LinkedList<>();
 
     if (stream == null)
     {
@@ -130,7 +129,7 @@ public class Utils
 
     for (int i = 0; i < array.length(); i++)
     {
-      final Subscription subscription;
+      final SubscriptionInfo subscription;
       try
       {
         subscription = parseSubscription(array.getJSONObject(i));
@@ -162,19 +161,20 @@ public class Utils
     return null;
   }
 
-  public static Subscription chooseDefaultSubscription(final List<Subscription> subscriptions)
+  public static SubscriptionInfo chooseDefaultSubscription(
+      final List<SubscriptionInfo> subscriptions)
   {
-    Subscription selectedSubscription = null;
+    SubscriptionInfo selectedSubscription = null;
     String selectedLanguage = null;
     int matchCount = 0;
     final Random rand = new Random();
-    for (Subscription subscription : subscriptions)
+    for (SubscriptionInfo subscription : subscriptions)
     {
       if (selectedSubscription == null)
       {
         selectedSubscription = subscription;
       }
-      final String language = checkLocaleLanguageMatch(subscription.prefixes);
+      final String language = checkLocaleLanguageMatch(subscription.languages);
       if (language == null)
       {
         continue;
@@ -202,11 +202,12 @@ public class Utils
     return selectedSubscription;
   }
 
-  public static List<Subscription> chooseSelectedSubscriptions(final List<Subscription> subscriptions,
-                                                               final Set<String> selectedTitles)
+  public static List<SubscriptionInfo> chooseSelectedSubscriptions(
+      final List<SubscriptionInfo> subscriptions,
+      final Set<String> selectedTitles)
   {
-    final List<Subscription> selectedSubscriptions = new LinkedList<>();
-    for (final Subscription eachSubscription : subscriptions)
+    final List<SubscriptionInfo> selectedSubscriptions = new LinkedList<>();
+    for (final SubscriptionInfo eachSubscription : subscriptions)
     {
       if (selectedTitles.contains(eachSubscription.url))
       {

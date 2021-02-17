@@ -72,41 +72,41 @@ public class SubscriptionsManager
 
           if (intent.getAction().equals(ACTION_ADD))
           {
-            add(subscription);
+            add(filterEngine, subscription);
           }
           else if (intent.getAction().equals(ACTION_REMOVE))
           {
-            remove(subscription);
+            remove(filterEngine, subscription);
           }
           else if (intent.getAction().equals(ACTION_ENABLE))
           {
-            enable(subscription);
+            enable(filterEngine, subscription);
           }
           else if (intent.getAction().equals(ACTION_DISABLE))
           {
-            disable(subscription);
+            disable(filterEngine, subscription);
           }
           else if (intent.getAction().equals(ACTION_UPDATE))
           {
-            update(subscription);
+            update(filterEngine, subscription);
           }
         }
       }
 
-      private void remove(final Subscription subscription)
+      private void remove(final FilterEngine filterEngine, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(filterEngine, subscription))
         {
           return;
         }
 
-        subscription.removeFromList();
+        filterEngine.removeSubscription(subscription);
         Timber.d("Removed subscription");
       }
 
-      private void update(final Subscription subscription)
+      private void update(final FilterEngine filterEngine, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(filterEngine, subscription))
         {
           return;
         }
@@ -120,9 +120,9 @@ public class SubscriptionsManager
         Timber.d("Forced subscription update");
       }
 
-      private void enable(final Subscription subscription)
+      private void enable(final FilterEngine filterEngine, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(filterEngine, subscription))
         {
           return;
         }
@@ -137,9 +137,9 @@ public class SubscriptionsManager
         Timber.d("Enabled subscription");
       }
 
-      private void disable(final Subscription subscription)
+      private void disable(final FilterEngine filterEngine, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(filterEngine, subscription))
         {
           return;
         }
@@ -153,9 +153,9 @@ public class SubscriptionsManager
         Timber.d("Disabled subscription");
       }
 
-      private void add(final Subscription subscription)
+      private void add(final FilterEngine filterEngine, final Subscription subscription)
       {
-        if (subscription.isListed())
+        if (filterEngine.getListedSubscriptions().contains(subscription))
         {
           if (subscription.isDisabled())
           {
@@ -169,7 +169,7 @@ public class SubscriptionsManager
         }
         else
         {
-          subscription.addToList();
+          filterEngine.addSubscription(subscription);
           Timber.d("Added subscription");
         }
       }
@@ -186,9 +186,10 @@ public class SubscriptionsManager
         }
       }
 
-      private boolean assertIsListed(final Subscription subscription)
+      private boolean assertIsListed(final FilterEngine filterEngine,
+                                     final Subscription subscription)
       {
-        if (!subscription.isListed())
+        if (!filterEngine.getListedSubscriptions().contains(subscription))
         {
           Timber.e("Subscription is not listed");
           return false;

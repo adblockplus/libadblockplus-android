@@ -345,12 +345,12 @@ public final class FilterEngine
 
   public void addSubscription(final Subscription subscription)
   {
-    addSubscription(this.ptr, subscription.getUrl());
+    addSubscription(this.ptr, subscription.url);
   }
 
   public void removeSubscription(final Subscription subscription)
   {
-    removeSubscription(this.ptr, subscription.getUrl());
+    removeSubscription(this.ptr, subscription.url);
   }
 
   public void addFilter(final Filter filter)

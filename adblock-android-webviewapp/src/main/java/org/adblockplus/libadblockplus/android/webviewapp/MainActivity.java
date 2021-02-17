@@ -180,10 +180,10 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   private void setTestPageSubscription()
   {
     AdblockHelper.get().getProvider().retain(true);
-    final FilterEngine fe = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
-    final Subscription subscription = fe.getSubscription(testPageSubscriptionUrl);
+    final FilterEngine filterEngne = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
+    final Subscription subscription = filterEngne.getSubscription(testPageSubscriptionUrl);
     String message;
-    if (subscription.isListed())
+    if (filterEngne.getListedSubscriptions().contains(subscription))
     {
       if (subscription.isDisabled())
       {
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     }
     else
     {
-      subscription.addToList();
+      filterEngne.addSubscription(subscription);
       message = getResources().getString(R.string.subscription_added_and_enabled);
     }
     message += testPageSubscriptionUrl;

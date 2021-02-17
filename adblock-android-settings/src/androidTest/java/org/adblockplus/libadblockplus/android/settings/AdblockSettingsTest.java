@@ -18,35 +18,29 @@
 package org.adblockplus.libadblockplus.android.settings;
 
 import org.adblockplus.libadblockplus.android.ConnectionType;
-import org.adblockplus.libadblockplus.android.Subscription;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class AdblockSettingsTest
 {
-  private static AdblockSettings buildModel(int subscriptionsCount, int allowlistedDomainsCount)
+  private static AdblockSettings buildModel(final int subscriptionsCount,
+                                            final int allowlistedDomainsCount)
   {
     final AdblockSettings settings = new AdblockSettings();
     settings.setAdblockEnabled(true);
     settings.setAcceptableAdsEnabled(true);
     settings.setAllowedConnectionType(ConnectionType.WIFI);
 
-    final List<Subscription> subscriptions = new LinkedList<>();
+    final List<SubscriptionInfo> subscriptions = new LinkedList<>();
     for (int i = 0; i < subscriptionsCount; i++)
     {
-      subscriptions.add(new Subscription("Title" + (i + 1), "URL" + (i + 1), "", "", ""));
+      subscriptions.add(new SubscriptionInfo("URL" + (i + 1), "Title" + (i + 1)));
     }
     settings.setSelectedSubscriptions(subscriptions);
 
@@ -58,29 +52,6 @@ public class AdblockSettingsTest
     settings.setAllowlistedDomains(domains);
 
     return settings;
-  }
-
-  private static void assertSettingsEquals(AdblockSettings expected, AdblockSettings actual)
-  {
-    assertEquals(expected.isAdblockEnabled(), actual.isAdblockEnabled());
-    assertEquals(expected.isAcceptableAdsEnabled(), actual.isAcceptableAdsEnabled());
-    assertEquals(expected.getAllowedConnectionType(), actual.getAllowedConnectionType());
-
-    assertNotNull(actual.getSelectedSubscriptions());
-    assertEquals(expected.getSelectedSubscriptions().size(), actual.getSelectedSubscriptions().size());
-    for (int i = 0; i < expected.getSelectedSubscriptions().size(); i++)
-    {
-      assertEquals(expected.getSelectedSubscriptions().get(i).title, actual.getSelectedSubscriptions().get(i).title);
-      assertEquals(expected.getSelectedSubscriptions().get(i).url, actual.getSelectedSubscriptions().get(i).url);
-    }
-
-    assertNotNull(actual.getAllowlistedDomains());
-    assertEquals(expected.getAllowlistedDomains().size(), actual.getAllowlistedDomains().size());
-
-    for (int i = 0; i < expected.getAllowlistedDomains().size(); i++)
-    {
-      assertEquals(expected.getAllowlistedDomains().get(i), actual.getAllowlistedDomains().get(i));
-    }
   }
 
   @Test
@@ -134,21 +105,5 @@ public class AdblockSettingsTest
       final AdblockSettings settings = buildModel(1, i);
       assertEquals(i, settings.getAllowlistedDomains().size());
     }
-  }
-
-  @Test
-  public void testSerializable() throws IOException, ClassNotFoundException
-  {
-    final AdblockSettings savedSettings = buildModel(2, 3);
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(savedSettings);
-
-    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-    ObjectInputStream ois = new ObjectInputStream(bais);
-    AdblockSettings loadedSettings = (AdblockSettings) ois.readObject();
-
-    assertSettingsEquals(savedSettings, loadedSettings);
   }
 }

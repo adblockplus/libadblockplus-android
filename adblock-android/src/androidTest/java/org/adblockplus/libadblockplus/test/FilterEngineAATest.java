@@ -75,7 +75,7 @@ public class FilterEngineAATest extends BaseFilterEngineTest
     }
     assertNotNull(aaSubscription);
     assertNotNull(langSubscription);
-    assertEquals(langSubscriptionUrl, langSubscription.getUrl());
+    assertEquals(langSubscriptionUrl, langSubscription.url);
     assertTrue(filterEngine.isAcceptableAdsEnabled());
   }
 
