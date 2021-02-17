@@ -184,21 +184,21 @@ public class FilterEngineTest extends BaseFilterEngineTest
     assertEquals(0, filterEngine.getListedSubscriptions().size());
     final Subscription subscription = filterEngine.getSubscription("foo");
     assertEquals(0, filterEngine.getListedSubscriptions().size());
-    assertFalse(subscription.isListed());
-    subscription.addToList();
+    assertFalse(filterEngine.getListedSubscriptions().contains(subscription));
+    filterEngine.addSubscription(subscription);
     assertEquals(1, filterEngine.getListedSubscriptions().size());
     assertEquals(subscription, filterEngine.getListedSubscriptions().get(0));
-    assertTrue(subscription.isListed());
-    subscription.addToList();
+    assertTrue(filterEngine.getListedSubscriptions().contains(subscription));
+    filterEngine.addSubscription(subscription);
     assertEquals(1, filterEngine.getListedSubscriptions().size());
     assertEquals(subscription, filterEngine.getListedSubscriptions().get(0));
-    assertTrue(subscription.isListed());
-    subscription.removeFromList();
+    assertTrue(filterEngine.getListedSubscriptions().contains(subscription));
+    filterEngine.removeSubscription(subscription);
     assertEquals(0, filterEngine.getListedSubscriptions().size());
-    assertFalse(subscription.isListed());
-    subscription.removeFromList();
+    assertFalse(filterEngine.getListedSubscriptions().contains(subscription));
+    filterEngine.removeSubscription(subscription);
     assertEquals(0, filterEngine.getListedSubscriptions().size());
-    assertFalse(subscription.isListed());
+    assertFalse(filterEngine.getListedSubscriptions().contains(subscription));
   }
 
   @Test

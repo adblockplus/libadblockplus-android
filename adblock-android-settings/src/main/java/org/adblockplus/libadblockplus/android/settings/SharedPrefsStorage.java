@@ -21,7 +21,6 @@ import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 
 import org.adblockplus.libadblockplus.android.ConnectionType;
-import org.adblockplus.libadblockplus.android.Subscription;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -81,7 +80,8 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     final String connectionType = prefs.getString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY, null);
     settings.setAllowedConnectionType(ConnectionType.findByValue(connectionType));
 
-    List<Subscription> subscriptions = loadSubscriptions(SETTINGS_SELECTED_SUBSCRIPTION_ITEM_KEY);
+    List<SubscriptionInfo> subscriptions =
+        loadSubscriptions(SETTINGS_SELECTED_SUBSCRIPTION_ITEM_KEY);
     if (subscriptions != null)
     {
       settings.setSelectedSubscriptions(subscriptions);
@@ -108,26 +108,27 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       final List<String> allowlistedDomains = new LinkedList<>();
       for (int i = 0; i < allowlistedDomainsCount; i++)
       {
-        final String allowlistedDomain = prefs.getString(getArrayItemKey(i, SETTINGS_AL_DOMAIN_KEY), "");
+        final String allowlistedDomain = prefs.getString(getArrayItemKey(i,
+            SETTINGS_AL_DOMAIN_KEY), "");
         allowlistedDomains.add(allowlistedDomain);
       }
       settings.setAllowlistedDomains(allowlistedDomains);
     }
   }
 
-  private List<Subscription> loadSubscriptions(final String subscriptionItemKey)
+  private List<SubscriptionInfo> loadSubscriptions(final String subscriptionItemKey)
   {
     if (!prefs.contains(getCountKey(subscriptionItemKey)))
     {
       return null;
     }
     final int subscriptionsCount = prefs.getInt(getCountKey(subscriptionItemKey), 0);
-    final List<Subscription> subscriptions = new LinkedList<>();
+    final List<SubscriptionInfo> subscriptions = new LinkedList<>();
     for (int i = 0; i < subscriptionsCount; i++)
     {
-      subscriptions.add(new Subscription(
-        prefs.getString(getSubscriptionTitleKey(subscriptionItemKey, i), ""),
+      subscriptions.add(new SubscriptionInfo(
         prefs.getString(getSubscriptionURLKey(subscriptionItemKey, i), ""),
+        prefs.getString(getSubscriptionTitleKey(subscriptionItemKey, i), ""),
         prefs.getString(getSubscriptionPrefixesKey(subscriptionItemKey, i), ""), "", ""));
     }
     return subscriptions;
@@ -177,11 +178,14 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
 
     if (settings.getAllowedConnectionType() != null)
     {
-      editor.putString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY, settings.getAllowedConnectionType().getValue());
+      editor.putString(SETTINGS_ALLOWED_CONNECTION_TYPE_KEY,
+          settings.getAllowedConnectionType().getValue());
     }
 
-    saveSubscriptions(editor, settings.getSelectedSubscriptions(), SETTINGS_SELECTED_SUBSCRIPTION_ITEM_KEY);
-    saveSubscriptions(editor, settings.getAvailableSubscriptions(), SETTINGS_AVAILABLE_SUBSCRIPTION_ITEM_KEY);
+    saveSubscriptions(editor, settings.getSelectedSubscriptions(),
+        SETTINGS_SELECTED_SUBSCRIPTION_ITEM_KEY);
+    saveSubscriptions(editor, settings.getAvailableSubscriptions(),
+        SETTINGS_AVAILABLE_SUBSCRIPTION_ITEM_KEY);
     saveAllowlistedDomains(settings, editor);
 
     if (commit)
@@ -195,7 +199,8 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     }
   }
 
-  private void saveAllowlistedDomains(final AdblockSettings settings, final SharedPreferences.Editor editor)
+  private void saveAllowlistedDomains(final AdblockSettings settings,
+                                      final SharedPreferences.Editor editor)
   {
     if (settings.getAllowlistedDomains() != null)
     {
@@ -211,7 +216,8 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
     }
   }
 
-  private void saveSubscriptions(final SharedPreferences.Editor editor, final List<Subscription> subscriptions,
+  private void saveSubscriptions(final SharedPreferences.Editor editor,
+                                 final List<SubscriptionInfo> subscriptions,
                                  final String subscriptionItemKey)
   {
     if (subscriptions != null)
@@ -222,12 +228,13 @@ public class SharedPrefsStorage extends AdblockSettingsStorage
       // each subscription
       for (int i = 0; i < subscriptions.size(); i++)
       {
-        final Subscription eachSubscription = subscriptions.get(i);
+        final SubscriptionInfo eachSubscription = subscriptions.get(i);
 
         // warning: saving `title`, `url` and `prefixes` fields only
         editor.putString(getSubscriptionTitleKey(subscriptionItemKey, i), eachSubscription.title);
         editor.putString(getSubscriptionURLKey(subscriptionItemKey, i), eachSubscription.url);
-        editor.putString(getSubscriptionPrefixesKey(subscriptionItemKey, i), eachSubscription.prefixes);
+        editor.putString(getSubscriptionPrefixesKey(subscriptionItemKey, i),
+            eachSubscription.languages);
       }
     }
   }

@@ -232,7 +232,7 @@ abstract class BaseAdblockWebViewTest {
     private fun clearSubscriptions() {
         assertNotEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
         adblockEngine.filterEngine.listedSubscriptions.forEach { subscription ->
-            subscription.removeFromList()
+            adblockEngine.filterEngine.removeSubscription(subscription)
         }
         assertEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
     }

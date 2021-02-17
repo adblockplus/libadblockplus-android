@@ -186,10 +186,14 @@ public final class AdblockEngine
     }
   }
 
-  public org.adblockplus.libadblockplus.android.Subscription[] getRecommendedSubscriptions()
+  public List<Subscription> getRecommendedSubscriptions()
   {
-    final List<Subscription> subscriptions = this.filterEngine.fetchAvailableSubscriptions();
-    return convertJsSubscriptions(subscriptions);
+    return this.filterEngine.fetchAvailableSubscriptions();
+  }
+
+  public List<Subscription> getListedSubscriptions()
+  {
+    return this.filterEngine.getListedSubscriptions();
   }
 
   public static Builder builder(final Context context,
@@ -240,39 +244,6 @@ public final class AdblockEngine
     return this.elemhideEnabled;
   }
 
-  private static org.adblockplus.libadblockplus.android.Subscription convertJsSubscription(
-          final Subscription jsSubscription)
-  {
-    final org.adblockplus.libadblockplus.android.Subscription subscription =
-      new org.adblockplus.libadblockplus.android.Subscription(
-          jsSubscription.getTitle(),
-          jsSubscription.getUrl(),
-          jsSubscription.getLanguages(),
-          jsSubscription.getHomepage(),
-          jsSubscription.getAuthor());
-    return subscription;
-  }
-
-  private static org.adblockplus.libadblockplus.android.Subscription[] convertJsSubscriptions(
-    final List<Subscription> jsSubscriptions)
-  {
-    final org.adblockplus.libadblockplus.android.Subscription[] subscriptions =
-      new org.adblockplus.libadblockplus.android.Subscription[jsSubscriptions.size()];
-
-    for (int i = 0; i < subscriptions.length; i++)
-    {
-      subscriptions[i] = convertJsSubscription(jsSubscriptions.get(i));
-    }
-
-    return subscriptions;
-  }
-
-  public org.adblockplus.libadblockplus.android.Subscription[] getListedSubscriptions()
-  {
-    final List<Subscription> subscriptions = this.filterEngine.getListedSubscriptions();
-    return convertJsSubscriptions(subscriptions);
-  }
-
   public String getDocumentationLink()
   {
     final JsValue jsPref = this.filterEngine.getPref("documentation_link");
@@ -290,7 +261,7 @@ public final class AdblockEngine
   {
     for (final Subscription s : this.filterEngine.getListedSubscriptions())
     {
-      s.removeFromList();
+      this.filterEngine.removeSubscription(s);
     }
   }
 
@@ -298,10 +269,10 @@ public final class AdblockEngine
   {
     clearSubscriptions();
 
-    final Subscription sub = this.filterEngine.getSubscription(url);
-    if (sub != null)
+    final Subscription s = this.filterEngine.getSubscription(url);
+    if (s != null)
     {
-      sub.addToList();
+      this.filterEngine.removeSubscription(s);
     }
   }
 
@@ -312,9 +283,9 @@ public final class AdblockEngine
     // remove the removed ones
     for (final Subscription eachCurrentSubscription : currentSubscriptions)
     {
-      if (!urls.contains(eachCurrentSubscription.getUrl()))
+      if (!urls.contains(eachCurrentSubscription.url))
       {
-        eachCurrentSubscription.removeFromList();
+        this.filterEngine.removeSubscription(eachCurrentSubscription);
       }
     }
 
@@ -324,9 +295,9 @@ public final class AdblockEngine
       final Subscription eachNewSubscription = this.filterEngine.getSubscription(eachNewUrl);
       if (eachNewSubscription != null)
       {
-        if (!eachNewSubscription.isListed())
+        if (!this.filterEngine.getListedSubscriptions().contains(eachNewSubscription))
         {
-          eachNewSubscription.addToList();
+          this.filterEngine.addSubscription(eachNewSubscription);
         }
       }
     }

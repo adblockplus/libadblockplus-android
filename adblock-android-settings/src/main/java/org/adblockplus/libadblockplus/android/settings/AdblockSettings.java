@@ -18,7 +18,6 @@
 package org.adblockplus.libadblockplus.android.settings;
 
 import org.adblockplus.libadblockplus.android.ConnectionType;
-import org.adblockplus.libadblockplus.android.Subscription;
 
 import java.io.Serializable;
 import java.util.List;
@@ -30,8 +29,8 @@ public class AdblockSettings implements Serializable
 {
   private volatile boolean adblockEnabled;
   private volatile boolean acceptableAdsEnabled;
-  private List<Subscription> selectedSubscriptions;
-  private List<Subscription> availableSubscriptions;
+  private List<SubscriptionInfo> selectedSubscriptions;
+  private List<SubscriptionInfo> availableSubscriptions;
   private List<String> allowlistedDomains;
   private ConnectionType allowedConnectionType;
 
@@ -55,22 +54,22 @@ public class AdblockSettings implements Serializable
     this.acceptableAdsEnabled = acceptableAdsEnabled;
   }
 
-  public List<Subscription> getSelectedSubscriptions()
+  public List<SubscriptionInfo> getSelectedSubscriptions()
   {
     return selectedSubscriptions;
   }
 
-  public void setSelectedSubscriptions(final List<Subscription> selectedSubscriptions)
+  public void setSelectedSubscriptions(final List<SubscriptionInfo> selectedSubscriptions)
   {
     this.selectedSubscriptions = selectedSubscriptions;
   }
 
-  public List<Subscription> getAvailableSubscriptions()
+  public List<SubscriptionInfo> getAvailableSubscriptions()
   {
     return availableSubscriptions;
   }
 
-  public void setAvailableSubscriptions(final List<Subscription> availableSubscriptions)
+  public void setAvailableSubscriptions(final List<SubscriptionInfo> availableSubscriptions)
   {
     this.availableSubscriptions = availableSubscriptions;
   }
