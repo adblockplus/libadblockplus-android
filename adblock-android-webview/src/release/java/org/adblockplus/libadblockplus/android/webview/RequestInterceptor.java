@@ -24,6 +24,16 @@ import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 
 public class RequestInterceptor
 {
+  public static final String DEBUG_URL_HOSTNAME = "abp_filters";
+  public static final String COMMAND_STRING_ADD = "ADD";
+  public static final String COMMAND_STRING_REMOVE = "REMOVE";
+  public static final String COMMAND_STRING_CLEAR = "CLEAR";
+  public static final String PAYLOAD_QUERY_PARAMETER_KEY = "base64";
+  public static final String RESPONSE_MIME_TYPE = "text/plain";
+  public static final String COMMAND_STRING_INVALID_COMMAND = "INVALID_COMMAND";
+  public static final String COMMAND_STRING_INVALID_PAYLOAD = "INVALID_PAYLOAD";
+  public static final String COMMAND_STRING_OK = "OK";
+
   static Boolean isBlockedByHandlingDebugURLQuery(final WebView view, final AdblockEngineProvider provider,
                                                   final Uri url)
   {
