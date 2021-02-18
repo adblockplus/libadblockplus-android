@@ -42,25 +42,14 @@ public final class FilterEngine
 
   private static native void removeFilter(long ptr, String raw);
 
-  public Filter getFilter(final String text)
+  public Filter getFilterFromText(final String text)
   {
-    final Filter filter = getFilter(this.ptr, text);
-    if (filter != null)
-    {
-      filter.setFilterEngine(this);
-    }
-    return filter;
+    return getFilter(this.ptr, text);
   }
 
   public List<Filter> getListedFilters()
   {
-    final List<Filter> filterList = getListedFilters(this.ptr);
-    // this is a hack to support deprecated functions
-    for (final Filter filter : filterList)
-    {
-      filter.setFilterEngine(this);
-    }
-    return filterList;
+    return getListedFilters(this.ptr);
   }
 
   public Subscription getSubscription(final String url)
@@ -120,13 +109,8 @@ public final class FilterEngine
   public Filter matches(final String url, final Set<ContentType> contentTypes,
                         final List<String> documentUrls, final String siteKey)
   {
-    final Filter filter = matches(this.ptr, url,
-        contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey, false);
-    if (filter != null)
-    {
-      filter.setFilterEngine(this); // this is a hack to support deprecated functions
-    }
-    return filter;
+    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
+        documentUrls, siteKey, false);
   }
 
   /**
@@ -148,14 +132,8 @@ public final class FilterEngine
                         final List<String> documentUrls, final String siteKey,
                         final boolean specificOnly)
   {
-    final Filter filter = matches(this.ptr, url,
-        contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey,
-        specificOnly);
-    if (filter != null)
-    {
-      filter.setFilterEngine(this); // this is a hack to support deprecated functions
-    }
-    return filter;
+    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
+        documentUrls, siteKey,  specificOnly);
   }
 
   /**
@@ -171,13 +149,8 @@ public final class FilterEngine
                         final String parent, final String siteKey,
                         final boolean specificOnly)
   {
-    final Filter filter = matches(this.ptr, url,
-        contentTypes.toArray(new ContentType[contentTypes.size()]), parent, siteKey, specificOnly);
-    if (filter != null)
-    {
-      filter.setFilterEngine(this); // this is a hack to support deprecated functions
-    }
-    return filter;
+    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
+        parent, siteKey, specificOnly);
   }
 
   /**
@@ -355,12 +328,12 @@ public final class FilterEngine
 
   public void addFilter(final Filter filter)
   {
-    addFilter(this.ptr, filter.getRaw());
+    addFilter(this.ptr, filter.text);
   }
 
   public void removeFilter(final Filter filter)
   {
-    removeFilter(this.ptr, filter.getRaw());
+    removeFilter(this.ptr, filter.text);
   }
 
 

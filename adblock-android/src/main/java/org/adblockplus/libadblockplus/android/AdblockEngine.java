@@ -404,9 +404,9 @@ public final class AdblockEngine
       return MatchesResult.NOT_FOUND;
     }
 
-    Timber.d("Found filter `%s` for url `%s`", filter.getRaw(), url);
+    Timber.d("Found filter `%s` for url `%s`", filter.text, url);
 
-    return filter.getType() == Filter.Type.BLOCKING
+    return filter.type == Filter.Type.BLOCKING
         ? MatchesResult.BLOCKED
         : MatchesResult.NOT_FOUND;
   }

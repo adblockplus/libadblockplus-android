@@ -45,7 +45,7 @@ class FilterEngineEnabledDisabledTest  {
         assertFalse(adblockEngine.isEnabled)
         assertFalse(adblockEngine.filterEngine.isEnabled)
 
-        var filter = adblockEngine.filterEngine.getFilter("adbanner.gif")
+        var filter = adblockEngine.filterEngine.getFilterFromText("adbanner.gif")
         adblockEngine.filterEngine.addFilter(filter)
 
         val match2: AdblockEngine.MatchesResult? = adblockEngine.matches("http://example.org/adbanner.gif",
@@ -104,7 +104,7 @@ class FilterEngineEnabledDisabledTest  {
         assertFalse(adblockEngine.isEnabled)
         assertFalse(adblockEngine.filterEngine.isEnabled)
 
-        var filter = adblockEngine.filterEngine.getFilter("adbanner.gif")
+        var filter = adblockEngine.filterEngine.getFilterFromText("adbanner.gif")
         adblockEngine.filterEngine.addFilter(filter)
 
         var match: AdblockEngine.MatchesResult? = adblockEngine.matches("http://example.org/adbanner.gif",

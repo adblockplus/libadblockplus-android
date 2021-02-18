@@ -212,7 +212,7 @@ abstract class BaseAdblockWebViewTest {
 
     protected fun addFilterRules(filterRules: List<String>) {
         filterRules.forEach { filterText ->
-            val filter = adblockEngine.filterEngine.getFilter(filterText)
+            val filter = adblockEngine.filterEngine.getFilterFromText(filterText)
             adblockEngine.filterEngine.addFilter(filter)
         }
     }
