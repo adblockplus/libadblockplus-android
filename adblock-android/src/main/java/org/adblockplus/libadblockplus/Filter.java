@@ -17,106 +17,59 @@
 
 package org.adblockplus.libadblockplus;
 
-import java.lang.ref.WeakReference;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * Data class representing filter
+ */
 public final class Filter
 {
-  private final Type type;
-  private final String raw;
-
-  // this is for deprecated methods
-  private WeakReference<FilterEngine> filterEngine;
-
-  // Called by Native
-  private Filter(final Type type, final String raw)
-  {
-    this.type = type;
-    this.raw = raw;
-  }
+  /**
+   * The raw filter text
+   */
+  @NotNull
+  public final String text;
 
   /**
-   * Retrieves the type of this filter.
-   *
-   * @return Type of this filter.
+   * The filter type
    */
-  public Type getType()
-  {
-    return type;
-  }
-
-  public String getRaw()
-  {
-    return raw;
-  }
-
-  /**
-   * Checks whether this filter has been added to the list of custom filters.
-   *
-   * @return `true` if this filter has been added.
-   * @deprecated Use {@link FilterEngine#getListedFilters()} combined with find instead.
-   */
-  @Deprecated
-  public boolean isListed()
-  {
-    final FilterEngine engine = this.filterEngine.get();
-    return engine != null && engine.getListedFilters().contains(this);
-  }
-
-  /**
-   * Adds this filter to the list of custom filters.
-   *
-   * @deprecated Use {@link FilterEngine#addFilter(Filter)} instead.
-   */
-  @Deprecated
-  public void addToList()
-  {
-    final FilterEngine engine = this.filterEngine.get();
-    if (engine != null)
-    {
-      engine.addFilter(this);
-    }
-  }
-
-  /**
-   * Removes this filter from the list of custom filters.
-   *
-   * @deprecated Use {@link FilterEngine#removeFilter(Filter)} instead.
-   */
-  @Deprecated
-  public void removeFromList()
-  {
-    final FilterEngine engine = this.filterEngine.get();
-    if (engine != null)
-    {
-      engine.removeFilter(this);
-    }
-  }
+  @NotNull
+  public final Type type;
 
   @Override
-  public boolean equals(final Object o)
+  public boolean equals(final Object other)
   {
-    if (this == o)
-    {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass())
+    if (!(other instanceof Filter))
     {
       return false;
     }
-    final Filter filter = (Filter) o;
-    return type == filter.type &&
-        raw.equals(filter.raw);
+    // Actually text alone determines filter type
+    return this.text.equals(((Filter) other).text);
   }
 
-  void setFilterEngine(final FilterEngine filterEngine)
-  {
-    this.filterEngine = new WeakReference<>(filterEngine);
-  }
-
+  /**
+   * Possible resource filter types
+   */
   public enum Type
   {
-    BLOCKING, EXCEPTION, ELEMHIDE, ELEMHIDE_EXCEPTION, ELEMHIDE_EMULATION,
-    COMMENT, INVALID
+    BLOCKING,
+    EXCEPTION,
+    ELEMHIDE,
+    ELEMHIDE_EXCEPTION,
+    ELEMHIDE_EMULATION,
+    COMMENT,
+    INVALID
   }
 
+  /**
+   * Filter objects are created by a native code, hence private constructor
+   *
+   * @param text the non-null raw filter text
+   * @param type the non-null filter type
+   */
+  private Filter(@NotNull final String text, @NotNull final Type type)
+  {
+    this.text = text;
+    this.type = type;
+  }
 }

@@ -172,7 +172,7 @@ public class RequestInterceptor
       final List<Filter> filtersToModify = new LinkedList<>();
       for (final String filter : payload.split("\\r?\\n"))
       {
-        filtersToModify.add(filterEngine.getFilter(filter));
+        filtersToModify.add(filterEngine.getFilterFromText(filter));
       }
 
       for (final Filter filter : filtersToModify)

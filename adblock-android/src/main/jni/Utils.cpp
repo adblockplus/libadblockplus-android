@@ -52,7 +52,7 @@ void JniUtils_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
   arrayListCtor = env->GetMethodID(arrayListClass->Get(), "<init>", "()V");
 
   filterClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Filter")));
-  filterCtor = env->GetMethodID(filterClass->Get(), "<init>", "(" TYP("Filter$Type") "Ljava/lang/String;)V");
+  filterCtor = env->GetMethodID(filterClass->Get(), "<init>", "(Ljava/lang/String;" TYP("Filter$Type") ")V");
 
   subscriptionClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Subscription")));
   subscriptionCtor = env->GetMethodID(subscriptionClass->Get(), "<init>",
@@ -208,8 +208,8 @@ jobject NewJniFilter(JNIEnv* env, AdblockPlus::Filter&& filter)
 {
     return env->NewObject(filterClass->Get(),
                           filterCtor,
-                          GetJniTypeFromNativeType(env, filter.GetType()),
-                          JniStdStringToJava(env, filter.GetRaw()));
+                          JniStdStringToJava(env, filter.GetRaw()),
+                          GetJniTypeFromNativeType(env, filter.GetType()));
 }
 
 jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription, jobject filterEngine)
