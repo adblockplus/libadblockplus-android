@@ -205,28 +205,6 @@ public class AdblockHelper
   }
 
   /**
-   * Init with context
-   * @deprecated <p> Use {@link AdblockHelper#init(Context,String,String)} instead.
-   * @param context application context
-   * @param basePath file system root to store files
-   *
-   *                 Adblock Plus library will download subscription files and store them on
-   *                 the path passed. The path should exist and the directory content should not be
-   *                 cleared out occasionally. Using `context.getCacheDir().getAbsolutePath()` is not
-   *                 recommended because it can be cleared by the system.
-   * @param developmentBuild debug or release?
-   * @param preferenceName Shared Preferences name to store adblock settings
-   */
-  @Deprecated
-  public AdblockHelper init(final Context context,
-                            final String basePath,
-                            final boolean developmentBuild,
-                            final String preferenceName)
-  {
-    return init(context, basePath, preferenceName);
-  }
-
-  /**
    * Check if it is already initialized
    * @return
    */
@@ -357,50 +335,5 @@ public class AdblockHelper
   {
     factory.setDisableByDefault();
     return this;
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().retain() instead
-   */
-  @Deprecated
-  public boolean retain(final boolean asynchronous)
-  {
-    return provider.retain(asynchronous);
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().waitForReady() instead
-   */
-  @Deprecated
-  public void waitForReady()
-  {
-    provider.waitForReady();
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().getEngine() instead
-   */
-  @Deprecated
-  public AdblockEngine getEngine()
-  {
-    return provider.getEngine();
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().release() instead
-   */
-  @Deprecated
-  public boolean release()
-  {
-    return provider.release();
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().getCounter() instead
-   */
-  @Deprecated
-  public int getCounter()
-  {
-    return provider.getCounter();
   }
 }
