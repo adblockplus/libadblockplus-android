@@ -62,6 +62,8 @@ checkstyle:
 
 gradle_unit_tests:
   stage: unit_test
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
   script:
     - ./gradlew test
   artifacts:
