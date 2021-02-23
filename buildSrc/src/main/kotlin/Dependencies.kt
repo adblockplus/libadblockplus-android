@@ -15,7 +15,7 @@ private object Versions {
         const val multidex = "2.0.0"
         const val test = "1.3.0"
         const val test_ext = "1.1.2"
-        const val appcompat = "1.2.0"
+        const val appcompat = "1.3.0-beta01"
         const val preference = "1.1.1"
     }
 }
