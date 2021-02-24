@@ -346,6 +346,9 @@ benchmark:
           --env UPSTREAM_PIPELINE_ID=${CI_PIPELINE_ID} \
           --env UPSTREAM_PROJECT_ID=${CI_PROJECT_ID} \
           --env UPSTREAM_PIPELINE_URL=${CI_PIPELINE_URL} \
+          --env UPSTREAM_CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} \
+          --env UPSTREAM_CI_COMMIT_SHA=${CI_COMMIT_SHA} \
+          --env UPSTREAM_CI_COMMIT_TAG=${CI_COMMIT_TAG} \
           ${TESTING_PROJECT}
   only:
     - schedules
