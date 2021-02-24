@@ -19,6 +19,7 @@ build_dependencies:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     WGET_FLAGS: "-q"
+  interruptible: true
   script:
     - cd ./libadblockplus
     - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
@@ -34,6 +35,7 @@ build_dependencies:
 # This is a shared read-only cache definition
 # which jobs can explicitly include to have build deps
 .cache_readonly: &cache_readonly
+  interruptible: true
   cache:
     key: $CI_COMMIT_REF_NAME
     paths:
@@ -42,6 +44,7 @@ build_dependencies:
     policy: pull
 
 checkstyle:
+  interruptible: true
   stage: lint
   image: registry.gitlab.com/eyeo/docker/gitlab-codequality:21.01
   script:
@@ -62,6 +65,7 @@ checkstyle:
 
 gradle_unit_tests:
   stage: unit_test
+  interruptible: true
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
@@ -169,6 +173,7 @@ build_libadblockplus-android:custom-jni:
 
 build_libadblockplus-android:without-jni:
   stage: build
+  interruptible: true
   # Custom cache definition for this job
   cache:
     key: $CI_COMMIT_REF_NAME
@@ -185,6 +190,7 @@ build_libadblockplus-android:without-jni:
 # @LargeTest tests are skipped in this job
 testobject_tests:
   stage: device_tests
+  interruptible: true
   variables:
     # Space-separated list of devices to run tests against
     TEST_DEVICES: "Samsung_Galaxy_S20_real Google_Pixel_5_real OnePlus_Nord_real"
@@ -220,6 +226,7 @@ testobject_tests:
 # automated regression tests using Appium
 regression_tests:
   stage: device_tests
+  interruptible: true
   retry: 1
   variables:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
@@ -271,6 +278,7 @@ functional_tests:
     - schedules
     - web
   stage: device_tests
+  interruptible: true
   variables:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
@@ -291,6 +299,7 @@ benchmark:
     # This is a Raspberry PI with an attached rooted device that is located at the office.
     - "android-pi"
   stage: device_tests
+  interruptible: true
   variables:
     ANDROID_SERIAL: "bd207da1" # Use the ZTE device
     LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
@@ -326,6 +335,7 @@ benchmark:
 web_page_replay:
   stage: device_tests
   image: "registry.gitlab.com/eyeo/adblockplus/libadblockplus-android/web_page_replay"
+  interruptible: true
   variables:
     ANDROID_DEVICE: "172.17.0.1:4444"
   before_script:
