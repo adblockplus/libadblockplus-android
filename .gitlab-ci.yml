@@ -232,6 +232,7 @@ regression_tests:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     GIT_AUTOMATION_BRANCH: "master"
+    PLATFORM_VERSION: "10"
     REGRESSION_TAGS: "@j1 @j2"
     # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
@@ -268,6 +269,7 @@ regression_tests:
         cat tag-${TAG}.log
       done
   artifacts:
+    when: always
     expire_in: 6 months
     reports:
       junit: "automation/target/cucumber-reports/*.xml"
@@ -283,6 +285,9 @@ functional_tests:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     # demo app debug apk
+    GIT_AUTOMATION_BRANCH: "master"
+    PLATFORM_VERSIONS: "9 10 11"
+    # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
   script:
     # TESTOBJ_PROJECT_KEY should exist, testing it
@@ -290,8 +295,37 @@ functional_tests:
     # we are not using submodules, because automation is not a part of repository functionality
     # its rather a standalone set of scripts
     - git clone $GIT_AUTOMATION_REPO automation
-    # `./gradlew functional` launches cucumber executor that then launches Appium client and executes entire functional tests
-    - cd automation && ./gradlew functional
+    - cd automation
+    - git checkout ${GIT_AUTOMATION_BRANCH:-master}
+    # Launch an instance of gradle for each bunch of tags we want to test
+    - pids=""
+    - |
+      for PLATFORM_VERSION in $PLATFORM_VERSIONS
+        do echo Starting job for version ${PLATFORM_VERSION}
+        (nohup ./gradlew functional &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
+        pids="$pids $!"
+      done
+    - wait $pids
+    # Check the exit codes of all processes were 0
+    - |
+      for PLATFORM_VERSION in $PLATFORM_VERSIONS
+        do test $(cat result_${PLATFORM_VERSION}) = 0
+      done
+  after_script:
+    - cd automation
+    - |
+      for PLATFORM_VERSION in $PLATFORM_VERSIONS
+        do
+        echo "**********************************"
+        echo "Logs for tests with plataform_version ${PLATFORM_VERSION}"
+        echo "**********************************"
+        cat platform_version-${PLATFORM_VERSION}.log
+      done
+  artifacts:
+    when: always
+    expire_in: 6 months
+    reports:
+      junit: "automation/target/cucumber-reports/*.xml"
 
 # FilterEngine performance benchmarking and memory
 benchmark:
