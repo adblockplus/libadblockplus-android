@@ -6,7 +6,7 @@ private object Versions {
     const val mockito = "2.28.2"
     const val mockito_kotlin = "2.2.0"
     const val timber = "4.7.1"
-    const val wiremock = "2.27.2"
+    const val wiremock = "2.26.2"
     const val android_material = "1.2.1"
 
     object AndroidX {
