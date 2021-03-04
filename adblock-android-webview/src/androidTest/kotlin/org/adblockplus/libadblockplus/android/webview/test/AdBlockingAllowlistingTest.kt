@@ -288,7 +288,6 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
             // to assert subframe resource visibility
     }
 
-    @Ignore //Depending on the setup this test may work or not => ignoring for now
     @Test
     fun testCrossOriginReferrers() {
         val subFrameHtml = "subframe.html"
