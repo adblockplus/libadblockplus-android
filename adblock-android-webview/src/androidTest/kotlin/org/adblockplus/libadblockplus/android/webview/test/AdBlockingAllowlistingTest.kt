@@ -38,7 +38,9 @@ import org.adblockplus.libadblockplus.android.webview.AdblockWebView
 import org.adblockplus.libadblockplus.android.webview.BaseSiteKeyExtractor
 import org.adblockplus.libadblockplus.android.webview.SiteKeyHelper
 import org.adblockplus.libadblockplus.android.webview.elementIsElemhidden
+import org.adblockplus.libadblockplus.android.webview.elementIsElemhiddenByStylesheet
 import org.adblockplus.libadblockplus.android.webview.elementIsNotElemhidden
+import org.adblockplus.libadblockplus.android.webview.elementIsNotElemhiddenByStylesheet
 import org.adblockplus.libadblockplus.android.webview.escapeForRegex
 import org.adblockplus.libadblockplus.android.webview.imageIsBlocked
 import org.adblockplus.libadblockplus.android.webview.imageIsNotBlocked
@@ -49,7 +51,6 @@ import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Mockito
 import timber.log.Timber
@@ -597,6 +598,68 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
         loadPageAndVerify(false, mockWebServer)
         loadPageAndVerify(true, mockWebServer)
+    }
+
+    @Test
+    fun testElementHidingStylesheet() {
+        val blockingRule = "##.advert"
+        load(
+                listOf("$blockingRule"),
+                """
+            |<html>
+            |<body>
+            |  <img class="advert" id="$notBlockedImageId"
+            |    src="${notMatchingBlockingPathPrefix}$redImage"/>
+            |</body>
+            |</html>
+            |""".trimMargin()
+        )
+
+        onAdblockWebView()
+                .check(imageIsNotBlocked(notBlockedImageId))
+                .check(elementIsElemhiddenByStylesheet(notBlockedImageId))
+    }
+
+    @Test
+    fun testElementHidingStylesheetElemhideException() {
+        val blockingRule = "##.advert"
+        val allowlistingRule = "@@localhost\$elemhide"
+        load(
+                listOf("$blockingRule", "$allowlistingRule"),
+                """
+            |<html>
+            |<body>
+            |  <img class="advert" id="$notBlockedImageId"
+            |    src="${notMatchingBlockingPathPrefix}$redImage"/>
+            |</body>
+            |</html>
+            |""".trimMargin()
+        )
+
+        onAdblockWebView()
+                .check(imageIsNotBlocked(notBlockedImageId))
+                .check(elementIsNotElemhiddenByStylesheet(notBlockedImageId))
+    }
+
+    @Test
+    fun testElementHidingStylesheetDocumentException() {
+        val blockingRule = "##.advert"
+        val allowlistingRule = "@@localhost\$document"
+        load(
+                listOf("$blockingRule", "$allowlistingRule"),
+                """
+            |<html>
+            |<body>
+            |  <img class="advert" id="$notBlockedImageId"
+            |    src="${notMatchingBlockingPathPrefix}$redImage"/>
+            |</body>
+            |</html>
+            |""".trimMargin()
+        )
+
+        onAdblockWebView()
+                .check(imageIsNotBlocked(notBlockedImageId))
+                .check(elementIsNotElemhiddenByStylesheet(notBlockedImageId))
     }
 
     private fun loadPageAndVerify(jsInIframesEnabled: Boolean, mockWebServer: WireMockServer) {
