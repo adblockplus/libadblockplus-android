@@ -87,16 +87,11 @@ public abstract class BaseSettingsFragment
       @Override
       public void onAdblockEngineCreated(final AdblockEngine engine)
       {
-        onAdblockEngineReadyInternal();
+        onAdblockEngineReady();
       }
     };
 
   protected abstract void onAdblockEngineReady();
-
-  private void onAdblockEngineReadyInternal()
-  {
-    onAdblockEngineReady();
-  }
 
   private void startLoadSettings()
   {
@@ -104,8 +99,8 @@ public abstract class BaseSettingsFragment
     if (settings == null)
     {
       // null because it was not saved yet
-      Timber.w("No adblock settings, yet. Using default ones from adblock engine");
-      settings = AdblockSettingsStorage.getDefaultSettings(getActivity());
+      Timber.w("No adblock settings, yet. Using default ones from raw resource");
+      settings = AdblockSettingsStorage.getDefaultSettings(requireContext());
     }
     onSettingsReady();
   }
