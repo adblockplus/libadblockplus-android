@@ -265,17 +265,6 @@ public final class AdblockEngine
     }
   }
 
-  public void setSubscription(final String url)
-  {
-    clearSubscriptions();
-
-    final Subscription s = this.filterEngine.getSubscription(url);
-    if (s != null)
-    {
-      this.filterEngine.removeSubscription(s);
-    }
-  }
-
   public void setSubscriptions(final Collection<String> urls)
   {
     final List<Subscription> currentSubscriptions = this.filterEngine.getListedSubscriptions();
