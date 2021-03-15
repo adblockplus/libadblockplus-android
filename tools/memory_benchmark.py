@@ -4,31 +4,30 @@ This script runs memory benchmark on android device.
 1) installs apk for testing assuming it already is built
 2) iterates following instructions NUM_TESTS times:
 2.1) runs each test scenario under `memory_benchmark_adblockwebview_test` array
-2.2) collects the .csv output.
+2.2) collects the .json output.
 3) calculates average for the test scenarios and inserts it into a metrics.txt
    file
 """
 
 import argparse
-import csv
 import sys
 import subprocess
 import os
 import time
 import shutil
+import json
 
 memory_benchmark_adblockwebview_test = ["MemoryBenchmark_full_easy",
     "MemoryBenchmark_minDist"]
 memory_benchmark_system_webview_test = "SystemWebViewBenchmark"
 
-TEST_APK = "./adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk"
+TEST_APK = os.path.join("adblock-android-webview", "build", "outputs", "apk", "androidTest", "release", "adblock-android-webview-release-androidTest.apk")
 TEST_PACKAGE = "org.adblockplus.libadblockplus.android.webview.test"
-CSV_FOLDER = os.path.join("adblock-android-webview", "build", "outputs", "memory_benchmark")
-DEVICE_BENCHMARK_CSV = "/storage/emulated/0/Download/memory_benchmark.csv"
+OUTPUT_FOLDER = os.path.join("adblock-android-webview", "build", "outputs", "memory_benchmark")
+JSON_FILE = os.path.join(OUTPUT_FOLDER, "memory_benchmark.json")
+DEVICE_BENCHMARK_JSON = "/storage/emulated/0/Download/memory_benchmark.json"
 
-NUM_TESTS = 10
-COOL_OFF_LABEL = "5 seconds cool off"
-TOTAL_ANDROID_STUDIO_COLUMN = 2
+DEFAULT_NUM_TRIES = 10
 FILE_METRICS = "metrics.txt"
 
 # this maps internal classpath of test to viewer name
@@ -108,59 +107,45 @@ def run_command(command, exit_on_error=True):
             print(command + " failed!")
 
 
-def get_total_memory(filepath):
-    with open(filepath, mode='r') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for row in csv_reader:
-            if row[0] == COOL_OFF_LABEL:
-                return int(row[TOTAL_ANDROID_STUDIO_COLUMN])
-
-    assert False, "could not find cool off row"
-
-
-def launch_test_and_collect(adb_device, testname, output):
-    print("cleaning previous file ...")
-    run_command("{} shell rm {}"
-                .format(adb_device, DEVICE_BENCHMARK_CSV), False)
-
+def launch_test_and_collect(adb_device, testname):
     print("Launching {} ... ".format(testname))
     classpath = TEST_PACKAGE + "." + testname
-    run_command("{} shell am instrument -w -r -e debug false -e class {} -e \
+    run_command("{} shell am instrument -w -r -e debug false -e num_tries {} -e class {} -e \
             annotation androidx.test.filters.LargeTest {}/androidx.test.runner.AndroidJUnitRunner"
-                .format(adb_device, classpath, TEST_PACKAGE))
+                .format(adb_device, getNumberOfTries(), classpath, TEST_PACKAGE))
     time.sleep(1)
+
+
+def pull_result_json(adb_device):
     print("Test done pulling results ...")
+    output = os.path.join(OUTPUT_FOLDER, "memory_benchmark.json")
     run_command("{} pull {} {}"
-                .format(adb_device, DEVICE_BENCHMARK_CSV, output))
+                .format(adb_device, DEVICE_BENCHMARK_JSON, output))
 
 
-def launch_tests_and_collect(NUM_TESTS, adb_device, test_name):
-    print("launch_tests_and_collect")
-    for i in range(0, NUM_TESTS):
-        output = CSV_FOLDER + "/" + test_name + "_" + str(i) + ".csv"
-        launch_test_and_collect(adb_device, test_name, output)
-
-
-def calc_stats(test, num_tests):
+def calc_stats_and_save(json_file_path, test_names: list):
     print("calculating stats ...")
-    memories = []
-    for i in range(0, num_tests):
-        filename = CSV_FOLDER + "/" + test + "_" + str(i) + ".csv"
-        memories.append(get_total_memory(filename))
 
-    memories.sort()
+    with open(json_file_path) as json_file:
+        data = json.load(json_file)
+        for i, run in enumerate(data):
+            memories = []
+            for _try in run["tries"]: 
+                memories.append(int(_try["total_android_studio"]))
 
-    _max    = int(max(memories))
-    average = int(sum(memories) / len(memories))
-    median  = int(memories[int(len(memories) / 2)])
-    _min    = int(min(memories))
-    return _max, average, median, _min
+            memories.sort()
+            _max    = int(max(memories))
+            average = int(sum(memories) / len(memories))
+            median  = int(memories[int(len(memories) / 2)])
+            _min    = int(min(memories))
+
+            store_metrics_file(test_names[i], _max, average, median, _min)
 
 
 def save_logcat(adb_device):
-    run_command("{} logcat -d > {}/logcat.log".format(adb_device, CSV_FOLDER))
-    run_command("{} logcat -d -b main > {}/logcat_main.log".format(adb_device, CSV_FOLDER))
-    run_command("{} logcat -d -b crash > {}/logcat_crash.log".format(adb_device, CSV_FOLDER))
+    run_command("{} logcat -d > {}/logcat.log".format(adb_device, OUTPUT_FOLDER))
+    run_command("{} logcat -d -b main > {}/logcat_main.log".format(adb_device, OUTPUT_FOLDER))
+    run_command("{} logcat -d -b crash > {}/logcat_crash.log".format(adb_device, OUTPUT_FOLDER))
 
 
 def store_metrics_file(test, max, average, median, min):
@@ -178,13 +163,12 @@ def store_metrics_file(test, max, average, median, min):
 
     metrics.close()
 
-
-def main(args):
-    adb_device = "adb"
-    if args.device is not None:
-        adb_device += " -s {}".format(args.device)
-
+def prepare_device(adb_device):
     run_command("{} logcat -c".format(adb_device), False)
+
+    print("cleaning previous file ...")
+    run_command("{} shell rm {}"
+                .format(adb_device, DEVICE_BENCHMARK_JSON), False)
 
     print("Preparing to run benchmark tests for: {}".format(TEST_PACKAGE))
 
@@ -193,16 +177,34 @@ def main(args):
     # in newer versions of android you might need to go:
     # developer options -> (Security settings) allow granting permissions
     run_command("{} shell pm grant {} android.permission.READ_EXTERNAL_STORAGE".format(adb_device,
-                                                                                       TEST_PACKAGE))
+                                                                                    TEST_PACKAGE))
     run_command("{} shell pm grant {} android.permission.WRITE_EXTERNAL_STORAGE".format(adb_device,
                                                                                         TEST_PACKAGE))
 
-    print("Running memory benchmark tests...")
 
-    shutil.rmtree(CSV_FOLDER, ignore_errors=True)
-    os.makedirs(CSV_FOLDER)
+def getNumberOfTries():
+    return os.environ.get("NUM_TRIES", str(DEFAULT_NUM_TRIES))
+
+
+def main(args):
+    adb_device = "adb"
+    if args.device is not None:
+        adb_device += " -s {}".format(args.device)
+
+    if not args.skip_test: 
+        prepare_device(adb_device)
+        shutil.rmtree(OUTPUT_FOLDER, ignore_errors=True)
+        os.makedirs(OUTPUT_FOLDER)
+
     if os.path.exists(FILE_METRICS):
         os.remove(FILE_METRICS)
+
+    print("Running memory benchmark tests...")
+
+    # We want to know the test name to save it properly to metrics.txt afterwards but we do not store it anywhere in json.
+    # Since metrics.txt will be deprecated soon, we can just stack it in the array and pass to a saving function
+    # because we know the exact order of test runs and corresponding names
+    test_names = list()
 
     # benchmark with adblockwebview
     for test in memory_benchmark_adblockwebview_test:
@@ -210,17 +212,20 @@ def main(args):
             # AA on or off and adblock disabled tests
             for option in ["_adblock_disabled", "_AA_disabled", ""]:
                 test_name = test + aa_subscription_list + option
-                launch_tests_and_collect(NUM_TESTS, adb_device, test_name)
-                max, average, median, min = calc_stats(test_name, NUM_TESTS)
-                store_metrics_file(test_name, max, average, median, min)
+                test_names.append(test_name)
+                if not args.skip_test: 
+                    launch_test_and_collect(adb_device, test_name)
 
     # test with system webview
     test_name = memory_benchmark_system_webview_test
-    launch_tests_and_collect(NUM_TESTS, adb_device, test_name)
-    max, average, median, min = calc_stats(test_name, NUM_TESTS)
-    store_metrics_file(test_name, max, average, median, min)
+    test_names.append(test_name)
 
-    save_logcat(adb_device)
+    if not args.skip_test: 
+        launch_test_and_collect(adb_device, test_name)
+        pull_result_json(adb_device)
+        save_logcat(adb_device)
+
+    calc_stats_and_save(args.json, test_names)    
 
 if __name__ == "__main__":
     fill_map_classpath_metric()
@@ -232,6 +237,10 @@ if __name__ == "__main__":
                         help='Run this script on a specific device (defaults to use ANDROID_SERIAL)',
                         default=os.environ.get('ANDROID_SERIAL'))
     parser.add_argument("--v", type=bool, required=False, default=False, help="verbose")
+    parser.add_argument("--json", type=str, required=False, default=JSON_FILE, 
+                        help="Path to a json file with memory benchmark")
+    parser.add_argument("--skip-test", type=bool, required=False, default=False, 
+                        help="Skip running test and generate metrics.txt from specified or default json")
 
     args = parser.parse_args()
     main(args)

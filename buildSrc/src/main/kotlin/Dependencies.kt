@@ -1,7 +1,7 @@
-private object Versions {
+object Versions {
     const val android_gradle_plugin = "3.5.3"
     const val bintray_gradle_plugin = "1.8.5"
-    const val kotlin = "1.3.72"
+    const val kotlin = "1.4.30"
     const val junit4 = "4.13.1"
     const val mockito = "2.28.2"
     const val mockito_kotlin = "2.2.0"
