@@ -15,20 +15,24 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.webview.content_type;
+package org.adblockplus;
 
-import android.webkit.WebResourceRequest;
+import org.jetbrains.annotations.NotNull;
 
-import org.adblockplus.ContentType;
-
-public interface ContentTypeDetector
+/**
+ * Data class representing an element hiding emulation selector
+ *
+ * @see <a href="https://help.eyeo.com/adblockplus/how-to-write-filters#elemhide-emulation">
+ *      Extended CSS selectors (Adblock Plus-specific)</a>
+ */
+public class EmulationSelector
 {
-  /**
-   * Detects ContentType for given URL and headers
-   *
-   * @param request WebResourceRequest that contains all required
-   *                info HTTP headers of incoming request including url and headers
-   * @return ContentType or `null` if not detected
-   */
-  ContentType detect(final WebResourceRequest request);
+  public final String selector;
+  public final String text;
+
+  public EmulationSelector(@NotNull final String selector, @NotNull final String text)
+  {
+    this.selector = selector;
+    this.text = text;
+  }
 }

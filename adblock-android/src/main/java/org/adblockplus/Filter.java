@@ -15,7 +15,7 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus;
+package org.adblockplus;
 
 import org.jetbrains.annotations.NotNull;
 

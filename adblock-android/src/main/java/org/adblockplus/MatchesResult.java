@@ -15,20 +15,30 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.webview.content_type;
+package org.adblockplus;
 
-import android.webkit.WebResourceRequest;
-
-import org.adblockplus.ContentType;
-
-public interface ContentTypeDetector
+/**
+ * The result of `matches()` call
+ */
+public enum MatchesResult
 {
   /**
-   * Detects ContentType for given URL and headers
-   *
-   * @param request WebResourceRequest that contains all required
-   *                info HTTP headers of incoming request including url and headers
-   * @return ContentType or `null` if not detected
+   * Allowlisting filter is found
    */
-  ContentType detect(final WebResourceRequest request);
+  ALLOWLISTED,
+
+  /**
+   * Blocking filter is found
+   */
+  BLOCKED,
+
+  /**
+   * No filter is found
+   */
+  NOT_FOUND,
+
+  /**
+   * Ad filtering is disabled
+   */
+  NOT_ENABLED
 }

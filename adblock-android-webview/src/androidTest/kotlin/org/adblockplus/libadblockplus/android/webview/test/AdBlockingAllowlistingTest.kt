@@ -602,9 +602,9 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
     @Test
     fun testElementHidingStylesheet() {
-        val blockingRule = "##.advert"
+        val elemHidingRule = "##.advert"
         load(
-                listOf("$blockingRule"),
+                listOf(elemHidingRule),
                 """
             |<html>
             |<body>
@@ -622,10 +622,10 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
     @Test
     fun testElementHidingStylesheetElemhideException() {
-        val blockingRule = "##.advert"
+        val elemHidingRule = "##.advert"
         val allowlistingRule = "@@localhost\$elemhide"
         load(
-                listOf("$blockingRule", "$allowlistingRule"),
+                listOf(elemHidingRule, allowlistingRule),
                 """
             |<html>
             |<body>
@@ -643,10 +643,10 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
     @Test
     fun testElementHidingStylesheetDocumentException() {
-        val blockingRule = "##.advert"
+        val elemHidingRule = "##.advert"
         val allowlistingRule = "@@localhost\$document"
         load(
-                listOf("$blockingRule", "$allowlistingRule"),
+                listOf(elemHidingRule, allowlistingRule),
                 """
             |<html>
             |<body>

@@ -23,18 +23,20 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Build.VERSION;
 
+import org.adblockplus.ContentType;
+import org.adblockplus.EmulationSelector;
+import org.adblockplus.Filter;
+import org.adblockplus.MatchesResult;
+import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FileSystem;
-import org.adblockplus.libadblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterChangeCallback;
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.FilterEngine.ContentType;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.libadblockplus.JsValue;
 import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.Platform;
-import org.adblockplus.libadblockplus.Subscription;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,38 +48,12 @@ import java.util.Set;
 
 import timber.log.Timber;
 
-public final class AdblockEngine
+public final class AdblockEngine implements org.adblockplus.AdblockEngine
 {
 
   public interface SettingsChangedListener
   {
     void onEnableStateChanged(boolean enabled);
-  }
-
-  /**
-   * The result of `matches()` call
-   */
-  public enum MatchesResult
-  {
-    /**
-     * Blocking filter is found
-     */
-    BLOCKED,
-
-    /**
-     * Exception filter is found
-     */
-    ALLOWLISTED,
-
-    /**
-     * No filter is found
-     */
-    NOT_FOUND,
-
-    /**
-     * Ad blocking is disabled
-     */
-    NOT_ENABLED
   }
 
   // default base path to store subscription files in android app
@@ -118,6 +94,70 @@ public final class AdblockEngine
   {
     settingsChangedListeners.remove(listener);
     return this;
+  }
+
+  @Override
+  public String getElementHidingStyleSheet(final String domain, final boolean specificOnly)
+  {
+    if (!enabled || !elemhideEnabled || domain.isEmpty())
+    {
+      return "";
+    }
+
+    return filterEngine.getElementHidingStyleSheet(domain, specificOnly);
+  }
+
+  @Override
+  public List<EmulationSelector> getElementHidingEmulationSelectors(final String domain)
+  {
+    if (!enabled || !elemhideEnabled || domain.isEmpty())
+    {
+      return new ArrayList<>();
+    }
+
+    return filterEngine.getElementHidingEmulationSelectors(domain);
+  }
+
+  @Override
+  public boolean isContentAllowlisted(final String url, final Set<ContentType> contentTypes,
+                                      final List<String> referrerChain, final String siteKey)
+  {
+    return filterEngine.isContentAllowlisted(url, contentTypes, referrerChain, siteKey);
+  }
+
+  @Override
+  public MatchesResult matches(final String url, final Set<ContentType> contentTypes, final String parent,
+                               final String siteKey, final boolean domainSpecificOnly)
+  {
+    if (!enabled)
+    {
+      return MatchesResult.NOT_ENABLED;
+    }
+
+    final Filter filter = filterEngine.matches(url, contentTypes, parent, siteKey, domainSpecificOnly);
+
+    if (filter == null)
+    {
+      return MatchesResult.NOT_FOUND;
+    }
+
+    Timber.d("Found filter `%s` for url `%s`", filter.text, url);
+
+    return filter.type == Filter.Type.BLOCKING
+      ? MatchesResult.BLOCKED
+      : MatchesResult.NOT_FOUND;
+  }
+
+  @Override
+  public Subscription getSubscription(final String url)
+  {
+    return filterEngine.getSubscription(url);
+  }
+
+  @Override
+  public Filter getFilterFromText(final String text)
+  {
+    return filterEngine.getFilterFromText(text);
   }
 
   public static AppInfo generateAppInfo(final Context context,
@@ -188,12 +228,12 @@ public final class AdblockEngine
 
   public List<Subscription> getRecommendedSubscriptions()
   {
-    return this.filterEngine.fetchAvailableSubscriptions();
+    return filterEngine.fetchAvailableSubscriptions();
   }
 
   public List<Subscription> getListedSubscriptions()
   {
-    return this.filterEngine.getListedSubscriptions();
+    return filterEngine.getListedSubscriptions();
   }
 
   public static Builder builder(final Context context,
@@ -219,12 +259,12 @@ public final class AdblockEngine
     Timber.w("Dispose");
 
     // engines first
-    if (this.filterEngine != null)
+    if (filterEngine != null)
     {
 
       if (this.filterChangeCallback != null)
       {
-        this.filterEngine.removeFilterChangeCallback();
+        filterEngine.removeFilterChangeCallback();
       }
 
       this.platform.dispose();
@@ -246,7 +286,7 @@ public final class AdblockEngine
 
   public String getDocumentationLink()
   {
-    final JsValue jsPref = this.filterEngine.getPref("documentation_link");
+    final JsValue jsPref = filterEngine.getPref("documentation_link");
     try
     {
       return jsPref.toString();
@@ -259,34 +299,34 @@ public final class AdblockEngine
 
   public void clearSubscriptions()
   {
-    for (final Subscription s : this.filterEngine.getListedSubscriptions())
+    for (final Subscription s : filterEngine.getListedSubscriptions())
     {
-      this.filterEngine.removeSubscription(s);
+      filterEngine.removeSubscription(s);
     }
   }
 
   public void setSubscriptions(final Collection<String> urls)
   {
-    final List<Subscription> currentSubscriptions = this.filterEngine.getListedSubscriptions();
+    final List<Subscription> currentSubscriptions = filterEngine.getListedSubscriptions();
 
     // remove the removed ones
     for (final Subscription eachCurrentSubscription : currentSubscriptions)
     {
       if (!urls.contains(eachCurrentSubscription.url))
       {
-        this.filterEngine.removeSubscription(eachCurrentSubscription);
+        filterEngine.removeSubscription(eachCurrentSubscription);
       }
     }
 
     // add new subscriptions
     for (final String eachNewUrl : urls)
     {
-      final Subscription eachNewSubscription = this.filterEngine.getSubscription(eachNewUrl);
+      final Subscription eachNewSubscription = filterEngine.getSubscription(eachNewUrl);
       if (eachNewSubscription != null)
       {
-        if (!this.filterEngine.getListedSubscriptions().contains(eachNewSubscription))
+        if (!filterEngine.getListedSubscriptions().contains(eachNewSubscription))
         {
-          this.filterEngine.addSubscription(eachNewSubscription);
+          filterEngine.addSubscription(eachNewSubscription);
         }
       }
     }
@@ -334,126 +374,9 @@ public final class AdblockEngine
     filterEngine.setAcceptableAdsEnabled(enabled);
   }
 
-  /**
-   * Checks whether the resource at the supplied URL has a blocking filter.
-   * For checking allowlisting filters use {@link AdblockEngine#isContentAllowlisted}.
-   *
-   * @param url URL of the resource
-   * @param contentTypes Set of content types for requested resource
-   * @param parent Immediate parent of the {@param url}.
-   * @param siteKey Public key provided by the document, can be empty
-   * @param specificOnly If `true` then we check only domain specific filters
-   * @return {@link MatchesResult#NOT_ENABLED} if FilterEngine is not enabled,
-   *         {@link MatchesResult#BLOCKED} when blocking filter was found or
-   *         {@link MatchesResult#NOT_FOUND} when blocking filter was not found.
-   */
-  public MatchesResult matches(final String url, final Set<ContentType> contentTypes,
-                               final String parent, final String siteKey,
-                               final boolean specificOnly)
-  {
-    if (!enabled)
-    {
-      return MatchesResult.NOT_ENABLED;
-    }
-
-    final Filter filter = this.filterEngine.matches(url, contentTypes, parent, siteKey,
-        specificOnly);
-
-    if (filter == null)
-    {
-      return MatchesResult.NOT_FOUND;
-    }
-
-    Timber.d("Found filter `%s` for url `%s`", filter.text, url);
-
-    return filter.type == Filter.Type.BLOCKING
-        ? MatchesResult.BLOCKED
-        : MatchesResult.NOT_FOUND;
-  }
-
-  /**
-   * Add whitelisting filter for a given domain.
-   *
-   * @param domain Domain to be added for whitelisting
-   */
-  public void addDomainWhitelistingFilter(final String domain)
-  {
-    final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
-    this.filterEngine.addFilter(filter);
-  }
-
-  /**
-   * Checks whether the resource at the supplied URL is allowlisted.
-   *
-   * @param url URL of the resource
-   * @param contentTypes Set of content types for requested resource
-   * @param referrerChain Chain of URLs requesting the resource
-   * @param siteKey Public key provided by the document, can be empty
-   * @return `true` if the URL is allowlisted
-   */
-  public boolean isContentAllowlisted(final String url,
-                                      final Set<ContentType> contentTypes,
-                                      final List<String> referrerChain,
-                                      final String siteKey)
-  {
-    return this.filterEngine.isContentAllowlisted(url, contentTypes, referrerChain, siteKey);
-  }
-
-  public String getElementHidingStyleSheet(
-      final String url,
-      final String domain,
-      final List<String> referrerChain,
-      final String sitekey,
-      final boolean specificOnly)
-  {
-    /*
-     * Issue 3364 (https://issues.adblockplus.org/ticket/3364) introduced the
-     * feature to re-enabled element hiding.
-     *
-     * Nothing changes for Adblock Plus for Android, as `this.elemhideEnabled`
-     * is `false`, which results in an empty list being returned and converted
-     * into a `(String[])null` in AdblockPlus.java, which is the only place
-     * this function here is called from Adblock Plus for Android.
-     *
-     * If element hiding is enabled, then this function now first checks for
-     * possible allowlisting of either the document or element hiding for
-     * the given URL and returns an empty list if so. This is needed to
-     * ensure correct functioning of e.g. acceptable ads.
-     */
-    if (!this.enabled
-        || !this.elemhideEnabled
-        || this.isContentAllowlisted(url,
-            FilterEngine.ContentType.maskOf(ContentType.DOCUMENT), referrerChain, sitekey)
-        || this.isContentAllowlisted(url,
-            FilterEngine.ContentType.maskOf(ContentType.ELEMHIDE), referrerChain, sitekey))
-    {
-      return "";
-    }
-
-    return this.filterEngine.getElementHidingStyleSheet(domain, specificOnly);
-  }
-
-  public List<FilterEngine.EmulationSelector> getElementHidingEmulationSelectors(
-      final String url,
-      final String domain,
-      final List<String> referrerChain,
-      final String sitekey)
-  {
-    if (!this.enabled
-        || !this.elemhideEnabled
-        || this.isContentAllowlisted(url,
-            FilterEngine.ContentType.maskOf(ContentType.DOCUMENT), referrerChain, sitekey)
-        || this.isContentAllowlisted(url,
-            FilterEngine.ContentType.maskOf(ContentType.ELEMHIDE), referrerChain, sitekey))
-    {
-      return new ArrayList<>();
-    }
-    return this.filterEngine.getElementHidingEmulationSelectors(domain);
-  }
-
   public FilterEngine getFilterEngine()
   {
-    return this.filterEngine;
+    return filterEngine;
   }
 
   /**
@@ -477,8 +400,8 @@ public final class AdblockEngine
    */
   public void addDomainAllowlistingFilter(final String domain)
   {
-    final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
-    this.filterEngine.addFilter(filter);
+    final Filter filter = Utils.createDomainAllowlistingFilter(this, domain);
+    filterEngine.addFilter(filter);
   }
 
   /**
@@ -487,8 +410,8 @@ public final class AdblockEngine
    */
   public void removeDomainAllowlistingFilter(final String domain)
   {
-    final Filter filter = Utils.createDomainAllowlistingFilter(filterEngine, domain);
-    this.filterEngine.removeFilter(filter);
+    final Filter filter = Utils.createDomainAllowlistingFilter(this, domain);
+    filterEngine.removeFilter(filter);
   }
 
   /**

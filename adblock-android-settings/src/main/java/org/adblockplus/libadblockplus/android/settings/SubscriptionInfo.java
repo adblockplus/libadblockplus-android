@@ -17,7 +17,7 @@
 
 package org.adblockplus.libadblockplus.android.settings;
 
-import org.adblockplus.libadblockplus.Subscription;
+import org.adblockplus.Subscription;
 
 public class SubscriptionInfo
 {

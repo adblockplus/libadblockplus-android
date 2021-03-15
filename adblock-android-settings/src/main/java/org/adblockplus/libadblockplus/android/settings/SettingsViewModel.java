@@ -22,7 +22,7 @@ import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
-import org.adblockplus.libadblockplus.Subscription;
+import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.ConnectionType;
 

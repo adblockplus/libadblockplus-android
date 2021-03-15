@@ -2,7 +2,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.net.Uri;
 
-import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.ContentType;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -42,9 +42,9 @@ public class HeadersContentTypeDetectorTest extends BaseContentTypeDetectorTest
   @Test
   public void testHeaderRequests()
   {
-    assertEquals(FilterEngine.ContentType.XMLHTTPREQUEST,
+    assertEquals(ContentType.XMLHTTPREQUEST,
         detector.detect(mockRequest(URI_EXAMPLE, XML_HEADER)));
-    assertEquals(FilterEngine.ContentType.SUBDOCUMENT,
+    assertEquals(ContentType.SUBDOCUMENT,
         detector.detect(mockRequest(URI_EXAMPLE, SUBDOCUMENT_HEADER)));
 
     // not detected

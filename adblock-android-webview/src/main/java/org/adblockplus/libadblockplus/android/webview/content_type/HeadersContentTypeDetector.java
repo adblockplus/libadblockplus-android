@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.ContentType;
 
 import java.util.Map;
 
@@ -35,15 +35,15 @@ import static org.adblockplus.libadblockplus.HttpClient.MIME_TYPE_TEXT_HTML;
  * <p>
  * It has a limited functionality and can detect only
  * two types of content:
- * - {@link FilterEngine.ContentType#XMLHTTPREQUEST} and
- * - {@link FilterEngine.ContentType#SUBDOCUMENT}
+ * - {@link ContentType#XMLHTTPREQUEST} and
+ * - {@link ContentType#SUBDOCUMENT}
  * <p>
  * Should be used in {@link OrderedContentTypeDetector}
  */
 public class HeadersContentTypeDetector implements ContentTypeDetector
 {
   @Override
-  public FilterEngine.ContentType detect(final WebResourceRequest request)
+  public ContentType detect(final WebResourceRequest request)
   {
     final Map<String, String> headers = request.getRequestHeaders();
 
@@ -54,14 +54,14 @@ public class HeadersContentTypeDetector implements ContentTypeDetector
     if (isXmlHttpRequest)
     {
       Timber.w("using xmlhttprequest content type");
-      return FilterEngine.ContentType.XMLHTTPREQUEST;
+      return ContentType.XMLHTTPREQUEST;
     }
 
     final String acceptType = headers.get(HEADER_ACCEPT);
     if (acceptType != null && acceptType.contains(MIME_TYPE_TEXT_HTML))
     {
       Timber.w("using subdocument content type");
-      return FilterEngine.ContentType.SUBDOCUMENT;
+      return ContentType.SUBDOCUMENT;
     }
 
     // not detected

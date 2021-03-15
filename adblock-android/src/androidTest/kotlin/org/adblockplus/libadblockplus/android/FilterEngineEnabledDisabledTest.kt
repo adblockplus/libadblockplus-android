@@ -17,6 +17,8 @@
 package org.adblockplus.libadblockplus.test.org.adblockplus.libadblockplus.android
 
 import androidx.test.platform.app.InstrumentationRegistry
+import org.adblockplus.ContentType
+import org.adblockplus.MatchesResult
 import org.adblockplus.libadblockplus.AppInfo
 import org.adblockplus.libadblockplus.android.AdblockEngine
 import org.adblockplus.libadblockplus.FilterEngine
@@ -48,9 +50,9 @@ class FilterEngineEnabledDisabledTest  {
         var filter = adblockEngine.filterEngine.getFilterFromText("adbanner.gif")
         adblockEngine.filterEngine.addFilter(filter)
 
-        val match2: AdblockEngine.MatchesResult? = adblockEngine.matches("http://example.org/adbanner.gif",
-                FilterEngine.ContentType.maskOf(FilterEngine.ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "", false)
-        assertTrue(match2 == null || match2.equals(AdblockEngine.MatchesResult.NOT_ENABLED))
+        val match2: MatchesResult? = adblockEngine.matches("http://example.org/adbanner.gif",
+                ContentType.maskOf(ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "", false)
+        assertTrue(match2 == null || match2 == MatchesResult.NOT_ENABLED)
     }
 
     @Test
@@ -107,18 +109,18 @@ class FilterEngineEnabledDisabledTest  {
         var filter = adblockEngine.filterEngine.getFilterFromText("adbanner.gif")
         adblockEngine.filterEngine.addFilter(filter)
 
-        var match: AdblockEngine.MatchesResult? = adblockEngine.matches("http://example.org/adbanner.gif",
-                FilterEngine.ContentType.maskOf(FilterEngine.ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "", false)
+        var match: MatchesResult? = adblockEngine.matches("http://example.org/adbanner.gif",
+                ContentType.maskOf(ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "", false)
         // should allow
-        assertTrue(match == null || match.equals(AdblockEngine.MatchesResult.NOT_ENABLED))
+        assertTrue(match == null || match == MatchesResult.NOT_ENABLED)
 
         adblockEngine.isEnabled = true
         assertTrue(adblockEngine.isEnabled)
         assertTrue(adblockEngine.filterEngine.isEnabled)
 
         match = adblockEngine.matches("http://example.org/adbanner.gif",
-                FilterEngine.ContentType.maskOf(FilterEngine.ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "", false)
+                ContentType.maskOf(ContentType.IMAGE), FilterEngine.EMPTY_PARENT, "", false)
 
-        assertTrue(match != null && match.equals(AdblockEngine.MatchesResult.BLOCKED))
+        assertTrue(match != null && match == MatchesResult.BLOCKED)
     }
 }
