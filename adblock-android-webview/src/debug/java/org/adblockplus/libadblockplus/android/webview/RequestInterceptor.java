@@ -20,7 +20,7 @@ package org.adblockplus.libadblockplus.android.webview;
 import android.net.Uri;
 import android.webkit.WebView;
 
-import org.adblockplus.libadblockplus.Filter;
+import org.adblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
@@ -57,7 +57,6 @@ public class RequestInterceptor
     INVALID_COMMAND,
     INVALID_PAYLOAD
   }
-
 
   static Boolean isBlockedByHandlingDebugURLQuery(final WebView view, final AdblockEngineProvider provider,
                                                   final Uri url)

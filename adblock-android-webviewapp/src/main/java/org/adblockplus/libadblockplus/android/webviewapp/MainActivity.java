@@ -35,8 +35,9 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.ArrayList;
@@ -180,8 +181,11 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   private void setTestPageSubscription()
   {
     AdblockHelper.get().getProvider().retain(true);
+    final AdblockEngine adblockEngine = AdblockHelper.get().getProvider().getEngine();
+    // This needs to be updated when we address new API AdblockEngine settings and initialization to skip using
+    // FilterEngine
     final FilterEngine filterEngne = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
-    final Subscription subscription = filterEngne.getSubscription(testPageSubscriptionUrl);
+    final Subscription subscription = adblockEngine.getSubscription(testPageSubscriptionUrl);
     String message;
     if (filterEngne.getListedSubscriptions().contains(subscription))
     {

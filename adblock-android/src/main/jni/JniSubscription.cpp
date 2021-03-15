@@ -181,7 +181,6 @@ static void JNICALL JniDtor(JNIEnv* env, jclass clazz, jlong ptr)
     delete JniLongToTypePtr<AdblockPlus::Subscription>(ptr);
 }
 
-
 static JNINativeMethod methods[] =
 {
   { (char*)"isDisabled", (char*)"(JLjava/lang/String;)Z", (void*)JniIsDisabled },
@@ -192,7 +191,7 @@ static JNINativeMethod methods[] =
   { (char*)"getSynchronizationStatus", (char*)"(JLjava/lang/String;)Ljava/lang/String;", (void*)JniGetSynchronizationStatus },
 };
 
-extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_libadblockplus_Subscription_registerNatives(JNIEnv *env, jclass clazz)
+extern "C" JNIEXPORT void JNICALL Java_org_adblockplus_Subscription_registerNatives(JNIEnv *env, jclass clazz)
 {
   env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0]));
 }

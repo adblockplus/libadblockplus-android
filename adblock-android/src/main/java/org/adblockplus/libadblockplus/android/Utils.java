@@ -20,8 +20,9 @@ package org.adblockplus.libadblockplus.android;
 import android.content.Context;
 import android.text.TextUtils;
 
-import org.adblockplus.libadblockplus.Filter;
-import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.EmulationSelector;
+import org.adblockplus.Filter;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.json.JSONArray;
@@ -88,13 +89,13 @@ public final class Utils
     return array.toString();
   }
 
-  public static String emulationSelectorListToJsonArray(final List<FilterEngine.EmulationSelector> list)
+  public static String emulationSelectorListToJsonArray(final List<EmulationSelector> list)
   {
     final JSONArray array = new JSONArray();
 
     if (list != null)
     {
-      for (FilterEngine.EmulationSelector selector : list)
+      for (EmulationSelector selector : list)
       {
         if (selector != null)
         {
@@ -592,13 +593,13 @@ public final class Utils
 
   /**
    * Creates allowlisting filter for a given domain
-   * @param filterEngine Filtering engine
+   * @param adblockEngine AdblockEngine
    * @param domain Domain that needs to be allow listed
    * @return Allowlisting filter
    */
-  public static Filter createDomainAllowlistingFilter(final FilterEngine filterEngine,
+  public static Filter createDomainAllowlistingFilter(final AdblockEngine adblockEngine,
                                                       final String domain)
   {
-    return filterEngine.getFilterFromText("@@||" + domain + "^$document,domain=" + domain);
+    return adblockEngine.getFilterFromText("@@||" + domain + "^$document,domain=" + domain);
   }
 }

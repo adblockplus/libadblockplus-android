@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.ContentType;
 
 /**
  * Detects content type based on {@link HeadersContentTypeDetector}
@@ -27,7 +27,7 @@ import org.adblockplus.libadblockplus.FilterEngine;
  * <p>
  * Can accept a list of content type detectors
  * <p>
- * {@link FilterEngine.ContentType#XMLHTTPREQUEST} is detected separately
+ * {@link ContentType#XMLHTTPREQUEST} is detected separately
  * just by checking header `HEADER_REQUESTED_WITH_XMLHTTPREQUEST`
  */
 public class OrderedContentTypeDetector implements ContentTypeDetector
@@ -49,9 +49,9 @@ public class OrderedContentTypeDetector implements ContentTypeDetector
   }
 
   @Override
-  public FilterEngine.ContentType detect(final WebResourceRequest request)
+  public ContentType detect(final WebResourceRequest request)
   {
-    FilterEngine.ContentType contentType;
+    ContentType contentType;
 
     for (final ContentTypeDetector detector : detectors)
     {

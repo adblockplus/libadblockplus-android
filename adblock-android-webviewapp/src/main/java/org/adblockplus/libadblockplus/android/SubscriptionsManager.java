@@ -22,8 +22,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.List;
@@ -66,9 +67,12 @@ public class SubscriptionsManager
         {
           final String url = intent.getStringExtra(EXTRA_URL);
           Timber.d("Subscription = %s", url);
+          final AdblockEngine adblockEngine = AdblockHelper.get().getProvider().getEngine();
+          // This needs to be updated when we address new API AdblockEngine settings and initialization
+          // to skip using FilterEngine
           final FilterEngine filterEngine =
             AdblockHelper.get().getProvider().getEngine().getFilterEngine();
-          final Subscription subscription = filterEngine.getSubscription(url);
+          final Subscription subscription = adblockEngine.getSubscription(url);
 
           if (intent.getAction().equals(ACTION_ADD))
           {

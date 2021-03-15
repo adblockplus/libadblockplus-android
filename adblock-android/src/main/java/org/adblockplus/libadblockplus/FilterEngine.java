@@ -17,7 +17,11 @@
 
 package org.adblockplus.libadblockplus;
 
-import java.util.HashSet;
+import org.adblockplus.ContentType;
+import org.adblockplus.EmulationSelector;
+import org.adblockplus.Filter;
+import org.adblockplus.Subscription;
+
 import java.util.List;
 import java.util.Set;
 
@@ -407,33 +411,4 @@ public final class FilterEngine
   private static native void addSubscription(long ptr, String subscriptionUrl);
 
   private static native void removeSubscription(long ptr, String subscriptionUrl);
-
-  public enum ContentType
-  {
-    OTHER, SCRIPT, IMAGE, STYLESHEET, OBJECT, SUBDOCUMENT, DOCUMENT, WEBSOCKET,
-    WEBRTC, PING, XMLHTTPREQUEST, OBJECT_SUBREQUEST, MEDIA, FONT, GENERICBLOCK,
-    ELEMHIDE, GENERICHIDE;
-
-    public static Set<ContentType> maskOf(final ContentType... contentTypes)
-    {
-      final Set<ContentType> set = new HashSet<>(contentTypes.length);
-      for (final ContentType contentType : contentTypes)
-      {
-        set.add(contentType);
-      }
-      return set;
-    }
-  }
-
-  public static class EmulationSelector
-  {
-    public String selector;
-    public String text;
-
-    public EmulationSelector(final String selector, final String text)
-    {
-      this.selector = selector;
-      this.text = text;
-    }
-  }
 }

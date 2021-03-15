@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.ContentType;
 import org.junit.Test;
 
 import java.text.MessageFormat;
@@ -32,7 +32,7 @@ public class UrlFileExtensionTypeDetectorTest extends BaseContentTypeDetectorTes
 {
   private final UrlFileExtensionTypeDetector detector = new UrlFileExtensionTypeDetector();
 
-  private void assertUrlMatchCase(final FilterEngine.ContentType expectedContentType,
+  private void assertUrlMatchCase(final ContentType expectedContentType,
                                   final String extension)
   {
     final String[] templates =
@@ -60,7 +60,7 @@ public class UrlFileExtensionTypeDetectorTest extends BaseContentTypeDetectorTes
     {
       final String url = MessageFormat.format(template, extension);
       final WebResourceRequest request = mockRequest(parseUri(url), null);
-      final FilterEngine.ContentType actualContentType = detector.detect(request);
+      final ContentType actualContentType = detector.detect(request);
       System.out.printf("assertUrlMatchCase %s expects %s, got %s\n", url, expectedContentType.toString(),
           actualContentType == null ? "NULL" : actualContentType.toString());
       assertNotNull(actualContentType);
@@ -68,7 +68,7 @@ public class UrlFileExtensionTypeDetectorTest extends BaseContentTypeDetectorTes
     }
   }
 
-  private void assertUrl(final FilterEngine.ContentType expectedContentType, final String extension)
+  private void assertUrl(final ContentType expectedContentType, final String extension)
   {
     assertUrlMatchCase(expectedContentType, extension.toLowerCase());
     assertUrlMatchCase(expectedContentType, extension.toUpperCase());
@@ -77,19 +77,19 @@ public class UrlFileExtensionTypeDetectorTest extends BaseContentTypeDetectorTes
   @Test
   public void testScript()
   {
-    assertUrl(FilterEngine.ContentType.SCRIPT, "js");
+    assertUrl(ContentType.SCRIPT, "js");
   }
 
   @Test
   public void testCSS()
   {
-    assertUrl(FilterEngine.ContentType.STYLESHEET, "css");
+    assertUrl(ContentType.STYLESHEET, "css");
   }
 
   @Test
   public void testImage()
   {
-    final FilterEngine.ContentType expectedContentType = FilterEngine.ContentType.IMAGE;
+    final ContentType expectedContentType = ContentType.IMAGE;
     final String[] imageExtensions = {"gif", "png", "jpg", "jpe", "jpeg", "bmp",
       "apng", "cur", "jfif", "ico", "pjpeg", "pjp", "svg", "tif", "tiff", "webp"};
     for (final String extension : imageExtensions)
@@ -101,7 +101,7 @@ public class UrlFileExtensionTypeDetectorTest extends BaseContentTypeDetectorTes
   @Test
   public void testFont()
   {
-    final FilterEngine.ContentType expectedContentType = FilterEngine.ContentType.FONT;
+    final ContentType expectedContentType = ContentType.FONT;
     assertUrl(expectedContentType, "ttf");
     assertUrl(expectedContentType, "woff");
     assertUrl(expectedContentType, "woff2");
@@ -110,7 +110,7 @@ public class UrlFileExtensionTypeDetectorTest extends BaseContentTypeDetectorTes
   @Test
   public void testHtml()
   {
-    final FilterEngine.ContentType expectedContentType = FilterEngine.ContentType.SUBDOCUMENT;
+    final ContentType expectedContentType = ContentType.SUBDOCUMENT;
     assertUrl(expectedContentType, "htm");
     assertUrl(expectedContentType, "html");
   }
@@ -118,7 +118,7 @@ public class UrlFileExtensionTypeDetectorTest extends BaseContentTypeDetectorTes
   @Test
   public void testMedia()
   {
-    final FilterEngine.ContentType expectedContentType = FilterEngine.ContentType.MEDIA;
+    final ContentType expectedContentType = ContentType.MEDIA;
     final String[] mediaExtensions = {"webm", "mkv", "flv", "vob", "ogv", "drc", "mng", "avi",
       "gifv", "qt", "wmv", "yuv", "rm", "rmvb", "asf", "amv", "mp4", "m4p", "mp2", "mpe", "mov",
       "mpv", "mpg", "mpeg", "m2v", "m4v", "svi", "3gp", "3g2", "mxf", "roq", "nsv", "8svx",

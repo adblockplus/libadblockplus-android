@@ -547,18 +547,18 @@ static void JNICALL JniRemoveFilter(JNIEnv *env, jclass clazz, jlong ptr, jstrin
 
 static JNINativeMethod methods[] =
 {
-  { (char*)"getFilter", (char*)"(JLjava/lang/String;)" TYP("Filter"), (void*)JniGetFilter },
+  { (char*)"getFilter", (char*)"(JLjava/lang/String;)" TYPAPI("Filter"), (void*)JniGetFilter },
   { (char*)"getListedFilters", (char*)"(J)Ljava/util/List;", (void*)JniGetListedFilters },
-  { (char*)"getSubscription", (char*)"(JLjava/lang/String;" TYP("FilterEngine") ")" TYP("Subscription"), (void*)JniGetSubscription },
+  { (char*)"getSubscription", (char*)"(JLjava/lang/String;" TYP("FilterEngine") ")" TYPAPI("Subscription"), (void*)JniGetSubscription },
   { (char*)"getListedSubscriptions", (char*)"(J" TYP("FilterEngine") ")Ljava/util/List;", (void*)JniGetListedSubscriptions },
   { (char*)"fetchAvailableSubscriptions", (char*)"(J" TYP("FilterEngine") ")Ljava/util/List;", (void*)JniFetchAvailableSubscriptions },
   { (char*)"setFilterChangeCallback", (char*)"(JJ)V", (void*)JniSetFilterChangeCallback },
   { (char*)"removeFilterChangeCallback", (char*)"(J)V", (void*)JniRemoveFilterChangeCallback },
   { (char*)"getElementHidingStyleSheet", (char*)"(JLjava/lang/String;Z)Ljava/lang/String;", (void*)JniGetElementHidingStyleSheet },
   { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
-  { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;Z)" TYP("Filter"), (void*)JniMatchesMany },
-  { (char*)"matches", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/lang/String;Ljava/lang/String;Z)" TYP("Filter"), (void*)JniMatches },
-  { (char*)"isContentAllowlisted", (char*)"(JLjava/lang/String;" "[" TYP("FilterEngine$ContentType") "Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsContentAllowlisted },
+  { (char*)"matches", (char*) "(JLjava/lang/String;" "[" TYPAPI("ContentType") "Ljava/util/List;Ljava/lang/String;Z)" TYPAPI("Filter"), (void*)JniMatchesMany },
+  { (char*)"matches", (char*) "(JLjava/lang/String;" "[" TYPAPI("ContentType") "Ljava/lang/String;Ljava/lang/String;Z)" TYPAPI("Filter"), (void*)JniMatches },
+  { (char*)"isContentAllowlisted", (char*) "(JLjava/lang/String;" "[" TYPAPI("ContentType") "Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsContentAllowlisted },
   { (char*)"isDocumentAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsDocumentAllowlisted },
   { (char*)"isGenericblockAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsGenericblockAllowlisted },
   { (char*)"isElemhideAllowlisted", (char*)"(JLjava/lang/String;Ljava/util/List;Ljava/lang/String;)Z", (void*)JniIsElemhideAllowlisted },
