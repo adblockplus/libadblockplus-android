@@ -71,8 +71,8 @@ def get_project(gl):
 
 # ------------------- MAIN -------------------#
 def main(args):
-    label = "ABP WebView {}".format(args.version)
-    project = "DP"
+    label = "Adblock WebView {}".format(args.version)
+    project = "DPC"
     version = args.version
 
     jira = log_into_jira()
