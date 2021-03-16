@@ -24,9 +24,10 @@ import org.adblockplus.Filter;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
-import org.adblockplus.libadblockplus.android.AndroidBase64Processor;
-import org.adblockplus.libadblockplus.util.Base64Exception;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -47,7 +48,8 @@ public class RequestInterceptor
   public static final String DEBUG_URL_HOSTNAME = "abp_filters";
   public static final String RESPONSE_ENCODING = "UTF-8";
   public static final String RESPONSE_MIME_TYPE = "text/plain";
-  public static final String PAYLOAD_QUERY_PARAMETER_KEY = "base64";
+  public static final String PAYLOAD_QUERY_PARAMETER_KEY = "payload";
+  public static final String URL_ENCODE_CHARSET = StandardCharsets.UTF_8.name();
 
   enum Command
   {
@@ -111,12 +113,11 @@ public class RequestInterceptor
   {
     if (payload != null && !payload.isEmpty())
     {
-      final AndroidBase64Processor base64 = new AndroidBase64Processor();
       try
       {
-        return new String(base64.decode(payload.getBytes()));
+        return URLDecoder.decode(payload, URL_ENCODE_CHARSET);
       }
-      catch (final Base64Exception e)
+      catch (final UnsupportedEncodingException e)
       {
         return "";
       }

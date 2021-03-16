@@ -1,12 +1,12 @@
 package org.adblockplus.libadblockplus.android.webview.test
 
 import androidx.test.platform.app.InstrumentationRegistry
-import org.adblockplus.libadblockplus.android.AndroidBase64Processor
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper
 import org.adblockplus.libadblockplus.android.webview.RequestInterceptor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.URLEncoder
 
 class RequestInterceptorTest : BaseAdblockWebViewTest() {
 
@@ -16,7 +16,7 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
         const val ADD_URL = BASE_URL + RequestInterceptor.COMMAND_STRING_ADD
         const val REMOVE_URL = BASE_URL + RequestInterceptor.COMMAND_STRING_REMOVE
         const val CLEAR_URL = BASE_URL + RequestInterceptor.COMMAND_STRING_CLEAR
-        const val BASE64_QUERY_PARAM_NAME = "/?" + RequestInterceptor.PAYLOAD_QUERY_PARAMETER_KEY + "="
+        const val PAYLOAD_QUERY_PARAM_NAME = "/?" + RequestInterceptor.PAYLOAD_QUERY_PARAMETER_KEY + "="
 
         private const val PLAIN_URL_BASE = "data:" + RequestInterceptor.RESPONSE_MIME_TYPE + ","
         const val RESPONSE_INVALID_COMMAND = PLAIN_URL_BASE + RequestInterceptor.COMMAND_STRING_INVALID_COMMAND
@@ -34,11 +34,13 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
 
     @Test
     fun testAddRemoveErrorWithoutPayload() {
-        assertTrue("$ADD_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(ADD_URL, RESPONSE_INVALID_PAYLOAD))
+        assertTrue("$ADD_URL exceeded loading timeout",
+                testSuitAdblock.loadUrlAndWait(ADD_URL, RESPONSE_INVALID_PAYLOAD))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_INVALID_PAYLOAD)
         }
-        assertTrue("$REMOVE_URL exceeded loading timeout", testSuitAdblock.loadUrlAndWait(REMOVE_URL, RESPONSE_INVALID_PAYLOAD))
+        assertTrue("$REMOVE_URL exceeded loading timeout",
+                testSuitAdblock.loadUrlAndWait(REMOVE_URL, RESPONSE_INVALID_PAYLOAD))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_INVALID_PAYLOAD)
         }
@@ -46,10 +48,10 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
 
     @Test
     fun testAddRemoveClearFilter() {
-        val base64 = AndroidBase64Processor()
-
-        val filters = "/adv?banners=\n/ad_iframe/*\$domain=~convert-video-online.com|~online-audio-converter.com"
-        val addUrl = ADD_URL + BASE64_QUERY_PARAM_NAME + base64.encodeToString(filters.toByteArray())
+        val filter1 = "dp-testpages.adblockplus.org##.testcase-examplecontent + .eh-sibling"
+        val filter2 = "/ad_iframe/*\\\$domain=~convert-video-online.com|~online-audio-converter.com"
+        val filters = "$filter1\n$filter2"
+        val addUrl = ADD_URL + PAYLOAD_QUERY_PARAM_NAME + URLEncoder.encode(filters, RequestInterceptor.URL_ENCODE_CHARSET)
 
         assertEquals(AdblockHelper.get().provider.engine.filterEngine.listedFilters.size, 0)
 
@@ -67,10 +69,9 @@ class RequestInterceptorTest : BaseAdblockWebViewTest() {
         }
         assertEquals(AdblockHelper.get().provider.engine.filterEngine.listedFilters.size, 2)
 
-        val filter = "/adv?banners="
-
         // Test remove
-        val removeUrl = REMOVE_URL + BASE64_QUERY_PARAM_NAME + base64.encodeToString(filter.toByteArray())
+        val removeUrl = REMOVE_URL + PAYLOAD_QUERY_PARAM_NAME + URLEncoder.encode(filter1,
+                RequestInterceptor.URL_ENCODE_CHARSET)
         assertTrue("$removeUrl exceeded loading timeout", testSuitAdblock.loadUrlAndWait(removeUrl, RESPONSE_OK))
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             assertEquals(testSuitAdblock.webView.originalUrl, RESPONSE_OK)
