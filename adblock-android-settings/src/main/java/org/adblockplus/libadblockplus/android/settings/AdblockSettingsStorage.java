@@ -20,6 +20,8 @@ package org.adblockplus.libadblockplus.android.settings;
 import android.content.Context;
 import android.content.res.Resources;
 
+import org.adblockplus.libadblockplus.android.Subscription;
+
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -62,7 +64,7 @@ public abstract class AdblockSettingsStorage
     settings.setAcceptableAdsEnabled(true);
     settings.setAllowedConnectionType(null);
 
-    List<SubscriptionInfo> defaultSubscriptions;
+    List<Subscription> defaultSubscriptions;
     try
     {
       final InputStream inputStream = context.getResources().openRawResource(R.raw.subscriptions);
@@ -76,12 +78,12 @@ public abstract class AdblockSettingsStorage
 
     settings.setAvailableSubscriptions(defaultSubscriptions);
 
-    final SubscriptionInfo selectedSubscription =
+    final Subscription selectedSubscription =
         Utils.chooseDefaultSubscription(defaultSubscriptions);
     settings.setSelectedSubscriptions(
         selectedSubscription != null
             ? new LinkedList<>(Collections.singletonList(selectedSubscription))
-            : new LinkedList<SubscriptionInfo>());
+            : new LinkedList<Subscription>());
 
     return settings;
   }
