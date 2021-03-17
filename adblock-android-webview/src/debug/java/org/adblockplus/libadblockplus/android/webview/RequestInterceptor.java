@@ -20,9 +20,9 @@ package org.adblockplus.libadblockplus.android.webview;
 import android.net.Uri;
 import android.webkit.WebView;
 
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.AdblockEngineSettings;
 import org.adblockplus.Filter;
-import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 
 import java.io.UnsupportedEncodingException;
@@ -156,7 +156,7 @@ public class RequestInterceptor
         return COMMAND_STRING_ERROR_NO_ENGINE;
       }
 
-      return modifyFilters(engine.getFilterEngine(), command, payload);
+      return modifyFilters(engine, command, payload);
     }
     finally
     {
@@ -164,30 +164,32 @@ public class RequestInterceptor
     }
   }
 
-  private static String modifyFilters(final FilterEngine filterEngine, final Command command, final String payload)
+  private static String modifyFilters(final AdblockEngine adblockEngine, final Command command, final String payload)
   {
+    final AdblockEngineSettings adblockEngineSettings = adblockEngine.settings();
     if (command == Command.ADD || command == Command.REMOVE)
     {
+      final AdblockEngineSettings.EditOperation editOperation = adblockEngineSettings.edit();
       final boolean shouldBePresent = command == Command.ADD;
       final List<Filter> filtersToModify = new LinkedList<>();
       for (final String filter : payload.split("\\r?\\n"))
       {
-        filtersToModify.add(filterEngine.getFilterFromText(filter));
+        filtersToModify.add(adblockEngine.getFilterFromText(filter));
       }
-
       for (final Filter filter : filtersToModify)
       {
         if (command == Command.ADD)
         {
-          filterEngine.addFilter(filter);
+          editOperation.addCustomFilter(filter);
         }
         else
         {
-          filterEngine.removeFilter(filter);
+          editOperation.removeCustomFilter(filter);
         }
       }
+      editOperation.save();
 
-      if (!checkModifications(filterEngine.getListedFilters(), filtersToModify, shouldBePresent))
+      if (!checkModifications(adblockEngineSettings.getListedFilters(), filtersToModify, shouldBePresent))
       {
         return COMMAND_STRING_ERROR;
       }
@@ -195,11 +197,12 @@ public class RequestInterceptor
 
     if (command == Command.CLEAR)
     {
-      for (final Filter filter : filterEngine.getListedFilters())
+      final AdblockEngineSettings.EditOperation editOperation = adblockEngineSettings.edit();
+      for (final Filter filter : adblockEngineSettings.getListedFilters())
       {
-        filterEngine.removeFilter(filter);
+        editOperation.removeCustomFilter(filter).save();
       }
-      if (!filterEngine.getListedFilters().isEmpty())
+      if (!adblockEngineSettings.getListedFilters().isEmpty())
       {
         return COMMAND_STRING_ERROR;
       }

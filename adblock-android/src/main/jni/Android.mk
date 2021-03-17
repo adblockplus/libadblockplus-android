@@ -108,7 +108,7 @@ LOCAL_SRC_FILES += JniPlatform.cpp
 LOCAL_SRC_FILES += JniJsEngine.cpp JniFilterEngine.cpp JniJsValue.cpp
 LOCAL_SRC_FILES += JniFilter.cpp JniSubscription.cpp JniEventCallback.cpp
 LOCAL_SRC_FILES += JniLogSystem.cpp JniWebRequest.cpp
-LOCAL_SRC_FILES += JniFilterChangeCallback.cpp JniCallbacks.cpp Utils.cpp
+LOCAL_SRC_FILES += JniCallbacks.cpp Utils.cpp
 LOCAL_SRC_FILES += JniIsAllowedConnectionTypeCallback.cpp JniFileSystem.cpp
 
 LOCAL_CPP_FEATURES := exceptions

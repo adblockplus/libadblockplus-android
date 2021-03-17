@@ -71,16 +71,6 @@ public final class FilterEngine
     return fetchAvailableSubscriptions(this.ptr, this);
   }
 
-  public void removeFilterChangeCallback()
-  {
-    removeFilterChangeCallback(this.ptr);
-  }
-
-  public void setFilterChangeCallback(final FilterChangeCallback callback)
-  {
-    setFilterChangeCallback(this.ptr, callback.ptr);
-  }
-
   public String getElementHidingStyleSheet(final String domain)
   {
     return getElementHidingStyleSheet(domain, false);
@@ -352,10 +342,6 @@ public final class FilterEngine
   private static native List<Subscription> getListedSubscriptions(long ptr, FilterEngine engine);
 
   private static native List<Subscription> fetchAvailableSubscriptions(long ptr, FilterEngine engine);
-
-  private static native void removeFilterChangeCallback(long ptr);
-
-  private static native void setFilterChangeCallback(long ptr, long filterPtr);
 
   private static native String getElementHidingStyleSheet(long ptr, String domain, boolean specificOnly);
 

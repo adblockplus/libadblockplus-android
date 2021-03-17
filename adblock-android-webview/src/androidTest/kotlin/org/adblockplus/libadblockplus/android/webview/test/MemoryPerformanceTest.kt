@@ -438,8 +438,8 @@ abstract class AdblockWebViewBenchmarkMemory(private val subscriptionListResourc
             val customEngineProvider = SingleInstanceEngineProvider(engineFactory)
 
             assertTrue(customEngineProvider.retain(false))
-            customEngineProvider.engine.isAcceptableAdsEnabled = isAaEnabled
-            customEngineProvider.engine.isEnabled = isAdblockEnabled
+            customEngineProvider.engine.settings().edit().setAcceptableAdsEnabled(isAaEnabled).setEnabled(isAaEnabled)
+                    .save()
             tries.add(stampMemory("ENGINE CREATED", stageCounter++, customEngineProvider))
             assertNotNull(customEngineProvider.engine)
 

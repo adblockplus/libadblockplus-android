@@ -22,7 +22,7 @@ import android.content.SharedPreferences;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import org.adblockplus.libadblockplus.android.ConnectionType;
+import org.adblockplus.ConnectionType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
