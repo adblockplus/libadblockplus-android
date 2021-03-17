@@ -22,6 +22,8 @@ import android.webkit.WebView;
 
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 
+import java.nio.charset.StandardCharsets;
+
 public class RequestInterceptor
 {
   public static final String DEBUG_URL_HOSTNAME = "abp_filters";
@@ -33,6 +35,7 @@ public class RequestInterceptor
   public static final String COMMAND_STRING_INVALID_COMMAND = "INVALID_COMMAND";
   public static final String COMMAND_STRING_INVALID_PAYLOAD = "INVALID_PAYLOAD";
   public static final String COMMAND_STRING_OK = "OK";
+  public static final String URL_ENCODE_CHARSET = StandardCharsets.UTF_8.name();
 
   static Boolean isBlockedByHandlingDebugURLQuery(final WebView view, final AdblockEngineProvider provider,
                                                   final Uri url)
