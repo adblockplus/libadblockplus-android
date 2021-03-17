@@ -18,6 +18,7 @@
 package org.adblockplus.libadblockplus.android.settings;
 
 import android.content.Context;
+import android.content.res.Resources;
 
 import org.adblockplus.libadblockplus.android.Subscription;
 
@@ -25,6 +26,8 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import timber.log.Timber;
 
 /**
  * Settings storage base class
@@ -61,11 +64,22 @@ public abstract class AdblockSettingsStorage
     settings.setAcceptableAdsEnabled(true);
     settings.setAllowedConnectionType(null);
 
-    final InputStream inputStream = context.getResources().openRawResource(R.raw.subscriptions);
-    final List<Subscription> defaultSubscriptions = Utils.getSubscriptionsFromResourceStream(inputStream);
+    List<Subscription> defaultSubscriptions;
+    try
+    {
+      final InputStream inputStream = context.getResources().openRawResource(R.raw.subscriptions);
+      defaultSubscriptions = Utils.getSubscriptionsFromResourceStream(inputStream);
+    }
+    catch (final Resources.NotFoundException exception)
+    {
+      Timber.e("subscriptions.json is not found");
+      defaultSubscriptions = new LinkedList<>();
+    }
+
     settings.setAvailableSubscriptions(defaultSubscriptions);
 
-    final Subscription selectedSubscription = Utils.chooseDefaultSubscription(defaultSubscriptions);
+    final Subscription selectedSubscription =
+        Utils.chooseDefaultSubscription(defaultSubscriptions);
     settings.setSelectedSubscriptions(
         selectedSubscription != null
             ? new LinkedList<>(Collections.singletonList(selectedSubscription))
