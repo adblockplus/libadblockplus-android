@@ -27,7 +27,7 @@ import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.SwitchPreferenceCompat;
 
-import org.adblockplus.libadblockplus.android.ConnectionType;
+import org.adblockplus.ConnectionType;
 
 import java.util.Set;
 

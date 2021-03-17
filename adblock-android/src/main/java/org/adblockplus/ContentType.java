@@ -17,6 +17,8 @@
 
 package org.adblockplus;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -49,7 +51,7 @@ public enum ContentType
    * @param contentTypes
    * @return a Set of {@link ContentType}s
    */
-  public static Set<ContentType> maskOf(final ContentType... contentTypes)
+  @NotNull public static Set<ContentType> maskOf(@NotNull final ContentType... contentTypes)
   {
     final Set<ContentType> set = new HashSet<>(contentTypes.length);
     for (final ContentType contentType : contentTypes)

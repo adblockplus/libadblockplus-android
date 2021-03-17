@@ -21,6 +21,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.Filter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -215,6 +217,18 @@ public class Utils
       }
     }
     return selectedSubscriptions;
+  }
+
+  /**
+   * Creates allowlisting filter for a given domain
+   * @param adblockEngine AdblockEngine
+   * @param domain Domain that needs to be allow listed
+   * @return Allowlisting filter
+   */
+  public static Filter createDomainAllowlistingFilter(final AdblockEngine adblockEngine,
+                                                      final String domain)
+  {
+    return adblockEngine.getFilterFromText("@@||" + domain + "^$document,domain=" + domain);
   }
 
 }

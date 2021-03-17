@@ -20,9 +20,7 @@ package org.adblockplus.libadblockplus.android;
 import android.content.Context;
 import android.text.TextUtils;
 
-import org.adblockplus.AdblockEngine;
 import org.adblockplus.EmulationSelector;
-import org.adblockplus.Filter;
 import org.adblockplus.libadblockplus.HeaderEntry;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.json.JSONArray;
@@ -589,17 +587,5 @@ public final class Utils
       }
     }
     return true;
-  }
-
-  /**
-   * Creates allowlisting filter for a given domain
-   * @param adblockEngine AdblockEngine
-   * @param domain Domain that needs to be allow listed
-   * @return Allowlisting filter
-   */
-  public static Filter createDomainAllowlistingFilter(final AdblockEngine adblockEngine,
-                                                      final String domain)
-  {
-    return adblockEngine.getFilterFromText("@@||" + domain + "^$document,domain=" + domain);
   }
 }

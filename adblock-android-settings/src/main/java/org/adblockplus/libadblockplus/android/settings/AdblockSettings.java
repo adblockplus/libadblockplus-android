@@ -17,7 +17,7 @@
 
 package org.adblockplus.libadblockplus.android.settings;
 
-import org.adblockplus.libadblockplus.android.ConnectionType;
+import org.adblockplus.ConnectionType;
 
 import java.io.Serializable;
 import java.util.List;

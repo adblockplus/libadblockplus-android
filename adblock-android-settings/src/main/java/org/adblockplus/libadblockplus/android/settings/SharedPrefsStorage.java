@@ -20,7 +20,7 @@ package org.adblockplus.libadblockplus.android.settings;
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 
-import org.adblockplus.libadblockplus.android.ConnectionType;
+import org.adblockplus.ConnectionType;
 
 import java.util.LinkedList;
 import java.util.List;

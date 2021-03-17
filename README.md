@@ -238,7 +238,7 @@ Make sure you initialize it once during app launch, call `isInit()` to check it:
       ...
     }
 
-Sometimes it's desired to initialize or deinitialize FilterEngine instance
+Sometimes it's desired to initialize or deinitialize AdblockEngine instance
 when created:
 
     AdblockHelper
@@ -316,14 +316,14 @@ and then unregister when not needed with `Context#unregisterComponentCallbacks(C
 If you are using old APIs, it's also possible to use any of `onLowMemory()` system callbacks:
 either `Activity#onLowMemory()` or `Fragment#onLowMemory()`.
 
-Please mind that if you are using `AdblockHelper` (which is in most cases), Adblock Filter Engine
+Please mind that if you are using `AdblockHelper` (which is in most cases), AdblockEngine
 exists only in one instance. Having one instance means that you only have to implement one call to
 `AdblockHelper.get().getProvider().getEngine().onLowMemory();`. Thus it's recommended to do the call in `Activity`
 or somewhere else where you are sure you are not creating multiple instances (e.g. fragments).
 
 #### Background operations
 
-By default filter engine will do some background operations like subscriptions synchronizations in background shortly
+By default AdblockEngine will do some background operations like subscriptions synchronizations in background shortly
 after initialized. If you want to have ad blocking as optional feature, you should consider use `setDisabledByDefault`
 
 ```

@@ -59,7 +59,7 @@ class HttpHeaderSiteKeyExtractorTest : BaseAdblockWebViewTest() {
 
         val sitekeyExtractorMock = mock(HttpHeaderSiteKeyExtractor::class.java)
 
-        adblockEngine.isAcceptableAdsEnabled = true
+        adblockEngine.settings().edit().setAcceptableAdsEnabled(true).save()
 
         val delegateSiteKey =
                 ((testSuitAdblock.webView.siteKeyExtractor as AlwaysEnabledSitekeyExtractor)

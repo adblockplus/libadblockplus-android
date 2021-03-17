@@ -37,7 +37,6 @@ import com.google.android.material.tabs.TabLayout;
 
 import org.adblockplus.AdblockEngine;
 import org.adblockplus.Subscription;
-import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.ArrayList;
@@ -182,12 +181,9 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   {
     AdblockHelper.get().getProvider().retain(true);
     final AdblockEngine adblockEngine = AdblockHelper.get().getProvider().getEngine();
-    // This needs to be updated when we address new API AdblockEngine settings and initialization to skip using
-    // FilterEngine
-    final FilterEngine filterEngne = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
     final Subscription subscription = adblockEngine.getSubscription(testPageSubscriptionUrl);
     String message;
-    if (filterEngne.getListedSubscriptions().contains(subscription))
+    if (adblockEngine.settings().getListedSubscriptions().contains(subscription))
     {
       if (subscription.isDisabled())
       {
@@ -201,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     }
     else
     {
-      filterEngne.addSubscription(subscription);
+      adblockEngine.settings().edit().addSubscription(subscription).save();
       message = getResources().getString(R.string.subscription_added_and_enabled);
     }
     message += testPageSubscriptionUrl;

@@ -22,6 +22,8 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.RawRes;
 
+import org.adblockplus.AdblockEngineSettings;
+import org.adblockplus.ConnectionType;
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
@@ -73,22 +75,19 @@ public class AdblockHelper
     @Override
     public void onAdblockEngineCreated(final AdblockEngine engine)
     {
-      final AdblockSettings settings = storage.load();
-      if (settings != null)
+      final AdblockSettings savedSettings = storage.load();
+      if (savedSettings != null)
       {
         Timber.d("Applying saved adblock settings to adblock engine");
-        // apply last saved settings to adblock engine.
-        // all the settings except `enabled` and allowlisted domains list
-        // are saved by adblock engine itself
-        engine.setEnabled(settings.isAdblockEnabled());
-        engine.initAllowlistedDomains(settings.getAllowlistedDomains());
-
-        // allowed connection type is saved by filter engine but we need to override it
-        // as filter engine can be not created when changing
-        final String connectionType = (settings.getAllowedConnectionType() != null
-          ? settings.getAllowedConnectionType().getValue()
-          : null);
-        engine.getFilterEngine().setAllowedConnectionType(connectionType);
+        // apply last saved settings to adblock engine
+        final ConnectionType connectionType = savedSettings.getAllowedConnectionType();
+        final AdblockEngineSettings.EditOperation editOperation = engine.settings().edit();
+        editOperation.setEnabled(savedSettings.isAdblockEnabled());
+        if (connectionType != null)
+        {
+          editOperation.setAllowedConnectionType(connectionType);
+        }
+        editOperation.save();
       }
       else
       {
@@ -273,7 +272,7 @@ public class AdblockHelper
    * Sets preloaded subscriptions simplified. It sets a preloaded subscription to all possible
    * default non AA subscriptions (based on locale). And a preload a subscription for the default
    * acceptable ads subscription. This method does not directly inject the subscriptions into the
-   * engine, but rather will return this files at the first time the filter engine needs them.
+   * engine, but rather will return this files at the first time the adblock engine needs them.
    * @param subscriptionResource resource id for non aa subscription
    * @param acceptableAdsSubscriptionResource resource id for aa subscription
    * @return this (for method chaining)
@@ -327,7 +326,7 @@ public class AdblockHelper
   }
 
   /**
-   * Will create filter engine disabled by default. This means subscriptions will be updated only
+   * Will create adblock engine disabled by default. This means subscriptions will be updated only
    * when setEnabled(true) will be called. This function configures only default engine state. If
    * other state is stored in settings, it will be preferred.
    */

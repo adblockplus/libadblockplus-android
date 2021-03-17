@@ -22,9 +22,10 @@ import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
+import org.adblockplus.AdblockEngineSettings;
+import org.adblockplus.ConnectionType;
 import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.ConnectionType;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -99,7 +100,7 @@ public class SettingsViewModel extends AndroidViewModel
   {
     final List<SubscriptionInfo> returnData = new ArrayList<>();
     //Due to Java 7 cannot use replaceAll API
-    for (final Subscription subscription : engine.getRecommendedSubscriptions())
+    for (final Subscription subscription : engine.settings().getDefaultSubscriptions())
     {
       returnData.add(new SubscriptionInfo(subscription));
     }
@@ -170,7 +171,7 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.setEnabled(newValue);
+        engine.settings().edit().setEnabled(newValue).save();
       }
       finally
       {
@@ -179,23 +180,29 @@ public class SettingsViewModel extends AndroidViewModel
     }
   }
 
-  protected void handleFilterListsChanged(final Set<String> newValue)
+  protected void handleFilterListsChanged(final Set<String> newSubsUrls)
   {
     final AdblockEngine engine = provider.lockEngine();
     List<SubscriptionInfo> selectedSubscriptions = null;
     if (engine == null)
     {
-      selectedSubscriptions = Utils.chooseSelectedSubscriptions(settings.getAvailableSubscriptions(), newValue);
+      selectedSubscriptions = Utils.chooseSelectedSubscriptions(settings.getAvailableSubscriptions(), newSubsUrls);
     }
     else
     {
       final List<SubscriptionInfo> availableSubscriptions;
       try
       {
-        engine.setSubscriptions(newValue);
+        final ArrayList<Subscription> newSubs = new ArrayList();
+        for (final String subUrl : newSubsUrls)
+        {
+          newSubs.add(engine.getSubscription(subUrl));
+        }
+        final AdblockEngineSettings.EditOperation settings = engine.settings().edit();
+        settings.addAllSubscriptions(newSubs);
         // since 'aa enabled' setting affects subscriptions list, we need to set it again
-        engine.setAcceptableAdsEnabled(settings.isAcceptableAdsEnabled());
-
+        settings.setAcceptableAdsEnabled(engine.settings().isAcceptableAdsEnabled());
+        settings.save();
         availableSubscriptions = getDefaultSubscriptions(engine);
       }
       finally
@@ -205,7 +212,8 @@ public class SettingsViewModel extends AndroidViewModel
       if (availableSubscriptions != null)
       {
         settings.setAvailableSubscriptions(availableSubscriptions);
-        selectedSubscriptions = Utils.chooseSelectedSubscriptions(availableSubscriptions, newValue);
+        selectedSubscriptions = org.adblockplus.libadblockplus.android.settings.Utils
+          .chooseSelectedSubscriptions(availableSubscriptions, newSubsUrls);
       }
     }
     if (selectedSubscriptions != null)
@@ -227,7 +235,7 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.setAcceptableAdsEnabled(newValue);
+        engine.settings().edit().setAcceptableAdsEnabled(newValue).save();
       }
       finally
       {
@@ -248,7 +256,7 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.getFilterEngine().setAllowedConnectionType(value);
+        engine.settings().edit().setAllowedConnectionType(ConnectionType.findByValue(value)).save();
       }
       finally
       {
@@ -297,7 +305,7 @@ public class SettingsViewModel extends AndroidViewModel
       {
         try
         {
-          engine.addDomainAllowlistingFilter(newDomain);
+          engine.settings().edit().addCustomFilter(Utils.createDomainAllowlistingFilter(engine, newDomain)).save();
         }
         finally
         {
@@ -327,7 +335,7 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.removeDomainAllowlistingFilter(removeDomain);
+        engine.settings().edit().removeCustomFilter(Utils.createDomainAllowlistingFilter(engine, removeDomain)).save();
       }
       finally
       {

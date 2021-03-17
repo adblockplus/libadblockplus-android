@@ -20,6 +20,7 @@ package org.adblockplus.libadblockplus.android;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import org.adblockplus.ConnectionType;
 import org.adblockplus.libadblockplus.IsAllowedConnectionCallback;
 
 import timber.log.Timber;
@@ -59,12 +60,38 @@ public class IsAllowedConnectionCallbackImpl implements IsAllowedConnectionCallb
       return false;
     }
 
-    if (!connectionType.isRequiredConnection(manager))
+    if (!isRequiredConnection(connectionType))
     {
-      Timber.w("Current connection type is not allowed for web requests");
+      Timber.w("Current connection type `%s` is not allowed for web requests", connectionType.getValue());
       return false;
     }
 
     return true;
+  }
+
+  private boolean isRequiredConnection(final ConnectionType connectionType)
+  {
+    if (connectionType.equals(ConnectionType.ANY))
+    {
+      return true;
+    }
+    if (connectionType.equals(ConnectionType.NONE))
+    {
+      return false;
+    }
+    // Here we just know that value can be WIFI or WIFI_NON_METERED
+    final boolean isCurrentlyWifi = manager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI;
+    if (!isCurrentlyWifi)
+    {
+      return false;
+    }
+    else if (connectionType.equals(ConnectionType.WIFI))
+    {
+      return true;
+    }
+    else //WIFI_NON_METERED
+    {
+      return !manager.isActiveNetworkMetered();
+    }
   }
 }

@@ -22,7 +22,6 @@ import org.adblockplus.EmulationSelector;
 import org.adblockplus.Filter;
 import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.TestFilterChangeCallback;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -119,63 +118,6 @@ public class FilterEngineTest extends BaseFilterEngineTest
   {
     final Subscription subscription = filterEngine.getSubscription("foo");
     assertFalse(subscription.isDisabled());
-  }
-
-  @Test
-  public void testDisablingSubscriptionDisablesItAndFiresEvent()
-  {
-    final Subscription subscription = filterEngine.getSubscription("foo");
-    final TestFilterChangeCallback callback = new TestFilterChangeCallback();
-    filterEngine.setFilterChangeCallback(callback);
-    assertFalse(subscription.isDisabled());
-    subscription.setDisabled(true);
-    final List<TestFilterChangeCallback.Event> filteredEvents = new ArrayList();
-    for (final TestFilterChangeCallback.Event event : callback.getEvents())
-    {
-      if (!event.getAction().equals("subscription.disabled") ||
-          !event.getJsValue().getProperty("url").asString().equals("foo"))
-      {
-        continue;
-      }
-      else
-      {
-        filteredEvents.add(event);
-      }
-    }
-    assertEquals(1, filteredEvents.size());
-    assertTrue(subscription.isDisabled());
-    filterEngine.removeFilterChangeCallback();
-    callback.dispose();
-  }
-
-  @Test
-  public void testEnablingSubscriptionEnablesItAndFiresEvent()
-  {
-    final Subscription subscription = filterEngine.getSubscription("foo");
-    assertFalse(subscription.isDisabled());
-    subscription.setDisabled(true);
-    assertTrue(subscription.isDisabled());
-
-    final TestFilterChangeCallback callback = new TestFilterChangeCallback();
-    filterEngine.setFilterChangeCallback(callback);
-    subscription.setDisabled(false);
-    final List<TestFilterChangeCallback.Event> filteredEvents = new ArrayList();
-    for (final TestFilterChangeCallback.Event event : callback.getEvents())
-    {
-      if (!event.getAction().equals("subscription.disabled") ||
-          !event.getJsValue().getProperty("url").asString().equals("foo"))
-      {
-        continue;
-      }
-      else
-      {
-        filteredEvents.add(event);
-      }
-    }
-    assertEquals(1, filteredEvents.size());
-    assertFalse(subscription.isDisabled());
-    filterEngine.removeFilterChangeCallback();
-    callback.dispose();
   }
 
   @Test
@@ -463,23 +405,6 @@ public class FilterEngineTest extends BaseFilterEngineTest
                 ContentType.SCRIPT,
                 ContentType.OBJECT),
             FilterEngine.EMPTY_PARENT,"", false));
-  }
-
-  @Test
-  public void testSetRemoveFilterChangeCallback()
-  {
-    final TestFilterChangeCallback callback = new TestFilterChangeCallback();
-    filterEngine.setFilterChangeCallback(callback);
-    callback.getEvents().clear();
-    filterEngine.addFilter(filterEngine.getFilterFromText("foo"));
-    final int eventsCount = callback.getEvents().size();
-
-    // we want to actually check the call count didn't change.
-    filterEngine.removeFilterChangeCallback();
-    filterEngine.removeFilter(filterEngine.getFilterFromText("foo"));
-    assertEquals(eventsCount, callback.getEvents().size());
-    filterEngine.removeFilterChangeCallback();
-    callback.dispose();
   }
 
   @Test

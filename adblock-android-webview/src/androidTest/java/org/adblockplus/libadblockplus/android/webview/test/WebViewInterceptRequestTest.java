@@ -246,7 +246,7 @@ public class WebViewInterceptRequestTest
   public void testSiteKeyVerifierWithoutAcceptableAds() throws InterruptedException
   {
     final int countExpectedSuccess = 0;
-    AdblockHelper.get().getProvider().getEngine().setAcceptableAdsEnabled(false);
+    AdblockHelper.get().getProvider().getEngine().settings().edit().setAcceptableAdsEnabled(false).save();
     for (final Map.Entry<String, Integer> entry : urls.entrySet())
     {
       assertTrue("Url load failed unexpectedly",
@@ -262,7 +262,7 @@ public class WebViewInterceptRequestTest
   public void testSiteKeyVerifierWithAcceptableAds() throws InterruptedException
   {
     int countExpectedSuccess = 0;
-    AdblockHelper.get().getProvider().getEngine().setAcceptableAdsEnabled(true);
+    AdblockHelper.get().getProvider().getEngine().settings().edit().setAcceptableAdsEnabled(true).save();
     for (final Map.Entry<String, Integer> entry : urls.entrySet())
     {
       assertTrue("Url load failed unexpectedly",

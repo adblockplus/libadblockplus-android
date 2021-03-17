@@ -37,13 +37,13 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.AdblockEngineSettings;
 import org.adblockplus.ContentType;
 import org.adblockplus.EmulationSelector;
 import org.adblockplus.MatchesResult;
 import org.adblockplus.Subscription;
-import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HttpClient;
-import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
@@ -86,6 +86,8 @@ public class AdblockWebView extends WebView
   private static final String BRIDGE = "jsBridge";
   private static final String EMPTY_ELEMHIDE_STRING = "";
   private static final String EMPTY_ELEMHIDE_ARRAY_STRING = "[]";
+  private static final String EMPTY_PARENT = "";
+  private static final String EMPTY_SITEKEY = "";
 
   private OrderedContentTypeDetector contentTypeDetector;
   private final AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
@@ -298,17 +300,18 @@ public class AdblockWebView extends WebView
   private final AtomicReference<SiteKeysConfiguration> siteKeysConfiguration =
     new AtomicReference<>();
   private final AtomicBoolean jsInIframesEnabled = new AtomicBoolean(false);
-  private final AdblockEngine.SettingsChangedListener engineSettingsChangedCb =
-    new AdblockEngine.SettingsChangedListener()
+  private final AdblockEngineSettings.EnableStateChangedListener enableStateChangedListener =
+    new AdblockEngineSettings.EnableStateChangedListener()
     {
+
       @Override
-      public void onEnableStateChanged(final boolean enabled)
+      public void onAdblockEngineEnableStateChanged(final boolean isEnabled)
       {
-        final OptionalBoolean newValue = from(enabled);
+        final OptionalBoolean newValue = from(isEnabled);
         final OptionalBoolean oldValue = adblockEnabled.getAndSet(newValue);
         if (oldValue != OptionalBoolean.UNDEFINED && oldValue != newValue)
         {
-          Timber.d("Filter Engine status changed, enable status is %s", newValue);
+          Timber.d("Adblock Engine status changed, enable status is %s", newValue);
           AdblockWebView.this.post(new Runnable()
           {
             @Override
@@ -319,16 +322,21 @@ public class AdblockWebView extends WebView
           });
         }
       }
+
+      @Override
+      public void onAcceptableAdsEnableStateChanged(final boolean isEnabled)
+      {
+      }
     };
   private final AdblockEngineProvider.EngineCreatedListener engineCreatedCb
     = new AdblockEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void onAdblockEngineCreated(final AdblockEngine engine)
+    public void onAdblockEngineCreated(final org.adblockplus.libadblockplus.android.AdblockEngine engine)
     {
-      adblockEnabled.set(from(engine.isEnabled()));
-      Timber.d("Filter Engine created, enable status is %s", adblockEnabled.get());
-      engine.addSettingsChangedListener(engineSettingsChangedCb);
+      adblockEnabled.set(from(engine.settings().isEnabled()));
+      Timber.d("Adblock Engine created, enable status is %s", adblockEnabled.get());
+      engine.settings().addEnableStateChangedListener(enableStateChangedListener);
     }
   };
   private final AdblockEngineProvider.EngineDisposedListener engineDisposedCb
@@ -496,14 +504,14 @@ public class AdblockWebView extends WebView
 
         try
         {
-          // Note that if retain() needs to create a FilterEngine it will wait (in bg thread)
+          // Note that if retain() needs to create a AdblockEngine it will wait (in bg thread)
           // until we finish this synchronized block and release the engine lock.
           getProvider().retain(true); // asynchronously
           if (locked && getProvider().getEngine() != null)
           {
-            adblockEnabled.set(from(getProvider().getEngine().isEnabled()));
-            Timber.d("Filter Engine already created, enable status is %s", adblockEnabled);
-            getProvider().getEngine().addSettingsChangedListener(engineSettingsChangedCb);
+            adblockEnabled.set(from(getProvider().getEngine().settings().isEnabled()));
+            Timber.d("Adblock Engine already created, enable status is %s", adblockEnabled);
+            getProvider().getEngine().settings().addEnableStateChangedListener(enableStateChangedListener);
           }
           else
           {
@@ -588,7 +596,7 @@ public class AdblockWebView extends WebView
 
   private enum AbpShouldBlockResult
   {
-    // FilterEngine is released or
+    // AdblockEngine is released or
     // ABP enabled state is unknown or
     // ABP enabled state is "disabled"
     NOT_ENABLED,
@@ -711,8 +719,7 @@ public class AdblockWebView extends WebView
 
     private String getFirstParent(final List<String> referrerChain)
     {
-      return (referrerChain == null || referrerChain.size() == 0) ?
-        FilterEngine.EMPTY_PARENT : referrerChain.get(0);
+      return (referrerChain == null || referrerChain.size() == 0) ? EMPTY_PARENT : referrerChain.get(0);
     }
 
     private AbpShouldBlockResult shouldAbpBlockRequest(final WebResourceRequest request)
@@ -758,7 +765,7 @@ public class AdblockWebView extends WebView
         // changed after this check.
         if (isDisposed || engine == null)
         {
-          Timber.e("FilterEngine already disposed");
+          Timber.e("AdblockEngine already disposed");
           return AbpShouldBlockResult.NOT_ENABLED;
         }
 
@@ -771,7 +778,7 @@ public class AdblockWebView extends WebView
         {
           // check the real enable status and update adblockEnabled flag which is used
           // later on to check if we should execute element hiding JS
-          final OptionalBoolean newValue = from(engine.isEnabled());
+          final OptionalBoolean newValue = from(engine.settings().isEnabled());
           adblockEnabled.set(newValue);
           if (newValue == OptionalBoolean.FALSE)
           {
@@ -799,10 +806,10 @@ public class AdblockWebView extends WebView
           Timber.w("No referrer header for %s", url);
         }
 
-        sitekeyCheckEnabled = engine.isAcceptableAdsEnabled() || getJsInIframesEnabled();
+        sitekeyCheckEnabled = engine.settings().isAcceptableAdsEnabled() || getJsInIframesEnabled();
         if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
         {
-          final List<Subscription> listedSubscriptions = engine.getListedSubscriptions();
+          final List<Subscription> listedSubscriptions = engine.settings().getListedSubscriptions();
           for (Subscription subscription : listedSubscriptions)
           {
             if (subscription.url.contains("abp-testcase-subscription.txt"))
@@ -830,7 +837,7 @@ public class AdblockWebView extends WebView
           final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
           String siteKey = (siteKeysConfiguration != null
             ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-            .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY))
+            .getAny(referrerChain, EMPTY_SITEKEY))
             : null);
 
           // determine the content
@@ -905,7 +912,7 @@ public class AdblockWebView extends WebView
 
                 siteKey = (siteKeysConfiguration != null
                   ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-                  .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY))
+                  .getAny(referrerChain, EMPTY_SITEKEY))
                   : null);
 
                 if (siteKey == null || siteKey.isEmpty())
@@ -985,17 +992,8 @@ public class AdblockWebView extends WebView
       // we rely on calling `fetchUrlAndCheckSiteKey` later in `shouldInterceptRequest`, now we
       // just reply that it's fine to load the resource
       final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
-      if ((
-        sitekeyCheckEnabled
-          ||
-          (siteKeysConfiguration != null && siteKeysConfiguration.getForceChecks())
-      )
-        &&
-        (
-          isMainFrame
-            ||
-            (canContainSitekey && !isAllowlisted)
-        ))
+      if ((sitekeyCheckEnabled || (siteKeysConfiguration != null && siteKeysConfiguration.getForceChecks()))
+        && (isMainFrame || (canContainSitekey && !isAllowlisted)))
       {
         // if url is a main frame (allowlisted by default) or can contain by design a site key header
         // (it content type is SUBDOCUMENT or OTHER) and it is not yet allowlisted then we need to
@@ -1027,7 +1025,7 @@ public class AdblockWebView extends WebView
       }
       final AbpShouldBlockResult abpBlockResult = shouldAbpBlockRequest(request);
 
-      // if FilterEngine is unavailable or not enabled, just let it go (and skip sitekey check)
+      // if AdblockEngine is unavailable or not enabled, just let it go (and skip sitekey check)
       if (AbpShouldBlockResult.NOT_ENABLED.equals(abpBlockResult))
       {
         clearStylesheets();
@@ -1248,8 +1246,9 @@ public class AdblockWebView extends WebView
     // Thus AdblockWebView is using SingleInstanceEngineProvider instance
     if (getProvider() == null)
     {
-      final AdblockEngine.Factory factory = AdblockEngine
-        .builder(getContext(), AdblockEngine.BASE_PATH_DIRECTORY);
+      final org.adblockplus.libadblockplus.android.AdblockEngine.Factory factory =
+        org.adblockplus.libadblockplus.android.AdblockEngine.builder(getContext(),
+          org.adblockplus.libadblockplus.android.AdblockEngine.BASE_PATH_DIRECTORY);
       setProvider(new SingleInstanceEngineProvider(factory));
     }
   }
@@ -1461,7 +1460,6 @@ public class AdblockWebView extends WebView
       if (!isDisposed && getProvider().getEngine() != null)
       {
         final AdblockEngine adblockEngine = getProvider().getEngine();
-        final FilterEngine filterEngine = adblockEngine.getFilterEngine();
 
         final List<String> referrerChain = isMainFrame ?
           new ArrayList<String>() : buildFramesHierarchy(urlWithoutFragment);
@@ -1470,7 +1468,7 @@ public class AdblockWebView extends WebView
         final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
         String siteKey = (siteKeysConfiguration != null
           ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-          .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY))
+          .getAny(referrerChain, EMPTY_SITEKEY))
           : null);
 
         if (!isMainFrame && siteKeysConfiguration != null && siteKey.isEmpty())
@@ -1480,14 +1478,14 @@ public class AdblockWebView extends WebView
           if (waited)
           {
             siteKey = PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-              .getAny(referrerChain, FilterEngine.EMPTY_SITEKEY));
+              .getAny(referrerChain, EMPTY_SITEKEY));
           }
         }
 
         if (!adblockEngine.isContentAllowlisted(urlWithoutFragment,
           ContentType.maskOf(ContentType.DOCUMENT, ContentType.ELEMHIDE), referrerChain, siteKey))
         {
-          final boolean specificOnly = filterEngine.isContentAllowlisted(urlWithoutFragment,
+          final boolean specificOnly = adblockEngine.isContentAllowlisted(urlWithoutFragment,
             ContentType.maskOf(ContentType.GENERICHIDE),
             referrerChain, siteKey);
 
@@ -1605,7 +1603,7 @@ public class AdblockWebView extends WebView
       final AdblockEngine engine = getProvider().getEngine();
       if (engine != null)
       {
-        engine.removeSettingsChangedListener(engineSettingsChangedCb);
+        engine.settings().removeEnableStateChangedListener(enableStateChangedListener);
       }
       getProvider().removeEngineCreatedListener(engineCreatedCb);
       getProvider().removeEngineDisposedListener(engineDisposedCb);

@@ -120,36 +120,6 @@ static jobject JNICALL JniFetchAvailableSubscriptions(JNIEnv* env, jclass clazz,
   CATCH_THROW_AND_RETURN(env, 0);
 }
 
-static void JNICALL JniRemoveFilterChangeCallback(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
-
-  try
-  {
-    engine.RemoveFilterChangeCallback();
-  }
-  CATCH_AND_THROW(env)
-}
-
-static void JNICALL JniSetFilterChangeCallback(JNIEnv* env, jclass clazz,
-    jlong ptr, jlong filterPtr)
-{
-  AdblockPlus::IFilterEngine& engine = GetFilterEngineRef(ptr);
-  JniFilterChangeCallback* callback = JniLongToTypePtr<JniFilterChangeCallback>(
-      filterPtr);
-
-  auto filterCallback = [callback](const std::string& arg, AdblockPlus::JsValue&& jsValue)
-  {
-    callback->Callback(arg, std::move(jsValue));
-  };
-
-  try
-  {
-    engine.SetFilterChangeCallback(filterCallback);
-  }
-  CATCH_AND_THROW(env)
-}
-
 static jstring JNICALL JniGetElementHidingStyleSheet(JNIEnv* env, jclass clazz,
                                                      jlong ptr, jstring jDomain, jboolean jSpecificOnly)
 {
@@ -552,8 +522,6 @@ static JNINativeMethod methods[] =
   { (char*)"getSubscription", (char*)"(JLjava/lang/String;" TYP("FilterEngine") ")" TYPAPI("Subscription"), (void*)JniGetSubscription },
   { (char*)"getListedSubscriptions", (char*)"(J" TYP("FilterEngine") ")Ljava/util/List;", (void*)JniGetListedSubscriptions },
   { (char*)"fetchAvailableSubscriptions", (char*)"(J" TYP("FilterEngine") ")Ljava/util/List;", (void*)JniFetchAvailableSubscriptions },
-  { (char*)"setFilterChangeCallback", (char*)"(JJ)V", (void*)JniSetFilterChangeCallback },
-  { (char*)"removeFilterChangeCallback", (char*)"(J)V", (void*)JniRemoveFilterChangeCallback },
   { (char*)"getElementHidingStyleSheet", (char*)"(JLjava/lang/String;Z)Ljava/lang/String;", (void*)JniGetElementHidingStyleSheet },
   { (char*)"getElementHidingEmulationSelectors", (char*)"(JLjava/lang/String;)Ljava/util/List;", (void*)JniGetElementHidingEmulationSelectors },
   { (char*)"matches", (char*) "(JLjava/lang/String;" "[" TYPAPI("ContentType") "Ljava/util/List;Ljava/lang/String;Z)" TYPAPI("Filter"), (void*)JniMatchesMany },

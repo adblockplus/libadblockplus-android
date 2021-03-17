@@ -38,8 +38,7 @@ public interface AdblockEngine
    * @return CSS stylesheet string
    */
   @NotNull
-  String getElementHidingStyleSheet(@NotNull String domain,
-                                    boolean specificOnly);
+  String getElementHidingStyleSheet(@NotNull String domain, boolean specificOnly);
 
   /**
    * Obtains element hiding emulation selectors for a domain.
@@ -62,10 +61,8 @@ public interface AdblockEngine
    * @param siteKey Public key provided by the document, can be empty
    * @return `true` if the URL is allowlisted
    */
-  boolean isContentAllowlisted(@NotNull String url,
-                               @NotNull Set<ContentType> contentTypes,
-                               @NotNull List<String> referrerChain,
-                               @NotNull String siteKey);
+  boolean isContentAllowlisted(@NotNull String url, @NotNull Set<ContentType> contentTypes,
+                               @NotNull List<String> referrerChain, @NotNull String siteKey);
 
   /**
    * Checks whether the resource at the supplied URL has a blocking filter.
@@ -81,9 +78,8 @@ public interface AdblockEngine
    *         {@link MatchesResult#NOT_FOUND} when blocking filter was not found.
    */
   @NotNull
-  MatchesResult matches(@NotNull String url, @NotNull Set<ContentType> contentTypes,
-                        @NotNull String parent, @NotNull String siteKey,
-                        @NotNull boolean domainSpecificOnly);
+  MatchesResult matches(@NotNull String url, @NotNull Set<ContentType> contentTypes, @NotNull String parent,
+                        @NotNull String siteKey, boolean domainSpecificOnly);
 
   /**
    * Creates a {@link Subscription} object from url.
@@ -102,4 +98,11 @@ public interface AdblockEngine
    */
   @NotNull
   Filter getFilterFromText(@NotNull String text);
+
+  /**
+   * Return AdblockEngineSettings instance.
+   * @return AdblockEngineSettings instance
+   */
+  @NotNull
+  AdblockEngineSettings settings();
 }

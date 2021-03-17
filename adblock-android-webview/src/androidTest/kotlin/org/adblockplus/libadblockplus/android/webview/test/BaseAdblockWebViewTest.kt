@@ -212,14 +212,14 @@ abstract class BaseAdblockWebViewTest {
 
     protected fun addFilterRules(filterRules: List<String>) {
         filterRules.forEach { filterText ->
-            val filter = adblockEngine.filterEngine.getFilterFromText(filterText)
-            adblockEngine.filterEngine.addFilter(filter)
+            val filter = adblockEngine.getFilterFromText(filterText)
+            adblockEngine.settings().edit().addCustomFilter(filter).save()
         }
     }
 
     private fun waitForDefaultSubscriptions() {
         var slept = 0L
-        while (adblockEngine.filterEngine.listedSubscriptions.size != 2) { // 2 = locale + AA
+        while (adblockEngine.settings().listedSubscriptions.size != 2) { // 2 = locale + AA
             Timber.d("Waiting for default subscriptions ready")
             SystemClock.sleep(sleepStepMillis)
             slept += sleepStepMillis
@@ -230,10 +230,10 @@ abstract class BaseAdblockWebViewTest {
     }
 
     private fun clearSubscriptions() {
-        assertNotEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
-        adblockEngine.filterEngine.listedSubscriptions.forEach { subscription ->
-            adblockEngine.filterEngine.removeSubscription(subscription)
+        assertNotEquals(0, adblockEngine.settings().listedSubscriptions.size)
+        adblockEngine.settings().listedSubscriptions.forEach { subscription ->
+            adblockEngine.settings().edit().removeSubscription(subscription).save()
         }
-        assertEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
+        assertEquals(0, adblockEngine.settings().listedSubscriptions.size)
     }
 }
