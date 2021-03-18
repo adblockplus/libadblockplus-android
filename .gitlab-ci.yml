@@ -194,6 +194,7 @@ testobject_tests:
   variables:
     # Space-separated list of devices to run tests against
     TEST_DEVICES: "Samsung_Galaxy_S20_real Google_Pixel_5_real OnePlus_Nord_real"
+    GIT_STRATEGY: "none"
   script:
     - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
     - test -f /opt/ci/runner.jar || wget --no-verbose https://s3.amazonaws.com/saucelabs-runner/v1.8/runner.jar -O /opt/ci/runner.jar
@@ -229,6 +230,7 @@ regression_tests:
   interruptible: true
   retry: 1
   variables:
+    GIT_STRATEGY: "none"
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     GIT_AUTOMATION_BRANCH: "master"
@@ -245,19 +247,28 @@ regression_tests:
     - cd automation
     - git checkout ${GIT_AUTOMATION_BRANCH:-master}
     # Launch an instance of gradle for each bunch of tags we want to test
+    - set +e
     - pids=""
     - |
       for TAG in $REGRESSION_TAGS
-        do echo Starting job for tag ${TAG}
+        do export PLATFORM_VERSION
+        echo Starting job for tag ${TAG}
         (nohup ./gradlew regressionParallel -P tags=${TAG} &> tag-${TAG}.log ; echo $? > result_${TAG}) &
         pids="$pids $!"
       done
     - wait $pids
-    # Check the exit codes of all processes were 0
+    # gather the contents of any failed tests
+    - cat target/rerun*.txt > target/rerun.txt
+    - set -e
+    # Rerun any failed tests or check the exit codes of all processes were 0
     - |
-      for TAG in $REGRESSION_TAGS
-        do test $(cat result_${TAG}) = 0
-      done
+      if [ -s target/rerun.txt ] ; then
+        ./gradlew rerunFailed
+      else
+        for TAG in $REGRESSION_TAGS
+          do test $(cat result_${TAG}) = 0
+        done
+      fi
   after_script:
     - cd automation
     - |
@@ -273,6 +284,9 @@ regression_tests:
     expire_in: 6 months
     reports:
       junit: "automation/target/cucumber-reports/*.xml"
+    paths:
+      - "automation/tag-*.log"
+      - "automation/result_*"
 
 # automated functional tests using Appium
 functional_tests:
@@ -282,6 +296,7 @@ functional_tests:
   stage: device_tests
   interruptible: true
   variables:
+    GIT_STRATEGY: "none"
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     # demo app debug apk
@@ -298,15 +313,28 @@ functional_tests:
     - cd automation
     - git checkout ${GIT_AUTOMATION_BRANCH:-master}
     # Launch an instance of gradle for each bunch of tags we want to test
+    - set +e
     - pids=""
     - |
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
-        do echo Starting job for version ${PLATFORM_VERSION}
-        (nohup ./gradlew functional &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
+        do export PLATFORM_VERSION
+        echo Starting job for version ${PLATFORM_VERSION}
+        (./gradlew functional &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
         pids="$pids $!"
       done
     - wait $pids
-    # Check the exit codes of all processes were 0
+    # Check for any failures and re-run them
+    - |
+      for PLATFORM_VERSION in $PLATFORM_VERSIONS
+        do if [ -s target/rerun${PLATFORM_VERSION}.txt ] ; then
+          echo "Rerunning failed test cases for platform version ${PLATFORM_VERSION}"
+          mv target/rerun${PLATFORM_VERSION}.txt target/rerun.txt
+          ./gradlew rerunFailed
+          echo $? > result_${PLATFORM_VERSION}
+          rm -f target/rerun.txt
+        fi
+      done
+    # check the exit codes of all processes were 0
     - |
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
         do test $(cat result_${PLATFORM_VERSION}) = 0
@@ -317,7 +345,7 @@ functional_tests:
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
         do
         echo "**********************************"
-        echo "Logs for tests with plataform_version ${PLATFORM_VERSION}"
+        echo "Logs for tests with platform_version ${PLATFORM_VERSION}"
         echo "**********************************"
         cat platform_version-${PLATFORM_VERSION}.log
       done
@@ -326,6 +354,9 @@ functional_tests:
     expire_in: 6 months
     reports:
       junit: "automation/target/cucumber-reports/*.xml"
+    paths:
+      - "automation/platform_version-*.log"
+      - "automation/result_*"
 
 # FilterEngine performance benchmarking and memory
 benchmark:
