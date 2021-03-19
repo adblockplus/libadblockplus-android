@@ -569,6 +569,11 @@ public final class AdblockEngine
       return this;
     }
 
+    public boolean getDisableByDefault()
+    {
+      return !enabledByDefault;
+    }
+
     public Builder enableElementHiding(final boolean enable)
     {
       engine.elemhideEnabled = enable;
