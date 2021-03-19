@@ -60,7 +60,7 @@ public abstract class AdblockSettingsStorage
   {
     final AdblockSettings settings = new AdblockSettings();
 
-    settings.setAdblockEnabled(true);
+    settings.setAdblockEnabled(!AdblockHelper.get().getDisabledByDefault());
     settings.setAcceptableAdsEnabled(true);
     settings.setAllowedConnectionType(null);
 
