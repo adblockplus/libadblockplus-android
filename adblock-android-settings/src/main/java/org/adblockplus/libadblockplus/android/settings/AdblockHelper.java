@@ -332,7 +332,13 @@ public class AdblockHelper
    */
   public AdblockHelper setDisabledByDefault()
   {
+    Timber.d("setDisabledByDefault()");
     factory.setDisableByDefault();
     return this;
+  }
+
+  public boolean getDisabledByDefault()
+  {
+    return factory.getDisableByDefault();
   }
 }

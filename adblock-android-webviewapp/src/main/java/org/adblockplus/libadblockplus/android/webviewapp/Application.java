@@ -74,6 +74,7 @@ public class Application extends android.app.Application
 
       if (!BuildConfig.ADBLOCK_ENABLED)
       {
+        Timber.d("onCreate() with DisabledByDefault");
         helper.setDisabledByDefault();
       }
 
