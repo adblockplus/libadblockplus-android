@@ -360,68 +360,31 @@ functional_tests:
 
 # FilterEngine performance benchmarking and memory
 benchmark:
-  tags:
-    # This is a Raspberry PI with an attached rooted device that is located at the office.
-    - "android-pi"
+  image: "registry.gitlab.com/finestructure/pipeline-trigger:2.7.0"
   stage: device_tests
   interruptible: true
   variables:
-    ANDROID_SERIAL: "bd207da1" # Use the ZTE device
-    LOCK_CLOCK_FILE: "/data/local/tmp/lockClocks.sh"
-    BENCHMARK_PULL_DIR: "adblock-android-benchmark/build/outputs/connected_android_test_additional_output"
-  before_script:
-    # for publish benchmark
-    - pip3 install pygsheets
+    GIT_STRATEGY: "none"
+    TESTING_PROJECT: "24119254" #eyeo/distpartners/libabp-android-perf-testing
+    TESTING_BRANCH: "master"
   script:
-    - export BENCHMARK_GSHEETS_TOKEN_FILE_DIR=$(pwd)
-    - cp $BENCHMARK_GSHEETS_TOKEN_FILE ./sheets.googleapis.com-python.json
-    - ./tools/memory_benchmark.py --v=True
-    - ./tools/performance_benchmark.py
-    - ./tools/storage_benchmark.py
-    - ./tools/publish_benchmark.py
-  after_script:
-    # it will only trigger rolling window job
-    # if it is a scheduled job or is a tag job (release)
-    - ./tools/trigger_past_jobs.py
-    - adb shell reboot
-  artifacts:
-    when: always
-    paths:
-      - $BENCHMARK_PULL_DIR
-      - adblock-android-webview/build/outputs/memory_benchmark/
-    reports:
-        metrics: metrics.txt
+    # Start the pipeline and exit before it completes
+    # The CI_JOB_TOKEN will ensure the downstream job shows in the UI
+    - |
+      trigger --pipeline-token ${CI_JOB_TOKEN} \
+          --target-ref $TESTING_BRANCH \
+          --detached \
+          --env UPSTREAM_PIPELINE_ID=${CI_PIPELINE_ID} \
+          --env UPSTREAM_PROJECT_ID=${CI_PROJECT_ID} \
+          --env UPSTREAM_PIPELINE_URL=${CI_PIPELINE_URL} \
+          --env UPSTREAM_CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} \
+          --env UPSTREAM_CI_COMMIT_SHA=${CI_COMMIT_SHA} \
+          --env UPSTREAM_CI_COMMIT_TAG=${CI_COMMIT_TAG} \
+          ${TESTING_PROJECT}
   only:
     - schedules
     - web
     - tags
-
-# Loads web_page_replay and launches tests targeted with it
-web_page_replay:
-  stage: device_tests
-  image: "registry.gitlab.com/eyeo/adblockplus/libadblockplus-android/web_page_replay"
-  interruptible: true
-  variables:
-    ANDROID_DEVICE: "172.17.0.1:4444"
-  before_script:
-    - adb connect ${ANDROID_DEVICE}
-    # need to uninstall app do to and not exit on failure
-    - bash -c 'adb uninstall org.adblockplus.libadblockplus.android.webview.test || true'
-    - bash -c 'adb uninstall org.adblockplus.libadblockplus.benchmark.test || true'
-    - adb install -r adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk
-    - adb install -r adblock-android-benchmark/build/outputs/apk/androidTest/release/adblock-android-benchmark-release-androidTest.apk
-  script:
-    - adb root && sleep 5
-    - cd ${GOPATH}/src/github.com/catapult/web_page_replay_go
-    # if root present its ok to fail
-    - bash -c 'go run src/wpr.go installroot --android_device_id ${ANDROID_DEVICE} || true'
-    - cd ${CI_PROJECT_DIR}/tools/web_page_replay_test/ && ./web_page_replay_runner.py --mode replay --index=indexer --wpr-path=$WEB_PAGE_REPLAY_GO --v=True
-  only:
-    - schedules
-    - web
-  after_script:
-    # remove root because if root already present it will fail on re-install
-    - cd ${GOPATH}/src/github.com/catapult/web_page_replay_go && go run src/wpr.go removeroot --android_device_id ${ANDROID_DEVICE}
 
 .publish_template: &publish_template
   stage: publish
