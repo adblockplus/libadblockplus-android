@@ -4,6 +4,14 @@ All notable changes to Adblock Android SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2021-03-15 - [!523](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/523)
+### Fixed
+ - NPE crash when opening settings [!515](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/515)
+ - Fix exception thrown from AdblockWebView sample app on startup [!505](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/505)
+
+### Changed/Added
+ - Pick disabled by default option from libabp [!477](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/477)
+
 ## [4.3.0] - 2021-02-09 - [!482](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/482)
 ### Fixed
  - Fixed user counting [!475](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/475)

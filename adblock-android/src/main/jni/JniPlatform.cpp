@@ -104,7 +104,11 @@ static long JNICALL JniGetJsEnginePtr(JNIEnv* env, jclass clazz, jlong ptr)
   CATCH_THROW_AND_RETURN(env, 0)
 }
 
-static void JNICALL JniSetUpFilterEngine(JNIEnv* env, jclass clazz, jlong ptr, jobject jIsSubscriptionDownloadAllowedCallback)
+static void JNICALL JniSetUpFilterEngine(JNIEnv* env,
+                                         jclass clazz,
+                                         jlong ptr,
+                                         jobject jIsSubscriptionDownloadAllowedCallback,
+                                         jboolean jIsFilterEngineEnable)
 {
   try
   {
@@ -127,6 +131,17 @@ static void JNICALL JniSetUpFilterEngine(JNIEnv* env, jclass clazz, jlong ptr, j
             });
         };
     }
+    // by default it is enabled
+    // so only need to set if it is not default
+    if (jIsFilterEngineEnable == JNI_FALSE)
+    {
+      auto &jsEngine = GetPlatformRef(ptr).GetJsEngine();
+
+      creationParameters.preconfiguredPrefs.insert(
+              {AdblockPlus::FilterEngineFactory::PrefName::FilterEngineEnabled,
+                 jsEngine.NewValue(false)});
+    }
+
     GetPlatformRef(ptr).CreateFilterEngineAsync(creationParameters);
   }
   CATCH_AND_THROW(env)
@@ -148,7 +163,7 @@ static JNINativeMethod methods[] =
 
   { (char*)"setUpJsEngine", (char*)"(J" TYP("AppInfo") "J)V", (void*)JniSetUpJsEngine },
   { (char*)"getJsEnginePtr", (char*)"(J)J", (void*)JniGetJsEnginePtr },
-  { (char*)"setUpFilterEngine", (char*)"(J" TYP("IsAllowedConnectionCallback") ")V", (void*)JniSetUpFilterEngine },
+  { (char*)"setUpFilterEngine", (char*)"(J" TYP("IsAllowedConnectionCallback") "Z)V", (void*)JniSetUpFilterEngine },
   { (char*)"ensureFilterEngine", (char*)"(J)V", (void*)JniEnsureFilterEngine }
 };
 
