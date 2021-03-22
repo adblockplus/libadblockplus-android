@@ -55,6 +55,7 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
 {
   // default base path to store subscription files in android app
   public static final String BASE_PATH_DIRECTORY = "adblock";
+
   /*
    * The fields below are volatile because:
    *
@@ -601,19 +602,13 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
 
     public Builder setDisableByDefault()
     {
-      this.engine.configureDisabledByDefault(context);
+      this.enabledByDefault = false;
       return this;
     }
 
     public boolean getDisableByDefault()
     {
       return !enabledByDefault;
-    }
-
-    public Builder enableElementHiding(final boolean enable)
-    {
-      engine.elemhideEnabled = enable;
-      return this;
     }
 
     public Builder setHttpClient(final HttpClient httpClient)
@@ -708,6 +703,7 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
         engine.platform.setUpJsEngine(appInfo);
       }
       engine.platform.setUpFilterEngine(isAllowedConnectionCallback, enabledByDefault);
+      engine.enabled.set(enabledByDefault); // to keep it in sync
       engine.filterEngine = engine.platform.getFilterEngine();
     }
   }
