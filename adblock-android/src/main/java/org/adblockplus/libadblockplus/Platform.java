@@ -39,7 +39,10 @@ public class Platform implements Disposable
    * @param httpClient HttpClient concrete implementation
    * @param basePath   base path for FileSystem (default C++ FileSystem implementation used)
    */
-  public Platform(final LogSystem logSystem, final FileSystem fileSystem, final HttpClient httpClient, final String basePath)
+  public Platform(final LogSystem logSystem,
+                  final FileSystem fileSystem,
+                  final HttpClient httpClient,
+                  final String basePath)
   {
     this(ctor(logSystem, fileSystem, httpClient, basePath));
   }
@@ -65,9 +68,10 @@ public class Platform implements Disposable
     return new JsEngine(getJsEnginePtr(this.ptr));
   }
 
-  public void setUpFilterEngine(final IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback)
+  public void setUpFilterEngine(final IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback,
+                                final boolean isFilterEngineEnabled)
   {
-    setUpFilterEngine(this.ptr, isSubscriptionDownloadAllowedCallback);
+    setUpFilterEngine(this.ptr, isSubscriptionDownloadAllowedCallback, isFilterEngineEnabled);
   }
 
   public FilterEngine getFilterEngine()
@@ -113,7 +117,9 @@ public class Platform implements Disposable
 
   private static native long getJsEnginePtr(long ptr);
 
-  private static native void setUpFilterEngine(long ptr, IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback);
+  private static native void setUpFilterEngine(long ptr,
+                                               IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback,
+                                               boolean isFilterEngineEnabled);
 
   private static native void ensureFilterEngine(long ptr);
 

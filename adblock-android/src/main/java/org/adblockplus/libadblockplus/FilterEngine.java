@@ -300,6 +300,24 @@ public final class FilterEngine
     return isAcceptableAdsEnabled(this.ptr);
   }
 
+  /**
+   * Sets FilterEngine enable state, at this moment this functionality
+   * is not complete and will match added filters, if added with it disabled.
+   * This Functionality automatically downloads and updates subscription if switched
+   * from disable to enable state. Will not update subscriptions otherwise
+   * For feature complete functionality use @see AdblockEngine#SetEnabled
+   * @param enabled
+   */
+  public void setEnabled(final boolean enabled)
+  {
+    setEnabled(this.ptr, enabled);
+  }
+
+  public boolean isEnabled()
+  {
+    return isEnabled(this.ptr);
+  }
+
   public String getAcceptableAdsSubscriptionURL()
   {
     return getAcceptableAdsSubscriptionURL(this.ptr);
@@ -402,6 +420,10 @@ public final class FilterEngine
   private static native void setAcceptableAdsEnabled(long ptr, boolean enabled);
 
   private static native boolean isAcceptableAdsEnabled(long ptr);
+
+  private static native void setEnabled(long ptr, boolean enabled);
+
+  private static native boolean isEnabled(long ptr);
 
   private static native String getAcceptableAdsSubscriptionURL(long ptr);
 

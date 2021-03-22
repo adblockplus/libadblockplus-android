@@ -18,7 +18,6 @@
 package org.adblockplus.libadblockplus.android;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
@@ -84,10 +83,6 @@ public final class AdblockEngine
   // default base path to store subscription files in android app
   public static final String BASE_PATH_DIRECTORY = "adblock";
 
-  // force subscription update when engine will be enabled
-  private static final String FORCE_SYNC_WHEN_ENABLED_PREF = "_force_sync_when_enabled";
-  private static final String ENGINE_STORAGE_NAME = "abp-engine.pref";
-
   /*
    * The fields below are volatile because:
    *
@@ -108,7 +103,6 @@ public final class AdblockEngine
   private volatile boolean elemhideEnabled = true;
   private volatile boolean enabled = true;
   private final Set<SettingsChangedListener> settingsChangedListeners = new HashSet<>();
-  private SharedPreferences prefs;
 
   public synchronized AdblockEngine addSettingsChangedListener(final SettingsChangedListener listener)
   {
@@ -338,87 +332,31 @@ public final class AdblockEngine
     }
   }
 
-  // This method is called when SingleInstanceEngineProvider configured to have filter engine
-  // disabled by default. It will configure setting to force subscriptions to be updated
-  // when engine will be enabled first time
-  public void configureDisabledByDefault(final Context context)
-  {
-    setEnabled(false);
-    ensurePrefs(context);
-
-    if (!prefs.contains(FORCE_SYNC_WHEN_ENABLED_PREF))
-    {
-      saveShouldForceSyncWhenEnabled(true);
-    }
-  }
-
-  private void ensurePrefs(final Context context)
-  {
-    if (prefs == null)
-    {
-      loadPrefs(context);
-    }
-  }
-
-  private void saveShouldForceSyncWhenEnabled(final boolean force)
-  {
-    prefs.edit().putBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, force).commit();
-  }
-
-  private void loadPrefs(final Context context)
-  {
-    prefs = context.getSharedPreferences(ENGINE_STORAGE_NAME, Context.MODE_PRIVATE);
-  }
-
   public void setEnabled(final boolean enabled)
   {
-    final boolean valueChanged = this.enabled != enabled;
-    this.enabled = enabled;
-
-    // Filter engine can be created disabled by default. In this case initial subscription sync
-    // will fail and and once it will be enabled first synchronization will take place only
-    // when retry timeout will trigger. In order to have something when enabling it first time
-    // let us check pref forcing update.
-    // See configureDisabledByDefault method for preference setup.
-
-    if (enabled && valueChanged && prefs != null && shouldForceSyncWhenEnabled())
+    // if the same no need to change anything
+    if (enabled == this.enabled)
     {
-      forceSync();
+      return;
     }
-
-    if (valueChanged)
+    this.enabled = enabled;
+    if (filterEngine != null)
     {
-      synchronized(this)
+      filterEngine.setEnabled(enabled);
+    }
+    synchronized(this)
+    {
+      for (final SettingsChangedListener listener : settingsChangedListeners)
       {
-        for (final SettingsChangedListener listener : settingsChangedListeners)
-        {
-          listener.onEnableStateChanged(enabled);
-        }
+        listener.onEnableStateChanged(enabled);
       }
     }
   }
 
-  private void forceSync()
-  {
-    Timber.i("Force updating subscription filters");
-    final List<Subscription> listed = filterEngine.getListedSubscriptions();
-
-    for (final Subscription subscription : listed)
-    {
-      subscription.updateFilters();
-    }
-
-    saveShouldForceSyncWhenEnabled(false);
-  }
-
-  private boolean shouldForceSyncWhenEnabled()
-  {
-    return prefs.getBoolean(FORCE_SYNC_WHEN_ENABLED_PREF, false);
-  }
-
   public boolean isEnabled()
   {
-    return enabled;
+    // should be in sync with filterEngine.isEnabled()
+    return this.enabled;
   }
 
   public String getAcceptableAdsSubscriptionURL()
@@ -601,6 +539,7 @@ public final class AdblockEngine
     private Context context;
     private Map<String, Integer> urlToResourceIdMap;
     private boolean forceUpdatePreloadedSubscriptions = true;
+    private boolean enabledByDefault = true;
     private AndroidHttpClientResourceWrapper.Storage resourceStorage;
     private HttpClient androidHttpClient;
     private final AppInfo appInfo;
@@ -626,8 +565,13 @@ public final class AdblockEngine
 
     public Builder setDisableByDefault()
     {
-      this.engine.configureDisabledByDefault(context);
+      this.enabledByDefault = false;
       return this;
+    }
+
+    public boolean getDisableByDefault()
+    {
+      return !enabledByDefault;
     }
 
     public Builder enableElementHiding(final boolean enable)
@@ -708,7 +652,6 @@ public final class AdblockEngine
         engine.httpClient = wrapper;
       }
 
-      engine.httpClient = new AndroidHttpClientEngineStateWrapper(engine.httpClient, engine);
     }
 
     private void initCallbacks()
@@ -725,18 +668,6 @@ public final class AdblockEngine
 
       // httpClient should be ready to be used passed right after JsEngine is created
       createEngines();
-
-      // force update filters if moved from "disabled by default" state to regular state,
-      // see https://jira.eyeo.com/browse/DP-1558
-      if (engine.isEnabled())
-      {
-        engine.ensurePrefs(context);
-        if (engine.shouldForceSyncWhenEnabled())
-        {
-          engine.saveShouldForceSyncWhenEnabled(false);
-          engine.forceSync();
-        }
-      }
 
       initCallbacks();
 
@@ -756,7 +687,8 @@ public final class AdblockEngine
       {
         engine.platform.setUpJsEngine(appInfo);
       }
-      engine.platform.setUpFilterEngine(isAllowedConnectionCallback);
+      engine.platform.setUpFilterEngine(isAllowedConnectionCallback, enabledByDefault);
+      engine.enabled = enabledByDefault; // to keep it in sync
       engine.filterEngine = engine.platform.getFilterEngine();
     }
   }
