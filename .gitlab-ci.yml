@@ -137,6 +137,21 @@ build_libadblockplus-android:all-and-test-release:
     - web
     - tags
 
+build_libadblockplus-android:abp-disabled:
+  <<: *cache_readonly
+  stage: build
+  script:
+    # APK with adblock disabled, with a random appId
+    - ./gradlew clean assemble -PadblockEnabled=false -PrandomizedAppId=true
+    # Rename the APKs to avoid confusion
+    - mv adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned{,-ADBLOCK-DISABLED}.apk 
+    - mv adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug{,-ADBLOCK-DISABLED}.apk
+  artifacts:
+    paths:
+      - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug-ADBLOCK-DISABLED.apk
+      - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned-ADBLOCK-DISABLED.apk 
+  when: manual
+
 # The remaining build_* jobs are only built on rc branches
 # They are run only to test that the build works, we dont use the artefacts
 .onlyrcbuilds: &onlyrc
