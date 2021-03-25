@@ -22,10 +22,10 @@ import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
+import org.adblockplus.AdblockEngine;
 import org.adblockplus.AdblockEngineSettings;
 import org.adblockplus.ConnectionType;
 import org.adblockplus.Subscription;
-import org.adblockplus.libadblockplus.android.AdblockEngine;
 
 import java.net.MalformedURLException;
 import java.net.URL;

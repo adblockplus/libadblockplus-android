@@ -21,7 +21,7 @@ import android.app.Activity;
 
 import androidx.preference.PreferenceFragmentCompat;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 
 import timber.log.Timber;
@@ -85,7 +85,7 @@ public abstract class BaseSettingsFragment
     AdblockEngineProvider.EngineCreatedListener()
     {
       @Override
-      public void onAdblockEngineCreated(final AdblockEngine engine)
+      public void onAdblockEngineCreated(final AdblockEngine adblockEngine)
       {
         onAdblockEngineReady();
       }

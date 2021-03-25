@@ -54,7 +54,7 @@ import timber.log.Timber;
 public final class AdblockEngine implements org.adblockplus.AdblockEngine
 {
   // default base path to store subscription files in android app
-  public static final String BASE_PATH_DIRECTORY = "adblock";
+  private static final String BASE_PATH_DIRECTORY = "adblock";
 
   /*
    * The fields below are volatile because:
@@ -467,8 +467,7 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     return filterEngine.getFilterFromText(text);
   }
 
-  public static AppInfo generateAppInfo(final Context context,
-                                        final String application,
+  public static AppInfo generateAppInfo(final String application,
                                         final String applicationVersion)
   {
     final String sdkVersion = String.valueOf(VERSION.SDK_INT);
@@ -505,7 +504,7 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
       final String application = context.getPackageName();
       final String applicationVersion = packageInfo.versionName;
 
-      return generateAppInfo(context, application, applicationVersion);
+      return generateAppInfo(application, applicationVersion);
     }
     catch (final PackageManager.NameNotFoundException e)
     {
@@ -519,18 +518,6 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
   public interface Factory
   {
     AdblockEngine build();
-  }
-
-  /**
-   * Calls the platform's garbage collector
-   * Assuming the default implementation, V8 garbage collector will be called
-   */
-  public void onLowMemory()
-  {
-    if (platform != null && platform.getJsEngine() != null)
-    {
-      platform.getJsEngine().onLowMemory();
-    }
   }
 
   public static Builder builder(final Context context,
@@ -547,7 +534,9 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
         (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     final IsAllowedConnectionCallback isAllowedConnectionCallback =
         new IsAllowedConnectionCallbackImpl(connectivityManager);
-    return builder(context, appInfo, basePath)
+    return builder(context, appInfo, basePath != null ? basePath :
+      context.getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE)
+        .getAbsolutePath())
         .setIsAllowedConnectionCallback(isAllowedConnectionCallback);
   }
 
@@ -569,6 +558,11 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     return filterEngine;
   }
 
+  Platform getPlatform()
+  {
+    return platform;
+  }
+
   /**
    * Builds Adblock engine piece-by-pieece
    */
@@ -583,7 +577,6 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     private final AppInfo appInfo;
     private final String basePath;
     private IsAllowedConnectionCallback isAllowedConnectionCallback;
-    private Long v8IsolateProviderPtr;
 
     private final AdblockEngine engine;
 
@@ -639,12 +632,6 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
       return this;
     }
 
-    public Builder useV8IsolateProvider(final long v8IsolateProviderPtr)
-    {
-      this.v8IsolateProviderPtr = v8IsolateProviderPtr;
-      return this;
-    }
-
     private void initRequests()
     {
       if (androidHttpClient == null)
@@ -694,14 +681,7 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
       engine.logSystem = new TimberLogSystem();
       engine.fileSystem = null; // using default
       engine.platform = new Platform(engine.logSystem, engine.fileSystem, engine.httpClient, basePath);
-      if (v8IsolateProviderPtr != null)
-      {
-        engine.platform.setUpJsEngine(appInfo, v8IsolateProviderPtr);
-      }
-      else
-      {
-        engine.platform.setUpJsEngine(appInfo);
-      }
+      engine.platform.setUpJsEngine(appInfo);
       engine.platform.setUpFilterEngine(isAllowedConnectionCallback, enabledByDefault);
       engine.enabled.set(enabledByDefault); // to keep it in sync
       engine.filterEngine = engine.platform.getFilterEngine();

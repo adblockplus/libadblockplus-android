@@ -22,10 +22,11 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.RawRes;
 
+import org.adblockplus.AdblockEngine;
 import org.adblockplus.AdblockEngineSettings;
 import org.adblockplus.ConnectionType;
 import org.adblockplus.libadblockplus.HttpClient;
-import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AdblockEngine.Builder;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.AndroidBase64Processor;
 import org.adblockplus.libadblockplus.android.AndroidHttpClient;
@@ -64,16 +65,16 @@ public class AdblockHelper
 
   private boolean isInitialized;
   private Context context;
-  private AdblockEngine.Builder factory;
-  private SingleInstanceEngineProvider provider;
+  private Builder factory;
+  private AdblockEngineProvider provider;
   private AdblockSettingsStorage storage;
   private SiteKeysConfiguration siteKeysConfiguration;
 
-  private final SingleInstanceEngineProvider.EngineCreatedListener engineCreatedListener =
-    new SingleInstanceEngineProvider.EngineCreatedListener()
+  private final AdblockEngineProvider.EngineCreatedListener engineCreatedListener =
+    new AdblockEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void onAdblockEngineCreated(final AdblockEngine engine)
+    public void onAdblockEngineCreated(final AdblockEngine adblockEngine)
     {
       final AdblockSettings savedSettings = storage.load();
       if (savedSettings != null)
@@ -81,7 +82,7 @@ public class AdblockHelper
         Timber.d("Applying saved adblock settings to adblock engine");
         // apply last saved settings to adblock engine
         final ConnectionType connectionType = savedSettings.getAllowedConnectionType();
-        final AdblockEngineSettings.EditOperation editOperation = engine.settings().edit();
+        final AdblockEngineSettings.EditOperation editOperation = adblockEngine.settings().edit();
         editOperation.setEnabled(savedSettings.isAdblockEnabled());
         if (connectionType != null)
         {
@@ -96,19 +97,8 @@ public class AdblockHelper
     }
   };
 
-  private final SingleInstanceEngineProvider.BeforeEngineDisposedListener
-    beforeEngineDisposedListener =
-      new SingleInstanceEngineProvider.BeforeEngineDisposedListener()
-  {
-    @Override
-    public void onBeforeAdblockEngineDispose()
-    {
-      Timber.d("Disposing Adblock engine");
-    }
-  };
-
-  private final SingleInstanceEngineProvider.EngineDisposedListener engineDisposedListener =
-    new SingleInstanceEngineProvider.EngineDisposedListener()
+  private final AdblockEngineProvider.EngineDisposedListener engineDisposedListener =
+    new AdblockEngineProvider.EngineDisposedListener()
   {
     @Override
     public void onAdblockEngineDisposed()
@@ -137,7 +127,7 @@ public class AdblockHelper
     return _instance;
   }
 
-  public AdblockEngine.Builder getFactory()
+  public Builder getFactory()
   {
     if (factory == null)
     {
@@ -214,7 +204,7 @@ public class AdblockHelper
 
   private void initFactory(final Context context, final String basePath)
   {
-    factory = AdblockEngine.builder(context, basePath);
+    factory = org.adblockplus.libadblockplus.android.AdblockEngine.builder(context, basePath);
     this.context = context;
   }
 
@@ -222,7 +212,6 @@ public class AdblockHelper
   {
     provider = new SingleInstanceEngineProvider(factory);
     provider.addEngineCreatedListener(engineCreatedListener);
-    provider.addBeforeEngineDisposedListener(beforeEngineDisposedListener);
     provider.addEngineDisposedListener(engineDisposedListener);
   }
 

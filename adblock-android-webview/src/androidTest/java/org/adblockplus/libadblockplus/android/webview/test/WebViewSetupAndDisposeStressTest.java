@@ -23,7 +23,6 @@ import androidx.test.annotation.UiThreadTest;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
 import org.junit.BeforeClass;
@@ -52,11 +51,9 @@ public class WebViewSetupAndDisposeStressTest
     }
     if (!AdblockHelper.get().isInit())
     {
-      final String basePath =
-          context.getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
       AdblockHelper
           .get()
-          .init(context, basePath, AdblockHelper.PREFERENCE_NAME);
+          .init(context, null /*use default value*/, AdblockHelper.PREFERENCE_NAME);
     }
   }
 

@@ -332,11 +332,12 @@ public class AdblockWebView extends WebView
     = new AdblockEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void onAdblockEngineCreated(final org.adblockplus.libadblockplus.android.AdblockEngine engine)
+    public void onAdblockEngineCreated(final AdblockEngine adblockEngine)
     {
-      adblockEnabled.set(from(engine.settings().isEnabled()));
+      final AdblockEngineSettings adblockEngineSettings = adblockEngine.settings();
+      adblockEnabled.set(from(adblockEngineSettings.isEnabled()));
       Timber.d("Adblock Engine created, enable status is %s", adblockEnabled.get());
-      engine.settings().addEnableStateChangedListener(enableStateChangedListener);
+      adblockEngineSettings.addEnableStateChangedListener(enableStateChangedListener);
     }
   };
   private final AdblockEngineProvider.EngineDisposedListener engineDisposedCb
@@ -1247,8 +1248,7 @@ public class AdblockWebView extends WebView
     if (getProvider() == null)
     {
       final org.adblockplus.libadblockplus.android.AdblockEngine.Factory factory =
-        org.adblockplus.libadblockplus.android.AdblockEngine.builder(getContext(),
-          org.adblockplus.libadblockplus.android.AdblockEngine.BASE_PATH_DIRECTORY);
+        org.adblockplus.libadblockplus.android.AdblockEngine.builder(getContext(), null /*use default value*/);
       setProvider(new SingleInstanceEngineProvider(factory));
     }
   }

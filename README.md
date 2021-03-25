@@ -290,7 +290,7 @@ Insert `GeneralSettingsFragment` fragment instance in runtime to start showing s
 
 #### Memory management
 Adblock Engine sometimes might be extensive to memory consumption. In order to guard your process
-from being killed by the system, call `AdblockEngine#onLowMemory()` method in
+from being killed by the system, call `AdblockEngineProvider#onLowMemory()` method in
 [ComponentCallbacks2#onTrimMemory(int)](https://developer.android.com/reference/android/content/ComponentCallbacks2#onTrimMemory(int)).
 
 ```java
@@ -302,7 +302,7 @@ from being killed by the system, call `AdblockEngine#onLowMemory()` method in
     // this can free up to ~60-70% of memory occupied by the engine
     if (level == TRIM_MEMORY_RUNNING_CRITICAL && AdblockHelper.get().isInit())
     {
-      AdblockHelper.get().getProvider().getEngine().onLowMemory();
+      AdblockHelper.get().getProvider().onLowMemory();
     }
     // ...
   }
@@ -318,7 +318,7 @@ either `Activity#onLowMemory()` or `Fragment#onLowMemory()`.
 
 Please mind that if you are using `AdblockHelper` (which is in most cases), AdblockEngine
 exists only in one instance. Having one instance means that you only have to implement one call to
-`AdblockHelper.get().getProvider().getEngine().onLowMemory();`. Thus it's recommended to do the call in `Activity`
+`AdblockHelper.get().getProvider().onLowMemory();`. Thus it's recommended to do the call in `Activity`
 or somewhere else where you are sure you are not creating multiple instances (e.g. fragments).
 
 #### Background operations

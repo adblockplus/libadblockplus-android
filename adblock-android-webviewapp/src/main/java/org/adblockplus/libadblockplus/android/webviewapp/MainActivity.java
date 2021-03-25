@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     // this can free up to ~60-70% of memory occupied by the engine
     if (level == TRIM_MEMORY_RUNNING_CRITICAL && AdblockHelper.get().isInit())
     {
-      AdblockHelper.get().getProvider().getEngine().onLowMemory();
+      AdblockHelper.get().getProvider().onLowMemory();
       Timber.w("Lacking memory! Notifying AdBlock about memory constraint");
     }
   }
