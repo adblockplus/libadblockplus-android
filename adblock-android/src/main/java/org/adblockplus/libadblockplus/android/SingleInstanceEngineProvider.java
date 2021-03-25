@@ -17,6 +17,10 @@
 
 package org.adblockplus.libadblockplus.android;
 
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.libadblockplus.Platform;
+import org.adblockplus.libadblockplus.android.AdblockEngine.Factory;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -33,10 +37,10 @@ import timber.log.Timber;
  */
 public class SingleInstanceEngineProvider implements AdblockEngineProvider
 {
-  private AdblockEngine.Factory engineFactory;
-  private AtomicReference<AdblockEngine> engineReference = new AtomicReference<>();
+  private Factory engineFactory;
+  private AtomicReference<org.adblockplus.libadblockplus.android.AdblockEngine> engineReference
+    = new AtomicReference<>();
   private List<EngineCreatedListener> engineCreatedListeners = new CopyOnWriteArrayList<>();
-  private List<BeforeEngineDisposedListener> beforeEngineDisposedListeners = new CopyOnWriteArrayList<>();
   private List<EngineDisposedListener> engineDisposedListeners = new CopyOnWriteArrayList<>();
   private final ReentrantReadWriteLock engineLock = new ReentrantReadWriteLock();
   private final ReentrantReadWriteLock referenceCounterLock = new ReentrantReadWriteLock();
@@ -72,7 +76,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
    * Init with factory
    * @param engineFactory Factory to build AdblockEngine
    */
-  public SingleInstanceEngineProvider(final AdblockEngine.Factory engineFactory)
+  public SingleInstanceEngineProvider(final Factory engineFactory)
   {
     this.engineFactory = engineFactory;
     this.executorService = createExecutorService();
@@ -99,31 +103,6 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   }
 
   @Override
-  public void clearEngineCreatedListeners()
-  {
-    this.engineCreatedListeners.clear();
-  }
-
-  @Override
-  public SingleInstanceEngineProvider addBeforeEngineDisposedListener(final BeforeEngineDisposedListener listener)
-  {
-    this.beforeEngineDisposedListeners.add(listener);
-    return this;
-  }
-
-  @Override
-  public void removeBeforeEngineDisposedListener(final BeforeEngineDisposedListener listener)
-  {
-    this.beforeEngineDisposedListeners.remove(listener);
-  }
-
-  @Override
-  public void clearBeforeEngineDisposedListeners()
-  {
-    this.beforeEngineDisposedListeners.clear();
-  }
-
-  @Override
   public SingleInstanceEngineProvider addEngineDisposedListener(final EngineDisposedListener listener)
   {
     this.engineDisposedListeners.add(listener);
@@ -136,22 +115,16 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     this.engineDisposedListeners.remove(listener);
   }
 
-  @Override
-  public void clearEngineDisposedListeners()
-  {
-    this.engineDisposedListeners.clear();
-  }
-
   private void createAdblock()
   {
     Timber.d("Creating adblock engine ...");
-    final AdblockEngine engine = engineFactory.build();
+    final org.adblockplus.libadblockplus.android.AdblockEngine engine = engineFactory.build();
     Timber.d("Engine created");
 
     engineReference.set(engine);
 
     // sometimes we need to init AdblockEngine instance, eg. set user settings
-    for (EngineCreatedListener listener : engineCreatedListeners)
+    for (final EngineCreatedListener listener : engineCreatedListeners)
     {
       listener.onAdblockEngineCreated(engine);
     }
@@ -291,16 +264,11 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   {
     Timber.w("Disposing adblock engine");
 
-    for (BeforeEngineDisposedListener listener : beforeEngineDisposedListeners)
-    {
-      listener.onBeforeAdblockEngineDispose();
-    }
-
     engineReference.getAndSet(null).dispose();
 
     // sometimes we need to deinit something after AdblockEngine instance disposed
     // eg. release user settings
-    for (EngineDisposedListener listener : engineDisposedListeners)
+    for (final EngineDisposedListener listener : engineDisposedListeners)
     {
       listener.onAdblockEngineDisposed();
     }
@@ -317,6 +285,17 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
     finally
     {
       referenceCounterLock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public void onLowMemory()
+  {
+    final org.adblockplus.libadblockplus.android.AdblockEngine engine = engineReference.get();
+    final Platform platform = engine == null ? null : engineReference.get().getPlatform();
+    if (platform != null && platform.getJsEngine() != null)
+    {
+      platform.getJsEngine().onLowMemory();
     }
   }
 

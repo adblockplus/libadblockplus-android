@@ -17,28 +17,26 @@
 
 package org.adblockplus.libadblockplus.android.webviewapp;
 
-import android.content.Context;
-
-import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import timber.log.Timber;
 
 public class Application extends android.app.Application
 {
-  private final SingleInstanceEngineProvider.EngineCreatedListener engineCreatedListener =
-    new SingleInstanceEngineProvider.EngineCreatedListener()
+  private final AdblockEngineProvider.EngineCreatedListener engineCreatedListener =
+    new AdblockEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void onAdblockEngineCreated(final AdblockEngine engine)
+    public void onAdblockEngineCreated(final AdblockEngine adblockEngine)
     {
       // put your AdblockEngine initialization here
     }
   };
 
-  private final SingleInstanceEngineProvider.EngineDisposedListener engineDisposedListener =
-    new SingleInstanceEngineProvider.EngineDisposedListener()
+  private final AdblockEngineProvider.EngineDisposedListener engineDisposedListener =
+    new AdblockEngineProvider.EngineDisposedListener()
   {
     @Override
     public void onAdblockEngineDisposed()
@@ -60,12 +58,10 @@ public class Application extends android.app.Application
     // it's not initialized here but we check it just to show API usage
     if (!AdblockHelper.get().isInit())
     {
-      // init Adblock
-      final String basePath = getDir(AdblockEngine.BASE_PATH_DIRECTORY, Context.MODE_PRIVATE).getAbsolutePath();
 
       final AdblockHelper helper = AdblockHelper.get();
       helper
-        .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
+        .init(this, null /*use default value*/, AdblockHelper.PREFERENCE_NAME)
         .preloadSubscriptions(
                 R.raw.easylist_minified,
                 R.raw.exceptionrules_minimal)

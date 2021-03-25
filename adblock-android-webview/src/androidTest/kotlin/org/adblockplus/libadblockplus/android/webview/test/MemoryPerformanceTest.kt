@@ -216,7 +216,7 @@ abstract class BenchmarkMemory {
         System.gc()
 
         // calling V8's garbage collector
-        engineProvider?.engine?.onLowMemory()
+        engineProvider?.onLowMemory()
 
         // measure; at this point GC usually frees up to ~70% of memory,
         // also making measurements less volatile, so its suggested to use this measurement
@@ -444,7 +444,7 @@ abstract class AdblockWebViewBenchmarkMemory(private val subscriptionListResourc
             assertNotNull(customEngineProvider.engine)
 
             // wait for all subscriptions to be loaded
-            while (!customEngineProvider.engine.filterEngine.listedSubscriptions.all {
+            while (!customEngineProvider.engine.settings().listedSubscriptions.all {
                         it.synchronizationStatus == "synchronize_ok"
                     }) {
                 SystemClock.sleep(SLEEP_TIME_MILLI)

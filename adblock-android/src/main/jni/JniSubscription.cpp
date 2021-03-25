@@ -19,11 +19,6 @@
 #include <numeric>
 #include "Utils.h"
 
-static AdblockPlus::Subscription* GetSubscriptionPtr(jlong ptr)
-{
-  return JniLongToTypePtr<AdblockPlus::Subscription>(ptr);
-}
-
 static AdblockPlus::Subscription GetSubscriptionPtrFromFE(JNIEnv *env, jlong ptr, jstring url)
 {
   AdblockPlus::IFilterEngine* filterEngine = JniLongToTypePtr<AdblockPlus::IFilterEngine>(ptr);
@@ -48,33 +43,6 @@ static void JNICALL JniSetDisabled(JNIEnv* env, jclass clazz, jlong fePtr, jbool
   CATCH_AND_THROW(env)
 }
 
-static jboolean JNICALL JniIsListed(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  try
-  {
-    return GetSubscriptionPtr(ptr)->IsListed() ? JNI_TRUE : JNI_FALSE;
-  }
-  CATCH_THROW_AND_RETURN(env, JNI_FALSE)
-}
-
-static void JNICALL JniAddToList(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  try
-  {
-    GetSubscriptionPtr(ptr)->AddToList();
-  }
-  CATCH_AND_THROW(env)
-}
-
-static void JNICALL JniRemoveFromList(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  try
-  {
-    GetSubscriptionPtr(ptr)->RemoveFromList();
-  }
-  CATCH_AND_THROW(env)
-}
-
 static void JNICALL JniUpdateFilters(JNIEnv* env, jclass clazz, jlong fePtr, jstring url)
 {
   try
@@ -93,18 +61,6 @@ static jboolean JNICALL JniIsUpdating(JNIEnv* env, jclass clazz, jlong fePtr, js
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
 }
 
-static jboolean JNICALL JniOperatorEquals(JNIEnv* env, jclass clazz, jlong ptr, jlong otherPtr)
-{
-  AdblockPlus::Subscription* me = GetSubscriptionPtr(ptr);
-  AdblockPlus::Subscription* other = GetSubscriptionPtr(otherPtr);
-
-  try
-  {
-    return *me == *other ? JNI_TRUE : JNI_FALSE;
-  }
-  CATCH_THROW_AND_RETURN(env, JNI_FALSE)
-}
-
 static jboolean JNICALL JniIsAcceptableAds(JNIEnv* env, jclass clazz, jlong fePtr, jstring url)
 {
   try
@@ -112,59 +68,6 @@ static jboolean JNICALL JniIsAcceptableAds(JNIEnv* env, jclass clazz, jlong fePt
     return (GetSubscriptionPtrFromFE(env, fePtr, url).IsAA() ? JNI_TRUE : JNI_FALSE);
   }
   CATCH_THROW_AND_RETURN(env, JNI_FALSE)
-}
-
-static jstring JNICALL JniGetTitle(JNIEnv* env, jclass clazz, jlong fePtr, jstring url)
-{
-  try
-  {
-    return env->NewStringUTF(GetSubscriptionPtrFromFE(env, fePtr, url).GetTitle().c_str());
-  }
-  CATCH_THROW_AND_RETURN(env, env->NewStringUTF(""))
-}
-
-static jstring JNICALL JniGetUrl(JNIEnv* env, jclass clazz, jlong ptr)
-{
-  try
-  {
-    return env->NewStringUTF(GetSubscriptionPtr(ptr)->GetUrl().c_str());
-  }
-  CATCH_THROW_AND_RETURN(env, env->NewStringUTF(""))
-}
-
-// Returns comma-separated list of languages
-static jstring JNICALL JniGetLanguages(JNIEnv* env, jclass clazz, jlong fePtr, jstring url)
-{
-    try
-    {
-        const std::vector<std::string> languages = GetSubscriptionPtrFromFE(env, fePtr, url).GetLanguages();
-        const std::string result = std::accumulate(std::begin(languages), std::end(languages),
-                                                   std::string(),
-                                                   [](std::string &ss, const std::string &s)
-                                                   {
-                                                       return ss.empty() ? s : ss + "," + s;
-                                                   });
-        return env->NewStringUTF(result.c_str());
-    }
-    CATCH_THROW_AND_RETURN(env, env->NewStringUTF(""))
-}
-
-static jstring JNICALL JniGetHomepage(JNIEnv* env, jclass clazz, jlong fePtr, jstring url)
-{
-  try
-  {
-    return env->NewStringUTF(GetSubscriptionPtrFromFE(env, fePtr, url).GetHomepage().c_str());
-  }
-  CATCH_THROW_AND_RETURN(env, env->NewStringUTF(""))
-}
-
-static jstring JNICALL JniGetAuthor(JNIEnv* env, jclass clazz, jlong fePtr, jstring url)
-{
-  try
-  {
-    return env->NewStringUTF(GetSubscriptionPtrFromFE(env, fePtr, url).GetAuthor().c_str());
-  }
-  CATCH_THROW_AND_RETURN(env, env->NewStringUTF(""))
 }
 
 static jstring JNICALL JniGetSynchronizationStatus(JNIEnv* env, jclass clazz, jlong fePtr, jstring url)

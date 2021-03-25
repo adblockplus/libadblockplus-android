@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * All the methods to set Engine preferences
+ * All the methods to read and set {@link AdblockEngine} preferences.
+ * For more information about setting please read {@link EditOperation} documentation.
  */
 public interface AdblockEngineSettings
 {

@@ -31,7 +31,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Notifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit.WireMockRule
-import org.adblockplus.libadblockplus.android.AdblockEngine
+import org.adblockplus.AdblockEngine
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView
 import org.adblockplus.libadblockplus.android.webview.SiteKeyExtractor

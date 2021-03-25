@@ -90,50 +90,6 @@ public final class FilterEngine
    * Checks if any active filter matches the supplied URL.
    * @param url url URL to match.
    * @param contentTypes Content type mask of the requested resource.
-   * @param documentUrls Chain of documents requesting the resource, starting
-   *                     with the current resource's parent frame, ending with the
-   *                     top-level frame.
-   * @param siteKey sitekey or null/empty string
-   * @return Matching filter, or a `null` if there was no match.
-   *
-   * @deprecated Use {@link FilterEngine#matches) which takes a single parent as a String instead of
-   * {@param documentUrls} and {@param specificOnly} argument.
-   */
-  @Deprecated
-  public Filter matches(final String url, final Set<ContentType> contentTypes,
-                        final List<String> documentUrls, final String siteKey)
-  {
-    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-        documentUrls, siteKey, false);
-  }
-
-  /**
-   * Checks if any active filter matches the supplied URL.
-   * @param url url URL to match.
-   * @param contentTypes Content type mask of the requested resource.
-   * @param documentUrls Chain of documents requesting the resource, starting
-   *                     with the current resource's parent frame, ending with the
-   *                     top-level frame.
-   * @param siteKey sitekey or null/empty string
-   * @param specificOnly if set to `true` then skips generic filters
-   * @return Matching filter, or a `null` if there was no match.
-   *
-   * @deprecated Use {@link FilterEngine#matches) which takes a single parent as a String instead of
-   * {@param documentUrls}.
-   */
-  @Deprecated
-  public Filter matches(final String url, final Set<ContentType> contentTypes,
-                        final List<String> documentUrls, final String siteKey,
-                        final boolean specificOnly)
-  {
-    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-        documentUrls, siteKey,  specificOnly);
-  }
-
-  /**
-   * Checks if any active filter matches the supplied URL.
-   * @param url url URL to match.
-   * @param contentTypes Content type mask of the requested resource.
    * @param parent immediate parent of the {@param url}.
    * @param siteKey sitekey or null/empty string
    * @param specificOnly if set to `true` then skips generic filters
@@ -163,68 +119,6 @@ public final class FilterEngine
   {
     return isContentAllowlisted(this.ptr, url,
         contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey);
-  }
-
-  /**
-   * Checks if any active filter matches the supplied URL.
-   * @param url URL to match which is actually first parent of URL for which we
-   *            want to check a $genericblock filter.
-   *            Value obtained by `IsGenericblockAllowlisted()` is used later
-   *            on as a `specificOnly` parameter value for `Matches()` call.
-   * @param documentUrls Chain of documents requesting the resource, starting
-   *                     with the current resource's parent frame, ending with the
-   *                     top-level frame.
-   * @param siteKey sitekey or null/empty string
-   * @return `true` if the URL is allowlisted by $genericblock filter
-   *
-   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
-   *             {@link ContentType#GENERICBLOCK} instead.
-   */
-  @Deprecated
-  public boolean isGenericblockAllowlisted(final String url, final List<String> documentUrls,
-                                           final String siteKey)
-  {
-    return isGenericblockAllowlisted(this.ptr, url, documentUrls, siteKey);
-  }
-
-  /**
-   * Check if the document with URL is allowlisted
-   * @param url URL
-   * @param documentUrls Chain of document URLs requesting the document,
-   *                     starting with the current document's parent frame, ending with
-   *                     the top-level frame.
-   * @param siteKey sitekey or null/empty string
-   * @return `true` if the URL is allowlisted
-   *
-   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
-   *             {@link ContentType#DOCUMENT} instead.
-   */
-  @Deprecated
-  public boolean isDocumentAllowlisted(final String url,
-                                       final List<String> documentUrls,
-                                       final String siteKey)
-  {
-    return isDocumentAllowlisted(this.ptr, url, documentUrls, siteKey);
-  }
-
-  /**
-   * Check if the element hiding is allowlisted
-   * @param url URL
-   * @param documentUrls Chain of document URLs requesting the document,
-   *                     starting with the current document's parent frame, ending with
-   *                     the top-level frame.
-   * @param siteKey sitekey or null/empty string
-   * @return `true` if element hiding is allowlisted for the supplied URL.
-   *
-   * @deprecated Use {@link FilterEngine#isContentAllowlisted) with contentType containing
-   *             {@link ContentType#ELEMHIDE} instead.
-   */
-  @Deprecated
-  public boolean isElemhideAllowlisted(final String url,
-                                       final List<String> documentUrls,
-                                       final String siteKey)
-  {
-    return isElemhideAllowlisted(this.ptr, url, documentUrls, siteKey);
   }
 
   public JsValue getPref(final String pref)
@@ -283,11 +177,6 @@ public final class FilterEngine
   public boolean isEnabled()
   {
     return isEnabled(this.ptr);
-  }
-
-  public String getAcceptableAdsSubscriptionURL()
-  {
-    return getAcceptableAdsSubscriptionURL(this.ptr);
   }
 
   /**
@@ -350,27 +239,11 @@ public final class FilterEngine
   private static native JsValue getPref(long ptr, String pref);
 
   private static native Filter matches(long ptr, String url, ContentType[] contentType,
-                                       List<String> referrerChain, String siteKey,
-                                       boolean specificOnly);
-
-  private static native Filter matches(long ptr, String url, ContentType[] contentType,
                                        String parent, String siteKey,
                                        boolean specificOnly);
 
   private static native boolean isContentAllowlisted(long ptr, String url, ContentType[] contentType,
                                                      List<String> referrerChain, String siteKey);
-
-  private static native boolean isGenericblockAllowlisted(long ptr, String url,
-                                                                List<String> referrerChain,
-                                                                String siteKey);
-
-  private static native boolean isDocumentAllowlisted(long ptr, String url,
-                                                      List<String> referrerChain,
-                                                      String siteKey);
-
-  private static native boolean isElemhideAllowlisted(long ptr, String url,
-                                                      List<String> referrerChain,
-                                                      String siteKey);
 
   private static native void setPref(long ptr, String pref, long valuePtr);
 
@@ -387,8 +260,6 @@ public final class FilterEngine
   private static native void setEnabled(long ptr, boolean enabled);
 
   private static native boolean isEnabled(long ptr);
-
-  private static native String getAcceptableAdsSubscriptionURL(long ptr);
 
   private static native void updateFiltersAsync(long ptr, String subscriptionUrl);
 
