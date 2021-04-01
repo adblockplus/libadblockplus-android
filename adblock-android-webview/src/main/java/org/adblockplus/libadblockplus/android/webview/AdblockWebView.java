@@ -639,6 +639,7 @@ public class AdblockWebView extends WebView
     {
       Timber.d("shouldOverrideUrlLoading called for view.getUrl() %s", view.getUrl());
       clearReferrers();
+      navigationUrl.set(null);
       return super.shouldOverrideUrlLoading(view, request);
     }
 
@@ -647,6 +648,7 @@ public class AdblockWebView extends WebView
     {
       Timber.d("shouldOverrideUrlLoading called for url %s", url);
       clearReferrers();
+      navigationUrl.set(null);
       return super.shouldOverrideUrlLoading(view, url);
     }
 
@@ -790,7 +792,9 @@ public class AdblockWebView extends WebView
 
         Timber.d("Loading url %s", url);
 
-        if (referrer != null)
+        // We don't want to use a referrer from the previous page, if previous page was allowlisted that would also
+        // allowlist current one which is wrong, hence added !isMainFrame
+        if (referrer != null && !isMainFrame)
         {
           Timber.d("Header referrer for %s is %s", url, referrer);
           if (!url.equals(referrer))
