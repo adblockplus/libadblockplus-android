@@ -23,9 +23,10 @@ import org.adblockplus.libadblockplus.util.JavaBase64Processor;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -52,7 +53,7 @@ public class JavaBase64ProcessorTest
     assertTrue(encodedBytes.length > 0);
     final String encodedString = base64Processor.encodeToString(STRING.getBytes());
     assertNotNull(encodedString);
-    assertTrue(Arrays.equals(encodedBytes, encodedString.getBytes()));
+    assertArrayEquals(encodedBytes, encodedString.getBytes());
   }
 
   @Test
@@ -69,7 +70,7 @@ public class JavaBase64ProcessorTest
     final byte[] decodedString = "SGVsbG8sIHdvcmxk".getBytes();
     final byte[] actualStringBytes = base64Processor.decode(decodedString);
     assertNotNull(actualStringBytes);
-    assertTrue(Arrays.equals(STRING.getBytes(), actualStringBytes));
+    assertArrayEquals(STRING.getBytes(), actualStringBytes);
   }
 
   @Test
@@ -92,7 +93,7 @@ public class JavaBase64ProcessorTest
     final byte[] randomStringBytes = generateString().getBytes();
     final byte[] encoded = base64Processor.encode(randomStringBytes);
     final byte[] decoded = base64Processor.decode(encoded);
-    assertTrue(Arrays.equals(randomStringBytes, decoded));
+    assertArrayEquals(randomStringBytes, decoded);
   }
 
   @Test
@@ -111,18 +112,18 @@ public class JavaBase64ProcessorTest
     final byte[] encoded = base64Processor.encode(expected);
     final byte[] actual = base64Processor.decode(encoded);
     assertNotNull(actual);
-    assertTrue(Arrays.equals(expected, actual));
+    assertArrayEquals(expected, actual);
   }
 
   @Test
   public void testEncodeDecodeUTF() throws Base64Exception
   {
-    final Charset charset = Charset.forName("UTF-8");
+    final Charset charset = StandardCharsets.UTF_8;
     final byte[] expected = "\u0075\u0090".getBytes(charset);
     final byte[] encoded = base64Processor.encode(expected);
     final byte[] actual = base64Processor.decode(encoded);
     assertNotNull(actual);
-    assertTrue(Arrays.equals(expected, actual));
+    assertArrayEquals(expected, actual);
   }
 
   @Test
@@ -132,6 +133,6 @@ public class JavaBase64ProcessorTest
     final byte[] encoded = base64Processor.encode(expected);
     final byte[] actual = base64Processor.decode(encoded);
     assertNotNull(actual);
-    assertTrue(Arrays.equals(expected, actual));
+    assertArrayEquals(expected, actual);
   }
 }

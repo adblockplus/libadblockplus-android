@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -334,7 +335,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
     // before generichide option
     assertFalse(filterEngine.isContentAllowlisted(url,
         ContentType.maskOf(ContentType.GENERICHIDE),
-        Arrays.asList("http://www.example.org"), null));
+      Collections.singletonList("http://www.example.org"), null));
 
     // add filter with generichide option
     filterEngine.addFilter(
@@ -342,7 +343,7 @@ public class FilterEngineTest extends BaseFilterEngineTest
 
     assertTrue(filterEngine.isContentAllowlisted(url,
         ContentType.maskOf(ContentType.GENERICHIDE),
-        Arrays.asList("http://www.example.org"), null));
+      Collections.singletonList("http://www.example.org"), null));
   }
 
   @Test
@@ -417,13 +418,13 @@ public class FilterEngineTest extends BaseFilterEngineTest
 
     assertTrue(filterEngine.isContentAllowlisted("http://example.org/ad.html",
         maskOf(ContentType.DOCUMENT),
-        Arrays.asList("http://example.org/ad.html"), FilterEngine.EMPTY_SITEKEY));
+      Collections.singletonList("http://example.org/ad.html"), FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.co.uk/ad.html",
         maskOf(ContentType.DOCUMENT),
-        Arrays.asList("http://example.co.uk/ad.html"), FilterEngine.EMPTY_SITEKEY));
+      Collections.singletonList("http://example.co.uk/ad.html"), FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.com/ad.html",
         maskOf(ContentType.DOCUMENT),
-        Arrays.asList(FilterEngine.EMPTY_PARENT), FilterEngine.EMPTY_SITEKEY));
+      Collections.singletonList(FilterEngine.EMPTY_PARENT), FilterEngine.EMPTY_SITEKEY));
     assertTrue(filterEngine.isContentAllowlisted("http://example.com/ad.html",
         maskOf(ContentType.DOCUMENT),
         Arrays.asList("http://example.com", "http://example.de"), FilterEngine.EMPTY_SITEKEY));
@@ -441,13 +442,13 @@ public class FilterEngineTest extends BaseFilterEngineTest
         filterEngine.getFilterFromText("@@||example.com^$elemhide,domain=example.de"));
 
     assertTrue(filterEngine.isContentAllowlisted("http://example.org/file",
-        maskOf(ContentType.ELEMHIDE), Arrays.asList("http://example.org"),
+        maskOf(ContentType.ELEMHIDE), Collections.singletonList("http://example.org"),
         FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.co.uk/file",
-        maskOf(ContentType.ELEMHIDE), Arrays.asList("http://example.co.uk"),
+        maskOf(ContentType.ELEMHIDE), Collections.singletonList("http://example.co.uk"),
         FilterEngine.EMPTY_SITEKEY));
     assertFalse(filterEngine.isContentAllowlisted("http://example.com/file",
-        maskOf(ContentType.ELEMHIDE), Arrays.asList("http://example.com"),
+        maskOf(ContentType.ELEMHIDE), Collections.singletonList("http://example.com"),
         FilterEngine.EMPTY_SITEKEY));
     assertTrue(filterEngine.isContentAllowlisted("http://example.com/ad.html",
         maskOf(ContentType.ELEMHIDE),

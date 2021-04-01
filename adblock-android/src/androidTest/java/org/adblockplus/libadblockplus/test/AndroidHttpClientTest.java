@@ -437,7 +437,7 @@ public class AndroidHttpClientTest extends BaseFilterEngineTest
         latch.countDown();
       }
     };
-    androidHttpClient.request(new HttpRequest("wronProtool://some.url"), javaCallback);
+    androidHttpClient.request(new HttpRequest("wrongProtocol://some.url"), javaCallback);
     latch.await(SLEEP_MAX_TIME_MS, TimeUnit.MILLISECONDS);
 
     assertNotNull(serverResponse);
