@@ -206,6 +206,7 @@ build_libadblockplus-android:without-jni:
 testobject_tests:
   stage: device_tests
   interruptible: true
+  retry: 1
   variables:
     # Space-separated list of devices to run tests against
     TEST_DEVICES: "Samsung_Galaxy_S20_real Google_Pixel_5_real OnePlus_Nord_real"
