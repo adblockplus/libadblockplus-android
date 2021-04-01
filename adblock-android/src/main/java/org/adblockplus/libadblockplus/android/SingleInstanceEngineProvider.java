@@ -292,7 +292,7 @@ public class SingleInstanceEngineProvider implements AdblockEngineProvider
   public void onLowMemory()
   {
     final org.adblockplus.libadblockplus.android.AdblockEngine engine = engineReference.get();
-    final Platform platform = engine == null ? null : engineReference.get().getPlatform();
+    final Platform platform = engine == null ? null : engineReference.get().platform;
     if (platform != null && platform.getJsEngine() != null)
     {
       platform.getJsEngine().onLowMemory();

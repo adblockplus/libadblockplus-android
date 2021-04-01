@@ -17,8 +17,8 @@
 
 package org.adblockplus.libadblockplus.test;
 
+import org.adblockplus.AppInfo;
 import org.adblockplus.Subscription;
-import org.adblockplus.libadblockplus.AppInfo;
 import org.junit.Test;
 
 import java.util.List;

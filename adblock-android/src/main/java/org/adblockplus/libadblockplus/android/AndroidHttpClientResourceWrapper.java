@@ -108,20 +108,36 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
     this.listener = listener;
   }
 
+  // When AndroidHttpClientResourceWrapper is created it may have a null storage and we need to
+  // check if url was already intercepted based on the params
+  private boolean wasAlreadyIntercepted(final String url, final String urlWithoutParams)
+  {
+    if (storage != null) //Old way with storage (can be removed later)
+    {
+      return storage.contains(urlWithoutParams);
+    }
+    //New way based on params which does not require storage
+    return !(url.contains("lastVersion=0") && url.contains("downloadCount=0"));
+  }
+
   @Override
   public void request(final HttpRequest request, final Callback callback)
   {
     // since parameters may vary we need to ignore them
-    final String urlWithoutParams = Utils.getUrlWithoutParams(request.getUrl());
+    final String url = request.getUrl();
+    final String urlWithoutParams = Utils.getUrlWithoutParams(url);
     final Integer resourceId = urlToResourceIdMap.get(urlWithoutParams);
 
     if (resourceId != null)
     {
-      if (!storage.contains(urlWithoutParams))
+      if (!wasAlreadyIntercepted(url, urlWithoutParams))
       {
-        Timber.w("Intercepting request for %s with resource #%d", request.getUrl(), resourceId);
+        Timber.w("Intercepting request for %s with resource #%d", url, resourceId);
         final ServerResponse response = buildResourceContentResponse(resourceId);
-        storage.put(urlWithoutParams);
+        if (storage != null)
+        {
+          storage.put(urlWithoutParams);
+        }
 
         callback.onFinished(response);
 
@@ -133,7 +149,7 @@ public class AndroidHttpClientResourceWrapper extends HttpClient
       }
       else
       {
-        Timber.d("Already intercepted request for %s", urlWithoutParams);
+        Timber.d("Already intercepted request for %s", url);
       }
     }
     else

@@ -17,7 +17,7 @@
 
 package org.adblockplus.libadblockplus.test;
 
-import org.adblockplus.libadblockplus.AppInfo;
+import org.adblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FileSystem;
 import org.adblockplus.libadblockplus.LogSystem;
 import org.adblockplus.libadblockplus.MockHttpClient;

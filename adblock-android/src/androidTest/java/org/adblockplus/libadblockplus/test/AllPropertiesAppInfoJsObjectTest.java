@@ -17,15 +17,15 @@
 
 package org.adblockplus.libadblockplus.test;
 
-import org.adblockplus.libadblockplus.AppInfo;
+import org.adblockplus.AppInfo;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 public class AllPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
 {
-  private final String VERSION = "1";
-  private final String NAME = "3";
+  private final String VERSION = "1.0";
+  private final String NAME = "libadblockplus-android";
   private final String APPLICATION = "4";
   private final String APPLICATION_VERSION = "5";
   private final String LOCALE = "2";
@@ -34,8 +34,6 @@ public class AllPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
   public void setUp()
   {
     final AppInfo appInfo = AppInfo.builder()
-        .setVersion(VERSION)
-        .setName(NAME)
         .setApplication(APPLICATION)
         .setApplicationVersion(APPLICATION_VERSION)
         .setLocale(LOCALE)
