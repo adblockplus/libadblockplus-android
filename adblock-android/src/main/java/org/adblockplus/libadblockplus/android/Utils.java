@@ -363,7 +363,7 @@ public final class Utils
     return buffer;
   }
 
-  public static final Set<String> commaNotMergableHeaders = Collections.unmodifiableSet(
+  public static final Set<String> commaNotMergeableHeaders = Collections.unmodifiableSet(
       new HashSet<>(Arrays.asList(
           HttpClient.HEADER_SET_COOKIE, HttpClient.HEADER_WWW_AUTHENTICATE,
           HttpClient.HEADER_PROXY_AUTHENTICATE, HttpClient.HEADER_EXPIRES, HttpClient.HEADER_DATE,
@@ -387,7 +387,7 @@ public final class Utils
       }
       else
       {
-        final boolean skipMerge = commaNotMergableHeaders.contains(header.getKey());
+        final boolean skipMerge = commaNotMergeableHeaders.contains(header.getKey());
         /*
          * See DP-971 for more context of this code but here we are trying to merge headers values.
          * HTTP 1.1 Section 4.2 (RFC 2616):

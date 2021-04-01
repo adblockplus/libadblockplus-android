@@ -21,6 +21,7 @@ import org.adblockplus.libadblockplus.android.Utils;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
@@ -32,7 +33,7 @@ public class MockFileSystem extends FileSystem
 
   public boolean success = true;
   public boolean exception;
-  public Charset charset = Charset.forName("UTF-8");
+  public final Charset charset = StandardCharsets.UTF_8;
   public String contentToRead;
   public String lastWrittenFile;
   public String lastWrittenContent;

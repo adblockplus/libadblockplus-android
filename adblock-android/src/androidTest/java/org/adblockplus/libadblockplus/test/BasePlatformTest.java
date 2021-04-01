@@ -30,7 +30,7 @@ import static org.mockito.Mockito.mock;
 
 public abstract class BasePlatformTest extends BaseTest
 {
-  protected SetUpInfo setUpInfo = new SetUpInfo();
+  protected final SetUpInfo setUpInfo = new SetUpInfo();
   protected Platform platform;
 
   static class SetUpInfo

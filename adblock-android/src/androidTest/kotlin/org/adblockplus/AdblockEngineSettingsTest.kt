@@ -35,8 +35,8 @@ import org.junit.rules.TemporaryFolder
 import timber.log.Timber
 
 class AdblockEngineSettingsTest  {
-    val appInfo = AppInfo.builder().build()
-    val context = InstrumentationRegistry.getInstrumentation().context
+    private val appInfo = AppInfo.builder().build()!!
+    val context = InstrumentationRegistry.getInstrumentation().context!!
 
     @get:Rule
     val folder = TemporaryFolder()
@@ -113,7 +113,7 @@ class AdblockEngineSettingsTest  {
         assertEquals(0, adblockEngine.settings().listedFilters.size)
 
         var addRemoveCounter = 0
-        var filter = adblockEngine.getFilterFromText("@@some.domain.com")
+        val filter = adblockEngine.getFilterFromText("@@some.domain.com")
         var action : AdblockEngineSettings.FiltersChangedListener.FilterEvent? = null
 
         val addRemoveFilterListener = object : AdblockEngineSettings.FiltersChangedListener {
@@ -157,7 +157,7 @@ class AdblockEngineSettingsTest  {
         assertEquals(2, adblockEngine.settings().listedSubscriptions.size)
 
         var addRemoveCounter = 0
-        var subscription = adblockEngine
+        val subscription = adblockEngine
                 .getSubscription("https://testpages.adblockplus.org/en/abp-testcase-subscription.txt")
         var action : AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent? = null
 
@@ -235,8 +235,8 @@ class AdblockEngineSettingsTest  {
         }
         adblockEngine.settings().addSubscriptionsChangedListener(addRemoveSubscriptionListener)
 
-        var filter = adblockEngine.getFilterFromText("@@some.domain.com")
-        var subscription = adblockEngine
+        val filter = adblockEngine.getFilterFromText("@@some.domain.com")
+        val subscription = adblockEngine
                 .getSubscription("https://testpages.adblockplus.org/en/abp-testcase-subscription.txt")
 
         val editOperation = adblockEngine.settings().edit()
