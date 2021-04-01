@@ -15,18 +15,20 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.test.org.adblockplus
+package org.adblockplus
 
 import androidx.test.platform.app.InstrumentationRegistry
+import org.adblockplus.AdblockEngineFactory
 import org.adblockplus.AdblockEngineSettings
 import org.adblockplus.ConnectionType
 import org.adblockplus.Filter
 import org.adblockplus.Subscription
-import org.adblockplus.libadblockplus.AppInfo
+import org.adblockplus.AppInfo
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -39,24 +41,35 @@ class AdblockEngineSettingsTest  {
     @get:Rule
     val folder = TemporaryFolder()
 
-    private lateinit var builder: org.adblockplus.libadblockplus.android.AdblockEngine.Builder
-    private lateinit var adblockEngine: org.adblockplus.libadblockplus.android.AdblockEngine
+    private lateinit var adblockEngine: org.adblockplus.AdblockEngine
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setUpClass() {
+            initLogging()
+        }
+
+        private fun initLogging() {
+            if (Timber.forest().isEmpty()) {
+                Timber.plant(Timber.DebugTree())
+            }
+        }
+    }
 
     @Before
     fun setUp() {
         Timber.d("setUp()")
-        builder = org.adblockplus.libadblockplus.android.AdblockEngine.builder(
-                context, appInfo, folder.newFolder().absolutePath)
-        adblockEngine = builder.build()
+        adblockEngine = AdblockEngineFactory
+                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath)
+                .build()
     }
 
     @Test
     fun testEnableStateChangesAndListeners() {
         // Verify preconditions
         assertTrue(adblockEngine.settings().isEnabled)
-        assertTrue(adblockEngine.filterEngine.isEnabled)
         assertTrue(adblockEngine.settings().isAcceptableAdsEnabled)
-        assertTrue(adblockEngine.filterEngine.isAcceptableAdsEnabled)
 
         var enableCounter = 0
         var enableAACounter = 0
@@ -78,9 +91,7 @@ class AdblockEngineSettingsTest  {
         // Disable all and verify
         adblockEngine.settings().edit().setEnabled(false).setAcceptableAdsEnabled(false).save()
         assertEquals(enableValue, adblockEngine.settings().isEnabled)
-        assertFalse(adblockEngine.filterEngine.isEnabled)
         assertEquals(enableAAValue, adblockEngine.settings().isAcceptableAdsEnabled)
-        assertFalse(adblockEngine.filterEngine.isAcceptableAdsEnabled)
         assertFalse(enableValue)
         assertFalse(enableAAValue)
         assertEquals(1, enableCounter)
@@ -89,9 +100,7 @@ class AdblockEngineSettingsTest  {
         // Enable all and verify
         adblockEngine.settings().edit().setEnabled(true).setAcceptableAdsEnabled(true).save()
         assertEquals(enableValue, adblockEngine.settings().isEnabled)
-        assertTrue(adblockEngine.filterEngine.isEnabled)
         assertEquals(enableAAValue, adblockEngine.settings().isAcceptableAdsEnabled)
-        assertTrue(adblockEngine.filterEngine.isAcceptableAdsEnabled)
         assertTrue(enableValue)
         assertTrue(enableAAValue)
         assertEquals(2, enableCounter)
@@ -120,7 +129,6 @@ class AdblockEngineSettingsTest  {
         adblockEngine.settings().edit().addCustomFilter(filter).save()
         assertEquals(1, addRemoveCounter)
         assertEquals(1, adblockEngine.settings().listedFilters.size)
-        assertEquals(1, adblockEngine.filterEngine.listedFilters.size)
         assertEquals(AdblockEngineSettings.FiltersChangedListener.FilterEvent.FILTER_ADDED, action)
         assertTrue(adblockEngine.settings().listedFilters.contains(filter))
 
@@ -128,21 +136,18 @@ class AdblockEngineSettingsTest  {
         adblockEngine.settings().edit().removeCustomFilter(filter).save()
         assertEquals(2, addRemoveCounter)
         assertEquals(0, adblockEngine.settings().listedFilters.size)
-        assertEquals(0, adblockEngine.filterEngine.listedFilters.size)
         assertEquals(AdblockEngineSettings.FiltersChangedListener.FilterEvent.FILTER_REMOVED, action)
 
         // Add filter and verify clear all
         adblockEngine.settings().edit().addCustomFilter(filter).save()
         assertEquals(3, addRemoveCounter)
         assertEquals(1, adblockEngine.settings().listedFilters.size)
-        assertEquals(1, adblockEngine.filterEngine.listedFilters.size)
         assertEquals(AdblockEngineSettings.FiltersChangedListener.FilterEvent.FILTER_ADDED, action)
         assertTrue(adblockEngine.settings().listedFilters.contains(filter))
         // Now clear all
         adblockEngine.settings().edit().clearCustomFilters().save()
         assertEquals(4, addRemoveCounter)
         assertEquals(0, adblockEngine.settings().listedFilters.size)
-        assertEquals(0, adblockEngine.filterEngine.listedFilters.size)
         assertEquals(AdblockEngineSettings.FiltersChangedListener.FilterEvent.FILTER_REMOVED, action)
     }
 
@@ -169,14 +174,12 @@ class AdblockEngineSettingsTest  {
         adblockEngine.settings().edit().clearSubscriptions().save()
         assertEquals(1, addRemoveCounter)
         assertEquals(0, adblockEngine.settings().listedSubscriptions.size)
-        assertEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
         assertEquals(AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent.SUBSCRIPTION_REMOVED, action)
 
         // Add subscription and verify
         adblockEngine.settings().edit().addSubscription(subscription).save()
         assertEquals(2, addRemoveCounter)
         assertEquals(1, adblockEngine.settings().listedSubscriptions.size)
-        assertEquals(1, adblockEngine.filterEngine.listedSubscriptions.size)
         assertEquals( AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent.SUBSCRIPTION_ADDED, action)
         assertTrue(adblockEngine.settings().listedSubscriptions.contains(subscription))
 
@@ -184,7 +187,6 @@ class AdblockEngineSettingsTest  {
         adblockEngine.settings().edit().removeSubscription(subscription).save()
         assertEquals(3, addRemoveCounter)
         assertEquals(0, adblockEngine.settings().listedSubscriptions.size)
-        assertEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
         assertEquals(AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent.SUBSCRIPTION_REMOVED, action)
     }
 

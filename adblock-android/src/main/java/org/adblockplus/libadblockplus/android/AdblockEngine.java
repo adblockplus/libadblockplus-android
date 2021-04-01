@@ -24,13 +24,13 @@ import android.net.ConnectivityManager;
 import android.os.Build.VERSION;
 
 import org.adblockplus.AdblockEngineSettings;
+import org.adblockplus.AppInfo;
 import org.adblockplus.ConnectionType;
 import org.adblockplus.ContentType;
 import org.adblockplus.EmulationSelector;
 import org.adblockplus.Filter;
 import org.adblockplus.MatchesResult;
 import org.adblockplus.Subscription;
-import org.adblockplus.libadblockplus.AppInfo;
 import org.adblockplus.libadblockplus.FileSystem;
 import org.adblockplus.libadblockplus.FilterEngine;
 import org.adblockplus.libadblockplus.HttpClient;
@@ -67,12 +67,12 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
    * volatile, this seems to prevent the JNI from 'optimizing away' those objects (as a volatile
    * variable might be changed at any time from any thread).
    */
-  private volatile Platform platform;
-  private volatile FilterEngine filterEngine;
-  private volatile LogSystem logSystem;
-  private volatile FileSystem fileSystem;
-  private volatile HttpClient httpClient;
-  private AtomicBoolean enabled = new AtomicBoolean(true);
+  volatile Platform platform;
+  volatile FilterEngine filterEngine;
+  volatile LogSystem logSystem;
+  volatile FileSystem fileSystem;
+  volatile HttpClient httpClient;
+  AtomicBoolean enabled = new AtomicBoolean(true);
 
   private AdblockEngineSettings adblockEngineSettings = new AdblockEngineSettings()
   {
@@ -547,7 +547,6 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     // engines first
     if (filterEngine != null)
     {
-
       this.platform.dispose();
       this.platform = null;
     }
@@ -558,9 +557,8 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     return filterEngine;
   }
 
-  Platform getPlatform()
+  AdblockEngine()
   {
-    return platform;
   }
 
   /**
@@ -602,12 +600,6 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     public boolean getDisableByDefault()
     {
       return !enabledByDefault;
-    }
-
-    public Builder setHttpClient(final HttpClient httpClient)
-    {
-      this.androidHttpClient = httpClient;
-      return this;
     }
 
     public Builder preloadSubscriptions(final Context context,

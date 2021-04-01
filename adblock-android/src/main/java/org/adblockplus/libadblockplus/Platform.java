@@ -17,6 +17,8 @@
 
 package org.adblockplus.libadblockplus;
 
+import org.adblockplus.AppInfo;
+
 public class Platform implements Disposable
 {
   private final Disposer disposer;

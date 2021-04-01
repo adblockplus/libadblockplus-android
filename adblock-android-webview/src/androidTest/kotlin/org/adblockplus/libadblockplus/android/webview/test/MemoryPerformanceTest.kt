@@ -24,7 +24,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import org.adblockplus.libadblockplus.AppInfo
+import org.adblockplus.AppInfo
 import org.adblockplus.libadblockplus.android.AdblockEngine
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider
 import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper
