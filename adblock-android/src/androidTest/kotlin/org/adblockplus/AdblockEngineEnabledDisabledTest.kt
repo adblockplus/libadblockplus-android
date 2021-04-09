@@ -15,17 +15,20 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus
+/* Package is `fake` and does not match this test file location to use package-private method setHttpClientForTesting */
+package org.adblockplus.libadblockplus.android
 
 import androidx.test.platform.app.InstrumentationRegistry
 import java.lang.Thread.sleep
 import kotlin.collections.HashMap
+import org.adblockplus.AdblockEngineFactory
+import org.adblockplus.AppInfo
+import org.adblockplus.ContentType
+import org.adblockplus.MatchesResult
 import org.adblockplus.libadblockplus.HttpClient
 import org.adblockplus.libadblockplus.HttpRequest
-import org.adblockplus.libadblockplus.android.AdblockEngineBuilder
-import org.adblockplus.libadblockplus.android.AndroidHttpClient
-import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper
 import org.adblockplus.libadblockplus.test.R
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -38,7 +41,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import timber.log.Timber
-
 
 class AdblockEngineEnabledDisabledTest {
     val appInfo = AppInfo.builder().build()
@@ -62,10 +64,17 @@ class AdblockEngineEnabledDisabledTest {
         }
     }
 
+    @After
+    fun teraDown() {
+        Timber.d("teraDown()")
+        AdblockEngineFactory.deinit()
+    }
+
     @Test
     fun testDisabledByDefaultReturnsNotEnabled() {
         val adblockEngine = AdblockEngineFactory
-                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath).disabledByDefault().build()
+                .init(context, appInfo, folder.newFolder().absolutePath)
+                .adblockEngineBuilder.disabledByDefault().build()
         assertFalse(adblockEngine.settings().isEnabled)
 
         val filter = adblockEngine.getFilterFromText("adbanner.gif")
@@ -73,13 +82,14 @@ class AdblockEngineEnabledDisabledTest {
 
         val match: MatchesResult? = adblockEngine.matches("http://example.org/adbanner.gif",
                 ContentType.maskOf(ContentType.IMAGE), EMPTY_PARENT, "", false)
-        assertEquals(MatchesResult.NOT_ENABLED, match);
+        assertEquals(MatchesResult.NOT_ENABLED, match)
     }
 
     @Test
     fun offAndOnShouldMatch() {
         val adblockEngine = AdblockEngineFactory
-                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath).disabledByDefault().build()
+                .init(context, appInfo, folder.newFolder().absolutePath)
+                .adblockEngineBuilder.disabledByDefault().build()
         assertFalse(adblockEngine.settings().isEnabled)
 
         val filter = adblockEngine.getFilterFromText("adbanner.gif")
@@ -101,7 +111,8 @@ class AdblockEngineEnabledDisabledTest {
     fun testDisabledByDefaultDoesNotDownloadSubscriptions() {
         val httpClient = mock(HttpClient::class.java)
         val adblockEngineBuilder = AdblockEngineFactory
-                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath)
+                .init(context, appInfo, folder.newFolder().absolutePath)
+                .adblockEngineBuilder
         (adblockEngineBuilder as AdblockEngineBuilder).setHttpClientForTesting(httpClient)
         var adblockEngine = adblockEngineBuilder.disabledByDefault().build()
         assertFalse(adblockEngine.settings().isEnabled)
@@ -131,7 +142,8 @@ class AdblockEngineEnabledDisabledTest {
         map[AndroidHttpClientResourceWrapper.EASYLIST] = R.raw.easylist
         map[AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS] = R.raw.exceptionrules
         val adblockEngineBuilder = AdblockEngineFactory
-                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath)
+                .init(context, appInfo, folder.newFolder().absolutePath)
+                .adblockEngineBuilder
         (adblockEngineBuilder as AdblockEngineBuilder).setHttpClientForTesting(httpClient)
         val adblockEngine = adblockEngineBuilder.preloadSubscriptions(map, false).build()
         assertTrue(adblockEngine.settings().isEnabled)
@@ -161,7 +173,8 @@ class AdblockEngineEnabledDisabledTest {
         map[AndroidHttpClientResourceWrapper.EASYLIST] = R.raw.easylist
         map[AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS] = R.raw.exceptionrules
         val adblockEngineBuilder = AdblockEngineFactory
-                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath)
+                .init(context, appInfo, folder.newFolder().absolutePath)
+                .adblockEngineBuilder
         (adblockEngineBuilder as AdblockEngineBuilder).setHttpClientForTesting(httpClient)
         val adblockEngine = adblockEngineBuilder.preloadSubscriptions(map, true).build()
         assertTrue(adblockEngine.settings().isEnabled)
@@ -175,7 +188,8 @@ class AdblockEngineEnabledDisabledTest {
     fun byDefaultShouldBeEnabledAndDownloadSubscriptions() {
         val httpClient = mock(HttpClient::class.java)
         val adblockEngineBuilder = AdblockEngineFactory
-                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath)
+                .init(context, appInfo, folder.newFolder().absolutePath)
+                .adblockEngineBuilder
         (adblockEngineBuilder as AdblockEngineBuilder).setHttpClientForTesting(httpClient)
         val adblockEngine = adblockEngineBuilder.build()
         assertTrue(adblockEngine.settings().isEnabled)
