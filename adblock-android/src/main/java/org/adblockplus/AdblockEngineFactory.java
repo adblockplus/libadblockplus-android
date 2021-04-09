@@ -23,25 +23,104 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Allows to obtain a {@link AdblockEngineBuilder} instance.
+ * Factory to obtain {@link AdblockEngineFactory} or {@link AsyncAdblockEngineBuilder} instance.
  */
 public class AdblockEngineFactory
 {
+  private static AdblockEngineFactory adblockEngineFactory;
+
+  private org.adblockplus.libadblockplus.android.AdblockEngineBuilder adblockEngineBuilder;
+  private Context context;
+  private AppInfo appInfo;
+  private String basePath;
+
+  private AdblockEngineFactory(@NotNull final Context context,
+                               @Nullable final AppInfo appInfo,
+                               @Nullable final String basePath)
+  {
+    this.context = context;
+    this.appInfo = appInfo;
+    this.basePath = basePath;
+  }
+
+  private synchronized org.adblockplus.libadblockplus.android.AdblockEngineBuilder getBuilder()
+  {
+    if (adblockEngineFactory == null)
+    {
+      throw new IllegalStateException("Call AdblockEngineFactory.init(...) first!");
+    }
+    if (adblockEngineBuilder == null)
+    {
+      adblockEngineBuilder =
+        new org.adblockplus.libadblockplus.android.AdblockEngineBuilder(context, appInfo, basePath);
+    }
+    return adblockEngineBuilder;
+  }
+
   /**
-   * Allows to obtain a {@link AdblockEngineBuilder} instance.
+   * Allows to init and obtain a {@link AdblockEngineFactory} instance.
    *
    * @param context Android Context object.
    * @param appInfo {@link AppInfo) object which identifies the application when downloading {@link Subscription}s.
    *                In most cases it is recommended to pass a null value and proper {@link AppInfo) object will be
    *                created internally.
    * @param basePath Allows to overwrite default base path to store {@link Subscription} files.
-   *
+   * @return {@link AdblockEngineFactory}
    */
   @NotNull
-  public static AdblockEngineBuilder getAdblockEngineBuilder(@NotNull final Context context,
-                                                             @Nullable final AppInfo appInfo,
-                                                             @Nullable final String basePath)
+  public static synchronized AdblockEngineFactory init(@NotNull final Context context,
+                                                       @Nullable final AppInfo appInfo,
+                                                       @Nullable final String basePath)
+    throws IllegalStateException
   {
-    return new org.adblockplus.libadblockplus.android.AdblockEngineBuilder(context, appInfo, basePath);
+    if (adblockEngineFactory != null)
+    {
+      throw new IllegalStateException("Call AdblockEngineFactory.deinit() first!");
+    }
+    adblockEngineFactory = new AdblockEngineFactory(context, appInfo, basePath);
+    return adblockEngineFactory;
+  }
+
+  /**
+   * Deinitializes {@link AdblockEngineFactory}.
+   */
+  public static synchronized void deinit()
+  {
+    adblockEngineFactory = null;
+  }
+
+  /**
+   * Allows to get a handle of {@link AdblockEngineFactory} instance.
+   * One needs to call {@link AdblockEngineFactory#init} first.
+   * @return {@link AdblockEngineFactory}
+   */
+  @NotNull
+  public static synchronized AdblockEngineFactory getFactory() throws IllegalStateException
+  {
+    if (adblockEngineFactory == null)
+    {
+      throw new IllegalStateException("Call AdblockEngineFactory.init(...) first!");
+    }
+    return adblockEngineFactory;
+  }
+
+  /**
+   * Returns synchronous {@link AdblockEngineBuilder} object
+   * @return {@link AdblockEngineBuilder}
+   */
+  @NotNull
+  public AdblockEngineBuilder getAdblockEngineBuilder() throws IllegalStateException
+  {
+    return getBuilder();
+  }
+
+  /**
+   * Returns asynchronous {@link AsyncAdblockEngineBuilder} object
+   * @return {@link AsyncAdblockEngineBuilder}
+   */
+  @NotNull
+  public AsyncAdblockEngineBuilder getAsyncAdblockEngineBuilder() throws IllegalStateException
+  {
+    return getBuilder();
   }
 }

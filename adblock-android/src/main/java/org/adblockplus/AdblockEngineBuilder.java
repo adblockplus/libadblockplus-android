@@ -22,17 +22,22 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
 /**
- * The {@link AdblockEngine} builder interface.
+ * Synchronous {@link AdblockEngine} builder.
  */
 public interface AdblockEngineBuilder
 {
   /**
-   * Builds {@link AdblockEngine}
+   * Builds {@link AdblockEngine} blocking current thread.
    *
    * @return {@link AdblockEngine} instance
    */
   @NotNull
   AdblockEngine build();
+
+  /**
+   * Disposes {@link AdblockEngine} blocking current thread.
+   */
+  void dispose();
 
   /**
    * Call it to create {@link AdblockEngine} which is disabled by default. This means that {@link AdblockEngine} will

@@ -18,15 +18,10 @@
 package org.adblockplus
 
 import androidx.test.platform.app.InstrumentationRegistry
-import org.adblockplus.AdblockEngineFactory
-import org.adblockplus.AdblockEngineSettings
-import org.adblockplus.ConnectionType
-import org.adblockplus.Filter
-import org.adblockplus.Subscription
-import org.adblockplus.AppInfo
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -60,9 +55,15 @@ class AdblockEngineSettingsTest  {
     @Before
     fun setUp() {
         Timber.d("setUp()")
-        adblockEngine = AdblockEngineFactory
-                .getAdblockEngineBuilder(context, appInfo, folder.newFolder().absolutePath)
+        adblockEngine = AdblockEngineFactory.init(context, appInfo, folder.newFolder().absolutePath)
+                .adblockEngineBuilder
                 .build()
+    }
+
+    @After
+    fun teraDown() {
+        Timber.d("teraDown()")
+        AdblockEngineFactory.deinit()
     }
 
     @Test
