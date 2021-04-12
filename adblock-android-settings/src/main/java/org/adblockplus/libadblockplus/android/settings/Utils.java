@@ -21,8 +21,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 
-import org.adblockplus.AdblockEngine;
-import org.adblockplus.Filter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,14 +44,14 @@ public class Utils
   public static final String SUBSCRIPTION_FIELD_TITLE = "title";
   @SuppressLint("ConstantLocale") // This is used only on fresh start
   public static final String LOCALE = Locale.getDefault().toString()
-      .replace('_', '-')
+    .replace('_', '-')
     .replaceAll("^iw-", "he-");
 
   public static Map<String, String> getLocaleToTitleMap(final Context context)
   {
     final Resources resources = context.getResources();
     final String[] locales = resources.getStringArray(
-        R.array.fragment_adblock_general_locale_title);
+      R.array.fragment_adblock_general_locale_title);
     final String separator = resources.getString(R.string.fragment_adblock_general_separator);
     final Map<String, String> localeToTitle = new HashMap<>(locales.length);
     for (final String localeAndTitlePair : locales)
@@ -164,13 +162,13 @@ public class Utils
   }
 
   public static SubscriptionInfo chooseDefaultSubscription(
-      final List<SubscriptionInfo> subscriptions)
+    final List<SubscriptionInfo> subscriptions)
   {
     SubscriptionInfo selectedSubscription = null;
     String selectedLanguage = null;
     int matchCount = 0;
     final Random rand = new Random();
-    for (SubscriptionInfo subscription : subscriptions)
+    for (final SubscriptionInfo subscription : subscriptions)
     {
       if (selectedSubscription == null)
       {
@@ -205,8 +203,8 @@ public class Utils
   }
 
   public static List<SubscriptionInfo> chooseSelectedSubscriptions(
-      final List<SubscriptionInfo> subscriptions,
-      final Set<String> selectedTitles)
+    final List<SubscriptionInfo> subscriptions,
+    final Set<String> selectedTitles)
   {
     final List<SubscriptionInfo> selectedSubscriptions = new LinkedList<>();
     for (final SubscriptionInfo eachSubscription : subscriptions)
@@ -217,18 +215,6 @@ public class Utils
       }
     }
     return selectedSubscriptions;
-  }
-
-  /**
-   * Creates allowlisting filter for a given domain
-   * @param adblockEngine AdblockEngine
-   * @param domain Domain that needs to be allow listed
-   * @return Allowlisting filter
-   */
-  public static Filter createDomainAllowlistingFilter(final AdblockEngine adblockEngine,
-                                                      final String domain)
-  {
-    return adblockEngine.getFilterFromText("@@||" + domain + "^$document,domain=" + domain);
   }
 
 }

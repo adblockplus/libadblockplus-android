@@ -74,8 +74,8 @@ class AdblockEngineBuilderTest {
     }
 
     @After
-    fun teraDown() {
-        Timber.d("teraDown()")
+    fun tearDown() {
+        Timber.d("tearDown()")
         AdblockEngineFactory.deinit()
     }
 

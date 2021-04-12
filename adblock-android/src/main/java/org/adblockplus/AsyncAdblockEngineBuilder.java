@@ -56,7 +56,7 @@ public interface AsyncAdblockEngineBuilder
     /**
      * Released
      */
-    RELEASED;
+    RELEASED
   }
 
   /**

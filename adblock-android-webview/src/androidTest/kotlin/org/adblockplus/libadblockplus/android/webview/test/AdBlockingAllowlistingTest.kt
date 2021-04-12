@@ -31,6 +31,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.whenever
+import org.adblockplus.AdblockFilterBuilder
+import org.adblockplus.ContentType
+import org.adblockplus.Filter
 import org.adblockplus.libadblockplus.HttpClient
 import org.adblockplus.libadblockplus.android.AndroidHttpClient
 import org.adblockplus.libadblockplus.android.Utils
@@ -90,8 +93,8 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
     }
 
     private fun load(filterRules: List<String>, content: String):
-        Pair<List<AdblockWebView.EventsListener.BlockedResourceInfo>,
-            List<AdblockWebView.EventsListener.AllowlistedResourceInfo>> {
+            Pair<List<AdblockWebView.EventsListener.BlockedResourceInfo>,
+                    List<AdblockWebView.EventsListener.AllowlistedResourceInfo>> {
 
         addFilterRules(filterRules)
         initHttpServer(arrayOf(WireMockReqResData("/${indexHtml}", content)))
@@ -102,15 +105,15 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
         Timber.d("Start loading...")
         assertTrue("$indexPageUrl exceeded loading timeout",
-            testSuitAdblock.loadUrlAndWait(indexPageUrl))
+                testSuitAdblock.loadUrlAndWait(indexPageUrl))
         Timber.d("Loaded")
 
         return Pair(blockedResources, allowlistedResources)
     }
 
     private fun subscribeToAdblockWebViewEvents(
-        blockedResources: MutableList<AdblockWebView.EventsListener.BlockedResourceInfo>,
-        allowlistedResources: MutableList<AdblockWebView.EventsListener.AllowlistedResourceInfo>) {
+            blockedResources: MutableList<AdblockWebView.EventsListener.BlockedResourceInfo>,
+            allowlistedResources: MutableList<AdblockWebView.EventsListener.AllowlistedResourceInfo>) {
 
         testSuitAdblock.webView.setEventsListener(object : AdblockWebView.EventsListener {
             override fun onNavigation() {
@@ -118,12 +121,12 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
             }
 
             override fun onResourceLoadingBlocked(
-                info: AdblockWebView.EventsListener.BlockedResourceInfo) {
+                    info: AdblockWebView.EventsListener.BlockedResourceInfo) {
                 blockedResources.add(info)
             }
 
             override fun onResourceLoadingAllowlisted(
-                info: AdblockWebView.EventsListener.AllowlistedResourceInfo) {
+                    info: AdblockWebView.EventsListener.AllowlistedResourceInfo) {
                 allowlistedResources.add(info)
             }
         })
@@ -134,10 +137,10 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
         if (verifyDelayMillis != null) {
             val slowSignatureVerifier = SlowSignatureVerifierWrapper(
-                verifyDelayMillis, siteKeyHelper.signatureVerifier)
+                    verifyDelayMillis, siteKeyHelper.signatureVerifier)
             siteKeyHelper.signatureVerifier = slowSignatureVerifier
             siteKeyHelper.siteKeyVerifier = SiteKeyHelper.TestSiteKeyVerifier(
-                slowSignatureVerifier, siteKeyHelper.publicKeyHolder, siteKeyHelper.base64Processor)
+                    slowSignatureVerifier, siteKeyHelper.publicKeyHolder, siteKeyHelper.base64Processor)
         }
 
         val userAgent = "someUserAgent"
@@ -149,10 +152,10 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         instrumentation.runOnMainSync {
             testSuitAdblock.webView.settings.userAgentString = userAgent
             testSuitAdblock.webView.siteKeysConfiguration = SiteKeysConfiguration(
-                siteKeyHelper.signatureVerifier,
-                siteKeyHelper.publicKeyHolder,
-                AndroidHttpClient(),
-                siteKeyHelper.siteKeyVerifier)
+                    siteKeyHelper.signatureVerifier,
+                    siteKeyHelper.publicKeyHolder,
+                    AndroidHttpClient(),
+                    siteKeyHelper.siteKeyVerifier)
             testSuitAdblock.webView.siteKeysConfiguration.forceChecks = true
         }
         return Pair(sitekey, signature)
@@ -166,27 +169,27 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
         // red image
         wireMockRule
-            .stubFor(any(urlMatching(""".*${redImage.escapeForRegex()}"""))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "image/png")
-                    .withBody(Utils.toByteArray(context.assets.open("red.png")))))
+                .stubFor(any(urlMatching(""".*${redImage.escapeForRegex()}"""))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", "image/png")
+                                .withBody(Utils.toByteArray(context.assets.open("red.png")))))
     }
 
     private fun initHttpGreenImage(server: WireMockServer = wireMockRule) {
         server
-            .stubFor(any(urlMatching(""".*${greenImage.escapeForRegex()}"""))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "image/png")
-                    .withBody(Utils.toByteArray(context.assets.open("green.png")))))
+                .stubFor(any(urlMatching(""".*${greenImage.escapeForRegex()}"""))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", "image/png")
+                                .withBody(Utils.toByteArray(context.assets.open("green.png")))))
     }
 
     @Test
     fun testResourceLoading_imageIsBlocked() {
         load(
-            listOf(blockingPathFilter),
-            """
+                listOf(blockingPathFilter),
+                """
             |<html>
             |<body>
             |  <img id="$notBlockedImageWithOverlappingPathId"
@@ -204,18 +207,18 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         )
 
         onAdblockWebView()
-            .check(imageIsNotBlocked(notBlockedImageWithOverlappingPathId))
-            .check(imageIsBlocked(blockedImageWithoutSlashId))
-            .check(imageIsBlocked(blockedImageWithSlashId))
-            .check(imageIsBlocked(blockedImageWithAbsolutePathId))
-            .check(imageIsNotBlocked(notBlockedImageId))
+                .check(imageIsNotBlocked(notBlockedImageWithOverlappingPathId))
+                .check(imageIsBlocked(blockedImageWithoutSlashId))
+                .check(imageIsBlocked(blockedImageWithSlashId))
+                .check(imageIsBlocked(blockedImageWithAbsolutePathId))
+                .check(imageIsNotBlocked(notBlockedImageId))
     }
 
     @Test
     fun testElementHiding_blockedImageIsElementHidden() {
         load(
-            listOf(blockingPathFilter),
-            """
+                listOf(blockingPathFilter),
+                """
             |<html>
             |<body>
             |  <img id="$notBlockedImageWithOverlappingPathId"
@@ -230,14 +233,14 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         )
 
         onAdblockWebView()
-            .check(imageIsNotBlocked(notBlockedImageWithOverlappingPathId))
-            .check(imageIsBlocked(blockedImageWithoutSlashId))
-            .check(imageIsBlocked(blockedImageWithSlashId))
-            .check(imageIsBlocked(blockedImageWithAbsolutePathId))
-            .check(elementIsNotElemhidden(notBlockedImageWithOverlappingPathId))
-            .check(elementIsElemhidden(blockedImageWithoutSlashId))
-            .check(elementIsElemhidden(blockedImageWithSlashId))
-            .check(elementIsElemhidden(blockedImageWithAbsolutePathId))
+                .check(imageIsNotBlocked(notBlockedImageWithOverlappingPathId))
+                .check(imageIsBlocked(blockedImageWithoutSlashId))
+                .check(imageIsBlocked(blockedImageWithSlashId))
+                .check(imageIsBlocked(blockedImageWithAbsolutePathId))
+                .check(elementIsNotElemhidden(notBlockedImageWithOverlappingPathId))
+                .check(elementIsElemhidden(blockedImageWithoutSlashId))
+                .check(elementIsElemhidden(blockedImageWithSlashId))
+                .check(elementIsElemhidden(blockedImageWithAbsolutePathId))
     }
 
     @Test
@@ -245,16 +248,19 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         val blockingRule = greenImage
         val subFrameHtml = "subframe.html"
 
-        // allowlist with path
-        val allowlistingRule = "@@$subFrameHtml\$subdocument,document"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .allowlistAddress(subFrameHtml)
+                .setContentTypes(ContentType.maskOf(ContentType.SUBDOCUMENT, ContentType.DOCUMENT))
+                .build()
+        val allowlistingRule = adblockFilter.text
 
         wireMockRule
-            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "text/html")
-                    .withBody(
-                        """
+                .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", "text/html")
+                                .withBody(
+                                        """
                         |<html>
                         |<body>
                         |  <img src="$greenImage"/>
@@ -263,8 +269,8 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
                         |""".trimMargin())))
 
         val (blockedResources, allowlistedResources) = load(
-            listOf(blockingRule, allowlistingRule),
-            """
+                listOf(blockingRule, allowlistingRule),
+                """
             |<html>
             |<body>
             |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
@@ -284,9 +290,9 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         })
 
         onAdblockWebView()
-            .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
-            // can't access subframe with JS so there is no [known at the moment] way
-            // to assert subframe resource visibility
+                .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
+        // can't access subframe with JS so there is no [known at the moment] way
+        // to assert subframe resource visibility
     }
 
     @Test
@@ -294,7 +300,11 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         val subFrameHtml = "subframe.html"
 
         // allowlisting main frame
-        val allowlistingRule = "@@$localhost\$subdocument,document"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .allowlistAddress(localhost)
+                .setContentTypes(ContentType.maskOf(ContentType.SUBDOCUMENT, ContentType.DOCUMENT))
+                .build()
+        val allowlistingRule = adblockFilter.text
 
         val selfSignedCertificateFile = extractCertificate()
         testSuitAdblock.extWebViewClient = allowingSelfSignedCertificatesWebViewClient
@@ -303,24 +313,24 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         val subFramePort = mainFramePort + 1
 
         val mainFrameServer = WireMockServer(wireMockConfig()
-            .bindAddress(localhost)
-            .dynamicPort()
-            .notifier(timberNotifier)
-            .httpsPort(mainFramePort)
-            .keystorePath(selfSignedCertificateFile.absolutePath)
-            .keystoreType(KeyStore.getDefaultType())
-            .keystorePassword(certificatePassword)
+                .bindAddress(localhost)
+                .dynamicPort()
+                .notifier(timberNotifier)
+                .httpsPort(mainFramePort)
+                .keystorePath(selfSignedCertificateFile.absolutePath)
+                .keystoreType(KeyStore.getDefaultType())
+                .keystorePassword(certificatePassword)
         )
 
         val subFramePath = "$subFrameHtml?query=m"
         val subFrameUrl = "https://$localhost:$subFramePort/$subFramePath"
         mainFrameServer
-            .stubFor(any(urlPathEqualTo("/$indexHtml"))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", HttpClient.MIME_TYPE_TEXT_HTML)
-                    .withBody(
-                        """
+                .stubFor(any(urlPathEqualTo("/$indexHtml"))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", HttpClient.MIME_TYPE_TEXT_HTML)
+                                .withBody(
+                                        """
                         |<html>
                         |<body>
                         |  <iframe src="$subFrameUrl"/>
@@ -331,23 +341,23 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
         // since the port is different it will be another origin and cross origin interaction
         val subFrameServer = WireMockServer(wireMockConfig()
-            .bindAddress(localhost)
-            .dynamicPort()
-            .notifier(timberNotifier)
-            .httpsPort(subFramePort)
-            .keystorePath(selfSignedCertificateFile.absolutePath)
-            .keystoreType(KeyStore.getDefaultType())
-            .keystorePassword(certificatePassword))
+                .bindAddress(localhost)
+                .dynamicPort()
+                .notifier(timberNotifier)
+                .httpsPort(subFramePort)
+                .keystorePath(selfSignedCertificateFile.absolutePath)
+                .keystoreType(KeyStore.getDefaultType())
+                .keystorePassword(certificatePassword))
 
         val mainFrameResourceUrl = "https://$localhost:$mainFramePort/$greenImage"
         subFrameServer
-            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", HttpClient.MIME_TYPE_TEXT_HTML)
-                    .withHeader("Referrer-Policy", "strict-origin-when-cross-origin") // !
-                    .withBody(
-                        """
+                .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", HttpClient.MIME_TYPE_TEXT_HTML)
+                                .withHeader("Referrer-Policy", "strict-origin-when-cross-origin") // !
+                                .withBody(
+                                        """
                         |<html>
                         |<body>
                         |  <img src="$mainFrameResourceUrl"/>
@@ -367,7 +377,7 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         try {
             Timber.d("Start loading...")
             assertTrue("${mainFrameServer.baseUrl()}/$indexHtml exceeded loading timeout",
-                testSuitAdblock.loadUrlAndWait("${mainFrameServer.baseUrl()}/$indexHtml"))
+                    testSuitAdblock.loadUrlAndWait("${mainFrameServer.baseUrl()}/$indexHtml"))
             Timber.d("Loaded")
 
             // subframe resource is allowlisted
@@ -388,11 +398,15 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         // - https://adservice.google.com/ ...
 
         // allowlisting main frame
-        val allowlistingRule = "@@localhost\$subdocument,document"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .allowlistAddress("localhost")
+                .setContentTypes(ContentType.maskOf(ContentType.SUBDOCUMENT, ContentType.DOCUMENT))
+                .build()
+        val allowlistingRule = adblockFilter.text
 
         val (_, allowlistedResources) = load(
-            listOf(allowlistingRule),
-            """
+                listOf(allowlistingRule),
+                """
             |<html>
             |<body>
             |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
@@ -422,16 +436,20 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         val (sitekey, signature) = initSitekey(subFrameUrl)
 
         // Allowlist with sitekey
-        val allowlistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .setContentTypes(ContentType.maskOf(ContentType.SUBDOCUMENT, ContentType.DOCUMENT))
+                .setSitekey(sitekey, true)
+                .build()
+        val allowlistingRule = adblockFilter.text
 
         wireMockRule
-            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "text/html")
-                    .withHeader("X-Adblock-key", signature) // sitekey
-                    .withBody(
-                        """
+                .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", "text/html")
+                                .withHeader("X-Adblock-key", signature) // sitekey
+                                .withBody(
+                                        """
                         |<html.data-adblockkey="$signature">
                         |<body>
                         |  <img src="$greenImage"/>
@@ -440,8 +458,8 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
                         |""".trimMargin())))
 
         val (blockedResources, allowlistedResources) = load(
-            listOf(blockingRule, allowlistingRule),
-            """
+                listOf(blockingRule, allowlistingRule),
+                """
             |<html>
             |<body>
             |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
@@ -465,9 +483,9 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         })
 
         onAdblockWebView()
-            .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
-            // can't access subframe with JS so there is no [known at the moment] way
-            // to assert subframe resource visibility
+                .check(imageIsBlocked(blockedImageWithSlashId)) // green image in main frame IS blocked
+        // can't access subframe with JS so there is no [known at the moment] way
+        // to assert subframe resource visibility
     }
 
     @Test
@@ -481,11 +499,15 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
                 (BaseSiteKeyExtractor.RESOURCE_HOLD_MAX_TIME_MS / 2).toLong())
 
         // Allowlist main frame with sitekey
-        val allowlistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .setContentTypes(ContentType.maskOf(ContentType.SUBDOCUMENT, ContentType.DOCUMENT))
+                .setSitekey(sitekey, true)
+                .build()
+        val allowlistingRule = adblockFilter.text
 
         val (_, allowlistedResources) = load(
-            listOf(blockingRule, allowlistingRule),
-            """
+                listOf(blockingRule, allowlistingRule),
+                """
             |<html data-adblockkey="$signature">
             |<body>
             |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
@@ -500,8 +522,8 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
         // green image in main frame is NOT blocked
         onAdblockWebView()
-            .check(imageIsNotBlocked(blockedImageWithSlashId))
-            .check(elementIsNotElemhidden(blockedImageWithSlashId))
+                .check(imageIsNotBlocked(blockedImageWithSlashId))
+                .check(elementIsNotElemhidden(blockedImageWithSlashId))
     }
 
     @Test
@@ -514,11 +536,15 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
                 (BaseSiteKeyExtractor.RESOURCE_HOLD_MAX_TIME_MS * 2).toLong())
 
         // Allowlist main frame with sitekey
-        val allowlistingRule = "@@\$subdocument,document,sitekey=$sitekey"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .setContentTypes(ContentType.maskOf(ContentType.SUBDOCUMENT, ContentType.DOCUMENT))
+                .setSitekey(sitekey, true)
+                .build()
+        val allowlistingRule = adblockFilter.text
 
         val (blockedResources, allowlistedResources) = load(
-            listOf(blockingRule, allowlistingRule),
-            """
+                listOf(blockingRule, allowlistingRule),
+                """
             |<html data-adblockkey="$signature">
             |<body>
             |  <img id="$blockedImageWithSlashId" src="/$greenImage"/>
@@ -538,8 +564,8 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
 
         // green image in main frame is blocked with the default blocking rule
         onAdblockWebView()
-            .check(imageIsBlocked(blockedImageWithSlashId))
-            .check(elementIsElemhidden(blockedImageWithSlashId))
+                .check(imageIsBlocked(blockedImageWithSlashId))
+                .check(elementIsElemhidden(blockedImageWithSlashId))
     }
 
     @Test
@@ -550,17 +576,17 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         initSitekey(indexPageUrl)
 
         val mockWebServer = WireMockServer(wireMockConfig()
-            .bindAddress(localhost)
-            .notifier(timberNotifier)
-            .dynamicPort())
+                .bindAddress(localhost)
+                .notifier(timberNotifier)
+                .dynamicPort())
 
         mockWebServer
-            .stubFor(any(urlPathEqualTo("/$indexHtml"))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "text/html")
-                    .withBody(
-                        """
+                .stubFor(any(urlPathEqualTo("/$indexHtml"))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", "text/html")
+                                .withBody(
+                                        """
                         |<html>
                         |<body>
                         |  <iframe src="/$subFrameHtml"/>
@@ -569,13 +595,13 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
                         |""".trimMargin())))
 
         mockWebServer
-            .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "text/html")
-                    .withHeader("Content-Security-Policy", "script-src 'sha256-RFWPLDbv2BY+rCkDzsE+0fr8ylGr2R2faWMhq4lfEQc=' 'nonce-+B+pU8gwIWUuPqY2HDc1xA'")
-                    .withBody(
-                        """
+                .stubFor(any(urlPathEqualTo("/$subFrameHtml"))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", "text/html")
+                                .withHeader("Content-Security-Policy", "script-src 'sha256-RFWPLDbv2BY+rCkDzsE+0fr8ylGr2R2faWMhq4lfEQc=' 'nonce-+B+pU8gwIWUuPqY2HDc1xA'")
+                                .withBody(
+                                        """
                         |<html>
                         |<body>
                         |  <img id="$hiddenImageId" src="$redImage"/>
@@ -587,11 +613,11 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
                         |""".trimMargin())))
 
         mockWebServer
-            .stubFor(any(urlMatching(""".*${Companion.redImage.escapeForRegex()}"""))
-                .willReturn(aResponse()
-                    .withStatus(HttpStatus.SC_OK)
-                    .withHeader("Content-Type", "image/png")
-                    .withBody(Utils.toByteArray(context.assets.open("red.png")))))
+                .stubFor(any(urlMatching(""".*${Companion.redImage.escapeForRegex()}"""))
+                        .willReturn(aResponse()
+                                .withStatus(HttpStatus.SC_OK)
+                                .withHeader("Content-Type", "image/png")
+                                .withBody(Utils.toByteArray(context.assets.open("red.png")))))
 
         val elemHidingRuleSubframe = "localhost###$hiddenImageId"
         addFilterRules(listOf(elemHidingRuleSubframe))
@@ -623,7 +649,12 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
     @Test
     fun testElementHidingStylesheetElemhideException() {
         val elemHidingRule = "##.advert"
-        val allowlistingRule = "@@localhost\$elemhide"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .allowlistAddress("localhost")
+                .setContentTypes(ContentType.maskOf(ContentType.ELEMHIDE))
+                .build()
+        val allowlistingRule = adblockFilter.text
+
         load(
                 listOf(elemHidingRule, allowlistingRule),
                 """
@@ -644,7 +675,11 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
     @Test
     fun testElementHidingStylesheetDocumentException() {
         val elemHidingRule = "##.advert"
-        val allowlistingRule = "@@localhost\$document"
+        val adblockFilter: Filter = AdblockFilterBuilder(adblockEngine)
+                .allowlistAddress("localhost")
+                .setContentTypes(ContentType.maskOf(ContentType.DOCUMENT))
+                .build()
+        val allowlistingRule = adblockFilter.text
         load(
                 listOf(elemHidingRule, allowlistingRule),
                 """
@@ -671,7 +706,7 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
         val countDownLatch = CountDownLatch(1)
         extWebChromeClientAdblock.apply {
             whenever(
-                onJsAlert(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenAnswer {
+                    onJsAlert(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenAnswer {
                 Timber.i("onJsAlert() fired in extWebChromeClient")
                 val styleDisplay = it.getArgument<String>(2)
                 if (jsInIframesEnabled)
@@ -688,7 +723,7 @@ class AdBlockingAllowlistingTest : BaseAdblockWebViewTest() {
             mockWebServer.start()
             Timber.d("Start loading...")
             assertTrue("${mockWebServer.baseUrl()}/$indexHtml exceeded loading timeout",
-                testSuitAdblock.loadUrlAndWait("${mockWebServer.baseUrl()}/$indexHtml"))
+                    testSuitAdblock.loadUrlAndWait("${mockWebServer.baseUrl()}/$indexHtml"))
             Timber.d("Loaded")
             countDownLatch.await()
         } finally {
