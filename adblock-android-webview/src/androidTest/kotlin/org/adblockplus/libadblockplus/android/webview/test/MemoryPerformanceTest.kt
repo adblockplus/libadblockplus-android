@@ -82,10 +82,8 @@ data class MemoryBenchmarkTryStage(
 
     override fun toString(): String =
             """
-            |{
-            |"id": $id,
-            |"name": "$name"
-            |}
+            |"stage_id": $id,
+            |"stage_name": "$name"
             """.trimMargin()
 }
 
@@ -114,7 +112,7 @@ data class MemoryBenchmarkList(
             |{
             |"name": "$name",
             |"minification_coef": $minification_coefficient,
-            |"file_size_kb": $file_size_b
+            |"file_size_bytes": $file_size_b
             |}
             """.trimMargin()
 }
@@ -138,7 +136,7 @@ data class MemoryBenchmarkTry(
     override fun toString(): String =
             """
             |{
-            |"stage": $stage,
+            |$stage,
             |"total_pss": $total_pss,
             |"total_android_studio": $total_android_studio,
             |"code": $code,
@@ -160,12 +158,12 @@ data class MemoryBenchmarkRun(
          * If Acceptable Ads were enabled during the run
          * Providing no lists is not the same as disabling AA
          */
-        val is_aa_enabled: Boolean,
+        val aa_enabled: Boolean,
         /**
          * Was the adblock enabled during the run
          * Providing no lists is not the same as disabling ad blocker
          */
-        val is_adblock_enabled: Boolean,
+        val adblock_enabled: Boolean,
         /**
          * Time the run took in ns
          */
@@ -183,8 +181,8 @@ data class MemoryBenchmarkRun(
             """
             |{
             |"run_unit": "$run_unit",
-            |"is_aa_enabled": $is_aa_enabled,
-            |"is_adblock_enabled": $is_adblock_enabled,
+            |"aa_enabled": $aa_enabled,
+            |"adblock_enabled": $adblock_enabled,
             |"total_run_time_ns": $total_run_time_ns,
             |"lists": $lists,
             |"tries": $tries
@@ -324,8 +322,8 @@ class SystemWebViewBenchmark : BenchmarkMemory() {
         }
         writeResultsOnFile(MemoryBenchmarkRun(
                 run_unit = "kb",
-                is_aa_enabled = false,
-                is_adblock_enabled = false,
+                aa_enabled = false,
+                adblock_enabled = false,
                 total_run_time_ns = (SystemClock.elapsedRealtimeNanos() - runTimeStart),
                 lists = emptyList(), tries = tries))
     }
@@ -477,8 +475,8 @@ abstract class AdblockWebViewBenchmarkMemory(private val subscriptionListResourc
 
         return MemoryBenchmarkRun(
                 run_unit = "kb",
-                is_aa_enabled = true,
-                is_adblock_enabled = isAdblockEnabled,
+                aa_enabled = true,
+                adblock_enabled = isAdblockEnabled,
                 total_run_time_ns = (SystemClock.elapsedRealtimeNanos() - runTimeStart),
                 lists = listOf(listToMemoryListObjMap[subscriptionListResourceID]!!,
                         listToMemoryListObjMap[exceptionListResourceID]!!),
