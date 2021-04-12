@@ -18,10 +18,10 @@
 package org.adblockplus
 
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.After
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -29,14 +29,14 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import timber.log.Timber
 
-class AdblockEngineSettingsTest  {
+class AdblockEngineSettingsTest {
     private val appInfo = AppInfo.builder().build()!!
     val context = InstrumentationRegistry.getInstrumentation().context!!
 
     @get:Rule
     val folder = TemporaryFolder()
 
-    private lateinit var adblockEngine: org.adblockplus.AdblockEngine
+    private lateinit var adblockEngine: AdblockEngine
 
     companion object {
         @BeforeClass
@@ -61,8 +61,8 @@ class AdblockEngineSettingsTest  {
     }
 
     @After
-    fun teraDown() {
-        Timber.d("teraDown()")
+    fun tearDown() {
+        Timber.d("tearDown()")
         AdblockEngineFactory.deinit()
     }
 
@@ -82,6 +82,7 @@ class AdblockEngineSettingsTest  {
                 ++enableCounter
                 enableValue = isEnabled
             }
+
             override fun onAcceptableAdsEnableStateChanged(isEnabled: Boolean) {
                 ++enableAACounter
                 enableAAValue = isEnabled
@@ -114,8 +115,10 @@ class AdblockEngineSettingsTest  {
         assertEquals(0, adblockEngine.settings().listedFilters.size)
 
         var addRemoveCounter = 0
-        val filter = adblockEngine.getFilterFromText("@@some.domain.com")
-        var action : AdblockEngineSettings.FiltersChangedListener.FilterEvent? = null
+        val filter = AdblockFilterBuilder(adblockEngine)
+                .allowlistAddress("some.domain.com")
+                .build()
+        var action: AdblockEngineSettings.FiltersChangedListener.FilterEvent? = null
 
         val addRemoveFilterListener = object : AdblockEngineSettings.FiltersChangedListener {
             override fun onFilterEvent(filterToEventMap: MutableMap<Filter,
@@ -160,7 +163,7 @@ class AdblockEngineSettingsTest  {
         var addRemoveCounter = 0
         val subscription = adblockEngine
                 .getSubscription("https://testpages.adblockplus.org/en/abp-testcase-subscription.txt")
-        var action : AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent? = null
+        var action: AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent? = null
 
         val addRemoveSubscriptionListener = object : AdblockEngineSettings.SubscriptionsChangedListener {
             override fun onSubscriptionEvent(subscriptionToEventMap: MutableMap<Subscription,
@@ -181,7 +184,7 @@ class AdblockEngineSettingsTest  {
         adblockEngine.settings().edit().addSubscription(subscription).save()
         assertEquals(2, addRemoveCounter)
         assertEquals(1, adblockEngine.settings().listedSubscriptions.size)
-        assertEquals( AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent.SUBSCRIPTION_ADDED, action)
+        assertEquals(AdblockEngineSettings.SubscriptionsChangedListener.SubscriptionEvent.SUBSCRIPTION_ADDED, action)
         assertTrue(adblockEngine.settings().listedSubscriptions.contains(subscription))
 
         // Remove subscription and verify
@@ -214,6 +217,7 @@ class AdblockEngineSettingsTest  {
             override fun onAdblockEngineEnableStateChanged(isEnabled: Boolean) {
                 ++enableCounter
             }
+
             override fun onAcceptableAdsEnableStateChanged(isEnabled: Boolean) {
                 ++enableAACounter
             }
@@ -273,5 +277,28 @@ class AdblockEngineSettingsTest  {
         assertEquals(2, enableAACounter)
         assertEquals(2, addRemoveFilterCounter)
         assertEquals(2, addRemoveSubscriptionCounter)
+    }
+
+    @Test
+    fun testSaveAndRemoveFilter() {
+        val newDomain = "example.com"
+        val newDomainFilter = AdblockFilterBuilder(adblockEngine)
+                .setBeginMatchingDomain()
+                .allowlistAddress(newDomain)
+                .setContentTypes(ContentType.maskOf(ContentType.DOCUMENT))
+                .setDomainRestriction(newDomain)
+                .build()
+        adblockEngine.settings().edit().addCustomFilter(newDomainFilter).save()
+        assertEquals("@@||example.com^\$document,domain=example.com",
+                adblockEngine.settings().listedFilters[0].text)
+
+        val removeDomainFilter = AdblockFilterBuilder(adblockEngine)
+                .setBeginMatchingDomain()
+                .allowlistAddress(newDomain)
+                .setContentTypes(ContentType.maskOf(ContentType.DOCUMENT))
+                .setDomainRestriction(newDomain)
+                .build()
+        adblockEngine.settings().edit().removeCustomFilter(removeDomainFilter).save()
+        assertEquals(0, adblockEngine.settings().listedFilters.size)
     }
 }

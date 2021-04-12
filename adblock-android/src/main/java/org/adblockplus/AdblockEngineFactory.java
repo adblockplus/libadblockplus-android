@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Factory to obtain {@link AdblockEngineFactory} or {@link AsyncAdblockEngineBuilder} instance.
+ * Singleton to obtain {@link AdblockEngineBuilder} or {@link AsyncAdblockEngineBuilder} instance.
  */
 public class AdblockEngineFactory
 {

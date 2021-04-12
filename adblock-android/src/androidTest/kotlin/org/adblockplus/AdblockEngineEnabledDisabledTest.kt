@@ -65,8 +65,8 @@ class AdblockEngineEnabledDisabledTest {
     }
 
     @After
-    fun teraDown() {
-        Timber.d("teraDown()")
+    fun tearDown() {
+        Timber.d("tearDown()")
         AdblockEngineFactory.deinit()
     }
 
@@ -114,7 +114,7 @@ class AdblockEngineEnabledDisabledTest {
                 .init(context, appInfo, folder.newFolder().absolutePath)
                 .adblockEngineBuilder
         (adblockEngineBuilder as AdblockEngineBuilder).setHttpClientForTesting(httpClient)
-        var adblockEngine = adblockEngineBuilder.disabledByDefault().build()
+        val adblockEngine = adblockEngineBuilder.disabledByDefault().build()
         assertFalse(adblockEngine.settings().isEnabled)
         sleep(3_000)
         // should not download subscriptions if disabled by default
@@ -196,7 +196,7 @@ class AdblockEngineEnabledDisabledTest {
 
         sleep(1_000)
         // should download subscriptions if enable
-        assertEquals(2, adblockEngine.settings().listedSubscriptions.size);
+        assertEquals(2, adblockEngine.settings().listedSubscriptions.size)
         verify(httpClient, times(2)).request(any(HttpRequest::class.java), any())
     }
 }

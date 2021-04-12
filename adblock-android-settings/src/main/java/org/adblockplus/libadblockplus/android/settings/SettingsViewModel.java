@@ -24,7 +24,10 @@ import androidx.lifecycle.MutableLiveData;
 
 import org.adblockplus.AdblockEngine;
 import org.adblockplus.AdblockEngineSettings;
+import org.adblockplus.AdblockFilterBuilder;
 import org.adblockplus.ConnectionType;
+import org.adblockplus.ContentType;
+import org.adblockplus.Filter;
 import org.adblockplus.Subscription;
 
 import java.net.MalformedURLException;
@@ -39,17 +42,19 @@ import java.util.Set;
 
 import timber.log.Timber;
 
+import static org.adblockplus.ContentType.maskOf;
+
 public class SettingsViewModel extends AndroidViewModel
 {
   final private AdblockSettings settings;
   final private BaseSettingsFragment.Provider provider;
 
   private final MutableLiveData<CharSequence[]> availableSubscriptionsTitles
-      = new MutableLiveData<>();
+    = new MutableLiveData<>();
   private final MutableLiveData<CharSequence[]> availableSubscriptionsValues
-      = new MutableLiveData<>();
+    = new MutableLiveData<>();
   private final MutableLiveData<Set<String>> selectedSubscriptionValues
-      = new MutableLiveData<>();
+    = new MutableLiveData<>();
 
   protected MutableLiveData<CharSequence[]> getAvailableSubscriptionsTitles()
   {
@@ -132,9 +137,9 @@ public class SettingsViewModel extends AndroidViewModel
     }
 
     final CharSequence[] availableSubscriptionsTitles =
-        new CharSequence[availableSubscriptions.size()];
+      new CharSequence[availableSubscriptions.size()];
     final CharSequence[] availableSubscriptionsValues =
-        new CharSequence[availableSubscriptions.size()];
+      new CharSequence[availableSubscriptions.size()];
     for (int i = 0; i < availableSubscriptions.size(); i++)
     {
       String title = null;
@@ -193,7 +198,7 @@ public class SettingsViewModel extends AndroidViewModel
       final List<SubscriptionInfo> availableSubscriptions;
       try
       {
-        final ArrayList<Subscription> newSubs = new ArrayList();
+        final ArrayList<Subscription> newSubs = new ArrayList<>();
         for (final String subUrl : newSubsUrls)
         {
           newSubs.add(engine.getSubscription(subUrl));
@@ -305,7 +310,13 @@ public class SettingsViewModel extends AndroidViewModel
       {
         try
         {
-          engine.settings().edit().addCustomFilter(Utils.createDomainAllowlistingFilter(engine, newDomain)).save();
+          final Filter adblockFilter = new AdblockFilterBuilder(engine)
+            .setBeginMatchingDomain()
+            .allowlistAddress(newDomain)
+            .setContentTypes(maskOf(ContentType.DOCUMENT))
+            .setDomainRestriction(newDomain)
+            .build();
+          engine.settings().edit().addCustomFilter(adblockFilter).save();
         }
         finally
         {
@@ -335,7 +346,13 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.settings().edit().removeCustomFilter(Utils.createDomainAllowlistingFilter(engine, removeDomain)).save();
+        final Filter adblockFilter = new AdblockFilterBuilder(engine)
+          .setBeginMatchingDomain()
+          .allowlistAddress(removeDomain)
+          .setContentTypes(maskOf(ContentType.DOCUMENT))
+          .setDomainRestriction(removeDomain)
+          .build();
+        engine.settings().edit().removeCustomFilter(adblockFilter).save();
       }
       finally
       {
