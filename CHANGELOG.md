@@ -4,6 +4,18 @@ All notable changes to Adblock Android SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - 2021-04-13 - [!545](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/545)
+### Fixed
+ - Fixed website is automatically allowlisted because of refferers hierarchy [!540](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/540)
+
+### Changed
+ - Make AdblockEngineProvider.getEngine() to return org.adblockplus.AdblockEngine [!532](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/532)
+ - Build AdblockEngine asynchronously [!541](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/541)
+ 
+### Added
+ - Add and implement org.adblockplus.AdblockEngineBuilder interface [!538](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/538)
+ - Create Adblock filter Builder [!542](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/542)
+
 ## [4.4.0] - 2021-03-15 - [!523](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/523)
 ### Fixed
  - NPE crash when opening settings [!515](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/515)
