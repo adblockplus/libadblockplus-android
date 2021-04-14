@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Previously, the same functionality was accomplished by mix of org.adblockplus.libadblockplus.android.AdblockEngine and org.adblockplus.libadblockplus.FilterEngine classes.
   - AdblockEngineSettings - new interface which exposes all methods to read and set AdblockEngine preferences. [!511](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/511)
     This interface contains embedded EditOperation interface which allows to edit settings in batch and then save the result.
-    Before the same functionality was accomplished by mix of org.adblockplus.libadblockplus.android.AdblockEngine and org.adblockplus.libadblockplus.FilterEngine classes.
+    Previously, the same functionality was accomplished by mix of org.adblockplus.libadblockplus.android.AdblockEngine and org.adblockplus.libadblockplus.FilterEngine classes.
   - AdblockEngineFactory - a new singleton class that allows to obtain AdblockEngineBuilder or AsyncAdblockEngineBuilder instances [!541](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/541)
   - AdblockEngineBuilder - new synchronous AdblockEngine builder interface [!541](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/541)
   - AsyncAdblockEngineBuilder - new asynchronous AdblockEngine builder interface [!541](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/541)
