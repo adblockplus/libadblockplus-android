@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Filter - data class representing ABP Filter object [!497](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/497)
     Updated and moved org.adblockplus.libadblockplus.Filter class.
   - Subscription - class representing ABP Subscription object [!491](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/491)
-    Before the same functionality was accomplished by mix of org.adblockplus.libadblockplus.android.Subscription and org.adblockplus.libadblockplus.Subscription classes.
+    Previously, the same functionality was accomplished by mix of org.adblockplus.libadblockplus.android.Subscription and org.adblockplus.libadblockplus.Subscription classes.
   - AdblockFilterBuilder - class for for building different kinds of Adblock filters. [!542](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/542)
 
 ## [4.4.0] - 2021-03-15 - [!523](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/523)
