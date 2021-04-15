@@ -4,6 +4,26 @@ All notable changes to Adblock Android SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - 2021-04-13 - [!545](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/545)
+### Fixed
+  - Fixed the problem with automatic allow listing the website because of referrers hierarchy [!540](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/540)
+
+### Changed/Added
+  - Refactored `adblock-android` public API which is now defined solely in package `org.adblockplus`
+  - AdblockEngine - new interface which exposes all the functionalities to filter URLs, get specific stylesheet and EmulationSelectors for a page [!511](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/511)
+    The same functionality had previously been accomplished through a mix of org.adblockplus.libadblockplus.android.AdblockEngine and org.adblockplus.libadblockplus.FilterEngine classes.
+  - AdblockEngineSettings - new interface which exposes all methods to read and set AdblockEngine preferences. [!511](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/511)
+    This interface contains embedded EditOperation interface which allows edit settings in batch and then saves the result.
+    The same functionality had previously been accomplished through a mix of org.adblockplus.libadblockplus.android.AdblockEngine and org.adblockplus.libadblockplus.FilterEngine classes.
+  - AdblockEngineFactory - new class is a singleton which can obtain AdblockEngineBuilder or AsyncAdblockEngineBuilder instances [!541](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/541)
+  - AdblockEngineBuilder - new synchronous AdblockEngine builder interface [!541](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/541)
+  - AsyncAdblockEngineBuilder - new asynchronous AdblockEngine builder interface [!541](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/541)
+  - Filter - data class representing ABP Filter object [!497](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/497)
+    Updated and moved org.adblockplus.libadblockplus.Filter class.
+  - Subscription - class representing ABP Subscription object [!491](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/491)
+    The same functionality had previously been accomplished through a mix of org.adblockplus.libadblockplus.android.Subscription and org.adblockplus.libadblockplus.Subscription classes.
+  - AdblockFilterBuilder - class for building different kinds of Adblock filters. [!542](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/542)
+
 ## [4.4.0] - 2021-03-15 - [!523](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/523)
 ### Fixed
  - NPE crash when opening settings [!515](https://gitlab.com/eyeo/adblockplus/libadblockplus-android/-/merge_requests/515)
