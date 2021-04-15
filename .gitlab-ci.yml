@@ -317,7 +317,7 @@ functional_tests:
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     # demo app debug apk
     GIT_AUTOMATION_BRANCH: "master"
-    PLATFORM_VERSIONS: "9 10 11"
+    PLATFORM_VERSIONS: "7 10 11"
     # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
   script:
@@ -334,7 +334,7 @@ functional_tests:
     - |
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
         do export PLATFORM_VERSION
-        echo Starting job for version ${PLATFORM_VERSION}
+        echo "Starting job for version ${PLATFORM_VERSION}"
         (./gradlew functional &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
         pids="$pids $!"
       done
@@ -361,7 +361,7 @@ functional_tests:
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
         do
         echo "**********************************"
-        echo "Logs for tests with platform_version ${PLATFORM_VERSION}"
+        echo "Logs for tests with platform versions ${PLATFORM_VERSION}"
         echo "**********************************"
         cat platform_version-${PLATFORM_VERSION}.log
       done
