@@ -19,7 +19,6 @@ package org.adblockplus.libadblockplus.android.settings;
 
 import android.content.Context;
 
-import org.adblockplus.libadblockplus.android.Subscription;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -29,6 +28,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -89,7 +89,7 @@ public class UtilsTest
       assertNotNull(Utils.parseSubscription(new JSONObject(json)));
       assertEquals(SUBSCRIPTION_FIELD_TITLE, Utils.parseSubscription(new JSONObject(json)).title);
       assertEquals(SUBSCRIPTION_FIELD_URL, Utils.parseSubscription(new JSONObject(json)).url);
-      assertEquals("en,fr", Utils.parseSubscription(new JSONObject(json)).prefixes);
+      assertEquals("en,fr", Utils.parseSubscription(new JSONObject(json)).languages);
 
       json = "{\"" + SUBSCRIPTION_FIELD_URL + "\":\"" + SUBSCRIPTION_FIELD_URL + "\"," +
           "\"" + SUBSCRIPTION_FIELD_LANGUAGES + "\":[\"en\"]}";
@@ -108,10 +108,10 @@ public class UtilsTest
   @Test
   public void testGetSubscriptionsFromResourceStream()
   {
-    assertEquals(Utils.getSubscriptionsFromResourceStream(null), new LinkedList<Subscription>());
+    assertEquals(Utils.getSubscriptionsFromResourceStream(null), new LinkedList<SubscriptionInfo>());
 
     InputStream stream = new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8));
-    assertEquals(Utils.getSubscriptionsFromResourceStream(stream), new LinkedList<Subscription>());
+    assertEquals(Utils.getSubscriptionsFromResourceStream(stream), new LinkedList<SubscriptionInfo>());
 
     stream = new ByteArrayInputStream(("[\n" +
         "  {\n" +
@@ -134,24 +134,27 @@ public class UtilsTest
         "    \"homepage\": \"http://abpvn.com/\"\n" +
         "  }" +
         "]").getBytes(StandardCharsets.UTF_8));
-    final List<Subscription> subs = Utils.getSubscriptionsFromResourceStream(stream);
-    assertNotEquals(subs, new LinkedList<Subscription>());
+    final List<SubscriptionInfo> subs = Utils.getSubscriptionsFromResourceStream(stream);
+    assertNotEquals(subs, new LinkedList<SubscriptionInfo>());
     assertEquals(2, subs.size());
-    Subscription sub = subs.get(0);
+    SubscriptionInfo sub = subs.get(0);
     assertEquals(sub.title, "ABPindo+EasyList");
     assertEquals(sub.url, "https://easylist-downloads.adblockplus.org/abpindo+easylist.txt");
-    assertEquals(sub.prefixes, "id,ms");
+    assertEquals(sub.languages, "id,ms");
     sub = subs.get(1);
     assertEquals(sub.title, "ABPVN List+EasyList");
     assertEquals(sub.url, "https://easylist-downloads.adblockplus.org/abpvn+easylist.txt");
-    assertEquals(sub.prefixes, "vi");
+    assertEquals(sub.languages, "vi");
   }
 
   @Test
   public void testCheckLocaleLanguageMatch()
   {
+    final String expectedLocale = "en";
+    final Locale locale = new Locale(expectedLocale, expectedLocale.toUpperCase());
+    Locale.setDefault(locale);
     assertTrue(LOCALE.matches("[a-z]{2}-[A-Z]{2}")); // Could fail for very special cases of locale e.g. ja_JP_JP
-    assertEquals("en", Utils.checkLocaleLanguageMatch("fr,en,de"));
+    assertEquals(expectedLocale, Utils.checkLocaleLanguageMatch("fr," + expectedLocale + ",de"));
     assertNull(Utils.checkLocaleLanguageMatch("fr,ru"));
   }
 

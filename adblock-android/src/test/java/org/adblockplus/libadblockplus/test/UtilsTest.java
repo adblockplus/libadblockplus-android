@@ -24,6 +24,7 @@ import org.junit.Test;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -157,13 +158,14 @@ public class UtilsTest
     assertEquals("name\\r123", Utils.escapeJavaScriptString("name\r123"));  // \r
     assertEquals("123", Utils.escapeJavaScriptString(new String(new byte[]
         { '1', '2', '3' })));
-    final Charset utf8 = Charset.forName("UTF-8");
+    final Charset utf8 = StandardCharsets.UTF_8;
     assertEquals("123\u202845", Utils.escapeJavaScriptString(new String(new byte[] //\u2028
         { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA8, '4', '5' }, utf8)));
     assertEquals("123\u202945", Utils.escapeJavaScriptString(new String(new byte[] //\u2029
         { '1', '2', '3', (byte)0xE2, (byte)0x80, (byte)0xA9, '4', '5' }, utf8)));
   }
 
+  @SuppressWarnings("OverwrittenKey")
   @Test
   public void testGetDomain()
   {
@@ -272,16 +274,16 @@ public class UtilsTest
   @Test
   public void testConvertHeaderEntriesToMap()
   {
-    final Set<String> commaNotMergableHeaders = Utils.commaNotMergableHeaders;
-    // Just some examples, can be actually any strings not present in commaNotMergableHeaders
-    final Set<String> commaMergableHeaders = new HashSet<>(Arrays.asList(
+    final Set<String> commaNotMergeableHeaders = Utils.commaNotMergeableHeaders;
+    // Just some examples, can be actually any strings not present in commaNotMergeableHeaders
+    final Set<String> commaMergeableHeaders = new HashSet<>(Arrays.asList(
         "cache-control", "content-language", "etag", "transfer-encoding"
     ));
 
     // Make sure headers sets have no intersection
-    for (final String header : commaNotMergableHeaders)
+    for (final String header : commaNotMergeableHeaders)
     {
-      assertFalse(commaMergableHeaders.contains(header));
+      assertFalse(commaMergeableHeaders.contains(header));
     }
 
     // We don't verify here headers value semantics so any string will do
@@ -289,57 +291,57 @@ public class UtilsTest
     final String headerValue2 = "CCCC 5555 dddd";
 
 
-    // Test not mergable headers => headerValue2 overwrites headerValue1
-    final List<HeaderEntry> notMergableHeadersData = new ArrayList<>();
-    for (final String header : commaNotMergableHeaders)
+    // Test not Mergeable headers => headerValue2 overwrites headerValue1
+    final List<HeaderEntry> notMergeableHeadersData = new ArrayList<>();
+    for (final String header : commaNotMergeableHeaders)
     {
-      notMergableHeadersData.add(new HeaderEntry(header, headerValue1));
-      notMergableHeadersData.add(new HeaderEntry(header, headerValue2));
+      notMergeableHeadersData.add(new HeaderEntry(header, headerValue1));
+      notMergeableHeadersData.add(new HeaderEntry(header, headerValue2));
     }
-    final Map<String, String> notMergableHeadersDataConverted =
-        Utils.convertHeaderEntriesToMap(notMergableHeadersData);
+    final Map<String, String> notMergeableHeadersDataConverted =
+        Utils.convertHeaderEntriesToMap(notMergeableHeadersData);
 
     // Verify that resulting map has expected size
-    assertTrue(notMergableHeadersDataConverted.size() * 2 == notMergableHeadersData.size());
+    assertEquals(notMergeableHeadersDataConverted.size() * 2, notMergeableHeadersData.size());
     // Verify all input headers are present and contain 2nd value
-    verifyHeaderEntriesMap(commaNotMergableHeaders, notMergableHeadersDataConverted, headerValue2);
+    verifyHeaderEntriesMap(commaNotMergeableHeaders, notMergeableHeadersDataConverted, headerValue2);
 
 
-    // Test mergable headers with identical values (case insensitive) => should not be merged
-    final List<HeaderEntry> mergableHeadersDataWithIdenticaltValues = new ArrayList<>();
-    for (final String header : commaMergableHeaders)
+    // Test Mergeable headers with identical values (case insensitive) => should not be merged
+    final List<HeaderEntry> MergeableHeadersDataWithIdenticaltValues = new ArrayList<>();
+    for (final String header : commaMergeableHeaders)
     {
-      mergableHeadersDataWithIdenticaltValues.add(new HeaderEntry(header, headerValue1.toLowerCase()));
-      mergableHeadersDataWithIdenticaltValues.add(new HeaderEntry(header, headerValue1.toUpperCase()));
+      MergeableHeadersDataWithIdenticaltValues.add(new HeaderEntry(header, headerValue1.toLowerCase()));
+      MergeableHeadersDataWithIdenticaltValues.add(new HeaderEntry(header, headerValue1.toUpperCase()));
     }
 
-    final Map<String, String> mergableHeadersDataWithIdenticaltValuesConverted =
-        Utils.convertHeaderEntriesToMap(mergableHeadersDataWithIdenticaltValues);
+    final Map<String, String> MergeableHeadersDataWithIdenticaltValuesConverted =
+        Utils.convertHeaderEntriesToMap(MergeableHeadersDataWithIdenticaltValues);
 
     // Verify that resulting map has expected size
-    assertTrue(mergableHeadersDataWithIdenticaltValuesConverted.size() * 2
-        == mergableHeadersDataWithIdenticaltValues.size());
+    assertEquals(MergeableHeadersDataWithIdenticaltValuesConverted.size() * 2,
+      MergeableHeadersDataWithIdenticaltValues.size());
     // Verify all input headers are present and contain 1st value which is not duplicated
-    verifyHeaderEntriesMap(commaMergableHeaders, mergableHeadersDataWithIdenticaltValuesConverted,
+    verifyHeaderEntriesMap(commaMergeableHeaders, MergeableHeadersDataWithIdenticaltValuesConverted,
         headerValue1.toLowerCase());
 
 
-    // Test mergable headers with distinct values => should be merged
-    final List<HeaderEntry> mergableHeadersDataWithDistinctValues = new ArrayList<>();
-    for (final String header : commaMergableHeaders)
+    // Test Mergeable headers with distinct values => should be merged
+    final List<HeaderEntry> MergeableHeadersDataWithDistinctValues = new ArrayList<>();
+    for (final String header : commaMergeableHeaders)
     {
-      mergableHeadersDataWithDistinctValues.add(new HeaderEntry(header, headerValue1));
-      mergableHeadersDataWithDistinctValues.add(new HeaderEntry(header, headerValue2));
+      MergeableHeadersDataWithDistinctValues.add(new HeaderEntry(header, headerValue1));
+      MergeableHeadersDataWithDistinctValues.add(new HeaderEntry(header, headerValue2));
     }
 
-    final Map<String, String> mergableHeadersDataWithDistinctValuesConverted =
-        Utils.convertHeaderEntriesToMap(mergableHeadersDataWithDistinctValues);
+    final Map<String, String> MergeableHeadersDataWithDistinctValuesConverted =
+        Utils.convertHeaderEntriesToMap(MergeableHeadersDataWithDistinctValues);
 
     // Verify that resulting map has expected size
-    assertTrue(mergableHeadersDataWithDistinctValuesConverted.size() * 2
-        == mergableHeadersDataWithDistinctValues.size());
+    assertEquals(MergeableHeadersDataWithDistinctValuesConverted.size() * 2,
+      MergeableHeadersDataWithDistinctValues.size());
     // Verify all input headers are present and contain 1st value which is not duplicated
-    verifyHeaderEntriesMap(commaMergableHeaders, mergableHeadersDataWithDistinctValuesConverted,
+    verifyHeaderEntriesMap(commaMergeableHeaders, MergeableHeadersDataWithDistinctValuesConverted,
         headerValue1 + ", " + headerValue2);
   }
 

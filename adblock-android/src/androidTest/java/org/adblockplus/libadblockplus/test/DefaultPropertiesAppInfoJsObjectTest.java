@@ -40,7 +40,7 @@ public class DefaultPropertiesAppInfoJsObjectTest extends BaseJsEngineTest
     assertEquals("0", appVersion.asString());
     application.dispose();
     final JsValue locale = jsEngine.evaluate("_appInfo.locale");
-    assertEquals("en_US", locale.asString());
+    assertEquals("en-US", locale.asString());
     locale.dispose();
   }
 }

@@ -35,8 +35,8 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 
-import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.Subscription;
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.ArrayList;
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     // this can free up to ~60-70% of memory occupied by the engine
     if (level == TRIM_MEMORY_RUNNING_CRITICAL && AdblockHelper.get().isInit())
     {
-      AdblockHelper.get().getProvider().getEngine().onLowMemory();
+      AdblockHelper.get().getProvider().onLowMemory();
       Timber.w("Lacking memory! Notifying AdBlock about memory constraint");
     }
   }
@@ -180,10 +180,10 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   private void setTestPageSubscription()
   {
     AdblockHelper.get().getProvider().retain(true);
-    final FilterEngine fe = AdblockHelper.get().getProvider().getEngine().getFilterEngine();
-    final Subscription subscription = fe.getSubscription(testPageSubscriptionUrl);
+    final AdblockEngine adblockEngine = AdblockHelper.get().getProvider().getEngine();
+    final Subscription subscription = adblockEngine.getSubscription(testPageSubscriptionUrl);
     String message;
-    if (subscription.isListed())
+    if (adblockEngine.settings().getListedSubscriptions().contains(subscription))
     {
       if (subscription.isDisabled())
       {
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     }
     else
     {
-      subscription.addToList();
+      adblockEngine.settings().edit().addSubscription(subscription).save();
       message = getResources().getString(R.string.subscription_added_and_enabled);
     }
     message += testPageSubscriptionUrl;

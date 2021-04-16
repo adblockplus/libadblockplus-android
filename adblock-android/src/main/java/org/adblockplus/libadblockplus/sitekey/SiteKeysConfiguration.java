@@ -71,7 +71,7 @@ public class SiteKeysConfiguration
     return forceChecks.get();
   }
 
-  public void setForceChecks(boolean forceChecks)
+  public void setForceChecks(final boolean forceChecks)
   {
     this.forceChecks.set(forceChecks);
   }

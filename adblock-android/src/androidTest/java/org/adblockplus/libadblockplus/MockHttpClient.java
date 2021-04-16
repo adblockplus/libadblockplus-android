@@ -23,10 +23,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MockHttpClient extends HttpClient
 {
-  public AtomicBoolean exception = new AtomicBoolean(false);
-  public List<HttpRequest> requests = new LinkedList<>();
+  public final AtomicBoolean exception = new AtomicBoolean(false);
+  public final List<HttpRequest> requests = new LinkedList<>();
   public ServerResponse response;
-  public AtomicBoolean called = new AtomicBoolean(false);
+  public final AtomicBoolean called = new AtomicBoolean(false);
 
   public synchronized HttpRequest getSpecificRequest(final String url, final String method)
   {

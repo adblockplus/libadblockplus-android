@@ -45,6 +45,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class SiteKeyVerifierTest
 {
   private final SignatureVerifier signatureVerifier = new JavaSignatureVerifier();

@@ -68,7 +68,6 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
   private MockHttpClient request;
   private Map<String, Integer> preloadMap;
   private TestStorage storage;
-  private AndroidHttpClientResourceWrapper wrapper;
   private TestWrapperListener wrapperListener;
 
   @Override
@@ -78,8 +77,8 @@ public class AndroidHttpClientResourceWrapperTest extends BaseJsEngineTest
     request.exception.set(true);
     preloadMap = new HashMap<>();
     storage = new TestStorage();
-    wrapper = new AndroidHttpClientResourceWrapper(
-        ApplicationProvider.getApplicationContext(), request, preloadMap, storage);
+    final AndroidHttpClientResourceWrapper wrapper = new AndroidHttpClientResourceWrapper(
+      ApplicationProvider.getApplicationContext(), request, preloadMap, storage);
     wrapperListener = new TestWrapperListener();
     wrapper.setListener(wrapperListener);
 

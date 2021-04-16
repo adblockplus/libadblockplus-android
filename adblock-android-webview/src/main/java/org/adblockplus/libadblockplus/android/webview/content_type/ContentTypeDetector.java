@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.ContentType;
 
 public interface ContentTypeDetector
 {
@@ -30,5 +30,5 @@ public interface ContentTypeDetector
    *                info HTTP headers of incoming request including url and headers
    * @return ContentType or `null` if not detected
    */
-  FilterEngine.ContentType detect(final WebResourceRequest request);
+  ContentType detect(final WebResourceRequest request);
 }

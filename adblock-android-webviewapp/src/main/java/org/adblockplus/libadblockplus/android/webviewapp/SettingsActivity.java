@@ -21,7 +21,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.AdblockEngine;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.SubscriptionsManager;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;

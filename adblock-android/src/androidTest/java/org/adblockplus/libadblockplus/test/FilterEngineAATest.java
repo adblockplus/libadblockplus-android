@@ -17,8 +17,8 @@
 
 package org.adblockplus.libadblockplus.test;
 
-import org.adblockplus.libadblockplus.AppInfo;
-import org.adblockplus.libadblockplus.Subscription;
+import org.adblockplus.AppInfo;
+import org.adblockplus.Subscription;
 import org.junit.Test;
 
 import java.util.List;
@@ -75,7 +75,7 @@ public class FilterEngineAATest extends BaseFilterEngineTest
     }
     assertNotNull(aaSubscription);
     assertNotNull(langSubscription);
-    assertEquals(langSubscriptionUrl, langSubscription.getUrl());
+    assertEquals(langSubscriptionUrl, langSubscription.url);
     assertTrue(filterEngine.isAcceptableAdsEnabled());
   }
 

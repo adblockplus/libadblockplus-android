@@ -66,19 +66,19 @@ public class ConnectionInputStream extends InputStream
   }
 
   @Override
-  public int read(byte b[]) throws IOException
+  public int read(final byte b[]) throws IOException
   {
     return bufferedInputStream.read(b);
   }
 
   @Override
-  public int read(byte b[], int off, int len) throws IOException
+  public int read(final byte b[], final int off, final int len) throws IOException
   {
     return bufferedInputStream.read(b, off, len);
   }
 
   @Override
-  public long skip(long n) throws IOException
+  public long skip(final long n) throws IOException
   {
     return bufferedInputStream.skip(n);
   }
@@ -106,7 +106,7 @@ public class ConnectionInputStream extends InputStream
   }
 
   @Override
-  public synchronized void mark(int readlimit)
+  public synchronized void mark(final int readlimit)
   {
     bufferedInputStream.mark(readlimit);
   }

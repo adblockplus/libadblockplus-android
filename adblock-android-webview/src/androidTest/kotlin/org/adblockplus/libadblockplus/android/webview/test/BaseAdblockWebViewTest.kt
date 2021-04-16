@@ -31,7 +31,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Notifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit.WireMockRule
-import org.adblockplus.libadblockplus.android.AdblockEngine
+import org.adblockplus.AdblockEngine
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView
 import org.adblockplus.libadblockplus.android.webview.SiteKeyExtractor
@@ -212,14 +212,14 @@ abstract class BaseAdblockWebViewTest {
 
     protected fun addFilterRules(filterRules: List<String>) {
         filterRules.forEach { filterText ->
-            val filter = adblockEngine.filterEngine.getFilter(filterText)
-            adblockEngine.filterEngine.addFilter(filter)
+            val filter = adblockEngine.getFilterFromText(filterText)
+            adblockEngine.settings().edit().addCustomFilter(filter).save()
         }
     }
 
     private fun waitForDefaultSubscriptions() {
         var slept = 0L
-        while (adblockEngine.filterEngine.listedSubscriptions.size != 2) { // 2 = locale + AA
+        while (adblockEngine.settings().listedSubscriptions.size != 2) { // 2 = locale + AA
             Timber.d("Waiting for default subscriptions ready")
             SystemClock.sleep(sleepStepMillis)
             slept += sleepStepMillis
@@ -230,10 +230,10 @@ abstract class BaseAdblockWebViewTest {
     }
 
     private fun clearSubscriptions() {
-        assertNotEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
-        adblockEngine.filterEngine.listedSubscriptions.forEach { subscription ->
-            subscription.removeFromList()
+        assertNotEquals(0, adblockEngine.settings().listedSubscriptions.size)
+        adblockEngine.settings().listedSubscriptions.forEach { subscription ->
+            adblockEngine.settings().edit().removeSubscription(subscription).save()
         }
-        assertEquals(0, adblockEngine.filterEngine.listedSubscriptions.size)
+        assertEquals(0, adblockEngine.settings().listedSubscriptions.size)
     }
 }

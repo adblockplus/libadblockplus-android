@@ -19,8 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
+import org.adblockplus.ContentType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,12 +43,11 @@ public class UrlFileExtensionTypeDetector implements ContentTypeDetector
     "mp3", "mpc", "msv", "nmf", "oga", "ogg", "opus", "ra", "raw", "rf64", "sln", "tta",
     "voc", "vox", "wav", "wma", "wv" };
 
-  private static final Map<String, FilterEngine.ContentType> extensionTypeMap
-    = new HashMap<String, FilterEngine.ContentType>();
+  private static final Map<String, ContentType> extensionTypeMap = new HashMap<>();
 
   private static void mapExtensions(
     final String[] extensions,
-    final FilterEngine.ContentType contentType)
+    final ContentType contentType)
   {
     for (final String extension : extensions)
     {
@@ -60,17 +58,17 @@ public class UrlFileExtensionTypeDetector implements ContentTypeDetector
 
   static
   {
-    mapExtensions(EXTENSIONS_JS, FilterEngine.ContentType.SCRIPT);
-    mapExtensions(EXTENSIONS_CSS, FilterEngine.ContentType.STYLESHEET);
-    mapExtensions(EXTENSIONS_FONT, FilterEngine.ContentType.FONT);
-    mapExtensions(EXTENSIONS_HTML, FilterEngine.ContentType.SUBDOCUMENT);
-    mapExtensions(EXTENSIONS_IMAGE, FilterEngine.ContentType.IMAGE);
-    mapExtensions(EXTENSIONS_MEDIA, FilterEngine.ContentType.MEDIA);
+    mapExtensions(EXTENSIONS_JS, ContentType.SCRIPT);
+    mapExtensions(EXTENSIONS_CSS, ContentType.STYLESHEET);
+    mapExtensions(EXTENSIONS_FONT, ContentType.FONT);
+    mapExtensions(EXTENSIONS_HTML, ContentType.SUBDOCUMENT);
+    mapExtensions(EXTENSIONS_IMAGE, ContentType.IMAGE);
+    mapExtensions(EXTENSIONS_MEDIA, ContentType.MEDIA);
   }
 
   // JavaDoc inherited from base interface
   @Override
-  public FilterEngine.ContentType detect(final WebResourceRequest request)
+  public ContentType detect(final WebResourceRequest request)
   {
     if (request == null || request.getUrl() == null)
     {

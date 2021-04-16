@@ -1,0 +1,74 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="AndroidLintLambdaLast" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AnonymousClassComplexity" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="m_limit" value="3" />
+    </inspection_tool>
+    <inspection_tool class="ArrayEquality" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AssignmentToLambdaParameter" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ClassComplexity" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="m_limit" value="80" />
+    </inspection_tool>
+    <inspection_tool class="ClassCoupling" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="m_includeJavaClasses" value="false" />
+      <option name="m_includeLibraryClasses" value="false" />
+      <option name="m_limit" value="15" />
+    </inspection_tool>
+    <inspection_tool class="ClassInitializer" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ClassNestingDepth" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_limit" value="1" />
+    </inspection_tool>
+    <inspection_tool class="ExceptionNameDoesntEndWithException" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="FieldCount" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_countConstantFields" value="false" />
+      <option name="m_considerStaticFinalFieldsConstant" value="false" />
+      <option name="myCountEnumConstants" value="false" />
+      <option name="m_limit" value="10" />
+    </inspection_tool>
+    <inspection_tool class="FieldMayBeFinal" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyConstantNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_regex" value="[A-Z\d]*" />
+      <option name="m_minLength" value="4" />
+      <option name="m_maxLength" value="32" />
+    </inspection_tool>
+    <inspection_tool class="GroovyStaticVariableNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_regex" value="s_[a-z][A-Za-z\d]*" />
+      <option name="m_minLength" value="4" />
+      <option name="m_maxLength" value="32" />
+    </inspection_tool>
+    <inspection_tool class="GroovyVariableCanBeFinal" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="InnerClassReferencedViaSubclass" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="InstanceofIncompatibleInterface" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="JavaLangImport" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="LiteralAsArgToStringEquals" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="LocalCanBeFinal" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="REPORT_VARIABLES" value="true" />
+      <option name="REPORT_PARAMETERS" value="true" />
+    </inspection_tool>
+    <inspection_tool class="MagicNumber" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="MalformedRegex" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="MethodCount" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_limit" value="20" />
+      <option name="ignoreGettersAndSetters" value="false" />
+      <option name="ignoreOverridingMethods" value="false" />
+    </inspection_tool>
+    <inspection_tool class="MisspelledEquals" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="NonFinalFieldInEnum" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SamePackageImport" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="SimplifiableEqualsExpression" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SizeReplaceableByIsEmpty" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="UnnecessarilyQualifiedStaticUsage" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_ignoreStaticFieldAccesses" value="false" />
+      <option name="m_ignoreStaticMethodCalls" value="true" />
+      <option name="m_ignoreStaticAccessFromStaticContext" value="false" />
+    </inspection_tool>
+    <inspection_tool class="UnnecessaryConstantArrayCreationExpression" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="UtilityClassWithPublicConstructor" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="WeakerAccess" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="SUGGEST_PACKAGE_LOCAL_FOR_MEMBERS" value="true" />
+      <option name="SUGGEST_PACKAGE_LOCAL_FOR_TOP_CLASSES" value="true" />
+      <option name="SUGGEST_PRIVATE_FOR_INNERS" value="false" />
+    </inspection_tool>
+  </profile>
+</component>

@@ -35,13 +35,11 @@ import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -65,13 +63,11 @@ public class WebViewLoadPerformanceUrlUsingJsTest
       "https://www.google.com/search?source=hp&ei=Di5NXdzQL6S0gwePqrugDw&q=laptops&oq=laptops&gs_l=psy-ab.3..0l10.871.2625..2730...3.0..0.59.396.9......0....1..gws-wiz.....0.LLzQyUKDP2A&ved=0ahUKEwjcj6TgrvXjAhUk2uAKHQ_VDvQQ4dUDCAc&uact=5",
       "https://www.xvideos.com/",
       "https://www.bing.com/search?q=laptop&qs=n&form=QBLH&sp=-1&pq=laptop&sc=8-6&sk=&cvid=81A2899A72C44903A148188906E7DCEE",
-//      "https://www.baidu.com/s?tn=50000021_hao_pg&ie=utf-8&sc=UWd1pgw-pA7EnHc1FMfqnHRvPHn1rjTzP10YPiuW5y99U1Dznzu9m1YzPW01n1RsPjTd&ssl_sample=normal&srcqid=3368502456200926350&H123Tmp=nunew7&word=iphone",
       "https://search.yahoo.com/search;_ylt=AwrEzedALE1d9ocA.lpDDWVH;_ylc=X1MDMTE5NzgwNDg2NwRfcgMyBGZyAwRncHJpZANqQjNGWDVlZFFDbWlWMlR1OXNCQVhBBG5fcnNsdAMwBG5fc3VnZwM5BG9yaWdpbgNzZWFyY2gueWFob28uY29tBHBvcwMwBHBxc3RyAwRwcXN0cmwDBHFzdHJsAzYEcXVlcnkDaXBob25lBHRfc3RtcAMxNTY1MzM4Njkx?fr2=sb-top-search&p=iphone&fr=sfp&iscqry=",
       "https://yandex.com/search/?text=iphone&lr=98",
       "https://www.youtube.com/results?search_query=casey+neistat",
       "https://en.wikipedia.org/wiki/Neodymium_magnet",
       "https://www.imdb.com/title/tt0119654/",
-      "https://cn.hao123.com/",
       "https://www.ndtv.com/world-news/pentagon-readies-talks-with-russia-on-syria-operations-1224527",
       "https://www.zomato.com/lublin/mandragora-lublin",
       "https://dir.indiamart.com/search.mp?ss=iphone&prdsrc=1&mcatid=23429&catid=213",
@@ -400,7 +396,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
   @LargeTest
   public void testLoadTime() throws InterruptedException
   {
-    AdblockHelper.get().getProvider().getEngine().getFilterEngine().setAcceptableAdsEnabled(true);
+    AdblockHelper.get().getProvider().getEngine().settings().edit().setAcceptableAdsEnabled(true).save();
     clearErrors();
     int repetitionCount = 0;
     while (repetitionCount++ < TEST_ITERATIONS)
@@ -426,7 +422,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
   {
     clearErrors();
 
-    AdblockHelper.get().getProvider().getEngine().getFilterEngine().setAcceptableAdsEnabled(false);
+    AdblockHelper.get().getProvider().getEngine().settings().edit().setAcceptableAdsEnabled(false).save();
 
     int repetitionCount = 0;
     while (repetitionCount++ < TEST_ITERATIONS)

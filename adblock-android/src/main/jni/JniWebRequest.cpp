@@ -74,7 +74,8 @@ void JniWebRequest_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
   }
 }
 
-JniWebRequestCallback::JniWebRequestCallback(JNIEnv* env, const AdblockPlus::Scheduler& scheduler, jobject callbackObject)
+JniWebRequestCallback::JniWebRequestCallback(JNIEnv* env, const AdblockPlus::Scheduler& scheduler,
+        jobject callbackObject)
   : JniCallbackBase(env, callbackObject)
   , m_scheduler(scheduler)
 {

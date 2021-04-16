@@ -5,8 +5,7 @@
 Adblock Android SDK
 ================================
 
-An Android library project, tests, settings fragments and demo application for AdblockWebView.
-
+An Android library containing project, tests, settings fragments, and demo application for AdblockWebView.
 
 
 ## Dependencies
@@ -31,7 +30,7 @@ dependencies {
 }
 ```
 
-In general case it's suggested to use the most recent version.
+In the general case, it's suggested to use the most recent version.
 
 ### Building
 
@@ -46,9 +45,9 @@ Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
 #### Building of libadblockplus
 
 First, make sure all the [prerequisites](https://gitlab.com/eyeo/adblockplus/libadblockplus/blob/master/README.md#supported-target-platforms-and-prerequisites) are installed.
-Second, one needs to build `V8` required for `libadblockplus`.
+Second, one needs to build the `V8` required for `libadblockplus`.
 See `libadblockplus/README` or V8 documentation on how to build V8 or
-fetch precompiled one. For the latter, run in 'libadblockplus' directory:
+fetch precompiled one. For the latter, run in the 'libadblockplus' directory:
 
     make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
     make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
@@ -99,7 +98,7 @@ An app that uses the library have to add the following permissions to `AndroidMa
 
 ### Build directory configuration
 
-By default Gradle uses `build` directory to build modules, however it can be undesired
+By default Gradle uses `build` directory to build modules, however, it can be undesired.
 for some use cases like CI or building as Chromium submodule.
 Set `GRADLE_BUILD_DIR` environment variable to configure build directory:
 
@@ -113,7 +112,7 @@ output while building
 
 ### Building with prebuilt shared V8
 
-This can be desired to use product's V8 (let's say Chromium) instead of built-in V8.
+There is an option to use the product's V8 (let's say Chromium) instead of built-in V8.
 Put prebuilt shared V8 library file(s) in ARCH directories and set `SHARED_V8_LIB_FILENAMES`
 environment variable and `SHARED_V8_LIB_DIR` before building.
 You can pass multiple filenames in `SHARED_V8_LIB_FILENAMES`, separated with space.
@@ -140,7 +139,7 @@ output while building.
 
 ### Building with exposing of libadblockplus classes
 
-Set `EXPOSE_LIBABP_OBJECTS` environment variable to expose libadblockplus classes in shared library.
+Set `EXPOSE_LIBABP_OBJECTS` environment variable to expose libadblockplus classes in the shared library.
 
 For example:
 
@@ -148,21 +147,21 @@ For example:
 
 ### JNI adjustments
 
-In order to load custom library name pass `LIBABP_SHARED_LIBRARY_NAME` environment variable (without `lib` and `.so`):
+To load custom library name pass `LIBABP_SHARED_LIBRARY_NAME` environment variable (without `lib` and `.so`):
 
     LIBABP_SHARED_LIBRARY_NAME=adblockplus ./gradlew assembleRelease
 
-In order to skip compilation of JNI classes pass `SKIP_JNI_COMPILATION` environment variable:
+To skip the compilation of JNI classes pass the `SKIP_JNI_COMPILATION` environment variable:
 
     SKIP_JNI_COMPILATION=true ./gradlew assembleRelease
 
 ### Building for single ARCH
 
-By default adblock-android is built for ARM/ARM64 and x86/x86_64 and it can be filtered when
-building end-user android application. However sometimes it can be desired to build
-"adblock-android.aar" for single ARCH.
+By default, adblock-android is built for ARM/ARM64 and x86/x86_64 and it can be filtered when
+building end-user Android applications. However, sometimes it can be desired to build
+"adblock-android.aar" for a single ARCH.
 
-Pass `abi_arm`, `abi_arm64`, `abi_x86`, or `abi_x86_64` to build it for single arch or `abi_all` for all ARCHs:
+Pass `abi_arm`, `abi_arm64`, `abi_x86`, or `abi_x86_64` to build it for a single arch or `abi_all` for all ARCHs:
 
     `./gradlew clean assembleAbi_arm`
 
@@ -176,17 +175,17 @@ output while building.
 
 ### Pure java tests
 
-You can find pure Java tests in 'src/test' directories of the modules (if provided).
+You can find pure Java tests in the 'src/test' directories of the modules (if provided).
 In the project directory run:
 
     ./gradlew test
 
-You can select test class/method and click 'Run ..Test'.
-No Android emulator/device running required.
+You can select the test class/method and click 'Run ..Test'.
+No Android emulator/device running is required.
 
 ### Android tests
 
-You can find Android tests in 'src/androidTest' directories of the modules (if provided).
+You can find Android tests in the 'src/androidTest' directories of the modules (if provided).
 In the project directory run:
 
     ./gradlew connectedAbi_x86DebugAndroidTest
@@ -196,7 +195,7 @@ to test with x86 device/emulator or run:
     ./gradlew connectedAbi_armDebugAndroidTest
 
 to test with ARM device/emulator.
-You can select test class/method and click 'Run ..Test'.
+You can select the test class/method and click 'Run ..Test'.
 
 ## Settings
 
@@ -215,12 +214,12 @@ dependencies {
 }
 ```
 
-In general case it's suggested to use the most recent version.
+In the general case, it's suggested to use the most recent version.
 
 ### Usage
 
 Create `AdblockEngineProvider` instance and `AdblockSettingsStorage` instance.
-You can use `SharedPrefsStorage` implementation to store settings in `SharedPreferences`.
+You can use the `SharedPrefsStorage` implementation to store settings in `SharedPreferences`.
 Or you can use AdblockHelper:
 
     AdblockHelper
@@ -238,7 +237,7 @@ Make sure you initialize it once during app launch, call `isInit()` to check it:
       ...
     }
 
-Sometimes it's desired to initialize or deinitialize FilterEngine instance
+Sometimes it's desired to initialize or deinitialize the AdblockEngine instance
 when created:
 
     AdblockHelper
@@ -257,7 +256,7 @@ Make sure you deinitialize it when values used during initialization are no long
 
     AdblockHelper.get().deinit();
 
-Note: one have to initialize it again to be used.
+Note: one has to initialize it again to be used.
 
 Implement the following interfaces in your settings activity:
 
@@ -289,8 +288,8 @@ Release Adblock instance in activity `onDestroy`:
 Insert `GeneralSettingsFragment` fragment instance in runtime to start showing settings UI.
 
 #### Memory management
-Adblock Engine sometimes might be extensive to memory consumption. In order to guard your process
-from being killed by the system, call `AdblockEngine#onLowMemory()` method in
+Adblock Engine sometimes might be extensive to memory consumption. To guard your process
+from being killed by the system, call the `AdblockEngineProvider#onLowMemory()` method in
 [ComponentCallbacks2#onTrimMemory(int)](https://developer.android.com/reference/android/content/ComponentCallbacks2#onTrimMemory(int)).
 
 ```java
@@ -302,7 +301,7 @@ from being killed by the system, call `AdblockEngine#onLowMemory()` method in
     // this can free up to ~60-70% of memory occupied by the engine
     if (level == TRIM_MEMORY_RUNNING_CRITICAL && AdblockHelper.get().isInit())
     {
-      AdblockHelper.get().getProvider().getEngine().onLowMemory();
+      AdblockHelper.get().getProvider().onLowMemory();
     }
     // ...
   }
@@ -316,15 +315,15 @@ and then unregister when not needed with `Context#unregisterComponentCallbacks(C
 If you are using old APIs, it's also possible to use any of `onLowMemory()` system callbacks:
 either `Activity#onLowMemory()` or `Fragment#onLowMemory()`.
 
-Please mind that if you are using `AdblockHelper` (which is in most cases), Adblock Filter Engine
+Please mind that if you are using `AdblockHelper` (which is in most cases), AdblockEngine
 exists only in one instance. Having one instance means that you only have to implement one call to
-`AdblockHelper.get().getProvider().getEngine().onLowMemory();`. Thus it's recommended to do the call in `Activity`
+`AdblockHelper.get().getProvider().onLowMemory();`. Thus it's recommended to do the call in `Activity`
 or somewhere else where you are sure you are not creating multiple instances (e.g. fragments).
 
 #### Background operations
 
-By default filter engine will do some background operations like subscriptions synchronizations in background shortly
-after initialized. If you want to have ad blocking as optional feature, you should consider use `setDisabledByDefault`
+By default AdblockEngine will do some background operations like subscriptions synchronizations in the background shortly
+after initialized. If you want to have ad-blocking as an optional feature, you should consider using `setDisabledByDefault`
 
 ```
     AdblockHelper
@@ -334,12 +333,12 @@ after initialized. If you want to have ad blocking as optional feature, you shou
 ```
 
 In this case no background operations will be done until you call `AdblockEngine.setEnabled(true)`. Please note that
-`setDisabledByDefault()` only configures the default state. If user preference on enabled state is stored in settings it will have
+`setDisabledByDefault()` only configures the default state. If user preference on the enabled state is stored in settings it will have
 priority.
 
-Other thing to take into account is synchronization time. If you have configured `setDisabledByDefault` and then enable
-engine, first synchronization will be done only after some time. You can combine configuration with
-`preloadSubscriptions` to load data from local file first time rather then from web.
+Another thing to take into account is synchronization time. If you have configured `setDisabledByDefault` and then enable
+the engine, the first synchronization will be done only after some time. You can combine configuration with
+`preloadSubscriptions` to load data from local file first time rather than from the web.
 
 #### Preloaded subscriptions
 
@@ -349,15 +348,15 @@ The benefit of using this feature is that it provides a better UX since the app 
 
 On the other hand, this is an opt-in feature that you have to set up. It also increases the footprint of the app by bundling the subscription lists with it, and you have to update the lists when building the apk. This is because subscription lists become outdated very fast. Ideally, you can set a gradle task for that, which is what we did.
 
-By running `./gradlew downloadSubscriptionLists`, you update the preloaded EasyList and exception list to the latest ones.
+By running `./gradlew downloadSubscriptionLists`, you update the preloaded subscriptions with the latest [minified EasyList](https://easylist-downloads.adblockplus.org/easylist-minified.txt) and [minimal exception list](https://easylist-downloads.adblockplus.org/exceptionrules-minimal.txt).
 
-To set it up in the code, you can either explicitly map all the possible locale specific subscriptions URLs to local files. Or you can set one general subscription file for all non AA and another for the AA subscription.
+To set it up in the code, you can either explicitly map all the possible locale-specific subscriptions URLs to local files. Or you can set one general subscription file for all non AA and another for the AA subscription.
 
 Usage example in a simplified way where all blocking subscriptions (like "easylist.txt" or "easylistgermany+easylist.txt") are mapped to the same file R.raw.easylist:
 ``` java
 adblockHelper
     .get()
-    .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+    .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
     .preloadSubscriptions(R.raw.easylist, R.raw.exceptionrules)
     .addEngineCreatedListener(engineCreatedListener)
     .addEngineDisposedListener(engineDisposedListener)
@@ -374,7 +373,7 @@ Then, when using the `AdblockHelper` for example, you can set it like:
 ``` java
 adblockHelper
     .get()
-    .init(this, basePath, true, AdblockHelper.PREFERENCE_NAME)
+    .init(this, basePath, AdblockHelper.PREFERENCE_NAME)
     .preloadSubscriptions(AdblockHelper.PRELOAD_PREFERENCE_NAME, map)
     .addEngineCreatedListener(engineCreatedListener)
     .addEngineDisposedListener(engineDisposedListener)
@@ -382,7 +381,7 @@ adblockHelper
 
 ### Theme
 
-Make sure to set application theme with `PreferenceThemeOverlay.v14.Material` parent theme
+Make sure to set the application theme with `PreferenceThemeOverlay.v14.Material` parent theme
 (see `AndroidManifest.xml` and `styles.xml` in `adblock-android-webviewapp` as an example).
 
 ### Building
@@ -408,11 +407,11 @@ Make sure you have `jcenter()` in the list of repositories and then add the foll
 
 ```groovy
 dependencies {
-    implementation 'org.adblockplus:adblock-android-webview:4.1'
+    implementation 'org.adblockplus:adblock-android-webview:MAJOR.MINOR.PATCHLEVEL'
 }
 ```
 
-In general case it's suggested to use the most recent version.
+In the general case it's suggested to use the most recent version.
 
 ### Usage
 
@@ -428,7 +427,7 @@ In java source code:
     AdblockWebView webView = findViewById(R.id.main_webview);
 
 Use `AdblockEngine.setEnabled(boolean enabled)` to enable/disable ad blocking for AdblockEngine.
-Make sure you update the settings model if you want the new value to be applied after application restart, eg:
+Make sure you update the settings model if you want the new value to be applied after the restart of the  application, eg:
 ```
 AdblockSettingsStorage storage = AdblockHelper.get().getStorage();
 AdblockSettings settings = storage.load();
@@ -441,7 +440,7 @@ settings.setAdblockEnabled(newValue);
 storage.save(settings);
 ```
 
-Android SDK logging system is based on Timber library.
+Android SDK logging system is based on the Timber library.
 
 If you are configuring your project using Maven dependencies to consume our Android SDK
 then Timber dependency is automatically installed.
@@ -449,9 +448,9 @@ If you are just copying AAR files to your project workspace then you need to add
 
 `implementation 'com.jakewharton.timber:timber:4.7.1'`.
 
-To enable desired log output level configure Timber logger in your application code.
+To enable desired log output level you should configure the Timber logger in your application code.
 
-For example this code enables all debug logs in DEBUG mode:
+For example, this code enables all debug logs in DEBUG mode:
 ```
 if (BuildConfig.DEBUG) {
     Timber.plant(new Timber.DebugTree());
@@ -459,35 +458,35 @@ if (BuildConfig.DEBUG) {
 ```
 Please refer to https://github.com/JakeWharton/timber for more information about Timber.
 
-Use `setAllowDrawDelay(int allowDrawDelay)` to set custom delay to start rendering a web page after 'DOMContentLoaded' event is fired.
+Use `setAllowDrawDelay(int allowDrawDelay)` to set the custom delay to start rendering a web page after the 'DOMContentLoaded' event is fired.
 
 Use `setProvider(@NotNull AdblockEngineProvider provider)` to use external adblock engine provider.
-The simplest solution is to use `AdblockHelper` from `-settings` as external adblock engine provider:
+The simplest solution is to use `AdblockHelper` from `-settings` as an external adblock engine provider:
 
     webView.setProvider(AdblockHelper.get().getProvider());
 
-If adblock engine provider is not set, it's created by AdblockWebView instance automatically.
+If the adblock engine provider is not set, it's created by the AdblockWebView instance automatically.
 
 Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
 This is optional but highly suggested. See `TabFragment.java` on usage example.
 
 Please note that the AdblockWebView does intercept some of the HTTP(S) requests done by the subclassed WebView and does them internally by means of `java.net.HttpURLConnection`. 
-For doing so AdblockWebView maintains the cookies in sync between the `java.net.CookieManager` and `android.webkit.CookieManager`. The sync is maintained by replacing the default `CookieHandler` by a `SharedCookieManager` which stores all the cookies in `android.webkit.CookieManager` storage.
+For doing so AdblockWebView maintains the cookies in sync between the `java.net.CookieManager` and `android.webkit.CookieManager`. The sync is maintained by replacing the default `CookieHandler` with a `SharedCookieManager` which stores all the cookies in `android.webkit.CookieManager` storage.
 If a client code sets a cookie handler by calling `java.net.CookieHandler.setDefault()`, such a cookie handler will be later overwritten by our custom `SharedCookieManager` which is set by AdblockWebView when loading any url.
 
 Use `enableJsInIframes(true)` to enable element hiding and element hiding emulation for iframes in AdblockWebView.
 This feature does not support yet element hiding for blocked requests.
-This is optional feature which under the hood rewrites html content to inject before the `</body>` tag `<script nonce="..">..</script>` with our custom element hiding (emulation) JavaScript, and if necessary updates CSP HTTP response header adding our `nonce` string to execute the script.
-This feature also requires `setSiteKeysConfiguration(..)` to be called beforehand, otherwise an IllegalStateException is thrown.
+This is an optional feature that rewrites the HTML content under the hood in order to inject our custom element hiding (emulation) JavaScript before the `</body>` tag `<script nonce="..">..</script>`. If it's necessary, the CSP HTTP response header is updated by adding our `nonce` string to execute the script.
+This feature also requires `setSiteKeysConfiguration(..)` to be called beforehand, otherwise, an IllegalStateException is thrown.
 See `TabFragment.java` on usage example.
 
 Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and whitelisting events, eg.
 "resource loading blocked" or "resource loading whitelisted" event that can be used for stats.
-For the latter there is a convenience class `WebViewCounters` which can be bound to `EventsListener`
+For the latter, there is a convenience class `WebViewCounters` which can be bound to `EventsListener`
 and notify your View about new values. See an example of usage in WebView Application.
 
 Use `dispose(Runnable disposeFinished)` to release resources (**required**).
-Note it can be invoked from background thread.
+Note it can be invoked from the background thread.
 
 Enabling/disabling of ad blocking per AdblockWebView is not supported.
 
@@ -522,8 +521,8 @@ This will generate *.apk in the 'adblock-android-webviewapp/build/outputs/apk/' 
 ### Required configuration changes
 
 Configure Proguard/R8 to skip Adblock Android SDK files (root package `org.adblockplus.libadblockplus`)
-from being modified for `Release` build of end-user application.
-See `adblock-android/proguard-rules-adblock.txt` as an example. If building end-user application
+from being modified for `Release` build of the end-user application.
+See `adblock-android/proguard-rules-adblock.txt` as an example. If building an end-user application
 with Gradle, no actions are required - Gradle will use provided consumer Proguard file automatically.
 See https://developer.android.com/studio/projects/android-library
 "A library module may include its own ProGuard configuration file" section for further information.
@@ -532,13 +531,13 @@ See https://developer.android.com/studio/projects/android-library
 
 Adblock Android SDK uses JNI behind the scene so Java classes and methods are accessed by full
 names from native code. If class names/members are modified by Proguard/R8 during `Release` build
-they can't be accessed from native code resulting into Runtime exceptions like follows:
+they can't be accessed from native code resulting in Runtime exceptions like follows:
 
     java.lang.NoSuchMethodError: no non-static method "Lorg/adblockplus/libadblockplus/JsValue;.<init>(J)V"
 
 ## Contribute
 
-You are more then welcome to contribute! Please use *Building* 
+You are more than welcome to contribute! Please use *Building*
 sections from corresponding submodules in order to set up build them and start developing.
 
 ### Git commits
@@ -553,18 +552,18 @@ In general:
 
 * Follow the [Mozilla Coding Style](https://firefox-source-docs.mozilla.org/code-quality/coding-style/coding_style_java.html) general practices and its naming and formatting rules.
 * All files should have a license header, but no mode line comments.
-* Newline at end of file, otherwise no trailing whitespace.
-* Lines can be longer than the limit, if limiting line length would hurt readability in a particular case.
+* Newline at end of the file, otherwise no trailing whitespace.
+* Lines can be longer than the limit if limiting line length would hurt readability in a particular case.
 * Opening braces always go on their own line.
 * No Hungarian notation, no special variable name prefixes or suffixes denoting type or scope. 
 * All variable names start with a lower case letter.
 * Don't comment code out, delete it.
 
 #### Java
-Overall it inherits basic code style rules above. More specific rules:
+Overall it inherits the basic code style rules above. More specific rules:
 * Spaces over tabs 
-* Indentation is in increment of two spaces.
-* Dedicated new line on opening opening brackets and closing brackets.
+* Indentation is in an increment of two spaces.
+* Dedicated new line on opening brackets and closing brackets.
 ```java
 // good 
 void doSomething()
@@ -582,14 +581,14 @@ void doSomething(){
 * Inline comments leave space after marker 
 * Remove trailing white spaces 
 * Don’t exceed 120 characters per line
-* **else** should be followed with new line
-* Add new line at the end of file 
-* Variables, parameters and class members should be final where it is possible (they are not modified)
+* **else** should be followed with a new line
+* Add a new line at the end of the file 
+* Variables, parameters, and class members should be final where it is possible (they are not modified)
 
 We use [Checkstyle](https://checkstyle.sourceforge.io/) to verify syntax for Java. You can find the 
 config in `config\checkstyle\checkstyle.xml`
 
-You can verify the syntax in sevaral ways:
+You can verify the syntax in several ways:
 1. [Gradle Checkstyle plugin](https://docs.gradle.org/current/userguide/checkstyle_plugin.html). 
 Just run `./gradlew checkstyle` and it will perform codestyle check over all the submodules, 
 including tests. Also

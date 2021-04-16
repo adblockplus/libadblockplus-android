@@ -6,13 +6,20 @@ final RANDOMIZED_APP_ID = "randomizedAppId"
 final ADBLOCK_ENABLED = "adblockEnabled"
 
 // using download file task plugin more info at https://github.com/michel-kraemer/gradle-download-task
-task downloadSubscriptionLists(type: Download) {
-  src([
-          'https://easylist-downloads.adblockplus.org/exceptionrules.txt',
-          'https://easylist-downloads.adblockplus.org/easylist.txt'
-  ])
-  dest "./src/main/res/raw/"
+task downloadEasylistMinified(type: Download) {
+  src(['https://easylist-downloads.adblockplus.org/easylist-minified.txt'])
+  dest "./src/main/res/raw/easylist_minified.txt"
   overwrite true
+}
+
+task downloadMinExceptionrulesMinimal(type: Download) {
+  src(['https://easylist-downloads.adblockplus.org/exceptionrules-minimal.txt'])
+  dest "./src/main/res/raw/exceptionrules_minimal.txt"
+  overwrite true
+}
+
+task downloadSubscriptionLists {
+  dependsOn(downloadEasylistMinified, downloadMinExceptionrulesMinimal)
 }
 
 android {
@@ -27,7 +34,7 @@ android {
     applicationId appId
     minSdkVersion Config.webView_minSdkVersion
     targetSdkVersion Config.targetSdkVersion
-    versionCode 50
+    versionCode 51
     versionName = Config.moduleVersion
     missingDimensionStrategy 'abi', 'abi_all', 'abi_arm', 'abi_arm64', 'abi_x86'
 

@@ -24,7 +24,7 @@ JniGlobalReference<jclass>* filterEnumClass;
 
 void JniFilter_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
 {
-  filterEnumClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Filter$Type")));
+  filterEnumClass = new JniGlobalReference<jclass>(env, env->FindClass(PKGAPI("Filter$Type")));
 }
 
 void JniFilter_OnUnload(JavaVM* vm, JNIEnv* env, void* reserved)
@@ -64,6 +64,6 @@ jobject GetJniTypeFromNativeType(JNIEnv *pEnv, AdblockPlus::Filter::Type type) {
   }
 
   jfieldID enumField = pEnv->GetStaticFieldID(filterEnumClass->Get(),
-                                              enumName, TYP("Filter$Type"));
+                                              enumName, TYPAPI("Filter$Type"));
   return pEnv->GetStaticObjectField(filterEnumClass->Get(), enumField);
 }

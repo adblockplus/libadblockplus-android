@@ -77,14 +77,14 @@ public class HttpClientTest extends BaseFilterEngineTest
         ServerResponse.NsStatus.OK.getStatusCode(),
         status.asLong());
     status.dispose();
-    final JsValue responceStatus = jsEngine.evaluate("foo.responseStatus");
+    final JsValue responseStatus = jsEngine.evaluate("foo.responseStatus");
     assertEquals(
         Long.valueOf(RESPONSE_STATUS).longValue(),
-        responceStatus.asLong());
-    responceStatus.dispose();
-    final JsValue responceText = jsEngine.evaluate("foo.responseText");
-    assertEquals(RESPONSE, responceText.asString());
-    responceStatus.dispose();
+        responseStatus.asLong());
+    responseStatus.dispose();
+    final JsValue responseText = jsEngine.evaluate("foo.responseText");
+    assertEquals(RESPONSE, responseText.asString());
+    responseStatus.dispose();
     final JsValue respHeaders = jsEngine.evaluate("JSON.stringify(foo.responseHeaders)");
     assertEquals(
         "{\"" + HEADER_KEY + "\":\"" + HEADER_VALUE + "\"}",

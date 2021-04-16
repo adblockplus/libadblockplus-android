@@ -34,6 +34,7 @@ import org.adblockplus.libadblockplus.android.TimberLogSystem
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.rules.Timeout
 import timber.log.Timber
 import java.io.File
@@ -41,52 +42,72 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.system.measureTimeMillis
 
-fun randomDirectory():File = File.createTempFile("adblock", ".tmpdir").also {
-    it.delete()
-    it.mkdirs()
-}
 
 class FilterEngineLoadTimeBenchmark {
+    @get:Rule
+    val folder = TemporaryFolder()
+
+    fun randomDirectory() : File {
+        return folder.newFolder()
+    }
+
     companion object {
+
+        // number of bytes of patterns ini file minified and full
+        // should be in sync with the filters lists used
+
+        private const val PATTERNS_INI_MINIFIED_SIZE = 1_425_053L
+        private const val PATTERNS_INI_FULL_SIZE = 11_308_451L
+
+        private val easylist = R.raw.easylist
+        private val exceptionRules = R.raw.exceptionrules
+
+        private val minifiedEasyList = R.raw.easylist_min_uc
+        private val minifiedExceptionList = R.raw.exceptionrules_min
+
         // used for waiting of subscriptions ready
         private const val SLEEP_INTERVAL_MILLIS = 1L
 
-        // Warning: should be in sync with main/res/raw/easylist.txt and exceptionrules.txt
-        private const val PATTERNS_INI_LENGTH = 365427L
-
         private val context = InstrumentationRegistry.getInstrumentation().targetContext
-        private val resourceIdToResourceMap = mapOf(
-            // Warning: it's required to have all the possible values from ..Wrapper
 
-            // locale-specific
-            AndroidHttpClientResourceWrapper.EASYLIST to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_CHINESE to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_DUTCH to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_GERMAN to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_FRENCH to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN to R.raw.easylist,
-            AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN to R.raw.easylist,
+        fun localeToResourceId(blockingListResourceID  : Int,
+                               exceptionListResourceID : Int) : Map<String, Int> {
+            return mapOf(
+                AndroidHttpClientResourceWrapper.EASYLIST to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_CHINESE to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_DUTCH to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_GERMAN to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_POLISH to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_FRENCH to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN to blockingListResourceID,
+                AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN to blockingListResourceID,
 
-            // acceptable ads
-            AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS to R.raw.exceptionrules
-        )
+                // acceptable ads
+                AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS to exceptionListResourceID)
+        }
     }
-
+    init {
+        if (Timber.treeCount() == 0) {
+            Timber.plant(Timber.DebugTree())
+        }
+    }
     @get:Rule
     val globalTimeout = Timeout(15, TimeUnit.MINUTES)
 
     @get:Rule
     val benchmarkRule = BenchmarkRule()
 
-    private class Setup(basePath: String) {
+    private class Setup(basePath: String,
+                        blockingList : Int,
+                        exceptionList : Int) {
         val logSystem = TimberLogSystem()
         val fileSystem: FileSystem? = null // default C++ impl
         val wrapperStorage = object : Storage {
@@ -97,14 +118,14 @@ class FilterEngineLoadTimeBenchmark {
         // we want to isolate the changes and remove the influence of network speed.
         // so providing subscriptions content from test resources instead of actual downloading
         val httpClientWrapper = AndroidHttpClientResourceWrapper(
-            context, AndroidHttpClient(), resourceIdToResourceMap, wrapperStorage)
+            context, AndroidHttpClient(), localeToResourceId(blockingList, exceptionList), wrapperStorage)
 
         // we need to randomize basePath to avoid test interference (shared state from persistence)
         val platform = Platform(logSystem, fileSystem, httpClientWrapper, basePath)
 
         init {
             httpClientWrapper.setListener {
-                url, _ -> Timber.i("Intercepted $url to avoid networking")
+                url, _ -> Timber.d("Intercepted $url to avoid networking")
             }
             platform.setUpJsEngine(AdblockEngine.generateAppInfo(context))
             Timber.d("Path = $basePath")
@@ -128,16 +149,22 @@ class FilterEngineLoadTimeBenchmark {
         Timber.d("Subscriptions ready in $subscriptionsReadyMillis millis")
     }
 
-    private fun waitForSubscriptionsSaved(pattersIniFile: File) {
-        while (!pattersIniFile.exists() || pattersIniFile.length() < PATTERNS_INI_LENGTH) {
+    private fun waitForSubscriptionsSaved(pattersIniFile: File, totalLines : Long) {
+        while (!pattersIniFile.exists() || pattersIniFile.length() < totalLines) {
+            Timber.d("waiting loaded %s of %s bytes should load", pattersIniFile.length().toString(), totalLines.toString())
             SystemClock.sleep(SLEEP_INTERVAL_MILLIS)
         }
+        Timber.d("end waiting loaded %s of %s bytes should load",
+                pattersIniFile.length().toString(), totalLines.toString())
     }
 
     private inline fun getPatternsIniFile(dir: File) = File(dir, "patterns.ini")
 
-    private fun createAndDispose(path: String, onCreated: ((FilterEngine) -> Unit)? = null) {
-        val setup = Setup(path)
+    private fun createAndDispose(path: String,
+                                 blockingList : Int,
+                                 exceptionList : Int,
+                                 onCreated: ((FilterEngine) -> Unit)?) {
+        val setup = Setup(path, blockingList, exceptionList)
         with(setup.platform) {
             Timber.d("Creating FilterEngine ...")
             lateinit var filterEngine: FilterEngine
@@ -155,19 +182,48 @@ class FilterEngineLoadTimeBenchmark {
         }
     }
 
-    private inline fun test(dir: File, waitForSaved: Boolean) {
-        createAndDispose(dir.absolutePath) {
+    private inline fun test(dir: File,
+                            waitForSaved  : Boolean,
+                            blockingList  : Int,
+                            exceptionList : Int,
+                            exceptedPatternsIniSize : Long) {
+
+        createAndDispose(dir.absolutePath, blockingList, exceptionList) {
             waitForSubscriptionsLoaded(it)
             if (waitForSaved) {
-                waitForSubscriptionsSaved(getPatternsIniFile(dir))
+                waitForSubscriptionsSaved(getPatternsIniFile(dir), exceptedPatternsIniSize)
             }
+        }
+    }
+
+    private fun genericMeasureSecondTimeFELT(blockingRulesResourceId : Int,
+                                             exceptionRulesResourceId : Int,
+                                             patternsInitExpectedByteSize : Long) {
+        // "not the first time" means subscriptions data is already downloaded and saved on SD
+        val dir = randomDirectory()
+        val pattersIniFile = getPatternsIniFile(dir)
+
+        // download, wait for subscriptions to be ready and saved
+        test(dir, true, blockingRulesResourceId, exceptionRulesResourceId, patternsInitExpectedByteSize)
+
+        // check saved subscriptions data
+        assertTrue(pattersIniFile.exists())
+
+        // Note: the actual file size can be a bit different when building locally vs. on CI
+        // due to different datetimes (lastDownload, lastSuccess) and some empty lines
+        assertTrue(abs(pattersIniFile.length() - patternsInitExpectedByteSize) < 10)
+        Timber.d("State is ready, starting benchmarking")
+
+        // the dir is the same as it was used for the first FE create,
+        // so it will read the subscriptions data from the persistent storage
+        benchmarkRule.measureRepeated {
+            test(dir, false, blockingRulesResourceId, exceptionRulesResourceId, patternsInitExpectedByteSize)
         }
     }
 
     // an example for proper benchmarking sample, taken from:
     // https://cs.android.com/androidx/platform/frameworks/support/+/androidx-master-dev:benchmark/common/src/main/java/androidx/benchmark/ThrottleDetector.kt;l=47;drc=18266f9efb44e8e63a45e055ffd471dd11544c02
     @Test
-    @LargeTest
     fun measurePureCalculation() {
         val sourceMatrix = FloatArray(16) { System.nanoTime().toFloat() }
         val resultMatrix = FloatArray(16)
@@ -180,39 +236,36 @@ class FilterEngineLoadTimeBenchmark {
     }
 
     @Test
-    @LargeTest
+    fun measureVeryFirstTimeMinified() {
+        // "very first time" means the subscriptions data is going to be downloaded (actually loaded
+        // from app resources), parsed and saved
+
+        benchmarkRule.measureRepeated {
+            test(randomDirectory(), false, minifiedEasyList, minifiedExceptionList, PATTERNS_INI_MINIFIED_SIZE)
+        }
+    }
+
+    @Test
+    fun measureNotTheFirstTimeMinified() {
+        genericMeasureSecondTimeFELT(minifiedEasyList, minifiedExceptionList, PATTERNS_INI_MINIFIED_SIZE)
+    }
+
+    @Test
     fun measureVeryFirstTime() {
         // "very first time" means the subscriptions data is going to be downloaded (actually loaded
         // from app resources), parsed and saved
 
         benchmarkRule.measureRepeated {
-            test(randomDirectory(), false)
+            test(randomDirectory(),
+                    false,
+                    easylist,
+                    exceptionRules,
+                    PATTERNS_INI_FULL_SIZE)
         }
     }
 
     @Test
-    @LargeTest    
     fun measureNotTheFirstTime() {
-        // "not the first time" means subscriptions data is already downloaded and saved on SD
-
-        val dir = randomDirectory()
-        val pattersIniFile = getPatternsIniFile(dir)
-
-        // download, wait for subscriptions to be ready and saved
-        test(dir, true)
-
-        // check saved subscriptions data
-        assertTrue(pattersIniFile.exists())
-
-        // Note: the actual file size can be a bit different when building locally vs. on CI
-        // due to different datetimes (lastDownload, lastSuccess) and some empty lines
-        assertTrue(abs(pattersIniFile.length() - PATTERNS_INI_LENGTH) < 10)
-        Timber.d("State is ready, starting benchmarking")
-
-        // the dir is the same as it was used for the first FE create,
-        // so it will read the subscriptions data from the persistent storage
-        benchmarkRule.measureRepeated {
-            test(dir, false)
-        }
+        genericMeasureSecondTimeFELT(easylist, exceptionRules, PATTERNS_INI_FULL_SIZE)
     }
 }

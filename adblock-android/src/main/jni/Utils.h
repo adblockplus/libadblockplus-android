@@ -29,6 +29,9 @@
 #define PKG(x) "org/adblockplus/libadblockplus/" x
 #define TYP(x) "L" PKG(x) ";"
 
+#define PKGAPI(x) "org/adblockplus/" x
+#define TYPAPI(x) "L" PKGAPI(x) ";"
+
 #define ABP_JNI_VERSION JNI_VERSION_1_6
 
 void JniUtils_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved);

@@ -51,14 +51,14 @@ void JniUtils_OnLoad(JavaVM* vm, JNIEnv* env, void* reserved)
   arrayListClass = new JniGlobalReference<jclass>(env, env->FindClass("java/util/ArrayList"));
   arrayListCtor = env->GetMethodID(arrayListClass->Get(), "<init>", "()V");
 
-  filterClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Filter")));
-  filterCtor = env->GetMethodID(filterClass->Get(), "<init>", "(" TYP("Filter$Type") "Ljava/lang/String;)V");
+  filterClass = new JniGlobalReference<jclass>(env, env->FindClass(PKGAPI("Filter")));
+  filterCtor = env->GetMethodID(filterClass->Get(), "<init>", "(Ljava/lang/String;" TYPAPI("Filter$Type") ")V");
 
-  subscriptionClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("Subscription")));
+  subscriptionClass = new JniGlobalReference<jclass>(env, env->FindClass(PKGAPI("Subscription")));
   subscriptionCtor = env->GetMethodID(subscriptionClass->Get(), "<init>",
           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;" TYP("FilterEngine") ")V");
 
-  emulationSelectorClass = new JniGlobalReference<jclass>(env, env->FindClass(PKG("FilterEngine$EmulationSelector")));
+  emulationSelectorClass = new JniGlobalReference<jclass>(env, env->FindClass(PKGAPI("EmulationSelector")));
   emulationSelectorCtor = env->GetMethodID(emulationSelectorClass->Get(), "<init>",
                                            "(Ljava/lang/String;Ljava/lang/String;)V");
 
@@ -208,8 +208,8 @@ jobject NewJniFilter(JNIEnv* env, AdblockPlus::Filter&& filter)
 {
     return env->NewObject(filterClass->Get(),
                           filterCtor,
-                          GetJniTypeFromNativeType(env, filter.GetType()),
-                          JniStdStringToJava(env, filter.GetRaw()));
+                          JniStdStringToJava(env, filter.GetRaw()),
+                          GetJniTypeFromNativeType(env, filter.GetType()));
 }
 
 jobject NewJniSubscription(JNIEnv* env, AdblockPlus::Subscription&& subscription, jobject filterEngine)

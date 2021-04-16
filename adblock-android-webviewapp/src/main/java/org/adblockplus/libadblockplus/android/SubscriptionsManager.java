@@ -22,8 +22,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import org.adblockplus.libadblockplus.FilterEngine;
-import org.adblockplus.libadblockplus.Subscription;
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.AdblockEngineSettings;
+import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.List;
@@ -66,47 +67,47 @@ public class SubscriptionsManager
         {
           final String url = intent.getStringExtra(EXTRA_URL);
           Timber.d("Subscription = %s", url);
-          final FilterEngine filterEngine =
-            AdblockHelper.get().getProvider().getEngine().getFilterEngine();
-          final Subscription subscription = filterEngine.getSubscription(url);
+          final AdblockEngine adblockEngine = AdblockHelper.get().getProvider().getEngine();
+          final AdblockEngineSettings adblockEngineSettings = adblockEngine.settings();
+          final Subscription subscription = adblockEngine.getSubscription(url);
 
           if (intent.getAction().equals(ACTION_ADD))
           {
-            add(subscription);
+            add(adblockEngineSettings, subscription);
           }
           else if (intent.getAction().equals(ACTION_REMOVE))
           {
-            remove(subscription);
+            remove(adblockEngineSettings, subscription);
           }
           else if (intent.getAction().equals(ACTION_ENABLE))
           {
-            enable(subscription);
+            enable(adblockEngineSettings, subscription);
           }
           else if (intent.getAction().equals(ACTION_DISABLE))
           {
-            disable(subscription);
+            disable(adblockEngineSettings, subscription);
           }
           else if (intent.getAction().equals(ACTION_UPDATE))
           {
-            update(subscription);
+            update(adblockEngineSettings, subscription);
           }
         }
       }
 
-      private void remove(final Subscription subscription)
+      private void remove(final AdblockEngineSettings adblockEngineSettings, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(adblockEngineSettings, subscription))
         {
           return;
         }
 
-        subscription.removeFromList();
+        adblockEngineSettings.edit().removeSubscription(subscription).save();
         Timber.d("Removed subscription");
       }
 
-      private void update(final Subscription subscription)
+      private void update(final AdblockEngineSettings adblockEngineSettings, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(adblockEngineSettings, subscription))
         {
           return;
         }
@@ -120,9 +121,9 @@ public class SubscriptionsManager
         Timber.d("Forced subscription update");
       }
 
-      private void enable(final Subscription subscription)
+      private void enable(final AdblockEngineSettings adblockEngineSettings, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(adblockEngineSettings, subscription))
         {
           return;
         }
@@ -137,9 +138,9 @@ public class SubscriptionsManager
         Timber.d("Enabled subscription");
       }
 
-      private void disable(final Subscription subscription)
+      private void disable(final AdblockEngineSettings adblockEngineSettings, final Subscription subscription)
       {
-        if (!assertIsListed(subscription))
+        if (!assertIsListed(adblockEngineSettings, subscription))
         {
           return;
         }
@@ -153,9 +154,9 @@ public class SubscriptionsManager
         Timber.d("Disabled subscription");
       }
 
-      private void add(final Subscription subscription)
+      private void add(final AdblockEngineSettings adblockEngineSettings, final Subscription subscription)
       {
-        if (subscription.isListed())
+        if (adblockEngineSettings.getListedSubscriptions().contains(subscription))
         {
           if (subscription.isDisabled())
           {
@@ -169,16 +170,16 @@ public class SubscriptionsManager
         }
         else
         {
-          subscription.addToList();
+          adblockEngineSettings.edit().addSubscription(subscription).save();
           Timber.d("Added subscription");
         }
       }
 
       private void list()
       {
-        final FilterEngine filterEngine =
-          AdblockHelper.get().getProvider().getEngine().getFilterEngine();
-        final List<Subscription> subscriptions = filterEngine.getListedSubscriptions();
+        final AdblockEngine adblockEngine =
+          AdblockHelper.get().getProvider().getEngine();
+        final List<Subscription> subscriptions = adblockEngine.settings().getListedSubscriptions();
         for (final Subscription subscription : subscriptions)
         {
           Timber.d("%s is %s",
@@ -186,9 +187,10 @@ public class SubscriptionsManager
         }
       }
 
-      private boolean assertIsListed(final Subscription subscription)
+      private boolean assertIsListed(final AdblockEngineSettings adblockEngineSettings,
+                                     final Subscription subscription)
       {
-        if (!subscription.isListed())
+        if (!adblockEngineSettings.getListedSubscriptions().contains(subscription))
         {
           Timber.e("Subscription is not listed");
           return false;

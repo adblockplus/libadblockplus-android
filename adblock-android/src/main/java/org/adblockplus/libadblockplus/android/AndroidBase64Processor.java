@@ -32,39 +32,39 @@ public class AndroidBase64Processor implements Base64Processor
   private static final int DEFAULT_FLAGS = Base64.DEFAULT | Base64.NO_WRAP;
 
   @Override
-  public byte[] decode(byte[] encodedBytes) throws Base64Exception
+  public byte[] decode(final byte[] encodedBytes) throws Base64Exception
   {
     try
     {
       return Base64.decode(encodedBytes, Base64.DEFAULT);
     }
-    catch (Throwable cause)
+    catch (final Throwable cause)
     {
       throw new Base64Exception(cause);
     }
   }
 
   @Override
-  public byte[] encode(byte[] rawBytes) throws Base64Exception
+  public byte[] encode(final byte[] rawBytes) throws Base64Exception
   {
     try
     {
       return Base64.encode(rawBytes, DEFAULT_FLAGS);
     }
-    catch (Throwable cause)
+    catch (final Throwable cause)
     {
       throw new Base64Exception(cause);
     }
   }
 
   @Override
-  public String encodeToString(byte[] rawBytes) throws Base64Exception
+  public String encodeToString(final byte[] rawBytes) throws Base64Exception
   {
     try
     {
       return Base64.encodeToString(rawBytes, DEFAULT_FLAGS);
     }
-    catch (Throwable cause)
+    catch (final Throwable cause)
     {
       throw new Base64Exception(cause);
     }

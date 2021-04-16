@@ -22,8 +22,11 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.RawRes;
 
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.AdblockEngineSettings;
+import org.adblockplus.ConnectionType;
 import org.adblockplus.libadblockplus.HttpClient;
-import org.adblockplus.libadblockplus.android.AdblockEngine;
+import org.adblockplus.libadblockplus.android.AdblockEngine.Builder;
 import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
 import org.adblockplus.libadblockplus.android.AndroidBase64Processor;
 import org.adblockplus.libadblockplus.android.AndroidHttpClient;
@@ -62,33 +65,30 @@ public class AdblockHelper
 
   private boolean isInitialized;
   private Context context;
-  private AdblockEngine.Builder factory;
-  private SingleInstanceEngineProvider provider;
+  private Builder factory;
+  private AdblockEngineProvider provider;
   private AdblockSettingsStorage storage;
   private SiteKeysConfiguration siteKeysConfiguration;
 
-  private final SingleInstanceEngineProvider.EngineCreatedListener engineCreatedListener =
-    new SingleInstanceEngineProvider.EngineCreatedListener()
+  private final AdblockEngineProvider.EngineCreatedListener engineCreatedListener =
+    new AdblockEngineProvider.EngineCreatedListener()
   {
     @Override
-    public void onAdblockEngineCreated(AdblockEngine engine)
+    public void onAdblockEngineCreated(final AdblockEngine adblockEngine)
     {
-      AdblockSettings settings = storage.load();
-      if (settings != null)
+      final AdblockSettings savedSettings = storage.load();
+      if (savedSettings != null)
       {
         Timber.d("Applying saved adblock settings to adblock engine");
-        // apply last saved settings to adblock engine.
-        // all the settings except `enabled` and allowlisted domains list
-        // are saved by adblock engine itself
-        engine.setEnabled(settings.isAdblockEnabled());
-        engine.initAllowlistedDomains(settings.getAllowlistedDomains());
-
-        // allowed connection type is saved by filter engine but we need to override it
-        // as filter engine can be not created when changing
-        String connectionType = (settings.getAllowedConnectionType() != null
-          ? settings.getAllowedConnectionType().getValue()
-          : null);
-        engine.getFilterEngine().setAllowedConnectionType(connectionType);
+        // apply last saved settings to adblock engine
+        final ConnectionType connectionType = savedSettings.getAllowedConnectionType();
+        final AdblockEngineSettings.EditOperation editOperation = adblockEngine.settings().edit();
+        editOperation.setEnabled(savedSettings.isAdblockEnabled());
+        if (connectionType != null)
+        {
+          editOperation.setAllowedConnectionType(connectionType);
+        }
+        editOperation.save();
       }
       else
       {
@@ -97,19 +97,8 @@ public class AdblockHelper
     }
   };
 
-  private final SingleInstanceEngineProvider.BeforeEngineDisposedListener
-    beforeEngineDisposedListener =
-      new SingleInstanceEngineProvider.BeforeEngineDisposedListener()
-  {
-    @Override
-    public void onBeforeAdblockEngineDispose()
-    {
-      Timber.d("Disposing Adblock engine");
-    }
-  };
-
-  private final SingleInstanceEngineProvider.EngineDisposedListener engineDisposedListener =
-    new SingleInstanceEngineProvider.EngineDisposedListener()
+  private final AdblockEngineProvider.EngineDisposedListener engineDisposedListener =
+    new AdblockEngineProvider.EngineDisposedListener()
   {
     @Override
     public void onAdblockEngineDisposed()
@@ -138,7 +127,7 @@ public class AdblockHelper
     return _instance;
   }
 
-  public AdblockEngine.Builder getFactory()
+  public Builder getFactory()
   {
     if (factory == null)
     {
@@ -205,28 +194,6 @@ public class AdblockHelper
   }
 
   /**
-   * Init with context
-   * @deprecated <p> Use {@link AdblockHelper#init(Context,String,String)} instead.
-   * @param context application context
-   * @param basePath file system root to store files
-   *
-   *                 Adblock Plus library will download subscription files and store them on
-   *                 the path passed. The path should exist and the directory content should not be
-   *                 cleared out occasionally. Using `context.getCacheDir().getAbsolutePath()` is not
-   *                 recommended because it can be cleared by the system.
-   * @param developmentBuild debug or release?
-   * @param preferenceName Shared Preferences name to store adblock settings
-   */
-  @Deprecated
-  public AdblockHelper init(final Context context,
-                            final String basePath,
-                            final boolean developmentBuild,
-                            final String preferenceName)
-  {
-    return init(context, basePath, preferenceName);
-  }
-
-  /**
    * Check if it is already initialized
    * @return
    */
@@ -237,7 +204,7 @@ public class AdblockHelper
 
   private void initFactory(final Context context, final String basePath)
   {
-    factory = AdblockEngine.builder(context, basePath);
+    factory = org.adblockplus.libadblockplus.android.AdblockEngine.builder(context, basePath);
     this.context = context;
   }
 
@@ -245,14 +212,13 @@ public class AdblockHelper
   {
     provider = new SingleInstanceEngineProvider(factory);
     provider.addEngineCreatedListener(engineCreatedListener);
-    provider.addBeforeEngineDisposedListener(beforeEngineDisposedListener);
     provider.addEngineDisposedListener(engineDisposedListener);
   }
 
-  private void initStorage(Context context, String settingsPreferenceName)
+  private void initStorage(final Context context, final String settingsPreferenceName)
   {
     // read and apply current settings
-    SharedPreferences settingsPrefs = context.getSharedPreferences(
+    final SharedPreferences settingsPrefs = context.getSharedPreferences(
       settingsPreferenceName,
       Context.MODE_PRIVATE);
 
@@ -295,7 +261,7 @@ public class AdblockHelper
    * Sets preloaded subscriptions simplified. It sets a preloaded subscription to all possible
    * default non AA subscriptions (based on locale). And a preload a subscription for the default
    * acceptable ads subscription. This method does not directly inject the subscriptions into the
-   * engine, but rather will return this files at the first time the filter engine needs them.
+   * engine, but rather will return this files at the first time the adblock engine needs them.
    * @param subscriptionResource resource id for non aa subscription
    * @param acceptableAdsSubscriptionResource resource id for aa subscription
    * @return this (for method chaining)
@@ -349,7 +315,7 @@ public class AdblockHelper
   }
 
   /**
-   * Will create filter engine disabled by default. This means subscriptions will be updated only
+   * Will create adblock engine disabled by default. This means subscriptions will be updated only
    * when setEnabled(true) will be called. This function configures only default engine state. If
    * other state is stored in settings, it will be preferred.
    */
@@ -363,50 +329,5 @@ public class AdblockHelper
   public boolean getDisabledByDefault()
   {
     return factory.getDisableByDefault();
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().retain() instead
-   */
-  @Deprecated
-  public boolean retain(boolean asynchronous)
-  {
-    return provider.retain(asynchronous);
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().waitForReady() instead
-   */
-  @Deprecated
-  public void waitForReady()
-  {
-    provider.waitForReady();
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().getEngine() instead
-   */
-  @Deprecated
-  public AdblockEngine getEngine()
-  {
-    return provider.getEngine();
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().release() instead
-   */
-  @Deprecated
-  public boolean release()
-  {
-    return provider.release();
-  }
-
-  /**
-   * @deprecated The method is deprecated: use .getProvider().getCounter() instead
-   */
-  @Deprecated
-  public int getCounter()
-  {
-    return provider.getCounter();
   }
 }

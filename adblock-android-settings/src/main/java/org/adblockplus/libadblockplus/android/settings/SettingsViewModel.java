@@ -22,13 +22,17 @@ import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
-import org.adblockplus.libadblockplus.android.AdblockEngine;
-import org.adblockplus.libadblockplus.android.ConnectionType;
-import org.adblockplus.libadblockplus.android.Subscription;
+import org.adblockplus.AdblockEngine;
+import org.adblockplus.AdblockEngineSettings;
+import org.adblockplus.AdblockFilterBuilder;
+import org.adblockplus.ConnectionType;
+import org.adblockplus.ContentType;
+import org.adblockplus.Filter;
+import org.adblockplus.Subscription;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -38,14 +42,19 @@ import java.util.Set;
 
 import timber.log.Timber;
 
+import static org.adblockplus.ContentType.maskOf;
+
 public class SettingsViewModel extends AndroidViewModel
 {
   final private AdblockSettings settings;
   final private BaseSettingsFragment.Provider provider;
 
-  private final MutableLiveData<CharSequence[]> availableSubscriptionsTitles = new MutableLiveData<>();
-  private final MutableLiveData<CharSequence[]> availableSubscriptionsValues = new MutableLiveData<>();
-  private final MutableLiveData<Set<String>> selectedSubscriptionValues = new MutableLiveData<>();
+  private final MutableLiveData<CharSequence[]> availableSubscriptionsTitles
+    = new MutableLiveData<>();
+  private final MutableLiveData<CharSequence[]> availableSubscriptionsValues
+    = new MutableLiveData<>();
+  private final MutableLiveData<Set<String>> selectedSubscriptionValues
+    = new MutableLiveData<>();
 
   protected MutableLiveData<CharSequence[]> getAvailableSubscriptionsTitles()
   {
@@ -92,50 +101,63 @@ public class SettingsViewModel extends AndroidViewModel
     return connectionType;
   }
 
+  private List<SubscriptionInfo> getDefaultSubscriptions(final AdblockEngine engine)
+  {
+    final List<SubscriptionInfo> returnData = new ArrayList<>();
+    //Due to Java 7 cannot use replaceAll API
+    for (final Subscription subscription : engine.settings().getDefaultSubscriptions())
+    {
+      returnData.add(new SubscriptionInfo(subscription));
+    }
+    return returnData;
+  }
+
   private void initFilterListsValues()
   {
     final Map<String, String> localeToTitle = Utils.getLocaleToTitleMap(getApplication());
 
     // all available values
-    final Subscription[] availableSubscriptions;
+    final List<SubscriptionInfo> availableSubscriptions;
     final AdblockEngine engine = provider.lockEngine();
     if (engine != null)
     {
       try
       {
-        availableSubscriptions = engine.getRecommendedSubscriptions();
+        availableSubscriptions = getDefaultSubscriptions(engine);
       }
       finally
       {
         provider.unlockEngine();
       }
-      settings.setAvailableSubscriptions(Arrays.asList(availableSubscriptions));
+      settings.setAvailableSubscriptions(availableSubscriptions);
     }
     else
     {
-      availableSubscriptions = settings.getAvailableSubscriptions().toArray(new Subscription[0]);
+      availableSubscriptions = settings.getAvailableSubscriptions();
     }
 
-    final CharSequence[] availableSubscriptionsTitles = new CharSequence[availableSubscriptions.length];
-    final CharSequence[] availableSubscriptionsValues = new CharSequence[availableSubscriptions.length];
-    for (int i = 0; i < availableSubscriptions.length; i++)
+    final CharSequence[] availableSubscriptionsTitles =
+      new CharSequence[availableSubscriptions.size()];
+    final CharSequence[] availableSubscriptionsValues =
+      new CharSequence[availableSubscriptions.size()];
+    for (int i = 0; i < availableSubscriptions.size(); i++)
     {
       String title = null;
-      if (availableSubscriptions[i].prefixes != null &&
-        !availableSubscriptions[i].prefixes.isEmpty())
+      if (availableSubscriptions.get(i).languages != null &&
+        !availableSubscriptions.get(i).languages.isEmpty())
       {
-        final String[] separatedPrefixes = availableSubscriptions[i].prefixes.split(",");
+        final String[] separatedPrefixes = availableSubscriptions.get(i).languages.split(",");
         title = localeToTitle.get(separatedPrefixes[0]);
       }
-      availableSubscriptionsTitles[i] = title != null ? title : availableSubscriptions[i].title;
-      availableSubscriptionsValues[i] = availableSubscriptions[i].url;
+      availableSubscriptionsTitles[i] = title != null ? title : availableSubscriptions.get(i).title;
+      availableSubscriptionsValues[i] = availableSubscriptions.get(i).url;
     }
     this.availableSubscriptionsTitles.postValue(availableSubscriptionsTitles);
     this.availableSubscriptionsValues.postValue(availableSubscriptionsValues);
 
     // selected values
     final Set<String> selectedSubscriptionValues = new HashSet<>();
-    for (final Subscription eachSubscription : settings.getSelectedSubscriptions())
+    for (final SubscriptionInfo eachSubscription : settings.getSelectedSubscriptions())
     {
       selectedSubscriptionValues.add(eachSubscription.url);
     }
@@ -154,7 +176,7 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.setEnabled(newValue);
+        engine.settings().edit().setEnabled(newValue).save();
       }
       finally
       {
@@ -163,24 +185,30 @@ public class SettingsViewModel extends AndroidViewModel
     }
   }
 
-  protected void handleFilterListsChanged(final Set<String> newValue)
+  protected void handleFilterListsChanged(final Set<String> newSubsUrls)
   {
     final AdblockEngine engine = provider.lockEngine();
-    List<Subscription> selectedSubscriptions = null;
+    List<SubscriptionInfo> selectedSubscriptions = null;
     if (engine == null)
     {
-      selectedSubscriptions = Utils.chooseSelectedSubscriptions(settings.getAvailableSubscriptions(), newValue);
+      selectedSubscriptions = Utils.chooseSelectedSubscriptions(settings.getAvailableSubscriptions(), newSubsUrls);
     }
     else
     {
-      final List<Subscription> availableSubscriptions;
+      final List<SubscriptionInfo> availableSubscriptions;
       try
       {
-        engine.setSubscriptions(newValue);
+        final ArrayList<Subscription> newSubs = new ArrayList<>();
+        for (final String subUrl : newSubsUrls)
+        {
+          newSubs.add(engine.getSubscription(subUrl));
+        }
+        final AdblockEngineSettings.EditOperation settings = engine.settings().edit();
+        settings.clearSubscriptions().addAllSubscriptions(newSubs);
         // since 'aa enabled' setting affects subscriptions list, we need to set it again
-        engine.setAcceptableAdsEnabled(settings.isAcceptableAdsEnabled());
-
-        availableSubscriptions = Arrays.asList(engine.getRecommendedSubscriptions());
+        settings.setAcceptableAdsEnabled(engine.settings().isAcceptableAdsEnabled());
+        settings.save();
+        availableSubscriptions = getDefaultSubscriptions(engine);
       }
       finally
       {
@@ -189,7 +217,8 @@ public class SettingsViewModel extends AndroidViewModel
       if (availableSubscriptions != null)
       {
         settings.setAvailableSubscriptions(availableSubscriptions);
-        selectedSubscriptions = Utils.chooseSelectedSubscriptions(availableSubscriptions, newValue);
+        selectedSubscriptions = org.adblockplus.libadblockplus.android.settings.Utils
+          .chooseSelectedSubscriptions(availableSubscriptions, newSubsUrls);
       }
     }
     if (selectedSubscriptions != null)
@@ -211,7 +240,7 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.setAcceptableAdsEnabled(newValue);
+        engine.settings().edit().setAcceptableAdsEnabled(newValue).save();
       }
       finally
       {
@@ -232,7 +261,7 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.getFilterEngine().setAllowedConnectionType(value);
+        engine.settings().edit().setAllowedConnectionType(ConnectionType.findByValue(value)).save();
       }
       finally
       {
@@ -281,7 +310,13 @@ public class SettingsViewModel extends AndroidViewModel
       {
         try
         {
-          engine.addDomainAllowlistingFilter(newDomain);
+          final Filter adblockFilter = new AdblockFilterBuilder(engine)
+            .setBeginMatchingDomain()
+            .allowlistAddress(newDomain)
+            .setContentTypes(maskOf(ContentType.DOCUMENT))
+            .setDomainRestriction(newDomain)
+            .build();
+          engine.settings().edit().addCustomFilter(adblockFilter).save();
         }
         finally
         {
@@ -311,7 +346,13 @@ public class SettingsViewModel extends AndroidViewModel
     {
       try
       {
-        engine.removeDomainAllowlistingFilter(removeDomain);
+        final Filter adblockFilter = new AdblockFilterBuilder(engine)
+          .setBeginMatchingDomain()
+          .allowlistAddress(removeDomain)
+          .setContentTypes(maskOf(ContentType.DOCUMENT))
+          .setDomainRestriction(removeDomain)
+          .build();
+        engine.settings().edit().removeCustomFilter(adblockFilter).save();
       }
       finally
       {

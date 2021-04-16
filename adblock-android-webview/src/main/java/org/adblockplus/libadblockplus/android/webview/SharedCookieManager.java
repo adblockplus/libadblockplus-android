@@ -100,8 +100,8 @@ class SharedCookieManager extends java.net.CookieManager
     // Make a copy as `requestHeaders` is not modifiable
     final Map<String, List<String>> res = new HashMap<>(requestHeaders);
     // Cleanup our fake headers used to pass context data
-    List<String> acceptThirdPartyCookieHolder = res.remove(PROP_ACCEPT_TPC);
-    List<String> navigationUrlHolder = res.remove(PROP_NAVIGATION_URL);
+    final List<String> acceptThirdPartyCookieHolder = res.remove(PROP_ACCEPT_TPC);
+    final List<String> navigationUrlHolder = res.remove(PROP_NAVIGATION_URL);
     if (cookie != null)
     {
       final boolean acceptThirdPartyCookie = !Utils.isNullOrEmpty(acceptThirdPartyCookieHolder) ?

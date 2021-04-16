@@ -2,7 +2,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.net.Uri;
 
-import org.adblockplus.libadblockplus.FilterEngine;
+import org.adblockplus.ContentType;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -46,11 +46,11 @@ public class OrderedContentTypeDetectorTest extends BaseContentTypeDetectorTest
         new UrlFileExtensionTypeDetector()
     );
 
-    assertEquals(FilterEngine.ContentType.IMAGE,
+    assertEquals(ContentType.IMAGE,
         regexFirst.detect(mockRequest(URI_IMAGE, XML_HEADER)));
-    assertEquals(FilterEngine.ContentType.XMLHTTPREQUEST,
+    assertEquals(ContentType.XMLHTTPREQUEST,
         headersFirst.detect(mockRequest(URI_IMAGE, XML_HEADER)));
-    assertEquals(FilterEngine.ContentType.SUBDOCUMENT,
+    assertEquals(ContentType.SUBDOCUMENT,
         headersFirst.detect(mockRequest(URI_IMAGE, SUBDOCUMENT_HEADER)));
   }
 }

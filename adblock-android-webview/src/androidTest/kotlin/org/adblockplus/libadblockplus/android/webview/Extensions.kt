@@ -34,6 +34,7 @@ const val naturalWidth = "naturalWidth"
 const val notBlockedImageWidth = 50
 const val blockedImageWidth = 0
 
+const val clientWidth = "clientWidth"
 const val styleDisplay = "style.display"
 const val none = "none"
 
@@ -64,6 +65,18 @@ fun elementIsNotElemhidden(elementId: String) = WebViewAssertions.webMatches(
     getPropertyForElementId(elementId, styleDisplay),
     not(equalTo(none))) {
     """A node with id="$elementId" is NOT expected to be elemhidden, but it IS."""
+}
+
+fun elementIsElemhiddenByStylesheet(elementId: String) = WebViewAssertions.webMatches(
+    getPropertyForElementId(elementId, clientWidth),
+    equalTo("0")) {
+    """A node with id="$elementId" is expected to be elemhidden by stylesheet, but it is NOT."""
+}
+
+fun elementIsNotElemhiddenByStylesheet(elementId: String) = WebViewAssertions.webMatches(
+    getPropertyForElementId(elementId, clientWidth),
+    not(equalTo("0"))) {
+    """A node with id="$elementId" is NOT expected to be elemhidden by stylesheet, but it IS."""
 }
 
 fun String.escapeForRegex(): String = this.replace(".", "\\.")

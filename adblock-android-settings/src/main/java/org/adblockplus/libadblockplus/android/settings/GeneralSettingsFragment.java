@@ -27,7 +27,7 @@ import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.SwitchPreferenceCompat;
 
-import org.adblockplus.libadblockplus.android.ConnectionType;
+import org.adblockplus.ConnectionType;
 
 import java.util.Set;
 
@@ -39,8 +39,8 @@ import timber.log.Timber;
  * create an instance of this fragment.
  */
 public class GeneralSettingsFragment
-    extends BaseSettingsFragment<GeneralSettingsFragment.Listener>
-    implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener
+  extends BaseSettingsFragment<GeneralSettingsFragment.Listener>
+  implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener
 {
   private SettingsViewModel settingsViewModel;
   private String SETTINGS_ENABLED_KEY;
@@ -80,14 +80,14 @@ public class GeneralSettingsFragment
   }
 
   @Override
-  public void onAttach(Activity activity)
+  public void onAttach(final Activity activity)
   {
     super.onAttach(activity);
     listener = castOrThrow(activity, Listener.class);
   }
 
   @Override
-  public void onCreatePreferences(Bundle bundle, String key)
+  public void onCreatePreferences(final Bundle bundle, final String key)
   {
     readKeys();
     addPreferencesFromResource(R.xml.preference_adblock_general);
@@ -115,18 +115,18 @@ public class GeneralSettingsFragment
   private void initUpdatesConnection()
   {
     final CharSequence[] values =
-        {
-            ConnectionType.WIFI_NON_METERED.getValue(),
-            ConnectionType.WIFI.getValue(),
-            ConnectionType.ANY.getValue()
-        };
+      {
+        ConnectionType.WIFI_NON_METERED.getValue(),
+        ConnectionType.WIFI.getValue(),
+        ConnectionType.ANY.getValue()
+      };
 
     final CharSequence[] titles =
-        {
-            getString(R.string.fragment_adblock_settings_allowed_connection_type_wifi_non_metered),
-            getString(R.string.fragment_adblock_settings_allowed_connection_type_wifi),
-            getString(R.string.fragment_adblock_settings_allowed_connection_type_all),
-        };
+      {
+        getString(R.string.fragment_adblock_settings_allowed_connection_type_wifi_non_metered),
+        getString(R.string.fragment_adblock_settings_allowed_connection_type_wifi),
+        getString(R.string.fragment_adblock_settings_allowed_connection_type_all)
+      };
 
     allowedConnectionType.setEntryValues(values);
     allowedConnectionType.setEntries(titles);
@@ -178,10 +178,10 @@ public class GeneralSettingsFragment
   private void initViewModel()
   {
     settingsViewModel = new ViewModelProvider(requireActivity(),
-        new SettingsViewModelFactory(
-            getActivity().getApplication(),
-            settings,
-            provider)).get(SettingsViewModel.class);
+      new SettingsViewModelFactory(
+        getActivity().getApplication(),
+        settings,
+        provider)).get(SettingsViewModel.class);
 
     initFilterLists();
 
@@ -199,39 +199,39 @@ public class GeneralSettingsFragment
   private void initFilterLists()
   {
     settingsViewModel.getAvailableSubscriptionsTitles().observe(this,
-        new Observer<CharSequence[]>()
+      new Observer<CharSequence[]>()
+      {
+        @Override
+        public void onChanged(final CharSequence[] availableSubscriptionsTitles)
         {
-          @Override
-          public void onChanged(final CharSequence[] availableSubscriptionsTitles)
-          {
-            filterLists.setEntries(availableSubscriptionsTitles);
-          }
-        });
+          filterLists.setEntries(availableSubscriptionsTitles);
+        }
+      });
 
     settingsViewModel.getAvailableSubscriptionsValues().observe(this,
-        new Observer<CharSequence[]>()
+      new Observer<CharSequence[]>()
+      {
+        @Override
+        public void onChanged(final CharSequence[] availableSubscriptionsValues)
         {
-          @Override
-          public void onChanged(final CharSequence[] availableSubscriptionsValues)
-          {
-            filterLists.setEntryValues(availableSubscriptionsValues);
-          }
-        });
+          filterLists.setEntryValues(availableSubscriptionsValues);
+        }
+      });
 
     settingsViewModel.getSelectedSubscriptionValues().observe(this,
-        new Observer<Set<String>>()
+      new Observer<Set<String>>()
+      {
+        @Override
+        public void onChanged(final Set<String> selectedSubscriptionValues)
         {
-          @Override
-          public void onChanged(final Set<String> selectedSubscriptionValues)
-          {
-            filterLists.setValues(selectedSubscriptionValues);
-          }
-        });
+          filterLists.setValues(selectedSubscriptionValues);
+        }
+      });
     filterLists.setOnPreferenceChangeListener(this);
   }
 
   @Override
-  public boolean onPreferenceChange(Preference preference, Object newValue)
+  public boolean onPreferenceChange(final Preference preference, final Object newValue)
   {
     Timber.d("\"%s\" new value is %s", preference.getTitle(), newValue);
     boolean arePresencesUpdated = true;
@@ -280,7 +280,7 @@ public class GeneralSettingsFragment
   }
 
   @Override
-  public boolean onPreferenceClick(Preference preference)
+  public boolean onPreferenceClick(final Preference preference)
   {
     if (preference.getKey().equals(SETTINGS_AL_DOMAINS_KEY))
     {

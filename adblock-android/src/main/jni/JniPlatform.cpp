@@ -161,7 +161,7 @@ static JNINativeMethod methods[] =
   { (char*)"ctor", (char*)"(" TYP("LogSystem") TYP("FileSystem") TYP("HttpClient") "Ljava/lang/String;)J", (void*)JniCtor },
   { (char*)"dtor", (char*)"(J)V", (void*)JniDtor },
 
-  { (char*)"setUpJsEngine", (char*)"(J" TYP("AppInfo") "J)V", (void*)JniSetUpJsEngine },
+  { (char*)"setUpJsEngine", (char*)"(J" TYPAPI("AppInfo") "J)V", (void*)JniSetUpJsEngine },
   { (char*)"getJsEnginePtr", (char*)"(J)J", (void*)JniGetJsEnginePtr },
   { (char*)"setUpFilterEngine", (char*)"(J" TYP("IsAllowedConnectionCallback") "Z)V", (void*)JniSetUpFilterEngine },
   { (char*)"ensureFilterEngine", (char*)"(J)V", (void*)JniEnsureFilterEngine }

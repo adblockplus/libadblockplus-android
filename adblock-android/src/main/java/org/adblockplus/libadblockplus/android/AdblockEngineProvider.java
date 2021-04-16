@@ -17,6 +17,8 @@
 
 package org.adblockplus.libadblockplus.android;
 
+import org.adblockplus.AdblockEngine;
+
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public interface AdblockEngineProvider
@@ -55,6 +57,12 @@ public interface AdblockEngineProvider
   int getCounter();
 
   /**
+   * Calls the AdblockEngine internal garbage collector
+   * Assuming the default implementation, V8 garbage collector will be called.
+   */
+  void onLowMemory();
+
+  /**
    * Get lock object to prevent AdblockEngine reference from being changed
    * @return read lock object
    */
@@ -62,12 +70,7 @@ public interface AdblockEngineProvider
 
   interface EngineCreatedListener
   {
-    void onAdblockEngineCreated(AdblockEngine engine);
-  }
-
-  interface BeforeEngineDisposedListener
-  {
-    void onBeforeAdblockEngineDispose();
+    void onAdblockEngineCreated(AdblockEngine adblockEngine);
   }
 
   interface EngineDisposedListener
@@ -79,17 +82,8 @@ public interface AdblockEngineProvider
 
   void removeEngineCreatedListener(EngineCreatedListener listener);
 
-  void clearEngineCreatedListeners();
-
-  AdblockEngineProvider addBeforeEngineDisposedListener(BeforeEngineDisposedListener listener);
-
-  void removeBeforeEngineDisposedListener(BeforeEngineDisposedListener listener);
-
-  void clearBeforeEngineDisposedListeners();
-
   AdblockEngineProvider addEngineDisposedListener(EngineDisposedListener listener);
 
   void removeEngineDisposedListener(EngineDisposedListener listener);
 
-  void clearEngineDisposedListeners();
 }

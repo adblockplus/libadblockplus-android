@@ -17,8 +17,7 @@
 
 package org.adblockplus.libadblockplus.android.settings;
 
-import org.adblockplus.libadblockplus.android.ConnectionType;
-import org.adblockplus.libadblockplus.android.Subscription;
+import org.adblockplus.ConnectionType;
 
 import java.io.Serializable;
 import java.util.List;
@@ -30,8 +29,8 @@ public class AdblockSettings implements Serializable
 {
   private volatile boolean adblockEnabled;
   private volatile boolean acceptableAdsEnabled;
-  private List<Subscription> selectedSubscriptions;
-  private List<Subscription> availableSubscriptions;
+  private List<SubscriptionInfo> selectedSubscriptions;
+  private List<SubscriptionInfo> availableSubscriptions;
   private List<String> allowlistedDomains;
   private ConnectionType allowedConnectionType;
 
@@ -40,7 +39,7 @@ public class AdblockSettings implements Serializable
     return adblockEnabled;
   }
 
-  public void setAdblockEnabled(boolean adblockEnabled)
+  public void setAdblockEnabled(final boolean adblockEnabled)
   {
     this.adblockEnabled = adblockEnabled;
   }
@@ -50,27 +49,27 @@ public class AdblockSettings implements Serializable
     return acceptableAdsEnabled;
   }
 
-  public void setAcceptableAdsEnabled(boolean acceptableAdsEnabled)
+  public void setAcceptableAdsEnabled(final boolean acceptableAdsEnabled)
   {
     this.acceptableAdsEnabled = acceptableAdsEnabled;
   }
 
-  public List<Subscription> getSelectedSubscriptions()
+  public List<SubscriptionInfo> getSelectedSubscriptions()
   {
     return selectedSubscriptions;
   }
 
-  public void setSelectedSubscriptions(final List<Subscription> selectedSubscriptions)
+  public void setSelectedSubscriptions(final List<SubscriptionInfo> selectedSubscriptions)
   {
     this.selectedSubscriptions = selectedSubscriptions;
   }
 
-  public List<Subscription> getAvailableSubscriptions()
+  public List<SubscriptionInfo> getAvailableSubscriptions()
   {
     return availableSubscriptions;
   }
 
-  public void setAvailableSubscriptions(final List<Subscription> availableSubscriptions)
+  public void setAvailableSubscriptions(final List<SubscriptionInfo> availableSubscriptions)
   {
     this.availableSubscriptions = availableSubscriptions;
   }
@@ -80,7 +79,7 @@ public class AdblockSettings implements Serializable
     return allowlistedDomains;
   }
 
-  public void setAllowlistedDomains(List<String> allowlistedDomains)
+  public void setAllowlistedDomains(final List<String> allowlistedDomains)
   {
     this.allowlistedDomains = allowlistedDomains;
   }
@@ -90,7 +89,7 @@ public class AdblockSettings implements Serializable
     return allowedConnectionType;
   }
 
-  public void setAllowedConnectionType(ConnectionType allowedConnectionType)
+  public void setAllowedConnectionType(final ConnectionType allowedConnectionType)
   {
     this.allowedConnectionType = allowedConnectionType;
   }
