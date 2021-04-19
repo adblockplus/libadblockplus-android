@@ -204,7 +204,7 @@ public class SettingsViewModel extends AndroidViewModel
           newSubs.add(engine.getSubscription(subUrl));
         }
         final AdblockEngineSettings.EditOperation settings = engine.settings().edit();
-        settings.addAllSubscriptions(newSubs);
+        settings.clearSubscriptions().addAllSubscriptions(newSubs);
         // since 'aa enabled' setting affects subscriptions list, we need to set it again
         settings.setAcceptableAdsEnabled(engine.settings().isAcceptableAdsEnabled());
         settings.save();
