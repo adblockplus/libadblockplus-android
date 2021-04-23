@@ -407,17 +407,13 @@ benchmark:
   <<: *cache_readonly
   script:
     - |
-      if [ -z "${BINTRAY_USERNAME}" ] || [ -z "${BINTRAY_KEY}" ] ; then
-        echo "BINTRAY_USERNAME and BINTRAY_KEY need to be set for publishing to work"
-        echo "Make sure this is running on a protected branch/tag to get those variables set"
-      fi
-    - |
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
-        echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to bintray'
+        echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to gitlab'
+      else
+        ./gradlew publish
       fi
-    - ./gradlew bintrayUpload -PbintrayUser=${BINTRAY_USERNAME:-unset} -PbintrayKey=${BINTRAY_KEY:-unset} -PdryRun=${DRY_RUN:-true}
 
-publish_rc_to_bintray:
+publish_rc_to_gitlab:
   <<: *publish_template
   only:
     variables:
@@ -427,7 +423,7 @@ publish_rc_to_bintray:
     # Append '-rcX' to the version to publish
     - sed -i -e "/moduleVersion/s/'$/-rc${RC}'/g" build.gradle
 
-publish_to_bintray:
+publish_to_gitlab:
   <<: *publish_template
   stage: publish
   only:

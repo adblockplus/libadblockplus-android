@@ -1,7 +1,3 @@
- [ ![adblock-android](https://img.shields.io/bintray/v/adblockplus/maven/adblock-android?label=adblock-android) ](https://bintray.com/adblockplus/maven/adblock-android/_latestVersion)
- [ ![adblock-android-webview](https://img.shields.io/bintray/v/adblockplus/maven/adblock-android-webview?label=adblock-android-webview) ](https://bintray.com/adblockplus/maven/adblock-android-webview/_latestVersion)
- [ ![adblock-android-settings](https://img.shields.io/bintray/v/adblockplus/maven/adblock-android-settings?label=adblock-android-settings) ](https://bintray.com/adblockplus/maven/adblock-android-settings/_latestVersion)
-
 Adblock Android SDK
 ================================
 
@@ -22,7 +18,15 @@ You can find it in the 'adblock-android' directory.
 
 ### Using as a Gradle dependency
 
-Make sure you have `jcenter()` in the list of repositories and then add the following dependency:
+Make sure you have:  
+
+```groovy
+maven {
+    url 'https://gitlab.com/api/v4/projects/8817162/packages/maven'
+}
+```
+
+in the list of repositories and then add the following dependencies:
 
 ```groovy
 dependencies {
@@ -206,7 +210,15 @@ You can find it in the 'adblock-android-settings' directory:
 
 ### Using as a Gradle dependency
 
-Make sure you have `jcenter()` in the list of repositories and then add the following dependency:
+Make sure you have:  
+
+```groovy
+maven {
+    url 'https://gitlab.com/api/v4/projects/8817162/packages/maven'
+}
+```
+
+in the list of repositories and then add the following dependency:
 
 ```groovy
 dependencies {
@@ -403,7 +415,15 @@ You can find it in the 'adblock-android-webview' directory.
 
 ### Using as a Gradle dependency
 
-Make sure you have `jcenter()` in the list of repositories and then add the following dependency:
+Make sure you have:  
+
+```groovy
+maven {
+    url 'https://gitlab.com/api/v4/projects/8817162/packages/maven'
+}
+```
+
+in the list of repositories and then add the following dependency:
 
 ```groovy
 dependencies {

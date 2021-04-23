@@ -29,12 +29,6 @@ android {
   }
 }
 
-bintray {
-  pkg {
-    desc="An Android library that provides a configuration interface for Adblock Plus."
-  }
-}
-
 dependencies {
   api project(':adblock-android')
   api Deps.androidx_preference

@@ -133,12 +133,6 @@ android {
   }
 }
 
-bintray {
-  pkg {
-    desc = "An Android library that provides the core functionality of Adblock Plus."
-  }
-}
-
 dependencies {
   api Deps.timber
   testImplementation Deps.junit4
@@ -151,15 +145,4 @@ dependencies {
   androidTestImplementation Deps.mockito_android
   androidTestImplementation Deps.wiremock_standalone
   androidTestImplementation Deps.androidx_multidex
-}
-
-afterEvaluate {
-  tasks.withType(PublishToMavenLocal) {
-    it.enabled = it.name.contains("Abi_allRelease")
-    def androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-    tasks.withType(Javadoc).all {
-      classpath += project.files(androidJar)
-      failOnError false
-    }
-  }
 }
