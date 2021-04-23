@@ -10,11 +10,7 @@ object Config {
     const val jvmTarget = "1.8"
 }
 
-object Bintray {
-    const val userOrg = "adblockplus"
+object GitlabPackageRegistry {
     const val groupId = "org.adblockplus"
-    val licences = arrayOf("GPL-3.0")
-    const val website = "https://github.com/adblockplus/libadblockplus-android"
-    const val issueTracker = "http://issues.adblockplus.org/"
-    const val repository = "https://github.com/adblockplus/libadblockplus-android.git"
+    const val repository = "https://gitlab.com/api/v4/projects/8817162/packages/maven"
 }

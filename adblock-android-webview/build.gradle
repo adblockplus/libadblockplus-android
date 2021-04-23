@@ -20,12 +20,6 @@ android {
   }
 }
 
-bintray {
-  pkg {
-    desc="An Android library that provides a WebView component with Adblock Plus integrated."
-  }
-}
-
 dependencies {
   api project(':adblock-android')
   testImplementation Deps.junit4

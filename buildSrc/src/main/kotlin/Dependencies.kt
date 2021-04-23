@@ -1,6 +1,5 @@
 object Versions {
     const val android_gradle_plugin = "3.5.3"
-    const val bintray_gradle_plugin = "1.8.5"
     const val kotlin = "1.4.30"
     const val junit4 = "4.13.1"
     const val mockito = "2.28.2"
@@ -46,7 +45,6 @@ object Deps {
     const val timber = "com.jakewharton.timber:timber:${Versions.timber}"
 
     const val tools_android_gradle_plugin = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
-    const val tools_bintray_gradle_plugin = "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintray_gradle_plugin}"
     const val tools_kotlin_gradle_plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
 
     const val wiremock_standalone = "com.github.tomakehurst:wiremock-standalone:${Versions.wiremock}"
