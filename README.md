@@ -504,6 +504,10 @@ Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and allowl
 "resource loading blocked" or "resource loading allowlisted" event that can be used for stats.
 For the latter, there is a convenience class `WebViewCounters` which can be bound to `EventsListener`
 and notify your View about new values. See an example of usage in WebView Application.
+Blocking and allowlisting events are fired only for blocking and allowing network request events
+and not for element hiding. Allowing network request event is triggered when there is a corresponding
+allowlisting filter for an url, no matter if it is an Acceptable Ads filter or any other filter,
+including a custom domain allowlisting filter.
 
 Use `dispose(Runnable disposeFinished)` to release resources (**required**).
 Note it can be invoked from the background thread.
