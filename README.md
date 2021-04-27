@@ -206,7 +206,7 @@ You can select the test class/method and click 'Run ..Test'.
 An Android library that provides a configuration interface for Adblock Plus.
 You can find it in the 'adblock-android-settings' directory:
 * GeneralSettingsFragment - main fragment
-* WhitelistedDomainsSettingsFragment - whitelisted domains fragment
+* AllowlistedDomainsSettingsFragment - allowlisted domains fragment
 
 ### Using as a Gradle dependency
 
@@ -274,7 +274,7 @@ Implement the following interfaces in your settings activity:
 
 * `BaseSettingsFragment.Provider`
 * `GeneralSettingsFragment.Listener`
-* `WhitelistedDomainsSettingsFragment.Listener`
+* `AllowlistedDomainsSettingsFragment.Listener`
 
 and return created instance or AdblockHelper instances:
 
@@ -487,7 +487,7 @@ The simplest solution is to use `AdblockHelper` from `-settings` as an external 
 
 If the adblock engine provider is not set, it's created by the AdblockWebView instance automatically.
 
-Use `setSiteKeysConfiguration(..)` to support sitekeys whitelisting.
+Use `setSiteKeysConfiguration(..)` to support sitekeys allowlisting.
 This is optional but highly suggested. See `TabFragment.java` on usage example.
 
 Please note that the AdblockWebView does intercept some of the HTTP(S) requests done by the subclassed WebView and does them internally by means of `java.net.HttpURLConnection`. 
@@ -500,8 +500,8 @@ This is an optional feature that rewrites the HTML content under the hood in ord
 This feature also requires `setSiteKeysConfiguration(..)` to be called beforehand, otherwise, an IllegalStateException is thrown.
 See `TabFragment.java` on usage example.
 
-Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and whitelisting events, eg.
-"resource loading blocked" or "resource loading whitelisted" event that can be used for stats.
+Use `setEventsListener()` to subscribe and unsubscribe to ad blocking and allowlisting events, eg.
+"resource loading blocked" or "resource loading allowlisted" event that can be used for stats.
 For the latter, there is a convenience class `WebViewCounters` which can be bound to `EventsListener`
 and notify your View about new values. See an example of usage in WebView Application.
 
