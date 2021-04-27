@@ -54,10 +54,10 @@ checkstyle:
     - sed -i -e "s|$(pwd)/./||g" checkstyle-report.xml
     # Convert the checkstyle output to code-climate format so gitlab can parse it
     - |
-        violations-command-line \
-          -detail-level COMPACT \
-          -code-climate code-climate-report.json \
-          --violations "CHECKSTYLE" "$(pwd)" ".*checkstyle-report.xml" "Checkstyle"
+      violations-command-line \
+        -detail-level COMPACT \
+        -code-climate code-climate-report.json \
+        --violations "CHECKSTYLE" "$(pwd)" ".*checkstyle-report.xml" "Checkstyle"
   artifacts:
     reports:
       codequality:
@@ -240,8 +240,8 @@ testobject_tests:
     reports:
       junit: test-results/*/philll-adblockwebview-app-*.xml
 
-# automated regression tests using Appium
-regression_tests:
+# automated regression tests template using Appium
+.template_automation:
   stage: device_tests
   interruptible: true
   retry: 1
@@ -250,74 +250,6 @@ regression_tests:
     # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     GIT_AUTOMATION_BRANCH: "master"
-    PLATFORM_VERSION: "10"
-    REGRESSION_TAGS: "@j1 @j2"
-    # demo app debug apk
-    TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
-  script:
-    # TESTOBJ_PROJECT_KEY should exist, testing it
-    - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
-    # we are not using submodules, because automation is not a part of repository functionality
-    # its rather a standalone set of scripts
-    - git clone $GIT_AUTOMATION_REPO automation
-    - cd automation
-    - git checkout ${GIT_AUTOMATION_BRANCH:-master}
-    # Launch an instance of gradle for each bunch of tags we want to test
-    - set +e
-    - pids=""
-    - |
-      for TAG in $REGRESSION_TAGS
-        do export PLATFORM_VERSION
-        echo Starting job for tag ${TAG}
-        (nohup ./gradlew regressionParallel -P tags=${TAG} &> tag-${TAG}.log ; echo $? > result_${TAG}) &
-        pids="$pids $!"
-      done
-    - wait $pids
-    # gather the contents of any failed tests
-    - cat target/rerun*.txt > target/rerun.txt
-    - set -e
-    # Rerun any failed tests or check the exit codes of all processes were 0
-    - |
-      if [ -s target/rerun.txt ] ; then
-        ./gradlew rerunFailed
-      else
-        for TAG in $REGRESSION_TAGS
-          do test $(cat result_${TAG}) = 0
-        done
-      fi
-  after_script:
-    - cd automation
-    - |
-      for TAG in $REGRESSION_TAGS
-        do
-        echo "**********************************"
-        echo "Logs for tests with tag ${TAG}"
-        echo "**********************************"
-        cat tag-${TAG}.log
-      done
-  artifacts:
-    when: always
-    expire_in: 6 months
-    reports:
-      junit: "automation/target/cucumber-reports/*.xml"
-    paths:
-      - "automation/tag-*.log"
-      - "automation/result_*"
-
-# automated functional tests using Appium
-functional_tests:
-  only:
-    - schedules
-    - web
-  stage: device_tests
-  interruptible: true
-  variables:
-    GIT_STRATEGY: "none"
-    # overridable automation repo; url uses CI_JOB_TOKEN for temporary authorization
-    GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
-    # demo app debug apk
-    GIT_AUTOMATION_BRANCH: "master"
-    PLATFORM_VERSIONS: "7 10 11"
     # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
   script:
@@ -335,7 +267,7 @@ functional_tests:
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
         do export PLATFORM_VERSION
         echo Starting job for version ${PLATFORM_VERSION}
-        (./gradlew functional &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
+        (./gradlew ${GRADLE_TASK} &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
         pids="$pids $!"
       done
     - wait $pids
@@ -361,7 +293,7 @@ functional_tests:
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
         do
         echo "**********************************"
-        echo "Logs for tests with platform_version ${PLATFORM_VERSION}"
+        echo "Logs for tests with platform version ${PLATFORM_VERSION}"
         echo "**********************************"
         cat platform_version-${PLATFORM_VERSION}.log
       done
@@ -373,6 +305,33 @@ functional_tests:
     paths:
       - "automation/platform_version-*.log"
       - "automation/result_*"
+
+master_autojob:
+  extends: .template_automation
+  variables:
+    PLATFORM_VERSIONS: "10"
+    GRADLE_TASK: "automatedTesting"
+  rules:
+    - if: '$FORCE_MASTER == "true"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+
+dev_regression_autojob:
+  extends: .template_automation
+  variables:
+    PLATFORM_VERSIONS: "10"
+    GRADLE_TASK: "regression"
+  rules:
+    - if: '$FORCE_REGRESSION == "true"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+
+dev_functional_autojob:
+  extends: .template_automation
+  variables:
+    PLATFORM_VERSIONS: "7 10 11"
+    GRADLE_TASK: "functional"
+  rules:
+    - if: '$FORCE_FUNCTIONAL == "true"'
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "schedule"'
 
 # FilterEngine performance benchmarking and memory
 benchmark:
