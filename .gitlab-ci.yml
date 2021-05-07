@@ -309,7 +309,7 @@ testobject_tests:
 master_autojob:
   extends: .template_automation
   variables:
-    PLATFORM_VERSIONS: "10"
+    PLATFORM_VERSIONS: "7 10 11"
     GRADLE_TASK: "automatedTesting"
   rules:
     - if: '$FORCE_MASTER == "true"'
