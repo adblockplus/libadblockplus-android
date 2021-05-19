@@ -1,3 +1,3 @@
 [submodule "libadblockplus"]
 	path = libadblockplus
-	url = ../libadblockplus.git
+	url = ../../adblockplus/libadblockplus.git
