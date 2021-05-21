@@ -67,6 +67,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import com.eyeo.hermes.Engine;
 
 import timber.log.Timber;
 
@@ -814,7 +815,7 @@ public class AdblockWebView extends WebView
         sitekeyCheckEnabled = engine.settings().isAcceptableAdsEnabled() || getJsInIframesEnabled();
         if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
         {
-          final List<Subscription> listedSubscriptions = engine.settings().getListedSubscriptions();
+          /*final List<Subscription> listedSubscriptions = engine.settings().getListedSubscriptions();
           for (Subscription subscription : listedSubscriptions)
           {
             if (subscription.url.contains("abp-testcase-subscription.txt"))
@@ -822,7 +823,7 @@ public class AdblockWebView extends WebView
               sitekeyCheckEnabled = true;
               break;
             }
-          }
+          }*/
         }
         if (isMainFrame)
         {

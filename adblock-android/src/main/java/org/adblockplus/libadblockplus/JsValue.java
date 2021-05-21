@@ -25,12 +25,6 @@ public class JsValue implements Disposable
   private final Disposer disposer;
   protected final long ptr;
 
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
-
   protected JsValue(final long ptr)
   {
     this.ptr = ptr;
@@ -45,57 +39,57 @@ public class JsValue implements Disposable
 
   public boolean isUndefined()
   {
-    return isUndefined(this.ptr);
+    return false;
   }
 
   public boolean isNull()
   {
-    return isNull(this.ptr);
+    return false;
   }
 
   public boolean isString()
   {
-    return isString(this.ptr);
+    return false;
   }
 
   public boolean isNumber()
   {
-    return isNumber(this.ptr);
+    return false;
   }
 
   public boolean isBoolean()
   {
-    return isBoolean(this.ptr);
+    return false;
   }
 
   public boolean isObject()
   {
-    return isObject(this.ptr);
+    return false;
   }
 
   public boolean isArray()
   {
-    return isArray(this.ptr);
+    return false;
   }
 
   public boolean isFunction()
   {
-    return isFunction(this.ptr);
+    return false;
   }
 
   public String asString()
   {
-    return asString(this.ptr);
+    return null;
   }
 
   public long asLong()
   {
-    return asLong(this.ptr);
+    return 0L;
   }
 
   public boolean asBoolean()
   {
-    return asBoolean(this.ptr);
+    return false;
   }
 
   protected long[] convertToPtrArray(final List<JsValue> params)
@@ -110,12 +104,12 @@ public class JsValue implements Disposable
 
   public JsValue call(final List<JsValue> params)
   {
-    return call(this.ptr, convertToPtrArray(params));
+    return null;
   }
 
   public JsValue call(final List<JsValue> params, final JsValue thisValue)
   {
-    return call(this.ptr, convertToPtrArray(params), thisValue.ptr);
+    return null;
   }
 
   public JsValue call()
@@ -125,34 +119,34 @@ public class JsValue implements Disposable
 
   public JsValue getProperty(final String name)
   {
-    return getProperty(this.ptr, name);
+    return null;
   }
 
   public void setProperty(final String name, final JsValue value)
   {
-    setProperty(this.ptr, name, value.ptr);
+
   }
 
   // `getClass()` is Object's method and is reserved
   public String getJsClass()
   {
-    return getJsClass(this.ptr);
+    return null;
   }
 
   public List<String> getOwnPropertyNames()
   {
-    return getOwnPropertyNames(this.ptr);
+    return null;
   }
 
   public List<JsValue> asList()
   {
-    return asList(this.ptr);
+    return null;
   }
 
   @Override
   public String toString()
   {
-    return asString(this.ptr);
+    return null;
   }
 
   private static final class DisposeWrapper implements Disposable
@@ -167,47 +161,7 @@ public class JsValue implements Disposable
     @Override
     public void dispose()
     {
-      dtor(this.ptr);
     }
   }
 
-  private static native void registerNatives();
-
-  private static native boolean isUndefined(long ptr);
-
-  private static native boolean isNull(long ptr);
-
-  private static native boolean isString(long ptr);
-
-  private static native boolean isNumber(long ptr);
-
-  private static native boolean isBoolean(long ptr);
-
-  private static native boolean isObject(long ptr);
-
-  private static native boolean isArray(long ptr);
-
-  private static native boolean isFunction(long ptr);
-
-  private static native String asString(long ptr);
-
-  private static native long asLong(long ptr);
-
-  private static native boolean asBoolean(long ptr);
-
-  private static native JsValue getProperty(long ptr, String name);
-
-  private static native void setProperty(long ptr, String name, long valuePtr);
-
-  private static native String getJsClass(long ptr);
-
-  private static native List<String> getOwnPropertyNames(long ptr);
-
-  private static native List<JsValue> asList(long ptr);
-
-  private static native JsValue call(long ptr, long[] paramPtrs);
-
-  private static native JsValue call(long ptr, long[] paramPtrs, long thisValuePtr);
-
-  private static native void dtor(long ptr);
 }

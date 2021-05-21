@@ -42,12 +42,6 @@ public abstract class HttpClient
   public static final String HEADER_CONTENT_LENGTH = "content-length";
   public static final String HEADER_CSP = "content-security-policy";
 
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
-
   public static final int STATUS_CODE_OK = 200;
 
   /**
@@ -146,7 +140,6 @@ public abstract class HttpClient
       @Override
       public void dispose()
       {
-        callbackDtor(this.ptr);
       }
     }
 
@@ -162,7 +155,6 @@ public abstract class HttpClient
     @Override
     public void onFinished(final ServerResponse response)
     {
-      callbackOnFinished(this.ptr, response);
     }
   }
 
@@ -172,10 +164,4 @@ public abstract class HttpClient
    * @param callback to invoke when the server response is ready.
    */
   public abstract void request(final HttpRequest request, final Callback callback);
-
-  private static native void callbackOnFinished(long ptr, ServerResponse response);
-
-  private static native void callbackDtor(long ptr);
-
-  private static native void registerNatives();
 }

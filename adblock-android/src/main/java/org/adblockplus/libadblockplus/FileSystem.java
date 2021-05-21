@@ -21,12 +21,6 @@ import java.nio.ByteBuffer;
 
 public abstract class FileSystem
 {
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
-
   /**
    * Result of a stat operation, i.e. information about a file.
    */
@@ -78,7 +72,6 @@ public abstract class FileSystem
       @Override
       public void dispose()
       {
-        callbackDtor(this.ptr);
       }
     }
 
@@ -93,7 +86,6 @@ public abstract class FileSystem
      */
     public void onFinished(final String error)
     {
-      callbackOnFinished(this.ptr, error);
     }
   }
 
@@ -123,7 +115,6 @@ public abstract class FileSystem
       @Override
       public void dispose()
       {
-        readCallbackDtor(this.ptr);
       }
     }
 
@@ -139,7 +130,6 @@ public abstract class FileSystem
      */
     public void onFinished(final ByteBuffer output)
     {
-      readCallbackOnFinished(this.ptr, output);
     }
   }
 
@@ -169,7 +159,6 @@ public abstract class FileSystem
       @Override
       public void dispose()
       {
-        statCallbackDtor(this.ptr);
       }
     }
 
@@ -185,7 +174,6 @@ public abstract class FileSystem
      */
     public void onFinished(final StatResult result, final String error)
     {
-      statCallbackOnFinished(this.ptr, result, error);
     }
   }
 
@@ -235,17 +223,4 @@ public abstract class FileSystem
   public abstract void stat(final String filename,
                             final StatCallback callback);
 
-  private static native void callbackOnFinished(long ptr, String error);
-
-  private static native void callbackDtor(long ptr);
-
-  private static native void readCallbackOnFinished(long ptr, ByteBuffer output);
-
-  private static native void readCallbackDtor(long ptr);
-
-  private static native void statCallbackOnFinished(long ptr, StatResult result, String error);
-
-  private static native void statCallbackDtor(long ptr);
-
-  private static native void registerNatives();
 }

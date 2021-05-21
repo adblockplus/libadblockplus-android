@@ -31,12 +31,6 @@ public final class FilterEngine
   public static final String EMPTY_SITEKEY = "";
   protected final long ptr;
 
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
-
   FilterEngine(final long jniPlatformPtr)
   {
     this.ptr = jniPlatformPtr;
@@ -48,27 +42,27 @@ public final class FilterEngine
 
   public Filter getFilterFromText(final String text)
   {
-    return getFilter(this.ptr, text);
+    return null;
   }
 
   public List<Filter> getListedFilters()
   {
-    return getListedFilters(this.ptr);
+    return null;
   }
 
   public Subscription getSubscription(final String url)
   {
-    return getSubscription(this.ptr, url, this);
+    return null;
   }
 
   public List<Subscription> getListedSubscriptions()
   {
-    return getListedSubscriptions(this.ptr, this);
+    return null;
   }
 
   public List<Subscription> fetchAvailableSubscriptions()
   {
-    return fetchAvailableSubscriptions(this.ptr, this);
+    return null;
   }
 
   public String getElementHidingStyleSheet(final String domain)
@@ -78,12 +72,12 @@ public final class FilterEngine
 
   public String getElementHidingStyleSheet(final String domain, final boolean specificOnly)
   {
-    return getElementHidingStyleSheet(this.ptr, domain, specificOnly);
+    return null;
   }
 
   public List<EmulationSelector> getElementHidingEmulationSelectors(final String domain)
   {
-    return getElementHidingEmulationSelectors(this.ptr, domain);
+    return null;
   }
 
   /**
@@ -99,8 +93,7 @@ public final class FilterEngine
                         final String parent, final String siteKey,
                         final boolean specificOnly)
   {
-    return matches(this.ptr, url, contentTypes.toArray(new ContentType[contentTypes.size()]),
-        parent, siteKey, specificOnly);
+    return null;
   }
 
   /**
@@ -117,13 +110,12 @@ public final class FilterEngine
                                       final List<String> documentUrls,
                                       final String siteKey)
   {
-    return isContentAllowlisted(this.ptr, url,
-        contentTypes.toArray(new ContentType[contentTypes.size()]), documentUrls, siteKey);
+    return false;
   }
 
   public JsValue getPref(final String pref)
   {
-    return getPref(this.ptr, pref);
+    return null;
   }
 
   /**
@@ -133,32 +125,29 @@ public final class FilterEngine
    */
   public void setPref(final String pref, final JsValue value)
   {
-    setPref(this.ptr, pref, value.ptr);
   }
 
   public String getHostFromURL(final String url)
   {
-    return getHostFromURL(this.ptr, url);
+    return null;
   }
 
   public void setAllowedConnectionType(final String value)
   {
-    setAllowedConnectionType(this.ptr, value);
   }
 
   public String getAllowedConnectionType()
   {
-    return getAllowedConnectionType(this.ptr);
+    return null;
   }
 
   public void setAcceptableAdsEnabled(final boolean enabled)
   {
-    setAcceptableAdsEnabled(this.ptr, enabled);
   }
 
   public boolean isAcceptableAdsEnabled()
   {
-    return isAcceptableAdsEnabled(this.ptr);
+    return false;
   }
 
   /**
@@ -171,12 +160,11 @@ public final class FilterEngine
    */
   public void setEnabled(final boolean enabled)
   {
-    setEnabled(this.ptr, enabled);
   }
 
   public boolean isEnabled()
   {
-    return isEnabled(this.ptr);
+    return false;
   }
 
   /**
@@ -187,7 +175,6 @@ public final class FilterEngine
    */
   public void updateFiltersAsync(final String subscriptionUrl)
   {
-    updateFiltersAsync(this.ptr, subscriptionUrl);
   }
 
   /**
@@ -196,76 +183,22 @@ public final class FilterEngine
    */
   public long getNativePtr()
   {
-    return getNativePtr(this.ptr);
+    return 0L;
   }
 
   public void addSubscription(final Subscription subscription)
   {
-    addSubscription(this.ptr, subscription.url);
   }
 
   public void removeSubscription(final Subscription subscription)
   {
-    removeSubscription(this.ptr, subscription.url);
   }
 
   public void addFilter(final Filter filter)
   {
-    addFilter(this.ptr, filter.text);
   }
 
   public void removeFilter(final Filter filter)
   {
-    removeFilter(this.ptr, filter.text);
   }
-
-
-  private static native void registerNatives();
-
-  private static native Filter getFilter(long ptr, String text);
-
-  private static native List<Filter> getListedFilters(long ptr);
-
-  private static native Subscription getSubscription(long ptr, String url, FilterEngine engine);
-
-  private static native List<Subscription> getListedSubscriptions(long ptr, FilterEngine engine);
-
-  private static native List<Subscription> fetchAvailableSubscriptions(long ptr, FilterEngine engine);
-
-  private static native String getElementHidingStyleSheet(long ptr, String domain, boolean specificOnly);
-
-  private static native List<EmulationSelector> getElementHidingEmulationSelectors(long ptr, String domain);
-
-  private static native JsValue getPref(long ptr, String pref);
-
-  private static native Filter matches(long ptr, String url, ContentType[] contentType,
-                                       String parent, String siteKey,
-                                       boolean specificOnly);
-
-  private static native boolean isContentAllowlisted(long ptr, String url, ContentType[] contentType,
-                                                     List<String> referrerChain, String siteKey);
-
-  private static native void setPref(long ptr, String pref, long valuePtr);
-
-  private static native String getHostFromURL(long ptr, String url);
-
-  private static native void setAllowedConnectionType(long ptr, String value);
-
-  private static native String getAllowedConnectionType(long ptr);
-
-  private static native void setAcceptableAdsEnabled(long ptr, boolean enabled);
-
-  private static native boolean isAcceptableAdsEnabled(long ptr);
-
-  private static native void setEnabled(long ptr, boolean enabled);
-
-  private static native boolean isEnabled(long ptr);
-
-  private static native void updateFiltersAsync(long ptr, String subscriptionUrl);
-
-  private static native long getNativePtr(long ptr);
-
-  private static native void addSubscription(long ptr, String subscriptionUrl);
-
-  private static native void removeSubscription(long ptr, String subscriptionUrl);
 }

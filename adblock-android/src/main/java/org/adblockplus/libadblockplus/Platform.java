@@ -21,14 +21,9 @@ import org.adblockplus.AppInfo;
 
 public class Platform implements Disposable
 {
-  private final Disposer disposer;
-  protected final long ptr;
+  private final Disposer disposer = null;
+  protected final long ptr = 0L;
 
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
 
   /**
    * If an interface parameter value is null then a default implementation is
@@ -46,18 +41,15 @@ public class Platform implements Disposable
                   final HttpClient httpClient,
                   final String basePath)
   {
-    this(ctor(logSystem, fileSystem, httpClient, basePath));
+
   }
 
   protected Platform(final long ptr)
   {
-    this.ptr = ptr;
-    this.disposer = new Disposer(this, new DisposeWrapper(ptr));
   }
 
   public void setUpJsEngine(final AppInfo appInfo, final long v8IsolateProviderPtr)
   {
-    setUpJsEngine(this.ptr, appInfo, v8IsolateProviderPtr);
   }
 
   public void setUpJsEngine(final AppInfo appInfo)
@@ -67,13 +59,12 @@ public class Platform implements Disposable
 
   public JsEngine getJsEngine()
   {
-    return new JsEngine(getJsEnginePtr(this.ptr));
+    return null;
   }
 
   public void setUpFilterEngine(final IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback,
                                 final boolean isFilterEngineEnabled)
   {
-    setUpFilterEngine(this.ptr, isSubscriptionDownloadAllowedCallback, isFilterEngineEnabled);
   }
 
   public FilterEngine getFilterEngine()
@@ -82,7 +73,6 @@ public class Platform implements Disposable
     // and in addition FilterEngine is being created asynchronously, the call
     // of `ensureFilterEngine` causes a construction of FilterEngine if it's
     // not created yet and waits for it.
-    ensureFilterEngine(this.ptr);
     return new FilterEngine(this.ptr);
   }
 
@@ -104,26 +94,8 @@ public class Platform implements Disposable
     @Override
     public void dispose()
     {
-      dtor(this.ptr);
     }
   }
 
-  private static native void registerNatives();
 
-  private static native long ctor(LogSystem logSystem,
-                                  FileSystem fileSystem,
-                                  HttpClient httpClient,
-                                  String basePath);
-
-  private static native void setUpJsEngine(long ptr, AppInfo appInfo, long v8IsolateProviderPtr);
-
-  private static native long getJsEnginePtr(long ptr);
-
-  private static native void setUpFilterEngine(long ptr,
-                                               IsAllowedConnectionCallback isSubscriptionDownloadAllowedCallback,
-                                               boolean isFilterEngineEnabled);
-
-  private static native void ensureFilterEngine(long ptr);
-
-  private static native void dtor(long ptr);
 }

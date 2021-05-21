@@ -22,6 +22,10 @@ android {
 
 dependencies {
   api project(':adblock-android')
+  api(name:'engine-release', ext:'aar')
+  // FIXME: com.facebook.* stuff should come from hermes-engine aar
+  implementation "com.facebook.soloader:nativeloader:0.10.1"
+  implementation 'com.facebook.fbjni:fbjni:0.2.2'
   testImplementation Deps.junit4
   testImplementation Deps.kotlin_stdlib
   testImplementation Deps.mockito_core

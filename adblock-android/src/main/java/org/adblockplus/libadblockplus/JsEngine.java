@@ -23,12 +23,6 @@ public final class JsEngine
 {
   protected final long ptr;
 
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
-
   JsEngine(final long ptr)
   {
     this.ptr = ptr;
@@ -36,39 +30,28 @@ public final class JsEngine
 
   public void setEventCallback(final String eventName, final EventCallback callback)
   {
-    setEventCallback(this.ptr, eventName, callback.ptr);
   }
 
   public void removeEventCallback(final String eventName)
   {
-    removeEventCallback(this.ptr, eventName);
   }
 
   public JsValue evaluate(final String source, final String filename)
   {
-    return evaluate(this.ptr, source, filename);
+    return null;
   }
 
   public JsValue evaluate(final String source)
   {
-    return evaluate(this.ptr, source, "");
+    return null;
   }
 
   public void setGlobalProperty(final String property, final JsValue value)
   {
-    setGlobalProperty(this.ptr, property, value.ptr);
   }
 
   public void triggerEvent(final String eventName, final List<JsValue> params)
   {
-    final long[] args = new long[params.size()];
-
-    for (int i = 0; i < args.length; i++)
-    {
-      args[i] = params.get(i).ptr;
-    }
-
-    triggerEvent(this.ptr, eventName, args);
   }
 
   /**
@@ -76,46 +59,8 @@ public final class JsEngine
    */
   public void onLowMemory()
   {
-    onLowMemory(this.ptr);
+
   }
 
-  public void triggerEvent(final String eventName)
-  {
-    triggerEvent(this.ptr, eventName, null);
-  }
 
-  public JsValue newValue(final long value)
-  {
-    return newValue(this.ptr, value);
-  }
-
-  public JsValue newValue(final boolean value)
-  {
-    return newValue(this.ptr, value);
-  }
-
-  public JsValue newValue(final String value)
-  {
-    return newValue(this.ptr, value);
-  }
-
-  private static native void registerNatives();
-
-  private static native void setEventCallback(long ptr, String eventName, long callback);
-
-  private static native void removeEventCallback(long ptr, String eventName);
-
-  private static native JsValue evaluate(long ptr, String source, String filename);
-
-  private static native void triggerEvent(long ptr, String eventName, long[] args);
-
-  private static native JsValue newValue(long ptr, long value);
-
-  private static native JsValue newValue(long ptr, boolean value);
-
-  private static native JsValue newValue(long ptr, String value);
-
-  private static native void setGlobalProperty(long ptr, String property, long valuePtr);
-
-  private static native void onLowMemory(long ptr);
 }

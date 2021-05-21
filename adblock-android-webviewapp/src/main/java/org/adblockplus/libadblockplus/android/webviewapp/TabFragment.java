@@ -41,6 +41,7 @@ import androidx.fragment.app.Fragment;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
 import org.adblockplus.libadblockplus.android.webview.WebViewCounters;
+import com.eyeo.hermes.Engine;
 
 import timber.log.Timber;
 
@@ -99,6 +100,8 @@ public class TabFragment extends Fragment
     this.title = getArguments().getString(TITLE);
     this.useCustomIntercept = getArguments().getBoolean(CUSTOM_INTERCEPT, false);
     this.navigateTo = getArguments().getString(NAVIGATE_TO_URL, null);
+    Timber.i("youtube.com stylesheets: " +
+      new Engine(getContext().getApplicationContext()).getElementHidingStyleSheet("youtube.com", true));
   }
 
   @Override

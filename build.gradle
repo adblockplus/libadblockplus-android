@@ -28,6 +28,10 @@ subprojects {
     google()
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    flatDir {
+      // I have a symlink from this repo to hermes-engine: hermes/src -> ../../hermes-engine
+      dirs project.rootProject.file('hermes/src/engine/build/outputs/aar')
+    }
   }
 
   // apply to all subprojects

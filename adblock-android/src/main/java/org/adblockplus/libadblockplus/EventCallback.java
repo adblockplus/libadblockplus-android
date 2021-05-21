@@ -21,19 +21,12 @@ import java.util.List;
 
 public abstract class EventCallback implements Disposable
 {
-  private final Disposer disposer;
-  protected final long ptr;
+  private final Disposer disposer = null;
+  protected final long ptr = 0L;
 
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
 
   public EventCallback()
   {
-    this.ptr = ctor(this);
-    this.disposer = new Disposer(this, new DisposeWrapper(this.ptr));
   }
 
   public abstract void eventCallback(List<JsValue> params);
@@ -56,13 +49,7 @@ public abstract class EventCallback implements Disposable
     @Override
     public void dispose()
     {
-      dtor(this.ptr);
     }
   }
 
-  private static native void registerNatives();
-
-  private static native long ctor(Object obj);
-
-  private static native void dtor(long ptr);
 }

@@ -31,12 +31,6 @@ public final class Subscription
   public final String languages;
   protected final WeakReference<FilterEngine> filterEngine;
 
-  static
-  {
-    System.loadLibrary(BuildConfig.nativeLibraryName);
-    registerNatives();
-  }
-
   private Subscription(final String url,
                        final String title,
                        final String homepage,
@@ -54,62 +48,30 @@ public final class Subscription
 
   public boolean isDisabled()
   {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return true;
-    }
-    return isDisabled(engine.getNativePtr(), this.url);
+    return false;
   }
 
   public void setDisabled(final boolean disabled)
   {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return;
-    }
-    setDisabled(engine.getNativePtr(), disabled, this.url);
   }
 
   public void updateFilters()
   {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return;
-    }
-    updateFilters(engine.getNativePtr(), this.url);
   }
 
   public boolean isUpdating()
   {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return false;
-    }
-    return isUpdating(engine.getNativePtr(), this.url);
+    return false;
   }
 
   public boolean isAcceptableAds()
   {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return false;
-    }
-    return isAcceptableAds(engine.getNativePtr(), this.url);
+    return false;
   }
 
   public String getSynchronizationStatus()
   {
-    final FilterEngine engine = filterEngine.get();
-    if (engine == null)
-    {
-      return "Filter Engine destroyed";
-    }
-    return getSynchronizationStatus(engine.getNativePtr(), this.url);
+    return null;
   }
 
   @Override
@@ -128,18 +90,5 @@ public final class Subscription
     return this.url.equals(((Subscription) o).url);
   }
 
-  private static native void registerNatives();
-
-  private static native boolean isDisabled(long ptr, String url);
-
-  private static native void setDisabled(long ptr, boolean disabled, String url);
-
-  private static native void updateFilters(long ptr, String url);
-
-  private static native boolean isUpdating(long ptr, String url);
-
-  private static native boolean isAcceptableAds(long ptr, String url);
-
-  private static native String getSynchronizationStatus(long ptr, String url);
 
 }
