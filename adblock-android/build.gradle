@@ -1,11 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-private String getNativeLibraryName() {
-  def libraryName = System.getenv('LIBABP_SHARED_LIBRARY_NAME')
-  return libraryName != null ? libraryName : 'adblockplus-jni'
-}
-
 def getProcessesCountArg() {
   def isClean = getGradle().getStartParameter().getTaskNames().find { it ==~ /.*clean.*/ }
   // The clean shouldn't be parallel, because it causes problems on Mac OS X for NDK below 18
@@ -20,7 +15,6 @@ android {
   defaultConfig {
     minSdkVersion Config.minSdkVersion
     targetSdkVersion Config.targetSdkVersion
-    buildConfigField "String", "nativeLibraryName", '"' + getNativeLibraryName() + '"'
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     consumerProguardFiles 'proguard-rules-adblock.txt'
     externalNativeBuild {
@@ -33,69 +27,6 @@ android {
   buildTypes {
     debug {
       multiDexEnabled true
-    }
-  }
-
-  flavorDimensions "abi"
-
-  productFlavors {
-    abi_arm {
-      dimension = "abi"
-      ndk {
-        abiFilters "armeabi-v7a"
-      }
-
-      externalNativeBuild {
-        ndkBuild {
-          arguments "APP_ABI=armeabi-v7a"
-        }
-      }
-    }
-
-    abi_arm64 {
-      dimension = "abi"
-      ndk {
-        abiFilters "arm64-v8a"
-      }
-
-      externalNativeBuild {
-        ndkBuild {
-          arguments "APP_ABI=arm64-v8a"
-        }
-      }
-    }
-
-    abi_x86 {
-      dimension = "abi"
-      ndk {
-        abiFilters "x86"
-      }
-
-      externalNativeBuild {
-        ndkBuild {
-          arguments "APP_ABI=x86"
-        }
-      }
-    }
-
-    abi_x86_64 {
-      dimension = "abi"
-      ndk {
-        abiFilters "x86_64"
-      }
-
-      externalNativeBuild {
-        ndkBuild {
-          arguments "APP_ABI=x86_64"
-        }
-      }
-    }
-
-    abi_all {
-      dimension = "abi"
-      ndk {
-        abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-      }
     }
   }
 
