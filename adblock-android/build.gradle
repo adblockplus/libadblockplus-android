@@ -41,12 +41,12 @@ android {
 
 dependencies {
   api Deps.timber
-  testImplementation Deps.junit4
-  testImplementation Deps.kotlin_stdlib
-  androidTestImplementation Deps.kotlin_stdlib
+  testImplementation Deps.junit
+  testImplementation Deps.kotlin
+  androidTestImplementation Deps.kotlin
   androidTestImplementation Deps.androidx_test_core
   androidTestImplementation Deps.androidx_test_runner
-  androidTestImplementation Deps.androidx_test_ext_junit
+  androidTestImplementation Deps.androidx_test_ext
   androidTestImplementation Deps.mockito_core
   androidTestImplementation Deps.mockito_android
   androidTestImplementation Deps.wiremock_standalone

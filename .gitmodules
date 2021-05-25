@@ -1,3 +1,6 @@
 [submodule "libadblockplus"]
 	path = libadblockplus
 	url = ../../adblockplus/libadblockplus.git
+[submodule "hermes"]
+	path = hermes
+	url = git@gitlab.com:eyeo/sandbox/hermes-engine.git

@@ -8,6 +8,9 @@ object Config {
     const val targetSdkVersion = compileSdkVersion
 
     const val jvmTarget = "1.8"
+
+    const val ndkVersion = "21.1.6352462"
+    const val cmakeVersion = "3.10.2.4988404"
 }
 
 object GitlabPackageRegistry {
