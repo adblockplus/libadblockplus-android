@@ -37,15 +37,12 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import org.adblockplus.AdblockEngine;
-import org.adblockplus.AdblockEngineSettings;
-import org.adblockplus.ContentType;
-import org.adblockplus.EmulationSelector;
-import org.adblockplus.MatchesResult;
-import org.adblockplus.Subscription;
+import com.eyeo.hermes.AdblockEngine;
+import com.eyeo.hermes.ContentType;
+import com.eyeo.hermes.EmulationSelector;
+import com.eyeo.hermes.MatchesResult;
+
 import org.adblockplus.libadblockplus.HttpClient;
-import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
-import org.adblockplus.libadblockplus.android.SingleInstanceEngineProvider;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.webview.content_type.ContentTypeDetector;
 import org.adblockplus.libadblockplus.android.webview.content_type.HeadersContentTypeDetector;
@@ -54,6 +51,9 @@ import org.adblockplus.libadblockplus.android.webview.content_type.UrlFileExtens
 import org.adblockplus.libadblockplus.sitekey.PublicKeyHolderImpl;
 import org.adblockplus.libadblockplus.sitekey.SiteKeysConfiguration;
 import org.jetbrains.annotations.TestOnly;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -65,13 +65,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import com.eyeo.hermes.Engine;
 
 import timber.log.Timber;
-
-import static org.adblockplus.libadblockplus.android.webview.AdblockWebView.OptionalBoolean.from;
 
 /**
  * WebView with ad blocking
@@ -91,7 +86,6 @@ public class AdblockWebView extends WebView
   private static final String EMPTY_SITEKEY = "";
 
   private OrderedContentTypeDetector contentTypeDetector;
-  private final AtomicReference<AdblockEngineProvider> providerReference = new AtomicReference<>();
   private Integer loadError;
   private ProxyWebChromeClient intWebChromeClient;
   private ProxyWebViewClient intWebViewClient;
@@ -132,12 +126,11 @@ public class AdblockWebView extends WebView
   private final AtomicReference<String> navigationUrl = new AtomicReference<>();
   private String injectJs;
   private String elemhideBlockedJs;
-  private final AtomicReference<OptionalBoolean> adblockEnabled =
-    new AtomicReference<>(OptionalBoolean.UNDEFINED);
   private boolean loading;
   private String elementsHiddenFlag;
   private String sitekeyExtractedFlag;
   private SiteKeyExtractor siteKeyExtractor;
+  private final AtomicReference<AdblockEngine> adblockEngineRef = new AtomicReference<>();
 
   /**
    * Optional boolean value.
@@ -301,55 +294,6 @@ public class AdblockWebView extends WebView
   private final AtomicReference<SiteKeysConfiguration> siteKeysConfiguration =
     new AtomicReference<>();
   private final AtomicBoolean jsInIframesEnabled = new AtomicBoolean(false);
-  private final AdblockEngineSettings.EnableStateChangedListener enableStateChangedListener =
-    new AdblockEngineSettings.EnableStateChangedListener()
-    {
-
-      @Override
-      public void onAdblockEngineEnableStateChanged(final boolean isEnabled)
-      {
-        final OptionalBoolean newValue = from(isEnabled);
-        final OptionalBoolean oldValue = adblockEnabled.getAndSet(newValue);
-        if (oldValue != OptionalBoolean.UNDEFINED && oldValue != newValue)
-        {
-          Timber.d("Adblock Engine status changed, enable status is %s", newValue);
-          AdblockWebView.this.post(new Runnable()
-          {
-            @Override
-            public void run()
-            {
-              clearCache(true);
-            }
-          });
-        }
-      }
-
-      @Override
-      public void onAcceptableAdsEnableStateChanged(final boolean isEnabled)
-      {
-      }
-    };
-  private final AdblockEngineProvider.EngineCreatedListener engineCreatedCb
-    = new AdblockEngineProvider.EngineCreatedListener()
-  {
-    @Override
-    public void onAdblockEngineCreated(final AdblockEngine adblockEngine)
-    {
-      final AdblockEngineSettings adblockEngineSettings = adblockEngine.settings();
-      adblockEnabled.set(from(adblockEngineSettings.isEnabled()));
-      Timber.d("Adblock Engine created, enable status is %s", adblockEnabled.get());
-      adblockEngineSettings.addEnableStateChangedListener(enableStateChangedListener);
-    }
-  };
-  private final AdblockEngineProvider.EngineDisposedListener engineDisposedCb
-    = new AdblockEngineProvider.EngineDisposedListener()
-  {
-    @Override
-    public void onAdblockEngineDisposed()
-    {
-      adblockEnabled.set(OptionalBoolean.UNDEFINED);
-    }
-  };
 
   public String getNavigationUrl()
   {
@@ -461,11 +405,6 @@ public class AdblockWebView extends WebView
     super.setWebViewClient(intWebViewClient);
   }
 
-  private AdblockEngineProvider getProvider()
-  {
-    return providerReference.get();
-  }
-
   private String readScriptFile(final String filename) throws IOException
   {
     return Utils
@@ -483,63 +422,9 @@ public class AdblockWebView extends WebView
     Timber.d("runScript finished");
   }
 
-  public void setProvider(final AdblockEngineProvider provider)
+  public void setEngine(final AdblockEngine adblockEngine)
   {
-    if (provider == null)
-    {
-      throw new IllegalArgumentException("Provider cannot be null");
-    }
-
-    if (this.getProvider() == provider)
-    {
-      return;
-    }
-
-    final Runnable setRunnable = new Runnable()
-    {
-      @Override
-      public void run()
-      {
-        AdblockWebView.this.providerReference.set(provider);
-        final ReentrantReadWriteLock.ReadLock lock = provider.getReadEngineLock();
-        final boolean locked = lock.tryLock();
-
-        try
-        {
-          // Note that if retain() needs to create a AdblockEngine it will wait (in bg thread)
-          // until we finish this synchronized block and release the engine lock.
-          getProvider().retain(true); // asynchronously
-          if (locked && getProvider().getEngine() != null)
-          {
-            adblockEnabled.set(from(getProvider().getEngine().settings().isEnabled()));
-            Timber.d("Adblock Engine already created, enable status is %s", adblockEnabled);
-            getProvider().getEngine().settings().addEnableStateChangedListener(enableStateChangedListener);
-          }
-          else
-          {
-            getProvider().addEngineCreatedListener(engineCreatedCb);
-            getProvider().addEngineDisposedListener(engineDisposedCb);
-          }
-        }
-        finally
-        {
-          if (locked)
-          {
-            lock.unlock();
-          }
-        }
-      }
-    };
-
-    if (this.getProvider() != null)
-    {
-      // as adblockEngine can be busy with elemhide thread we need to use callback
-      this.dispose(setRunnable);
-    }
-    else
-    {
-      setRunnable.run();
-    }
+    adblockEngineRef.set(adblockEngine);
   }
 
   private class AdblockWebWebChromeClient extends ProxyWebChromeClient
@@ -573,7 +458,7 @@ public class AdblockWebView extends WebView
 
   private void tryInjectJs()
   {
-    if (adblockEnabled.get() != OptionalBoolean.TRUE)
+    if (adblockEngineRef.get() == null)
     {
       return;
     }
@@ -735,86 +620,39 @@ public class AdblockWebView extends WebView
       final boolean isMainFrame = request.isForMainFrame();
       boolean isAllowlisted = false;
       boolean canContainSitekey = false;
-      boolean sitekeyCheckEnabled;
+      final boolean sitekeyCheckEnabled = true;
 
       final String referrer = request.getRequestHeaders().get(HttpClient.HEADER_REFERRER);
 
-      final Lock lock = getProvider().getReadEngineLock();
-      lock.lock();
-
-      try
+      final AdblockEngine engine = adblockEngineRef.get();
+      if (engine == null)
       {
-        // if dispose() was invoke, but the page is still loading then just let it go
-        boolean isDisposed = false;
-        if (getProvider().getCounter() == 0)
+        return AbpShouldBlockResult.NOT_ENABLED;
+      }
+
+      Timber.d("Loading url %s", url);
+
+      // We don't want to use a referrer from the previous page, if previous page was allowlisted that would also
+      // allowlist current one which is wrong, hence added !isMainFrame
+      if (referrer != null && !isMainFrame)
+      {
+        Timber.d("Header referrer for %s is %s", url, referrer);
+        if (!url.equals(referrer))
         {
-          isDisposed = true;
+          url2Referrer.put(urlWithoutFragment, referrer);
         }
         else
         {
-          lock.unlock();
-          getProvider().waitForReady();
-          lock.lock();
-          if (getProvider().getCounter() == 0)
-          {
-            isDisposed = true;
-          }
+          Timber.w("Header referrer value is the same as url, skipping url2Referrer.put()");
         }
+      }
+      else
+      {
+        Timber.w("No referrer header for %s", url);
+      }
 
-        final AdblockEngine engine = getProvider().getEngine();
-
-        // Apart from checking counter (getProvider().getCounter()) we also need to make sure
-        // that getProvider().getEngine() is already set.
-        // We check that under getProvider().getReadEngineLock(); so we are sure it will not be
-        // changed after this check.
-        if (isDisposed || engine == null)
-        {
-          Timber.e("AdblockEngine already disposed");
-          return AbpShouldBlockResult.NOT_ENABLED;
-        }
-
-        if (adblockEnabled.get() == OptionalBoolean.UNDEFINED)
-        {
-          Timber.e("No adblockEnabled value");
-          return AbpShouldBlockResult.NOT_ENABLED;
-        }
-        else
-        {
-          // check the real enable status and update adblockEnabled flag which is used
-          // later on to check if we should execute element hiding JS
-          final OptionalBoolean newValue = from(engine.settings().isEnabled());
-          adblockEnabled.set(newValue);
-          if (newValue == OptionalBoolean.FALSE)
-          {
-            Timber.d("adblockEnabled = false");
-            return AbpShouldBlockResult.NOT_ENABLED;
-          }
-        }
-
-        Timber.d("Loading url %s", url);
-
-        // We don't want to use a referrer from the previous page, if previous page was allowlisted that would also
-        // allowlist current one which is wrong, hence added !isMainFrame
-        if (referrer != null && !isMainFrame)
-        {
-          Timber.d("Header referrer for %s is %s", url, referrer);
-          if (!url.equals(referrer))
-          {
-            url2Referrer.put(urlWithoutFragment, referrer);
-          }
-          else
-          {
-            Timber.w("Header referrer value is the same as url, skipping url2Referrer.put()");
-          }
-        }
-        else
-        {
-          Timber.w("No referrer header for %s", url);
-        }
-
-        sitekeyCheckEnabled = engine.settings().isAcceptableAdsEnabled() || getJsInIframesEnabled();
-        if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
-        {
+      if (!sitekeyCheckEnabled && BuildConfig.DEBUG)
+      {
           /*final List<Subscription> listedSubscriptions = engine.settings().getListedSubscriptions();
           for (Subscription subscription : listedSubscriptions)
           {
@@ -824,176 +662,171 @@ public class AdblockWebView extends WebView
               break;
             }
           }*/
-        }
-        if (isMainFrame)
+      }
+      if (isMainFrame)
+      {
+        // never blocking main frame requests, just subrequests
+        Timber.w("%s is main frame, allow loading", url);
+        siteKeyExtractor.setEnabled(sitekeyCheckEnabled);
+        // For a main frame we don't need to check result of generateStylesheetForUrl as we still
+        // need to inject js for a site key (site key check is disabled in inject.js for subframes).
+        clearStylesheets();
+        generateStylesheetForUrl(urlWithoutFragment, true);
+      }
+      else
+      {
+        // reconstruct frames hierarchy
+        final List<String> referrerChain = buildFramesHierarchy(urlWithoutFragment);
+
+        final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
+        String siteKey = (siteKeysConfiguration != null
+          ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+          .getAny(referrerChain, EMPTY_SITEKEY))
+          : EMPTY_SITEKEY);
+
+        // determine the content
+        ContentType contentType =
+          ensureContentTypeDetectorCreatedAndGet().detect(request);
+
+        if (contentType == null)
         {
-          // never blocking main frame requests, just subrequests
-          Timber.w("%s is main frame, allow loading", url);
-          siteKeyExtractor.setEnabled(sitekeyCheckEnabled);
-          // For a main frame we don't need to check result of generateStylesheetForUrl as we still
-          // need to inject js for a site key (site key check is disabled in inject.js for subframes).
-          clearStylesheets();
-          generateStylesheetForUrl(urlWithoutFragment, true);
+          Timber.w("contentTypeDetector didn't recognize content type");
+          contentType = ContentType.OTHER;
+        }
+
+        if (contentType == ContentType.SUBDOCUMENT && referrer != null)
+        {
+          // Due to "strict-origin-when-cross-origin" referrer policy set as default starting
+          // Chromium 85 we have to fix the referrers chain with just "origin".
+          // See https://jira.eyeo.com/browse/DP-1621
+          try
+          {
+            url2Referrer.put(Utils.getOrigin(url), referrer);
+          }
+          catch (final MalformedURLException | IllegalArgumentException e)
+          {
+            Timber.e(e, "Failed to extract origin from %s", url);
+          }
+        }
+
+        // allowlisted
+        if (engine.isContentAllowlisted(url,
+          ContentType.maskOf(ContentType.DOCUMENT), referrerChain,
+          siteKey))
+        {
+          isAllowlisted = true;
+          Timber.w("%s document is allowlisted, allow loading", url);
+          notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+            url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
         }
         else
         {
-          // reconstruct frames hierarchy
-          final List<String> referrerChain = buildFramesHierarchy(urlWithoutFragment);
-
-          final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
-          String siteKey = (siteKeysConfiguration != null
-            ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-            .getAny(referrerChain, EMPTY_SITEKEY))
-            : null);
-
-          // determine the content
-          ContentType contentType =
-            ensureContentTypeDetectorCreatedAndGet().detect(request);
-
-          if (contentType == null)
+          if (contentType == ContentType.SUBDOCUMENT ||
+            contentType == ContentType.OTHER)
           {
-            Timber.w("contentTypeDetector didn't recognize content type");
-            contentType = ContentType.OTHER;
+            canContainSitekey = true;
           }
 
-          if (contentType == ContentType.SUBDOCUMENT && referrer != null)
+          boolean specificOnly = engine.isContentAllowlisted(url,
+            ContentType.maskOf(ContentType.GENERICBLOCK),
+            referrerChain, siteKey);
+          if (specificOnly)
           {
-            // Due to "strict-origin-when-cross-origin" referrer policy set as default starting
-            // Chromium 85 we have to fix the referrers chain with just "origin".
-            // See https://jira.eyeo.com/browse/DP-1621
-            try
-            {
-              url2Referrer.put(Utils.getOrigin(url), referrer);
-            }
-            catch (final MalformedURLException | IllegalArgumentException e)
-            {
-              Timber.e(e, "Failed to extract origin from %s", url);
-            }
+            Timber.w("Found genericblock filter for url %s", url);
           }
 
-          // allowlisted
-          if (engine.isContentAllowlisted(url,
-            ContentType.maskOf(ContentType.DOCUMENT), referrerChain,
-            siteKey))
+          // check if we should block
+          MatchesResult result =
+            engine.isContentAllowlisted(url, ContentType.maskOf(contentType),
+              referrerChain, siteKey) ? MatchesResult.ALLOWLISTED :
+              engine.matches(url, ContentType.maskOf(contentType),
+                getFirstParent(referrerChain), siteKey, specificOnly);
+
+          if (result == MatchesResult.BLOCKED)
           {
-            isAllowlisted = true;
-            Timber.w("%s document is allowlisted, allow loading", url);
-            notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
-              url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
-          }
-          else
-          {
-            if (contentType == ContentType.SUBDOCUMENT ||
-              contentType == ContentType.OTHER)
+            Timber.i("Attempting to block request with AA on the first try: %s", url);
+
+            // Need to run `waitForSitekeyCheck` to hold the actual check until
+            // the sitekey is either obtained or not present
+            final boolean waitedForSitekey = siteKeyExtractor.waitForSitekeyCheck(url, isMainFrame);
+            if (waitedForSitekey)
             {
-              canContainSitekey = true;
-            }
+              // Request was held, start over to see if it's now allowlisted
+              Timber.i("Restarting the check having waited for the sitekey: %s", url);
 
-            boolean specificOnly = engine.isContentAllowlisted(url,
-              ContentType.maskOf(ContentType.GENERICBLOCK),
-              referrerChain, siteKey);
-            if (specificOnly)
-            {
-              Timber.w("Found genericblock filter for url %s", url);
-            }
+              siteKey = (siteKeysConfiguration != null
+                ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+                .getAny(referrerChain, EMPTY_SITEKEY))
+                : EMPTY_SITEKEY);
 
-            // check if we should block
-            MatchesResult result =
-              engine.isContentAllowlisted(url, ContentType.maskOf(contentType),
-                referrerChain, siteKey) ? MatchesResult.ALLOWLISTED :
-                engine.matches(url, ContentType.maskOf(contentType),
-                  getFirstParent(referrerChain), siteKey, specificOnly);
-
-            if (result == MatchesResult.BLOCKED)
-            {
-              Timber.i("Attempting to block request with AA on the first try: %s", url);
-
-              // Need to run `waitForSitekeyCheck` to hold the actual check until
-              // the sitekey is either obtained or not present
-              final boolean waitedForSitekey = siteKeyExtractor.waitForSitekeyCheck(url, isMainFrame);
-              if (waitedForSitekey)
+              if (siteKey.isEmpty())
               {
-                // Request was held, start over to see if it's now allowlisted
-                Timber.i("Restarting the check having waited for the sitekey: %s", url);
-
-                siteKey = (siteKeysConfiguration != null
-                  ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-                  .getAny(referrerChain, EMPTY_SITEKEY))
-                  : null);
-
-                if (siteKey == null || siteKey.isEmpty())
-                {
-                  Timber.i("SiteKey is not found, blocking the resource %s", url);
-                  return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
-                }
-
-                if (engine.isContentAllowlisted(url,
-                  ContentType.maskOf(ContentType.DOCUMENT),
-                  referrerChain, siteKey))
-                {
-                  isAllowlisted = true;
-                  Timber.w("%s document is allowlisted, allow loading", url);
-                  notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
-                    url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
-                }
-                else
-                {
-                  specificOnly = engine.isContentAllowlisted(url,
-                    ContentType.maskOf(ContentType.GENERICBLOCK),
-                    referrerChain, siteKey);
-                  if (specificOnly)
-                  {
-                    Timber.w("Found genericblock filter for url %s", url);
-                  }
-
-                  // check if we should block
-                  result =
-                    engine.isContentAllowlisted(url, ContentType.maskOf(contentType),
-                      referrerChain, siteKey) ? MatchesResult.ALLOWLISTED :
-                      engine.matches(url, ContentType.maskOf(contentType),
-                        getFirstParent(referrerChain), siteKey, specificOnly);
-
-                  if (result == MatchesResult.BLOCKED)
-                  {
-                    Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
-                      sitekeyCheckEnabled ? "enabled" : "disabled");
-                    return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
-                  }
-                  if (result == MatchesResult.ALLOWLISTED)
-                  {
-                    isAllowlisted = true;
-                    Timber.w("%s is allowlisted in matches()", url);
-                    notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
-                      url, referrerChain, EventsListener.AllowlistReason.FILTER));
-                  }
-                  Timber.d("Allowed loading %s", url);
-                }
-              } // if (waitedForSitekey)
-
-              // This check is required because the resource could be allowlisted on the second
-              // check after waiting for the sitekey check conclusion
-              if (!isAllowlisted)
-              {
-                Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
-                  sitekeyCheckEnabled ? "enabled" : "disabled");
+                Timber.i("SiteKey is not found, blocking the resource %s", url);
                 return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
               }
-            }
-            else if (result == MatchesResult.ALLOWLISTED)
+
+              if (engine.isContentAllowlisted(url,
+                ContentType.maskOf(ContentType.DOCUMENT),
+                referrerChain, siteKey))
+              {
+                isAllowlisted = true;
+                Timber.w("%s document is allowlisted, allow loading", url);
+                notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                  url, referrerChain, EventsListener.AllowlistReason.DOCUMENT));
+              }
+              else
+              {
+                specificOnly = engine.isContentAllowlisted(url,
+                  ContentType.maskOf(ContentType.GENERICBLOCK),
+                  referrerChain, siteKey);
+                if (specificOnly)
+                {
+                  Timber.w("Found genericblock filter for url %s", url);
+                }
+
+                // check if we should block
+                result =
+                  engine.isContentAllowlisted(url, ContentType.maskOf(contentType),
+                    referrerChain, siteKey) ? MatchesResult.ALLOWLISTED :
+                    engine.matches(url, ContentType.maskOf(contentType),
+                      getFirstParent(referrerChain), siteKey, specificOnly);
+
+                if (result == MatchesResult.BLOCKED)
+                {
+                  Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                    sitekeyCheckEnabled ? "enabled" : "disabled");
+                  return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
+                }
+                if (result == MatchesResult.ALLOWLISTED)
+                {
+                  isAllowlisted = true;
+                  Timber.w("%s is allowlisted in matches()", url);
+                  notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+                    url, referrerChain, EventsListener.AllowlistReason.FILTER));
+                }
+                Timber.d("Allowed loading %s", url);
+              }
+            } // if (waitedForSitekey)
+
+            // This check is required because the resource could be allowlisted on the second
+            // check after waiting for the sitekey check conclusion
+            if (!isAllowlisted)
             {
-              isAllowlisted = true;
-              Timber.w("%s is allowlisted in matches()", url);
-              notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
-                url, referrerChain, EventsListener.AllowlistReason.FILTER));
+              Timber.i("Blocked loading %s with sitekeyCheckEnabled %s", url,
+                sitekeyCheckEnabled ? "enabled" : "disabled");
+              return notifyAndReturnBlockingResponse(url, referrerChain, contentType);
             }
-            Timber.d("Allowed loading %s", url);
           }
-        } // !MainFrame
-      }
-      finally
-      {
-        lock.unlock();
-      }
+          else if (result == MatchesResult.ALLOWLISTED)
+          {
+            isAllowlisted = true;
+            Timber.w("%s is allowlisted in matches()", url);
+            notifyResourceAllowlisted(new EventsListener.AllowlistedResourceInfo(
+              url, referrerChain, EventsListener.AllowlistReason.FILTER));
+          }
+          Timber.d("Allowed loading %s", url);
+        }
+      } // !MainFrame
 
       // we rely on calling `fetchUrlAndCheckSiteKey` later in `shouldInterceptRequest`, now we
       // just reply that it's fine to load the resource
@@ -1021,13 +854,13 @@ public class AdblockWebView extends WebView
       {
         Timber.d("Updating navigationUrl to `%s`", urlString);
         navigationUrl.set(Utils.getUrlWithoutFragment(urlString));
-        if (BuildConfig.DEBUG)
+        /*if (BuildConfig.DEBUG)
         {
           if (RequestInterceptor.isBlockedByHandlingDebugURLQuery(view, getProvider(), url))
           {
             return WebResponseResult.BLOCK_LOAD;
           }
-        }
+        }*/
       }
       final AbpShouldBlockResult abpBlockResult = shouldAbpBlockRequest(request);
 
@@ -1246,18 +1079,6 @@ public class AdblockWebView extends WebView
     sitekeyExtractedFlag = "abp" + Math.abs(random.nextLong());
   }
 
-  private void ensureProvider()
-  {
-    // if AdblockWebView works as drop-in replacement for WebView 'provider' is not set.
-    // Thus AdblockWebView is using SingleInstanceEngineProvider instance
-    if (getProvider() == null)
-    {
-      final org.adblockplus.libadblockplus.android.AdblockEngine.Factory factory =
-        org.adblockplus.libadblockplus.android.AdblockEngine.builder(getContext(), null /*use default value*/);
-      setProvider(new SingleInstanceEngineProvider(factory));
-    }
-  }
-
   private void startAbpLoading(final String newUrl)
   {
     Timber.d("Start loading %s", newUrl);
@@ -1273,7 +1094,6 @@ public class AdblockWebView extends WebView
         // If we get here it usually means that shouldInterceptRequest() was not called for the main
         // frame so let's do it now
         generateStylesheetForUrl(urlWithoutFragment, true);
-
       }
     }
   }
@@ -1336,8 +1156,6 @@ public class AdblockWebView extends WebView
   @Override
   public void reload()
   {
-    ensureProvider();
-
     if (loading)
     {
       stopAbpLoading();
@@ -1355,8 +1173,6 @@ public class AdblockWebView extends WebView
 
   private void loadUrlCommon()
   {
-    ensureProvider();
-
     if (loading)
     {
       stopAbpLoading();
@@ -1409,12 +1225,41 @@ public class AdblockWebView extends WebView
     clearReferrers();
   }
 
+  private String emulationSelectorListToJsonArray(final List<EmulationSelector> list)
+  {
+    final JSONArray array = new JSONArray();
+
+    if (list != null)
+    {
+      for (final EmulationSelector selector : list)
+      {
+        if (selector != null)
+        {
+          try
+          {
+            final JSONObject selectorObj = new JSONObject();
+            selectorObj.put("selector", selector.selector);
+            selectorObj.put("text", selector.text);
+            array.put(selectorObj);
+          }
+          catch (final JSONException e)
+          {
+            Timber.e(e, "Failed to create JSON object");
+          }
+        }
+      }
+    }
+
+    return array.toString();
+  }
+
   public boolean generateStylesheetForUrl(final String urlWithoutFragment, final boolean isMainFrame)
   {
     final boolean isJsInIframesEnabled = getJsInIframesEnabled();
     Timber.d("generateStylesheetForUrl() called for url %s, isMainFrame = %b, " +
       "isJsInIframesEnabled == %b", urlWithoutFragment, isMainFrame, isJsInIframesEnabled);
-    if (!isMainFrame && !isJsInIframesEnabled)
+    final AdblockEngine adblockEngine = adblockEngineRef.get();
+    if (!isMainFrame && !isJsInIframesEnabled || adblockEngine == null)
     {
       return false;
     }
@@ -1437,92 +1282,57 @@ public class AdblockWebView extends WebView
         !stylesheets.second.equals(EMPTY_ELEMHIDE_ARRAY_STRING);
     }
 
-    final Lock lock = getProvider().getReadEngineLock();
-    lock.lock();
+    final List<String> referrerChain = isMainFrame ?
+      new ArrayList<String>() : buildFramesHierarchy(urlWithoutFragment);
 
-    try
+    referrerChain.add(0, urlWithoutFragment);
+    final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
+    String siteKey = (siteKeysConfiguration != null
+      ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+      .getAny(referrerChain, EMPTY_SITEKEY))
+      : null);
+
+    if (!isMainFrame && siteKeysConfiguration != null && siteKey.isEmpty())
     {
-      boolean isDisposed = false;
-      if (getProvider().getCounter() == 0)
+      Timber.d("Waiting for a site key when handling %s", urlWithoutFragment);
+      final boolean waited = siteKeyExtractor.waitForSitekeyCheck(urlWithoutFragment, isMainFrame);
+      if (waited)
       {
-        isDisposed = true;
-      }
-      else
-      {
-        lock.unlock();
-        getProvider().waitForReady();
-        lock.lock();
-        if (getProvider().getCounter() == 0)
-        {
-          isDisposed = true;
-        }
-      }
-
-      // Apart from checking counter (getProvider().getCounter()) we also need to make sure
-      // that getProvider().getEngine() is already set.
-      // We check that under getProvider().getReadEngineLock(); so we are sure it will not be
-      // changed after this check.
-      if (!isDisposed && getProvider().getEngine() != null)
-      {
-        final AdblockEngine adblockEngine = getProvider().getEngine();
-
-        final List<String> referrerChain = isMainFrame ?
-          new ArrayList<String>() : buildFramesHierarchy(urlWithoutFragment);
-
-        referrerChain.add(0, urlWithoutFragment);
-        final SiteKeysConfiguration siteKeysConfiguration = getSiteKeysConfiguration();
-        String siteKey = (siteKeysConfiguration != null
-          ? PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-          .getAny(referrerChain, EMPTY_SITEKEY))
-          : null);
-
-        if (!isMainFrame && siteKeysConfiguration != null && siteKey.isEmpty())
-        {
-          Timber.d("Waiting for a site key when handling %s", urlWithoutFragment);
-          final boolean waited = siteKeyExtractor.waitForSitekeyCheck(urlWithoutFragment, isMainFrame);
-          if (waited)
-          {
-            siteKey = PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
-              .getAny(referrerChain, EMPTY_SITEKEY));
-          }
-        }
-
-        if (!adblockEngine.isContentAllowlisted(urlWithoutFragment,
-          ContentType.maskOf(ContentType.DOCUMENT, ContentType.ELEMHIDE), referrerChain, siteKey))
-        {
-          final boolean specificOnly = adblockEngine.isContentAllowlisted(urlWithoutFragment,
-            ContentType.maskOf(ContentType.GENERICHIDE),
-            referrerChain, siteKey);
-
-          // elemhide
-          Timber.d("Requesting elemhide stylesheet from AdblockEngine for %s", domain);
-          stylesheetString = adblockEngine.getElementHidingStyleSheet(domain, specificOnly);
-          Timber.d("Finished requesting elemhide stylesheet, got %d symbols" +
-              (specificOnly ? " (specificOnly)" : "") + " for %s", stylesheetString.length(),
-            domain);
-
-          // elemhideemu
-          Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s", domain);
-          final List<EmulationSelector> emuSelectors = adblockEngine.getElementHidingEmulationSelectors(domain);
-          Timber.d("Finished requesting elemhideemu selectors, got %d symbols for %s",
-            emuSelectors.size(), domain);
-          emuSelectorsString = Utils.emulationSelectorListToJsonArray(emuSelectors);
-        }
-        else
-        {
-          Timber.d("Skipped requesting elemhide stylesheet and elemhideemu selectors for allowlisted %s",
-            urlWithoutFragment);
-        }
+        siteKey = PublicKeyHolderImpl.stripPadding(siteKeysConfiguration.getPublicKeyHolder()
+          .getAny(referrerChain, EMPTY_SITEKEY));
       }
     }
-    finally
+
+    if (!adblockEngine.isContentAllowlisted(urlWithoutFragment,
+      ContentType.maskOf(ContentType.DOCUMENT, ContentType.ELEMHIDE), referrerChain, siteKey))
     {
-      lock.unlock();
-      url2Stylesheets.put(urlWithoutFragment, new Pair<>(stylesheetString, emuSelectorsString));
-      // return true if elemhide OR elemhideemu data was provided
-      return !stylesheetString.equals(EMPTY_ELEMHIDE_STRING) ||
-        !emuSelectorsString.equals(EMPTY_ELEMHIDE_ARRAY_STRING);
+      final boolean specificOnly = adblockEngine.isContentAllowlisted(urlWithoutFragment,
+        ContentType.maskOf(ContentType.GENERICHIDE),
+        referrerChain, siteKey);
+
+      // elemhide
+      Timber.d("Requesting elemhide stylesheet from AdblockEngine for %s", domain);
+      stylesheetString = adblockEngine.getElementHidingStyleSheet(domain, specificOnly);
+      Timber.d("Finished requesting elemhide stylesheet, got %d symbols" +
+          (specificOnly ? " (specificOnly)" : "") + " for %s", stylesheetString.length(),
+        domain);
+
+      // elemhideemu
+      Timber.d("Requesting elemhideemu selectors from AdblockEngine for %s", domain);
+      final List<EmulationSelector> emuSelectors = adblockEngine.getElementHidingEmulationSelectors(domain);
+      Timber.d("Finished requesting elemhideemu selectors, got %d symbols for %s",
+        emuSelectors.size(), domain);
+      emuSelectorsString = emulationSelectorListToJsonArray(emuSelectors);
     }
+    else
+    {
+      Timber.d("Skipped requesting elemhide stylesheet and elemhideemu selectors for allowlisted %s",
+        urlWithoutFragment);
+    }
+    url2Stylesheets.put(urlWithoutFragment, new Pair<>(stylesheetString, emuSelectorsString));
+    // return true if elemhide OR elemhideemu data was provided
+    return !stylesheetString.equals(EMPTY_ELEMHIDE_STRING) ||
+      !emuSelectorsString.equals(EMPTY_ELEMHIDE_ARRAY_STRING);
   }
 
   private Pair<String, String> getStylesheetsForUrl(final String url)
@@ -1559,7 +1369,6 @@ public class AdblockWebView extends WebView
   private void doDispose()
   {
     Timber.w("Disposing AdblockEngine");
-    getProvider().release();
   }
 
   private class DisposeRunnable implements Runnable
@@ -1593,34 +1402,5 @@ public class AdblockWebView extends WebView
   public void dispose(final Runnable disposeFinished)
   {
     Timber.d("Dispose invoked");
-
-    if (getProvider() == null)
-    {
-      Timber.d("No internal AdblockEngineProvider created");
-      return;
-    }
-
-    final Lock lock = getProvider().getReadEngineLock();
-    lock.lock();
-
-    try
-    {
-      final AdblockEngine engine = getProvider().getEngine();
-      if (engine != null)
-      {
-        engine.settings().removeEnableStateChangedListener(enableStateChangedListener);
-      }
-      getProvider().removeEngineCreatedListener(engineCreatedCb);
-      getProvider().removeEngineDisposedListener(engineDisposedCb);
-    }
-    finally
-    {
-      lock.unlock();
-    }
-
-    stopLoading();
-
-    final DisposeRunnable disposeRunnable = new DisposeRunnable(disposeFinished);
-    disposeRunnable.run();
   }
 }

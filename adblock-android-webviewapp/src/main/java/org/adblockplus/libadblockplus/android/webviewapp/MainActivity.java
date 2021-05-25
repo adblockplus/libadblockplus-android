@@ -17,10 +17,13 @@
 
 package org.adblockplus.libadblockplus.android.webviewapp;
 
+import android.Manifest;
 import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebView;
@@ -30,13 +33,14 @@ import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
+import com.eyeo.hermes.AdblockEngine;
+import com.eyeo.hermes.Engine;
 import com.google.android.material.tabs.TabLayout;
 
-import org.adblockplus.AdblockEngine;
-import org.adblockplus.Subscription;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 
 import java.util.ArrayList;
@@ -60,9 +64,59 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   private CheckBox iframesEhCheckbox;
   // hidden clicks left to enable test pages subscriptions list
   private int hiddenClicksLeft = 5;
-
+  AdblockEngine adblockEngine;
 
   private final List<TabFragment> tabs = new ArrayList<>();
+
+  private void addTab()
+  {
+    adblockEngine = new Engine(getApplicationContext());
+    addTab(false, getIntent().getDataString());
+  }
+
+  private void checkPermissions()
+  {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+    {
+      if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        &&
+        checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+      {
+        if (tabs.isEmpty())
+        {
+          addTab();
+        }
+        navigateIfUrlIntent(tabs.get(0), getIntent());
+      }
+      else
+      {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+          Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+      }
+    }
+    else
+    {
+      if (tabs.isEmpty())
+      {
+        addTab();
+      }
+      navigateIfUrlIntent(tabs.get(0), getIntent());
+    }
+  }
+
+  @Override
+  public void onRequestPermissionsResult(final int requestCode, final String[] permissions, final  int[] grantResults)
+  {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+    {
+      if (tabs.isEmpty())
+      {
+        addTab();
+      }
+      navigateIfUrlIntent(tabs.get(0), getIntent());
+    }
+  }
 
   @Override
   protected void onCreate(final Bundle savedInstanceState)
@@ -80,11 +134,7 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
       WebView.setWebContentsDebuggingEnabled(true);
     }
 
-    if (tabs.isEmpty())
-    {
-      addTab(false, getIntent().getDataString());
-    }
-    navigateIfUrlIntent(tabs.get(0), getIntent());
+    checkPermissions();
   }
 
   @Override
@@ -101,8 +151,12 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     return iframesEhCheckbox.isChecked();
   }
 
-  private static void navigateIfUrlIntent(final TabFragment tabFragment, final Intent intent)
+  private void navigateIfUrlIntent(final TabFragment tabFragment, final Intent intent)
   {
+    if (adblockEngine == null)
+    {
+      adblockEngine = new Engine(getApplicationContext());
+    }
     if (Intent.ACTION_VIEW.equals(intent.getAction()))
     {
       final Uri uri = intent.getData();
@@ -177,43 +231,13 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
     }
   }
 
-  private void setTestPageSubscription()
-  {
-    AdblockHelper.get().getProvider().retain(true);
-    final AdblockEngine adblockEngine = AdblockHelper.get().getProvider().getEngine();
-    final Subscription subscription = adblockEngine.getSubscription(testPageSubscriptionUrl);
-    String message;
-    if (adblockEngine.settings().getListedSubscriptions().contains(subscription))
-    {
-      if (subscription.isDisabled())
-      {
-        subscription.setDisabled(false);
-        message = getResources().getString(R.string.subscription_enabled);
-      }
-      else
-      {
-        message = getResources().getString(R.string.subscription_already_listed_and_enabled);
-      }
-    }
-    else
-    {
-      adblockEngine.settings().edit().addSubscription(subscription).save();
-      message = getResources().getString(R.string.subscription_added_and_enabled);
-    }
-    message += testPageSubscriptionUrl;
-    Timber.d(message);
-    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    
-    AdblockHelper.get().getProvider().release();
-  }
-
   void handleHiddenSetting()
   {
     // countdowns counter until reaches 0
     // and sets subscription to test pages
     if (hiddenClicksLeft-- == 0)
     {
-      setTestPageSubscription();
+      Toast.makeText(getApplicationContext(), "Hidden settings are not supported!", Toast.LENGTH_SHORT).show();
     }
   }
 
@@ -224,7 +248,8 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
       @Override
       public void onClick(final View v)
       {
-        addTab(false, null);
+        Toast.makeText(getApplicationContext(), "Multiple tabs are not supported!", Toast.LENGTH_SHORT).show();
+        //addTab(false, null);
       }
     });
     addTab.setOnLongClickListener(new View.OnLongClickListener()
@@ -232,7 +257,8 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
       @Override
       public boolean onLongClick(final View view)
       {
-        addTab(true, null);
+        Toast.makeText(getApplicationContext(), "Multiple tabs are not supported!", Toast.LENGTH_SHORT).show();
+        //addTab(true, null);
         return true;
       }
     });
@@ -242,7 +268,8 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
       @Override
       public void onClick(final View v)
       {
-        navigateSettings();
+        Toast.makeText(getApplicationContext(), "Settings are not supported!", Toast.LENGTH_SHORT).show();
+        //navigateSettings();
       }
     });
 

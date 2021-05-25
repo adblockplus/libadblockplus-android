@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import org.adblockplus.ContentType;
+import com.eyeo.hermes.ContentType;
 
 import java.util.HashMap;
 import java.util.Map;
