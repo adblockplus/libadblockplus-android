@@ -38,7 +38,7 @@ android {
 dependencies {
   api project(':adblock-android-settings')
   api project(':adblock-android-webview')
-  androidTestImplementation Deps.androidx_test_espresso_core
+  androidTestImplementation Deps.androidx_test_espresso
   androidTestImplementation Deps.androidx_test_espresso_web
   androidTestImplementation Deps.mockito_core
   androidTestImplementation Deps.mockito_android
@@ -48,12 +48,12 @@ dependencies {
   androidTestImplementation project(':adblock-android')
   // All of the following could be androidTestImplementation, but Android Studio 4.1 doesn't
   // navigate dependencies good enough. So it's left as is because it's a non-production module.
-  implementation Deps.kotlin_stdlib
+  implementation Deps.kotlin
   implementation Deps.androidx_benchmark_junit4
   implementation Deps.androidx_test_core
   implementation Deps.androidx_test_runner
-  implementation Deps.androidx_test_ext_junit
+  implementation Deps.androidx_test_ext
   implementation Deps.androidx_benchmark_common
   implementation Deps.androidx_benchmark_junit4
-  implementation Deps.junit4
+  implementation Deps.junit
 }
