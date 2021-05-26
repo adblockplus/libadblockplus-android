@@ -7,9 +7,6 @@
         and merged to final AndroidManifest.xml automatically.
     -->
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-
     <application
         android:icon="@drawable/icon"
         android:name=".Application"
