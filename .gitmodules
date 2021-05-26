@@ -3,4 +3,4 @@
 	url = ../../adblockplus/libadblockplus.git
 [submodule "hermes"]
 	path = hermes
-	url = git@gitlab.com:eyeo/sandbox/hermes-engine.git
+	url = ../../sandbox/hermes-engine.git
