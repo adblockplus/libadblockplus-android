@@ -20,7 +20,12 @@ package org.adblockplus.libadblockplus.benchmark;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.http.SslError;
 import android.webkit.JavascriptInterface;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -30,6 +35,8 @@ import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
+import org.adblockplus.libadblockplus.android.AndroidHttpClient;
+import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper;
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
@@ -50,10 +57,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import timber.log.Timber;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import timber.log.Timber;
 
 @RunWith(AndroidJUnit4.class)
 public class WebViewLoadPerformanceUrlUsingJsTest
@@ -72,6 +79,9 @@ public class WebViewLoadPerformanceUrlUsingJsTest
       "https://www.zomato.com/lublin/mandragora-lublin",
       "https://dir.indiamart.com/search.mp?ss=iphone&prdsrc=1&mcatid=23429&catid=213",
       "https://www.flipkart.com/search?q=iphone");
+
+  private static final int minifiedEasyList = R.raw.easylist_min_uc;
+  private static final int minifiedExceptionList = R.raw.exceptionrules_min;
 
   private static final int PAGE_LOAD_TIMEOUT_SEC = 40;
   private static final int TEST_ITERATIONS = 10;
@@ -251,6 +261,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
       {
         loadTimeJsOnLoad = timeDelta;
       }
+      Timber.d("UsingJs: onPageFinishedLoading JS %s", url);
       countDownLatch.countDown();
     }
 
@@ -272,6 +283,47 @@ public class WebViewLoadPerformanceUrlUsingJsTest
         loadTimeOnPageFinishedLoading = timeDelta;
       }
       countDownLatch.countDown();
+      Timber.d("UsingJs: onPageFinished JS %s", url);
+    }
+
+    private void abortWithMessage(final String msg)
+    {
+      Timber.d("UsingJs: abort %s", msg);
+      countDownLatch.countDown();
+      countDownLatch.countDown();
+    }
+
+    @Override
+    public void onReceivedSslError(final WebView view, final SslErrorHandler handler, final SslError error)
+    {
+      if (error.getPrimaryError() == SslError.SSL_UNTRUSTED)
+      {
+        handler.proceed();
+      }
+      else
+      {
+        handler.cancel();
+        abortWithMessage("onReceivedSslError " + error.toString());
+      }
+    }
+
+    @Override
+    public void onReceivedHttpError(final WebView view, final WebResourceRequest request,
+                                    final WebResourceResponse errorResponse)
+    {
+      if (request.isForMainFrame())
+      {
+        abortWithMessage("onReceivedHttpError " + errorResponse.getData());
+      }
+    }
+
+    @Override
+    public void onReceivedError(final WebView view, final WebResourceRequest request, final WebResourceError error)
+    {
+      if (request.isForMainFrame())
+      {
+        abortWithMessage("onReceivedError " + error.getDescription());
+      }
     }
   }
 
@@ -287,10 +339,50 @@ public class WebViewLoadPerformanceUrlUsingJsTest
     {
       final String basePath = context.getDir(UUID.randomUUID().toString(),
           Context.MODE_PRIVATE).getAbsolutePath();
+
+      final Map<String, Integer> urlToResourceIdMap = new HashMap<String, Integer>()
+      {
+        {
+          put(AndroidHttpClientResourceWrapper.EASYLIST, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_INDONESIAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_BULGARIAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_CZECH_SLOVAK, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_DUTCH, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_GERMAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_ISRAELI, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_ITALIAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_LITHUANIAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_LATVIAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_ARABIAN_FRENCH, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_FRENCH, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_ROMANIAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.EASYLIST_RUSSIAN, minifiedEasyList);
+          put(AndroidHttpClientResourceWrapper.ACCEPTABLE_ADS, minifiedExceptionList);
+        }
+      };
+
+      // we want to isolate the changes and prevent loading existing subscriptions
+      // so providing subscriptions content from test resources instead of actual downloading
+      final AndroidHttpClientResourceWrapper httpClientWrapper = new AndroidHttpClientResourceWrapper(
+        context, new AndroidHttpClient(), urlToResourceIdMap, null);
+
+      // we need to randomize basePath to avoid test interference (shared state from persistence)
+      httpClientWrapper.setListener(new AndroidHttpClientResourceWrapper.Listener()
+      {
+        @Override
+        public void onIntercepted(final String url, final int resourceId)
+        {
+          Timber.d("Intercepted $url to avoid networking");
+        }
+      });
+
       AdblockHelper
-          .get()
-          .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
-          .getProvider().retain(true);
+        .get()
+        .init(context, basePath, AdblockHelper.PREFERENCE_NAME)
+        .getFactory().setHttpClient(httpClientWrapper);
+      AdblockHelper
+        .get()
+        .getProvider().retain(true);
     }
   }
 

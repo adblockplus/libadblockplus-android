@@ -624,6 +624,12 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
       return this;
     }
 
+    public Builder setHttpClient(final HttpClient client)
+    {
+      androidHttpClient = client;
+      return this;
+    }
+
     private void initRequests()
     {
       if (androidHttpClient == null)
