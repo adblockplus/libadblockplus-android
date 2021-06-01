@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit
 const val SLEEP_TIME_MILLI = 100L
 const val COOL_OFF_DURATION_MILLI = 5000L
 
-// Need Mockstorage to always say that a certain string(url)
+// Need MockStorage to always say that a certain string(url)
 // was never stored so it will always use the custom http server
 class MockStorage : AndroidHttpClientResourceWrapper.Storage {
     override fun contains(url: String?) = false
@@ -475,7 +475,7 @@ abstract class AdblockWebViewBenchmarkMemory(private val subscriptionListResourc
 
         return MemoryBenchmarkRun(
                 run_unit = "kb",
-                aa_enabled = true,
+                aa_enabled = isAaEnabled,
                 adblock_enabled = isAdblockEnabled,
                 total_run_time_ns = (SystemClock.elapsedRealtimeNanos() - runTimeStart),
                 lists = listOf(listToMemoryListObjMap[subscriptionListResourceID]!!,
