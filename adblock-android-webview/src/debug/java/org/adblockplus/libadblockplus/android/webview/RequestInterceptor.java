@@ -222,12 +222,12 @@ public class RequestInterceptor
     });
   }
 
-  private static boolean checkModifications(final List<Filter> modifiedList,
-                                            final List<Filter> modifications, final Boolean expectedValue)
+  private static boolean checkModifications(final List<Filter> existingFilters, final List<Filter> modifications,
+                                            final Boolean expectedValue)
   {
-    for (final Filter filter : modifiedList)
+    for (final Filter filter : modifications)
     {
-      if (modifications.contains(filter) != expectedValue)
+      if (existingFilters.contains(filter) != expectedValue)
       {
         return false;
       }
