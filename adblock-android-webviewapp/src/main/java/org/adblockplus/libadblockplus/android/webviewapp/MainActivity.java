@@ -22,11 +22,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -133,10 +131,10 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
   }
 
   @Override
-  protected void onStop()
+  protected void onPause()
   {
     saveTabs();
-    super.onStop();
+    super.onPause();
   }
 
   public int getTabId(final TabFragment tab)
@@ -219,66 +217,37 @@ public class MainActivity extends AppCompatActivity implements ComponentCallback
 
   private void initControls()
   {
-    addTab.setOnClickListener(new View.OnClickListener()
-    {
-      @Override
-      public void onClick(final View v)
-      {
-        addTab(false, null);
-      }
-    });
-    addTab.setOnLongClickListener(new View.OnLongClickListener()
-    {
-      @Override
-      public boolean onLongClick(final View view)
-      {
-        addTab(true, null);
-        return true;
-      }
+    addTab.setOnClickListener(v -> addTab(false, null));
+    addTab.setOnLongClickListener(view -> {
+      addTab(true, null);
+      return true;
     });
 
-    settings.setOnClickListener(new View.OnClickListener()
-    {
-      @Override
-      public void onClick(final View v)
-      {
-        navigateSettings();
-      }
-    });
+    settings.setOnClickListener(v -> navigateSettings());
 
     viewPager.setAdapter(new TabFragmentAdapter(getSupportFragmentManager(), tabs));
     tabLayout.setupWithViewPager(viewPager);
 
-    restoreTabsCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
-    {
-      @Override
-      public void onCheckedChanged(final CompoundButton compoundButton, final boolean newValue)
+    restoreTabsCheckbox.setOnCheckedChangeListener((compoundButton, newValue) -> {
+      handleHiddenSetting();
+      final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+      sharedPreferences.edit().putBoolean(SAVED_RESTORE_TABS_CHECK, newValue).apply();
+      if (!newValue)
       {
-        handleHiddenSetting();
-        final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
-        sharedPreferences.edit().putBoolean(SAVED_RESTORE_TABS_CHECK, newValue).apply();
-        if (!newValue)
+        for (int i = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0) - 1; i >= 0; --i)
         {
-          for (int i = sharedPreferences.getInt(SAVED_RESTORE_TABS_COUNT, 0) - 1; i >= 0; --i)
-          {
-            TabFragment.deleteTabState(getApplicationContext(), i);
-          }
-          sharedPreferences.edit().putInt(SAVED_RESTORE_TABS_COUNT, 0).apply();
+          TabFragment.deleteTabState(getApplicationContext(), i);
         }
+        sharedPreferences.edit().putInt(SAVED_RESTORE_TABS_COUNT, 0).apply();
       }
     });
 
-    iframesEhCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
-    {
-      @Override
-      public void onCheckedChanged(final CompoundButton compoundButton, final boolean newValue)
+    iframesEhCheckbox.setOnCheckedChangeListener((compoundButton, newValue) -> {
+      final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
+      sharedPreferences.edit().putBoolean(SAVED_IFRAMES_EH, newValue).apply();
+      for (final TabFragment tabFragment : tabs)
       {
-        final SharedPreferences sharedPreferences = getSharedPreferences(SAVED_SETTINGS, 0);
-        sharedPreferences.edit().putBoolean(SAVED_IFRAMES_EH, newValue).apply();
-        for (final TabFragment tabFragment : tabs)
-        {
-          tabFragment.setJsInIframesEnabled(newValue);
-        }
+        tabFragment.setJsInIframesEnabled(newValue);
       }
     });
 
