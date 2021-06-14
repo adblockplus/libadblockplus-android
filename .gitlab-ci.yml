@@ -360,7 +360,6 @@ plt_tests:
     - cd automation
     - git checkout ${GIT_AUTOMATION_BRANCH:-master}
     - APPIUM_HOST="localhost:4723" ./gradlew pltWebview
-    - kill `cat appium_pid`
   rules:
     - if: '$FORCE_PLT == "true"'
     #- if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "schedule"'
