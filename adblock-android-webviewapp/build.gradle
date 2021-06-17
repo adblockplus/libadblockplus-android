@@ -67,4 +67,5 @@ dependencies {
   implementation project(':adblock-android-webview')
   implementation Deps.androidx_appcompat
   implementation Deps.android_material
+  implementation Deps.mozilla_components_support_utils
 }

@@ -22,4 +22,12 @@
     <string name="subscription_enabled">Enabled subscription</string>
     <string name="subscription_already_listed_and_enabled">Already listed and enabled subscription</string>
     <string name="subscription_added_and_enabled">Added injected subscription</string>
+
+    <!-- download dialog -->
+    <string name="download_dialog_title">Download</string>
+    <string name="download_dialog_text">Do you want to download %s?</string>
+    <string name="download_dialog_yes">Yes</string>
+    <string name="download_dialog_no">No</string>
+    <string name="download_toast_message">Downloading File</string>
+
 </resources>
