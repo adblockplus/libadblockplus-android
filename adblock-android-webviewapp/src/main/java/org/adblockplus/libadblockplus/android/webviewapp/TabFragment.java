@@ -17,14 +17,22 @@
 
 package org.adblockplus.libadblockplus.android.webviewapp;
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
+import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -34,14 +42,19 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
+import androidx.core.content.PermissionChecker;
 import androidx.fragment.app.Fragment;
 
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
 import org.adblockplus.libadblockplus.android.webview.WebViewCounters;
 
+import mozilla.components.support.utils.DownloadUtils;
 import timber.log.Timber;
 
 public class TabFragment extends Fragment
@@ -68,6 +81,11 @@ public class TabFragment extends Fragment
   private TextView blockedCounter;
   private TextView allowlistedCounter;
   private AdblockWebView webView;
+
+  private String downloadUrl;
+  private String downloadUserAgent;
+  private String downloadContentDisposition;
+  private String downloadMimetype;
 
   /**
    * Factory method
@@ -109,7 +127,7 @@ public class TabFragment extends Fragment
     final View view = inflater.inflate(R.layout.fragment_tab, container, false);
     bindControls(view);
     initControls();
-    ((MainActivity)getActivity()).checkResume(this);
+    ((MainActivity) getActivity()).checkResume(this);
     return view;
   }
 
@@ -172,9 +190,7 @@ public class TabFragment extends Fragment
 
   /**
    * This one is used for QAing if custom `shouldInterceptRequest`
-   *
    * It adds `X-Modified-Intercept` request header to a web request
-   *
    * Might be checked
    */
   private class TabInterceptingWebViewClient extends TabWebViewClient
@@ -235,7 +251,8 @@ public class TabFragment extends Fragment
       final String urlStr = savedState.getString(SAVED_URL_STATE);
       url.setText(urlStr);
       Timber.d("restoreTabState() restored tab url %s", urlStr);
-    } else
+    }
+    else
     {
       Timber.d("restoreTabState() fails to restore tab %d", id);
     }
@@ -275,46 +292,21 @@ public class TabFragment extends Fragment
 
   private void initControls()
   {
-    url.setOnKeyListener(new View.OnKeyListener()
+    url.setOnKeyListener((v, keyCode, event) ->
     {
-      @Override
-      public boolean onKey(final View v, final int keyCode, final KeyEvent event)
-      {
-        if (event.getAction() == KeyEvent.ACTION_DOWN &&
-            keyCode == KeyEvent.KEYCODE_ENTER)
-        {
-          loadUrl();
-        }
-        return false;
-      }
-    });
-
-    ok.setOnClickListener(new View.OnClickListener()
-    {
-      @Override
-      public void onClick(final View view)
+      if (event.getAction() == KeyEvent.ACTION_DOWN &&
+        keyCode == KeyEvent.KEYCODE_ENTER)
       {
         loadUrl();
       }
+      return false;
     });
 
-    back.setOnClickListener(new View.OnClickListener()
-    {
-      @Override
-      public void onClick(final View v)
-      {
-        loadPrev();
-      }
-    });
+    ok.setOnClickListener(view -> loadUrl());
 
-    forward.setOnClickListener(new View.OnClickListener()
-    {
-      @Override
-      public void onClick(final View v)
-      {
-        TabFragment.this.loadForward();
-      }
-    });
+    back.setOnClickListener(v -> loadPrev());
+
+    forward.setOnClickListener(v -> TabFragment.this.loadForward());
 
     initAdblockWebView();
 
@@ -340,13 +332,49 @@ public class TabFragment extends Fragment
 
     // to show that external WebViewClient is still working
     webView.setWebViewClient(useCustomIntercept ?
-            new TabInterceptingWebViewClient() : new TabWebViewClient());
+      new TabInterceptingWebViewClient() : new TabWebViewClient());
 
     // to show that external WebChromeClient is still working
     webView.setWebChromeClient(webChromeClient);
 
     // to enable local storage for HTML5
     webView.getSettings().setDomStorageEnabled(true);
+
+    final ActivityResultLauncher<String> writeStoragePermissionResult = registerForActivityResult(
+      new ActivityResultContracts.RequestPermission(),
+      isPermissionGranted ->
+      {
+        if (isPermissionGranted)
+        {
+          showDownloadDialog();
+        }
+      });
+
+    webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) ->
+    {
+      downloadUrl = url;
+      downloadUserAgent = userAgent;
+      downloadContentDisposition = contentDisposition;
+      downloadMimetype = mimetype;
+
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+      {
+        showDownloadDialog();
+      }
+      else
+      {
+        if (PermissionChecker
+          .checkSelfPermission(TabFragment.this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+          PermissionChecker.PERMISSION_GRANTED)
+        {
+          showDownloadDialog();
+        }
+        else
+        {
+          writeStoragePermissionResult.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+      }
+    });
 
     // if using custom intercept
     // we would already navigate to the
@@ -356,6 +384,37 @@ public class TabFragment extends Fragment
     {
       webView.loadUrl("https://request.urih.com/");
     }
+  }
+
+  private void showDownloadDialog()
+  {
+
+    final String fileName = DownloadUtils
+      .guessFileName(downloadContentDisposition, null, downloadUrl, downloadMimetype);
+
+    final AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+      .setTitle(getResources().getString(R.string.download_dialog_title))
+      .setMessage(String.format(getResources().getString(R.string.download_dialog_text), fileName))
+      .setPositiveButton(getResources().getString(R.string.download_dialog_yes), (dialog, which) ->
+      {
+        final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadUrl))
+          .addRequestHeader("Cookie", CookieManager.getInstance().getCookie(downloadUrl))
+          .addRequestHeader("User-Agent", downloadUserAgent)
+          .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+          .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.allowScanningByMediaScanner();
+        final DownloadManager dm =
+          (DownloadManager) TabFragment.this.getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+        if (dm != null)
+        {
+          dm.enqueue(request);
+          Toast.makeText(TabFragment.this.getContext(),
+            getResources().getString(R.string.download_toast_message),
+            Toast.LENGTH_LONG).show();
+        }
+      })
+      .setNegativeButton(getResources().getString(R.string.download_dialog_no), (dialog, which) -> dialog.cancel());
+    builder.create().show();
   }
 
   public void setJsInIframesEnabled(final boolean enabled)
@@ -371,7 +430,7 @@ public class TabFragment extends Fragment
     if (SITEKEYS_ALLOWLISTING)
     {
       webView.setSiteKeysConfiguration(AdblockHelper.get().getSiteKeysConfiguration());
-      webView.enableJsInIframes(((MainActivity)getActivity()).elemHideInInframesEnabled());
+      webView.enableJsInIframes(((MainActivity) getActivity()).elemHideInInframesEnabled());
     }
 
     this.navigate(navigateTo);

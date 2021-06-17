@@ -7,6 +7,7 @@ object Versions {
     const val timber = "4.7.1"
     const val wiremock = "2.26.2"
     const val android_material = "1.2.1"
+    const val mozilla_components = "90.0.6"
 
     object AndroidX {
         const val benchmark = "1.0.0"
@@ -51,4 +52,5 @@ object Deps {
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.AndroidX.appcompat}"
     const val androidx_preference = "androidx.preference:preference:${Versions.AndroidX.preference}"
     const val android_material = "com.google.android.material:material:${Versions.android_material}"
+    const val mozilla_components_support_utils = "org.mozilla.components:support-utils:${Versions.mozilla_components}"
 }

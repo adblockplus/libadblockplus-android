@@ -3,6 +3,7 @@ buildscript {
     google()
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.mozilla.org/maven2' }
   }
 
   dependencies {
@@ -28,6 +29,7 @@ subprojects {
     google()
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.mozilla.org/maven2' }
   }
 
   // apply to all subprojects
