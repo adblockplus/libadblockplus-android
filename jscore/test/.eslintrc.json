@@ -1,0 +1,12 @@
+{  
+  "env": {
+    "commonjs": true
+  },
+  "globals": {
+    "print": "readonly",
+    "HermesInternal": "readonly"
+  },
+  "parserOptions": {
+    "sourceType": "module"
+  }
+}

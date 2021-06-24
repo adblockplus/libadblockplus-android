@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import org.adblockplus.ContentType;
+import org.adblockplus.hermes.ContentType;
 import org.junit.Test;
 
 import java.text.MessageFormat;

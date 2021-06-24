@@ -18,20 +18,11 @@
 package org.adblockplus.libadblockplus.benchmark
 
 import android.opengl.Matrix
-import android.os.SystemClock
 import androidx.benchmark.junit4.BenchmarkRule
 import androidx.benchmark.junit4.measureRepeated
-import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import org.adblockplus.libadblockplus.FileSystem
-import org.adblockplus.libadblockplus.FilterEngine
-import org.adblockplus.libadblockplus.Platform
-import org.adblockplus.libadblockplus.android.AdblockEngine
-import org.adblockplus.libadblockplus.android.AndroidHttpClient
+import org.adblockplus.hermes.Engine
 import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper
-import org.adblockplus.libadblockplus.android.AndroidHttpClientResourceWrapper.Storage
-import org.adblockplus.libadblockplus.android.TimberLogSystem
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -39,9 +30,7 @@ import org.junit.rules.Timeout
 import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 import kotlin.system.measureTimeMillis
-
 
 class FilterEngineLoadTimeBenchmark {
     @get:Rule
@@ -105,120 +94,23 @@ class FilterEngineLoadTimeBenchmark {
     @get:Rule
     val benchmarkRule = BenchmarkRule()
 
-    private class Setup(basePath: String,
-                        blockingList : Int,
-                        exceptionList : Int) {
-        val logSystem = TimberLogSystem()
-        val fileSystem: FileSystem? = null // default C++ impl
-        val wrapperStorage = object : Storage {
-            override fun put(url: String?) { /* nothing */ }
-            override fun contains(url: String?) = false // we don't need downloading at all
-        }
-
-        // we want to isolate the changes and remove the influence of network speed.
-        // so providing subscriptions content from test resources instead of actual downloading
-        val httpClientWrapper = AndroidHttpClientResourceWrapper(
-            context, AndroidHttpClient(), localeToResourceId(blockingList, exceptionList), wrapperStorage)
-
-        // we need to randomize basePath to avoid test interference (shared state from persistence)
-        val platform = Platform(logSystem, fileSystem, httpClientWrapper, basePath)
-
-        init {
-            httpClientWrapper.setListener {
-                url, _ -> Timber.d("Intercepted $url to avoid networking")
-            }
-            platform.setUpJsEngine(AdblockEngine.generateAppInfo(context))
-            Timber.d("Path = $basePath")
-        }
-    }
-
-    private fun waitForSubscriptionsLoaded(filterEngine: FilterEngine) {
-        Timber.d("Waiting for ready subscriptions ...")
-        val subscriptionsReadyMillis = measureTimeMillis {
-            var subscriptions = filterEngine.listedSubscriptions
-            Timber.d("Current subscriptions: $subscriptions")
-            while (subscriptions.size != 2 || // 2 = locale-specific + AA
-                !subscriptions.all {
-                    it.synchronizationStatus == "synchronize_ok"
-                }) {
-                SystemClock.sleep(SLEEP_INTERVAL_MILLIS)
-                subscriptions = filterEngine.listedSubscriptions
-                Timber.d("Current subscriptions: $subscriptions")
-            }
-        }
-        Timber.d("Subscriptions ready in $subscriptionsReadyMillis millis")
-    }
-
-    private fun waitForSubscriptionsSaved(pattersIniFile: File, totalLines : Long) {
-        while (!pattersIniFile.exists() || pattersIniFile.length() < totalLines) {
-            Timber.d("waiting loaded %s of %s bytes should load", pattersIniFile.length().toString(), totalLines.toString())
-            SystemClock.sleep(SLEEP_INTERVAL_MILLIS)
-        }
-        Timber.d("end waiting loaded %s of %s bytes should load",
-                pattersIniFile.length().toString(), totalLines.toString())
-    }
-
-    private inline fun getPatternsIniFile(dir: File) = File(dir, "patterns.ini")
-
     private fun createAndDispose(path: String,
                                  blockingList : Int,
-                                 exceptionList : Int,
-                                 onCreated: ((FilterEngine) -> Unit)?) {
-        val setup = Setup(path, blockingList, exceptionList)
-        with(setup.platform) {
+                                 exceptionList : Int) {
+
             Timber.d("Creating FilterEngine ...")
-            lateinit var filterEngine: FilterEngine
-            try {
-                val loadTime = measureTimeMillis {
-                    filterEngine = getFilterEngine()
-                }
-                Timber.d("Created in $loadTime millis")
-                if (onCreated != null) {
-                    onCreated(filterEngine)
-                }
-            } finally {
-                dispose()
+            val loadTime = measureTimeMillis {
+                Engine(context)
             }
-        }
+            Timber.d("Created in $loadTime millis")
     }
 
-    private inline fun test(dir: File,
-                            waitForSaved  : Boolean,
-                            blockingList  : Int,
-                            exceptionList : Int,
-                            exceptedPatternsIniSize : Long) {
+    private fun test(dir: File,
+                     blockingList: Int,
+                     exceptionList: Int,
+                     exceptedPatternsIniSize: Long) {
 
-        createAndDispose(dir.absolutePath, blockingList, exceptionList) {
-            waitForSubscriptionsLoaded(it)
-            if (waitForSaved) {
-                waitForSubscriptionsSaved(getPatternsIniFile(dir), exceptedPatternsIniSize)
-            }
-        }
-    }
-
-    private fun genericMeasureSecondTimeFELT(blockingRulesResourceId : Int,
-                                             exceptionRulesResourceId : Int,
-                                             patternsInitExpectedByteSize : Long) {
-        // "not the first time" means subscriptions data is already downloaded and saved on SD
-        val dir = randomDirectory()
-        val pattersIniFile = getPatternsIniFile(dir)
-
-        // download, wait for subscriptions to be ready and saved
-        test(dir, true, blockingRulesResourceId, exceptionRulesResourceId, patternsInitExpectedByteSize)
-
-        // check saved subscriptions data
-        assertTrue(pattersIniFile.exists())
-
-        // Note: the actual file size can be a bit different when building locally vs. on CI
-        // due to different datetimes (lastDownload, lastSuccess) and some empty lines
-        assertTrue(abs(pattersIniFile.length() - patternsInitExpectedByteSize) < 10)
-        Timber.d("State is ready, starting benchmarking")
-
-        // the dir is the same as it was used for the first FE create,
-        // so it will read the subscriptions data from the persistent storage
-        benchmarkRule.measureRepeated {
-            test(dir, false, blockingRulesResourceId, exceptionRulesResourceId, patternsInitExpectedByteSize)
-        }
+        createAndDispose(dir.absolutePath, blockingList, exceptionList)
     }
 
     // an example for proper benchmarking sample, taken from:
@@ -236,36 +128,16 @@ class FilterEngineLoadTimeBenchmark {
     }
 
     @Test
-    fun measureVeryFirstTimeMinified() {
-        // "very first time" means the subscriptions data is going to be downloaded (actually loaded
-        // from app resources), parsed and saved
-
-        benchmarkRule.measureRepeated {
-            test(randomDirectory(), false, minifiedEasyList, minifiedExceptionList, PATTERNS_INI_MINIFIED_SIZE)
-        }
-    }
-
-    @Test
-    fun measureNotTheFirstTimeMinified() {
-        genericMeasureSecondTimeFELT(minifiedEasyList, minifiedExceptionList, PATTERNS_INI_MINIFIED_SIZE)
-    }
-
-    @Test
     fun measureVeryFirstTime() {
         // "very first time" means the subscriptions data is going to be downloaded (actually loaded
         // from app resources), parsed and saved
 
         benchmarkRule.measureRepeated {
             test(randomDirectory(),
-                    false,
                     easylist,
                     exceptionRules,
                     PATTERNS_INI_FULL_SIZE)
         }
     }
 
-    @Test
-    fun measureNotTheFirstTime() {
-        genericMeasureSecondTimeFELT(easylist, exceptionRules, PATTERNS_INI_FULL_SIZE)
-    }
 }

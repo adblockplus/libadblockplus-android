@@ -1,0 +1,18 @@
+{
+  "extends": "./node_modules/eslint-config-eyeo/index.js",
+  "root": true,
+  "rules": {
+    "curly": ["error", "multi-or-nest", "consistent"],
+    "id-denylist": [
+      "error",
+      "blacklist", "blackList",
+      "_blacklist", "_blackList",
+      "Blacklist", "BlackList",
+      "BLACKLIST", "BLACK_LIST"
+    ],
+    "no-warning-comments": "off"
+  },
+  "env": {
+    "node": true
+  }
+}

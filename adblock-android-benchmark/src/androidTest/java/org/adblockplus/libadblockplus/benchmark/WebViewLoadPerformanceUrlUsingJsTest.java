@@ -130,7 +130,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
       resultsJsVector.add(loadTime);
     }
 
-    public void reportData(final String testType, Map<String, Integer> urlFailures)
+    public void reportData(final String testType, final Map<String, Integer> urlFailures)
     {
       for (final String url : TESTING_URLS)
       {
@@ -155,7 +155,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
         assertNotNull(results);
 
         long urlTotalTime = 0;
-        for (long result : results)
+        for (final long result : results)
         {
           urlTotalTime += result;
         }
@@ -199,7 +199,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
       });
     }
 
-    public void loadUrl(final CountDownLatch latch, String url)
+    public void loadUrl(final CountDownLatch latch, final String url)
     {
       lastPageStartedUrl = "";
       loadTimeOnPageFinishedLoading = 0;
@@ -243,7 +243,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
     }
 
     @JavascriptInterface
-    public void onPageFinishedLoading(String url) // It's referenced from JS, see above
+    public void onPageFinishedLoading(final String url) // It's referenced from JS, see above
     {
       final Long startTimeValue = startTime.get();
       assertTrue(Utils.getUrlWithoutParams(url).
@@ -402,7 +402,7 @@ public class WebViewLoadPerformanceUrlUsingJsTest
     }
   }
 
-  void recreateWebView(final WebViewTestSuit<?> testSuit)
+  void recreateWebView(final WebViewTestSuit testSuit)
   {
     instrumentation.runOnMainSync(new Runnable()
     {
@@ -411,12 +411,12 @@ public class WebViewLoadPerformanceUrlUsingJsTest
       {
         if (testSuit.webView instanceof AdblockWebView)
         {
-          ((WebViewTestSuit<AdblockWebView>) testSuit)
+          testSuit
               .webView = new AdblockWebView(context);
         }
         else
         {
-          ((WebViewTestSuit<WebView>) testSuit)
+          testSuit
               .webView = new WebView(context);
         }
       }

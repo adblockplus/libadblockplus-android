@@ -37,10 +37,10 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.eyeo.hermes.AdblockEngine;
-import com.eyeo.hermes.ContentType;
-import com.eyeo.hermes.EmulationSelector;
-import com.eyeo.hermes.MatchesResult;
+import org.adblockplus.hermes.AdblockEngine;
+import org.adblockplus.hermes.ContentType;
+import org.adblockplus.hermes.EmulationSelector;
+import org.adblockplus.hermes.MatchesResult;
 
 import org.adblockplus.libadblockplus.HttpClient;
 import org.adblockplus.libadblockplus.android.Utils;

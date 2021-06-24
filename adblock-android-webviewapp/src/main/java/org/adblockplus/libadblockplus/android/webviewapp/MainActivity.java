@@ -33,8 +33,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
-import com.eyeo.hermes.AdblockEngine;
-import com.eyeo.hermes.Engine;
+import org.adblockplus.hermes.AdblockEngine;
+import org.adblockplus.hermes.Engine;
 import com.google.android.material.tabs.TabLayout;
 
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;

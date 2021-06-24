@@ -1,0 +1,24 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion Config.compileSdkVersion
+    buildToolsVersion Config.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+        buildConfigField "boolean", "IS_INTERNAL_BUILD", 'true'
+
+        sourceSets {
+            main {
+                manifest.srcFile file('../extern/fbjni/java/com/facebook/jni/AndroidManifest.xml')
+                java.srcDir file('../extern/fbjni/java')
+            }
+        }
+    }
+}
+
+dependencies {
+    compileOnly Deps.findbugs
+    implementation Deps.facebook_soloader
+}

@@ -1,0 +1,13 @@
+plugins {
+    id 'adblockplus-npm-plugin'
+}
+
+node {
+    buildDir file("build")
+    buildScript "build"
+    cleanScript "clean"
+}
+
+tasks.named('build').configure {
+    dependsOn ':hermes-libs:buildHermesHostRelease'
+}

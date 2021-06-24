@@ -1,0 +1,133 @@
+plugins {
+    id 'adblockplus-cmake-plugin'
+}
+
+if (System.getenv('JAVA_HOME') == null) {
+    throw new GradleException("Please set 'JAVA_HOME'")
+}
+
+cmake {
+    name 'fbjni'
+    source project.file('../extern/fbjni')
+    // targets 'libhermes', 'hermesc'
+    param 'JAVA_HOME', "${System.env.'JAVA_HOME'}"
+}
+
+cmake {
+    name 'fbjni'
+    source project.file('../extern/fbjni')
+    os android
+    arches 'x86', 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+}
+
+cmake {
+    name 'hermes'
+    source project.file('../extern/hermes')
+    targets 'hermes', 'hermesc', 'libhermes'
+}
+
+def importHermescPath(mode) {
+    mode = mode.toLowerCase()
+    def osName = System.getProperty('os.name').toLowerCase()
+    if (osName.startsWith("windows")) osName = "win"
+    if (osName.startsWith("mac")) osName = "osx"
+    def osArch = System.getProperty("os.arch").toLowerCase()
+
+    return project
+            .file("build/cmake/hermes/${mode}/${osName}/${osArch}/ImportHermesc.cmake")
+            .toString()
+}
+cmake {
+    name 'hermes'
+    source project.file('../extern/hermes')
+    targets 'libhermes'
+    os android
+    arches 'x86', 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+    param 'HERMES_IS_ANDROID', 'True'
+    param 'HERMES_FACEBOOK_BUILD', '0'
+    param 'ANDROID_STL', 'c++_shared'
+    param 'ANDROID_PIE', 'True'
+    param 'HERMES_SLOW_DEBUG', 'False'
+    param 'HERMES_ENABLE_INTL', 'False'
+    paramDebug 'IMPORT_HERMESC', importHermescPath("debug")
+    paramRelease 'IMPORT_HERMESC', importHermescPath("release")
+}
+
+cmake {
+    name 'engine'
+    source project.file('../hermes-engine')
+    param 'JAVA_HOME', "${System.env.'JAVA_HOME'}"
+}
+
+afterEvaluate {
+    def confTaskPrefix = 'configureEngine'
+    
+    // Making the configureEngine* dependant on building fbjni and hermes
+    tasks.names.findAll {
+        it.startsWith(confTaskPrefix)
+    } each {
+        def postfix = it.substring(confTaskPrefix.length())
+        def fbjniTaskName = "buildFbjni${postfix}"
+        def hermesTaskName = "buildHermes${postfix}"
+
+        tasks.named(it).configure {
+            dependsOn(fbjniTaskName, hermesTaskName)
+        }
+    }
+
+    // Creating a task to build all the android libraries (one for Debug one for Release)
+    def debugTasks = []
+    def releaseTasks = []
+    tasks.names.findAll {
+        it.startsWith('build') && it.contains('Android')
+    } each {
+        if (it.endsWith('Debug')) {
+            debugTasks << it
+        } else if (it.endsWith('Release')) {
+            releaseTasks << it
+        }
+    }
+
+    tasks.register('assembleAndroidDebug') {
+        group = 'build'
+        dependsOn debugTasks
+    }
+    
+    tasks.register('assembleAndroidRelease') {
+        group = 'build'
+        dependsOn releaseTasks
+    }
+
+    // Make all buildHermesAndroid.*((Debug)|(Release)) dependant on Host Hermes
+    tasks.names.findAll {
+        it.startsWith('buildHermesAndroid')
+    } each {taskName ->
+        tasks.named(taskName).configure {
+            dependsOn taskName.endsWith('Debug') ? 'buildHermesHostDebug' : 'buildHermesHostRelease'
+        }
+    }
+
+    // This should find a single task (like `buildHermesLinuxAmd64Debug`)
+    final def hostDebugTask = tasks.names.find {
+        it ==~ /buildHermes((Linux)|(Osx)|(Win)).+Debug/
+    }
+
+    // This should find a single task (like `buildHermesLinuxAmd64Release`)
+    final def hostReleaseTask = tasks.names.find {
+        it ==~ /buildHermes((Linux)|(Osx)|(Win)).+Release/
+    }
+
+    // Creating an aliases for building the hermesc compilers for Debug and Release
+    tasks.register('buildHermesHostDebug') {
+        dependsOn hostDebugTask
+    }
+    tasks.register('buildHermesHostRelease') {
+        dependsOn hostReleaseTask
+    }
+
+    // Creating the bootstrap task
+    tasks.register('bootstrap') {
+      group = 'build'
+      dependsOn('buildHermesHostRelease', 'assembleAndroidDebug')
+    }
+}
