@@ -198,6 +198,7 @@ testobject_tests:
     TEST_DEVICES: "Samsung_Galaxy_S20_real Google_Pixel_5_real OnePlus_Nord_real"
     GIT_STRATEGY: "none"
   script:
+    - apt-get update && apt-get install -y git wget
     - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
     - test -f /opt/ci/runner.jar || wget --no-verbose https://s3.amazonaws.com/saucelabs-runner/v1.8/runner.jar -O /opt/ci/runner.jar
     # Docs for running tests on testobject:
