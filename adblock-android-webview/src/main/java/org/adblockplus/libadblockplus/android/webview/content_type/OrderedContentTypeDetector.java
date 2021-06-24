@@ -19,7 +19,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.webkit.WebResourceRequest;
 
-import com.eyeo.hermes.ContentType;
+import org.adblockplus.hermes.ContentType;
 
 /**
  * Detects content type based on {@link HeadersContentTypeDetector}

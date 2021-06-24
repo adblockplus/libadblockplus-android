@@ -27,7 +27,9 @@ import android.webkit.WebViewClient;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
+import org.adblockplus.hermes.AdblockEngine;
+import org.adblockplus.hermes.Engine;
+
 import org.adblockplus.libadblockplus.android.Utils;
 import org.adblockplus.libadblockplus.android.settings.AdblockHelper;
 import org.adblockplus.libadblockplus.android.webview.AdblockWebView;
@@ -38,9 +40,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import timber.log.Timber;
-
 import static android.webkit.WebSettings.LOAD_NO_CACHE;
+
+import timber.log.Timber;
 
 public class WebViewTestSuit<T extends WebView>
 {
@@ -49,6 +51,7 @@ public class WebViewTestSuit<T extends WebView>
   public WebViewClient extWebViewClient;
   public final Map<String, Long> results = new HashMap<>();
   public WebViewClient client = null;
+  private AdblockEngine engine; // FIXME Clumsy, but ok for now. Need a global instance.
 
   public void setUp()
   {
@@ -64,11 +67,11 @@ public class WebViewTestSuit<T extends WebView>
       }
     });
 
+    engine = new Engine(webView.getContext()); // FIXME Clumsy, but ok for now. Need a global instance.
     if (webView instanceof AdblockWebView)
     {
       final AdblockWebView adblockWebView = (AdblockWebView)webView;
-      final AdblockEngineProvider adblockEngineProvider = AdblockHelper.get().getProvider();
-      adblockWebView.setProvider(adblockEngineProvider);
+      adblockWebView.setEngine(engine);
       Timber.d("Before FE waitForReady()");
       AdblockHelper.get().getProvider().waitForReady();
       Timber.d("After FE waitForReady()");

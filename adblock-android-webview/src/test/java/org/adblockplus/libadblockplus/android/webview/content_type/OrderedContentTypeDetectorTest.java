@@ -2,7 +2,7 @@ package org.adblockplus.libadblockplus.android.webview.content_type;
 
 import android.net.Uri;
 
-import org.adblockplus.ContentType;
+import org.adblockplus.hermes.ContentType;
 import org.junit.Test;
 
 import java.util.HashMap;

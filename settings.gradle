@@ -3,11 +3,8 @@ include ':adblock-android-benchmark'
 include ':adblock-android-webview'
 include ':adblock-android-settings'
 include ':adblock-android-webviewapp'
-include ':engine'
-project(':engine').projectDir = file('hermes/engine')
+include ':hermes-engine'
 include ':fbjni'
-project(':fbjni').projectDir = file('hermes/fbjni')
 include ':jscore'
-project(':jscore').projectDir = file('hermes/jscore')
-include ':libs'
-project(':libs').projectDir = file('hermes/libs')
+include ':hermes-libs'
+

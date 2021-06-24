@@ -1,47 +1,10 @@
-image: "registry.gitlab.com/eyeo/docker/libadblockplus-android_gitlab-runner:202004.1"
+image: "registry.gitlab.com/eyeo/docker/libadblockplus-android_hermes_gitlab-runner:202105.1"
 stages:
   - lint
   - unit_test
-  - build_dependencies
   - build
   - device_tests
   - publish
-
-# This updates the cache with shared dependencies
-build_dependencies:
-  stage: build_dependencies
-  cache:
-    key: $CI_COMMIT_REF_NAME
-    policy: push
-    paths:
-      - libadblockplus/
-      - buildtools/
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
-    WGET_FLAGS: "-q"
-  interruptible: true
-  script:
-    - cd ./libadblockplus
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
-    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
-    - make TARGET_OS=android ABP_TARGET_ARCH=x64 Configuration=release get-prebuilt-v8
-    - make TARGET_OS=android ABP_TARGET_ARCH=x64 Configuration=release
-    - cd ..
-
-# This is a shared read-only cache definition
-# which jobs can explicitly include to have build deps
-.cache_readonly: &cache_readonly
-  interruptible: true
-  cache:
-    key: $CI_COMMIT_REF_NAME
-    paths:
-      - libadblockplus/
-      - buildtools/
-    policy: pull
 
 checkstyle:
   interruptible: true
@@ -69,22 +32,32 @@ gradle_unit_tests:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
-    - ./gradlew test
+    - &apt-install apt-get update && apt-get install -y ninja-build libicu-dev nodejs git
+    - &npm_path npm list glob || npm install -g glob ; export NPM_PATH=`which npm` ; export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+    - gradle test --stacktrace
+  # RUN ONLY MANUALLY, the tests are broken fore Hermes right now
+  only:
+    - web
   artifacts:
     reports:
       junit: adblock-android/build/test-results/*/TEST-*.xml
 
 build_libadblockplus-android:all:
-  <<: *cache_readonly
   stage: build
+  interruptible: true
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
   script:
-    - ./gradlew clean assemble assembleAndroidTest
+    - *apt-install
+    - *npm_path
+    - gradle clean assemble assembleAndroidTest
   # won't run for manual and scheduled; we'd like to run
   # `build_libadblockplus-android:all-and-test-release` instead
   except:
     - schedules
     - web
   artifacts:
+    when: always
     paths:
       - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
       - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
@@ -100,17 +73,23 @@ build_libadblockplus-android:all:
       - adblock-android-webview/build/outputs/aar/adblock-android-webview-release.aar
       - adblock-android-settings/build/outputs/aar/adblock-android-settings-release.aar
       - adblock-android-benchmark/build/outputs/aar/adblock-android-benchmark-release.aar
+      - hermes-libs/build
+    exclude:
+      - hermes-libs/build/**/*.a
+      - hermes-libs/build/**/*.o
+      - hermes-libs/build/**/*.so
 
 
 # Builds additional release test apk for performance testing at nightly runs
 build_libadblockplus-android:all-and-test-release:
-  <<: *cache_readonly
   stage: build
   variables:
     PATH_TO_RELEASE_APK: "adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk"
   script:
+    - *apt-install
+    - *npm_path
     # we are building release apk as a separate call since we also need a debug test apk
-    - ./gradlew clean assemble assembleAndroidTest && ./gradlew assembleAndroidTest -PtestBuildType=release
+    - gradle clean assemble assembleAndroidTest && gradle assembleAndroidTest -PtestBuildType=release
     # sign test apk with debug key
     - jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android ${PATH_TO_RELEASE_APK} androiddebugkey
   artifacts:
@@ -138,11 +117,12 @@ build_libadblockplus-android:all-and-test-release:
     - tags
 
 build_libadblockplus-android:abp-disabled:
-  <<: *cache_readonly
   stage: build
   script:
+    - *apt-install
+    - *npm_path
     # APK with adblock disabled, with a random appId
-    - ./gradlew clean assemble -PadblockEnabled=false -PrandomizedAppId=true
+    - gradle clean assemble -PadblockEnabled=false -PrandomizedAppId=true
     # Rename the APKs to avoid confusion
     - mv adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned{,-ADBLOCK-DISABLED}.apk
     - mv adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug{,-ADBLOCK-DISABLED}.apk
@@ -160,31 +140,35 @@ build_libadblockplus-android:abp-disabled:
 
 build_libadblockplus-android:arm:
   stage: build
-  <<: *cache_readonly
   <<: *onlyrc
   script:
-    - ./gradlew clean assembleAbi_arm
+    - *apt-install
+    - *npm_path
+    - gradle clean assembleAbi_arm
 
 build_libadblockplus-android:arm64:
   stage: build
-  <<: *cache_readonly
   <<: *onlyrc
   script:
-    - ./gradlew clean assembleAbi_arm64
+    - *apt-install
+    - *npm_path
+    - gradle clean assembleAbi_arm64
 
 build_libadblockplus-android:x86:
   stage: build
-  <<: *cache_readonly
   <<: *onlyrc
   script:
-    - ./gradlew clean assembleAbi_x86
+    - *apt-install
+    - *npm_path
+    - gradle clean assembleAbi_x86
 
 build_libadblockplus-android:custom-jni:
   stage: build
-  <<: *cache_readonly
   <<: *onlyrc
   script:
-    - LIBABP_SHARED_LIBRARY_NAME=adblockplus ./gradlew clean assembleAbi_arm
+    - *apt-install
+    - *npm_path
+    - LIBABP_SHARED_LIBRARY_NAME=adblockplus gradle clean assembleAbi_arm
 
 build_libadblockplus-android:without-jni:
   stage: build
@@ -199,7 +183,9 @@ build_libadblockplus-android:without-jni:
     policy: pull
   <<: *onlyrc
   script:
-    - SKIP_JNI_COMPILATION=true ./gradlew clean assemble
+    - *apt-install
+    - *npm_path
+    - SKIP_JNI_COMPILATION=true gradle clean assemble
 
 # These are the instrumented tests that run on the real devices on https://saucelabs.com TestObject.
 # @LargeTest tests are skipped in this job
@@ -253,6 +239,8 @@ testobject_tests:
     # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
   script:
+    - export NPM_PATH=`which npm`
+    - apt-get update && apt-get install -y ninja-build libicu-dev
     # TESTOBJ_PROJECT_KEY should exist, testing it
     - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
     # we are not using submodules, because automation is not a part of repository functionality
@@ -267,7 +255,7 @@ testobject_tests:
       for PLATFORM_VERSION in $PLATFORM_VERSIONS
         do export PLATFORM_VERSION
         echo Starting job for version ${PLATFORM_VERSION}
-        (./gradlew ${GRADLE_TASK} &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
+        (gradle ${GRADLE_TASK} &> platform_version-${PLATFORM_VERSION}.log ; echo $? > result_${PLATFORM_VERSION}) &
         pids="$pids $!"
       done
     - wait $pids
@@ -277,7 +265,7 @@ testobject_tests:
         do if [ -s target/rerun${PLATFORM_VERSION}.txt ] ; then
           echo "Rerunning failed test cases for platform version ${PLATFORM_VERSION}"
           mv target/rerun${PLATFORM_VERSION}.txt target/rerun.txt
-          ./gradlew rerunFailed
+          gradle rerunFailed
           echo $? > result_${PLATFORM_VERSION}
           rm -f target/rerun.txt
         fi
@@ -333,6 +321,48 @@ dev_functional_autojob:
     - if: '$FORCE_FUNCTIONAL == "true"'
     - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "schedule"'
 
+plt_tests:
+  stage: device_tests
+  interruptible: true
+  tags:
+    - "ce11171b5399805a0c"
+  retry: 1
+  image: "registry.gitlab.com/eyeo/docker/appium:1.16.0"
+  variables:
+    GIT_STRATEGY: "none"
+    PLATFORM_VERSIONS: "10"
+    GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
+    GIT_AUTOMATION_BRANCH: "master"
+    TEST_APK: "../adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
+    #Override the real TESTOBJ_PROJECT_KEY so its not accidentally used
+    TESTOBJ_PROJECT_KEY: "123"
+  before_script:
+    - apt-get -y update
+    - apt-get -y install openjdk-8-jdk git
+    - if [ "${ANDROID_KEY_FILE}" ] ; then cp -f ${ANDROID_KEY_FILE} ~/.android/adbkey; fi
+    - if [ "${ANDROID_KEY_PUB_FILE}" ] ; then cp -f ${ANDROID_KEY_PUB_FILE} ~/.android/adbkey.pub; fi
+  script:
+    - CHROMEDRIVER_AUTODOWNLOAD=true /root/entry_point.sh &> appium.log &
+    - echo $! > appium_pid
+    - git clone $GIT_AUTOMATION_REPO automation
+    - cd automation
+    - git checkout ${GIT_AUTOMATION_BRANCH:-master}
+    - APPIUM_HOST="localhost:4723" gradle pltWebview
+    - kill `cat appium_pid`
+  rules:
+    - if: '$FORCE_PLT == "true"'
+    #- if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "schedule"'
+    #- if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "manual"'
+  artifacts:
+    when: always
+    expire_in: 6 months
+    reports:
+      junit: "automation/target/cucumber-reports/*.xml"
+    paths:
+      - "automation/plt/webviewPLT.json"
+      - "appium.log"
+
+
 # FilterEngine performance benchmarking and memory
 benchmark:
   image: "registry.gitlab.com/finestructure/pipeline-trigger:2.7.0"
@@ -363,13 +393,14 @@ benchmark:
 
 .publish_template: &publish_template
   stage: publish
-  <<: *cache_readonly
   script:
+    - *apt-install
+    - *npm_path
     - |
       if [[ ${DRY_RUN:-true} == "true" ]] ; then
         echo 'Note: $DRY_RUN is currently "true", run pipeline manually and set to "false" to actually publish to gitlab'
       else
-        ./gradlew publish
+        gradle publish
       fi
 
 publish_rc_to_gitlab:

@@ -1,0 +1,109 @@
+plugins {
+    id 'com.android.library'
+    id 'adblockplus-shared-test-plugin'
+}
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion Config.compileSdkVersion
+    buildToolsVersion Config.buildToolsVersion
+    ndkVersion Config.ndkVersion
+
+    defaultConfig {
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+        versionCode 1
+        versionName '1.0'
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        consumerProguardFiles 'consumer-rules.pro'
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_shared'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    externalNativeBuild {
+        cmake {
+            path file('CMakeLists.txt')
+        }
+    }
+    aaptOptions {
+        noCompress 'hbc'
+    }
+    sourceSets {
+        androidTest {
+            java.srcDirs += [ 'src/sharedTest/java' ]
+        }
+        test {
+            java.srcDirs += [ 'src/sharedTest/java' ]
+        }
+    }
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+}
+
+dependencies {
+    implementation Deps.androidx_appcompat
+    implementation Deps.facebook_soloader
+    implementation project(':fbjni')
+    implementation Deps.jetbrains_annotations
+
+    sharedTestImplementation Deps.junit
+    sharedTestImplementation Deps.roboletric
+    sharedTestImplementation Deps.androidx_test_ext
+    sharedTestImplementation Deps.androidx_test_espresso
+    sharedTestImplementation Deps.core_ktx
+    sharedTestImplementation Deps.kotlin
+}
+repositories {
+    mavenCentral()
+}
+
+def genCopyBundleTask(mode) {
+    tasks.register("copyMainBundle${mode.capitalize()}", Copy) {
+        def dst = buildDir.toPath().resolve("intermediates/library_assets/${mode.toLowerCase()}/out/")
+        from rootProject.project('jscore').files('build/dist/API.hbc')
+        into dst
+        doFirst { dst.toFile().mkdirs() }
+        dependsOn ':jscore:build'
+    }
+}
+
+genCopyBundleTask('debug')
+genCopyBundleTask('release')
+
+afterEvaluate {
+    // Let's make sure the core and external libraries are compiled before we start
+    // to compile the engine.
+
+    tasks.named('externalNativeBuildDebug').configure {
+        dependsOn ':hermes-libs:buildHermesHostDebug', ':hermes-libs:assembleAndroidDebug'
+    }
+    tasks.named('externalNativeBuildRelease').configure {
+        dependsOn ':hermes-libs:buildHermesHostRelease', ':hermes-libs:assembleAndroidRelease'
+    }
+
+    // Make sure the main bundle is copied into the assets with the other assets
+    tasks.named('packageDebugAssets').configure {
+        finalizedBy 'copyMainBundleDebug'
+    }
+    tasks.named('packageReleaseAssets').configure {
+        finalizedBy 'copyMainBundleRelease'
+    }
+}

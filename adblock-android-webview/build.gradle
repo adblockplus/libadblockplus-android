@@ -22,7 +22,8 @@ android {
 
 dependencies {
   api project(':adblock-android')
-  api project(':engine')
+  api project(':hermes-engine')
+  testImplementation project(':hermes-engine')
   testImplementation Deps.junit
   testImplementation Deps.kotlin
   testImplementation Deps.mockito_core

@@ -41,7 +41,7 @@ dependencies {
 }
 
 task copyDefaultSubscriptions (type: org.gradle.api.tasks.Copy) {
-  from "$rootDir/libadblockplus/adblockpluscore/data/"
+  from "$rootDir/extern/adblockpluscore/data/"
   into "./src/main/res/raw/"
   include "subscriptions.json"
 }

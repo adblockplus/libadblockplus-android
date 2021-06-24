@@ -1,0 +1,14 @@
+{
+  "env": {
+    "commonjs": true
+  },
+  "globals": {
+    "URL": true,
+    "atob": true,
+    "console": true,
+    "fetch": true
+  },
+  "parserOptions": {
+    "sourceType": "module"
+  }
+}

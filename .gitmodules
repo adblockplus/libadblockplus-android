@@ -1,6 +1,12 @@
 [submodule "libadblockplus"]
 	path = libadblockplus
 	url = ../../adblockplus/libadblockplus.git
-[submodule "hermes"]
-	path = hermes
-	url = ../../sandbox/hermes-engine.git
+[submodule "extern/fbjni"]
+	path = extern/fbjni
+	url = https://github.com/facebookincubator/fbjni.git
+[submodule "extern/hermes"]
+	path = extern/hermes
+	url = https://github.com/facebook/hermes.git
+[submodule "extern/adblockpluscore"]
+	path = extern/adblockpluscore
+	url = https://gitlab.com/adblockplus/adblockpluscore.git

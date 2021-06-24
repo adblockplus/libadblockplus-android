@@ -1,0 +1,28 @@
+{
+  "name": "jscore",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js",
+    "test": "npm run build && node test.js",
+    "clean": "npx rimraf build"
+  },
+  "keywords": [],
+  "author": "Stefano Pacifici <s.pacifici@eyeo.com>",
+  "license": "GPLv3",
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/plugin-transform-runtime": "^7.13.10",
+    "@babel/preset-env": "^7.12.11",
+    "babel-loader": "^8.2.2",
+    "eslint-config-eyeo": "^3.2.0",
+    "rimraf": "^3.0.2",
+    "webpack": "^5.18.0",
+    "webpack-cli": "^4.5.0"
+  },
+  "dependencies": {
+    "glob": "^7.1.7",
+    "punycode": "^2.1.1"
+  }
+}
