@@ -32,7 +32,7 @@ gradle_unit_tests:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   script:
-    - &apt-install apt-get update && apt-get install -y ninja-build libicu-dev nodejs git
+    - &apt-install apt-get update && apt-get install -y ninja-build libicu-dev nodejs git; /opt/android-sdk/tools/bin/sdkmanager --install "cmake;3.18.1"
     - &npm_path npm list glob || npm install -g glob ; export NPM_PATH=`which npm` ; export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
     - gradle test --stacktrace
   # RUN ONLY MANUALLY, the tests are broken fore Hermes right now
