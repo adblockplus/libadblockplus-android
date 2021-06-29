@@ -69,8 +69,9 @@ module.exports = function(env, _)
             loader: "babel-loader",
             options: {
               sourceType: "unambiguous",
-              presets: ["@babel/preset-env"],
-              plugins: ["@babel/plugin-transform-runtime"]
+              presets:  [
+                "module:metro-react-native-babel-preset",
+              ],
             }
           }
         }
