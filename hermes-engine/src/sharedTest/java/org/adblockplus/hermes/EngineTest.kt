@@ -22,6 +22,7 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -37,6 +38,83 @@ class EngineTest {
         val engine = Engine(application)
         val result = engine.evaluateJS("\"21\" + 21")
         Assert.assertEquals("We should be able to evaluate simple expressions", "2121", result)
+    }
+
+    @Test
+    fun testSetTimeout() {
+        val engine = Engine(application)
+        try {
+            engine.evaluateJS("setTimeout()")
+            fail("Should fail without arguments!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+        try {
+            engine.evaluateJS("setTimeout(\"not a function\")")
+            fail("Should fail with wrong first argument!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+        try {
+            engine.evaluateJS("setTimeout(function() {}, \"not a number\")")
+            fail("Should fail with wrong second argument!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+
+        engine.evaluateJS("var wasCalled = false;" +
+                "function setToTrue() { wasCalled = true; };" +
+                "setTimeout(setToTrue, 100)")
+        Thread.sleep(50)
+        // Should be false as timeout didn't tick
+        Assert.assertFalse(engine.evaluateJS("wasCalled").toBoolean())
+
+        // setTimeout without args and 0 timeout
+        engine.evaluateJS("var wasCalled = false;" +
+                "function setToTrue() { wasCalled = true; };" +
+                "setTimeout(setToTrue, 0)")
+        Thread.sleep(10)
+        Assert.assertTrue(engine.evaluateJS("wasCalled").toBoolean())
+
+        // setTimeout without args
+        engine.evaluateJS("var wasCalled = false;" +
+                "function setToTrue() { wasCalled = true; };" +
+                "setTimeout(setToTrue, 100)")
+        Assert.assertFalse(engine.evaluateJS("wasCalled").toBoolean())
+        Thread.sleep(120)
+        Assert.assertTrue(engine.evaluateJS("wasCalled").toBoolean())
+
+        // setTimeout with args
+        engine.evaluateJS("var value = 0;" +
+                "function plusPlus(arg1, arg2) { value = arg1 + arg2; };" +
+                "setTimeout(plusPlus, 100, 2, 2)")
+        Assert.assertEquals(0, engine.evaluateJS("value").toInt())
+        Thread.sleep(120)
+        Assert.assertEquals(4, engine.evaluateJS("value").toInt())
+    }
+
+    @Test
+    fun testSetImmediate() {
+        val engine = Engine(application)
+        try {
+            engine.evaluateJS("setImmediate()")
+            fail("Should fail without arguments!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+        try {
+            engine.evaluateJS("setImmediate(\"not a function\")")
+            fail("Should fail with wrong first argument!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+        // setTimeout with args
+        engine.evaluateJS("var value = 0;" +
+                "function plusPlus(arg1, arg2) { value = arg1 + arg2; };" +
+                "setImmediate(plusPlus, 2, 2)");
+        Thread.sleep(50)
+        val result2 = engine.evaluateJS("value").toInt()
+        Assert.assertEquals(4, result2)
     }
 
     @Test

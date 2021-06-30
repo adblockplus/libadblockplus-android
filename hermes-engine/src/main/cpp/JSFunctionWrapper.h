@@ -15,17 +15,26 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HERMESENGINE_FILE_SYSTEM_H
-#define HERMESENGINE_FILE_SYSTEM_H
+#ifndef JS_FUNCTION_WRAPPER_H
+#define JS_FUNCTION_WRAPPER_H
 
-#include "jsi/jsi.h"
+#include <vector>
+#include <jsi/jsi/jsi.h>
+#include <fbjni/fbjni.h>
 
 namespace AdblockPlus
 {
-   namespace JsFileSystem
-   {
-      void Setup(facebook::jsi::Runtime *pRuntime);
-   }
-}
+  struct JSFunctionWrapperNative
+  {
+     jlong millis = 0;
+     std::vector<facebook::jsi::Value> jsCallbackArguments;
+     JSFunctionWrapperNative(facebook::jsi::Runtime& rt, const facebook::jsi::Value *args, size_t count, bool isImmediate);
+  };
 
-#endif // HERMESENGINE_FILE_SYSTEM_H
+  struct JSFunctionWrapper : facebook::jni::JavaClass<JSFunctionWrapper>
+  {
+     static constexpr auto kJavaDescriptor = "Lorg/adblockplus/hermes/JSFunctionWrapper;";
+     static facebook::jni::local_ref<JSFunctionWrapper> create(jlong nativePtr);
+  };
+}
+#endif

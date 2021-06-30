@@ -15,17 +15,21 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HERMESENGINE_FILE_SYSTEM_H
-#define HERMESENGINE_FILE_SYSTEM_H
+package org.adblockplus.hermes;
 
-#include "jsi/jsi.h"
-
-namespace AdblockPlus
+/**
+ * Opaque type to keep Javascript function references to be scheduled with setTimeout (or setImmediate) Javascript API.
+ * This class should be built only by the C++ support code when a function reference is available. EVERY FIELD SHOULD BE
+ * PRIVATE.
+ */
+class JSFunctionWrapper
 {
-   namespace JsFileSystem
-   {
-      void Setup(facebook::jsi::Runtime *pRuntime);
-   }
-}
+  // Built only by C++ code
+  private JSFunctionWrapper(final long nativePtr)
+  {
+    this.nativePtr = nativePtr;
+  }
 
-#endif // HERMESENGINE_FILE_SYSTEM_H
+  // This should have only private fields
+  private final long nativePtr;
+}

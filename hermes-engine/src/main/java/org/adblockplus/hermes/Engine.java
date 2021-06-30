@@ -51,6 +51,7 @@ public class Engine implements AdblockEngine
   private static final List<String> SUBSCRIPTIONS = Arrays.asList
       ("easylist_minified.txt", "exceptionrules_minimal.txt");
   private final File engineDataPath;
+  private final EngineScheduler looper = new EngineScheduler();
 
   private static void createDirectoryIfNeeded(final File directory)
   {
@@ -137,14 +138,14 @@ public class Engine implements AdblockEngine
 
 
   @Override
-  public synchronized @NotNull String getElementHidingStyleSheet(@NotNull final String domain,
+  public @NotNull String getElementHidingStyleSheet(@NotNull final String domain,
                                                     final boolean specificOnly)
   {
     return _getElementHidingStyleSheet(domain, specificOnly);
   }
 
   @Override
-  public synchronized @NotNull List<EmulationSelector> getElementHidingEmulationSelectors(
+  public @NotNull List<EmulationSelector> getElementHidingEmulationSelectors(
       @NotNull final String domain)
   {
     final ArrayList<EmulationSelector> result = new ArrayList<>();
@@ -159,7 +160,7 @@ public class Engine implements AdblockEngine
   }
 
   @Override
-  public synchronized boolean isContentAllowlisted(@NotNull final String url,
+  public boolean isContentAllowlisted(@NotNull final String url,
                                       @NotNull final Set<ContentType> contentTypes,
                                       @NotNull final List<String> referrerChain,
                                       @NotNull final String siteKey)
@@ -169,7 +170,7 @@ public class Engine implements AdblockEngine
   }
 
   @Override
-  public synchronized MatchesResult matches(@NotNull final String url,
+  public MatchesResult matches(@NotNull final String url,
                                @NotNull final Set<ContentType> contentTypes,
                                @NotNull final String parent, @NotNull final String siteKey,
                                final boolean domainSpecificOnly)
@@ -200,6 +201,11 @@ public class Engine implements AdblockEngine
     throw new RuntimeException("Not implemented yet");
   }
 
+  private void schedule(@NonNull final JSFunctionWrapper jsFunction, final long millis)
+  {
+    looper.post(this, jsFunction, millis);
+  }
+
   private native String _matches(String url, int contentTypeMask,
                                  String parent, String siteKey, boolean domainSpecificOnly);
 
@@ -209,4 +215,6 @@ public class Engine implements AdblockEngine
   private native String _getElementHidingStyleSheet(String domain, boolean specificOnly);
 
   private native Object[] _getElementHidingEmulationSelectors(String domain);
+
+  native void _executeJSFunction(@NonNull final JSFunctionWrapper jsFunction);
 }

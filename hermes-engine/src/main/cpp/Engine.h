@@ -18,9 +18,12 @@
 #ifndef HERMESENGINE_ENGINE_H
 #define HERMESENGINE_ENGINE_H
 
-#include <fbjni/ByteBuffer.h>
 #include <string>
+
+#include <fbjni/ByteBuffer.h>
 #include <jsi/jsi/jsi.h>
+
+#include "JSFunctionWrapper.h"
 
 using namespace facebook::jni;
 
@@ -46,6 +49,8 @@ struct Engine : JavaClass<Engine>
   static std::string evaluateJS(alias_ref<Engine> thiz,
                                 alias_ref<JString> src);
 
+  static void _executeJSFunction(alias_ref<Engine> thiz, alias_ref<AdblockPlus::JSFunctionWrapper> jsFunctionWrapper);
+
   static jboolean _isContentAllowlisted(alias_ref<Engine> thiz,
                                         int contentTypeMask,
                                         alias_ref<JList<JString> > referrerChain,
@@ -66,6 +71,9 @@ struct Engine : JavaClass<Engine>
                                                           alias_ref<JString> domain);
 
   static void registerNatives();
+
+  static void StoreCallback(facebook::jsi::Runtime& rt, const facebook::jsi::Value *args, size_t count,
+                            bool isImmediate);
 
 private:
   static facebook::hermes::HermesRuntime* getRuntimePtr(alias_ref<Engine> thiz);

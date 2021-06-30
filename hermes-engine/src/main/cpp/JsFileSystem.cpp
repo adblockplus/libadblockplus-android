@@ -19,30 +19,13 @@
 
 #include <memory>
 #include "JsFileSystem.h"
-
-using namespace facebook::hermes;
-using namespace AdblockPlus;
+#include "JsUtils.h"
 
 #include "DefaultFileSystem.h"
 
-namespace
-{
-  void throwJsIfNotAString(Runtime &rt, const Value *pArg, const char *message)
-  {
-    if (!pArg->isString())
-    {
-      throw JSError(rt, message);
-    }
-  }
-
-  void throwJsIfNotAFunction(Runtime &rt, const Value *pArg, const char *message)
-  {
-    if (!pArg->isObject() || !pArg->asObject(rt).isFunction(rt))
-    {
-      throw JSError(rt, message);
-    }
-  }
-}
+using namespace facebook::hermes;
+using namespace facebook::jsi;
+using namespace AdblockPlus;
 
 namespace ReadFromFileCallback
 {
@@ -78,13 +61,13 @@ namespace ReadFromFileCallback
       throw JSError(rt, "__fileSystem_readFromFile requires 4 parameters");
     }
 
-    throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_readFromFile"
+    JsUtils::throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_readFromFile"
                                       " must be a string (file path)");
-    throwJsIfNotAFunction(rt, &args[1], "Second argument to __fileSystem_readFromFile"
+    JsUtils::throwJsIfNotAFunction(rt, &args[1], "Second argument to __fileSystem_readFromFile"
                                         " must be a function (listener callback)");
-    throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_readFromFile"
+    JsUtils::throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_readFromFile"
                                         " must be a function (done callback)");
-    throwJsIfNotAFunction(rt, &args[3], "Forth argument to __fileSystem_readFromFile"
+    JsUtils::throwJsIfNotAFunction(rt, &args[3], "Forth argument to __fileSystem_readFromFile"
                                         " must be a function (error callback)");
 
     const std::string filename = args[0].getString(rt).utf8(rt);
@@ -130,11 +113,11 @@ bool WriteCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t 
     throw JSError(rt, "__fileSystem_writeToFile requires 3 parameters");
   }
 
-  throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_writeToFile"
+  JsUtils::throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_writeToFile"
                                     " must be a string (file path)");
-  throwJsIfNotAString(rt, &args[1], "Second argument to __fileSystem_writeToFile"
+  JsUtils::throwJsIfNotAString(rt, &args[1], "Second argument to __fileSystem_writeToFile"
                                     " must be a string (file content)");
-  throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_writeToFile"
+  JsUtils::throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_writeToFile"
                                       " must be a function (error callback)");
 
   const std::string filename = args[0].getString(rt).utf8(rt);
@@ -167,11 +150,11 @@ bool MoveCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t c
     throw JSError(rt, "__fileSystem_moveFile requires 3 parameters");
   }
 
-  throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_writeToFile"
+  JsUtils::throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_writeToFile"
                                     " must be a string (from file path)");
-  throwJsIfNotAString(rt, &args[1], "Second argument to __fileSystem_writeToFile"
+  JsUtils::throwJsIfNotAString(rt, &args[1], "Second argument to __fileSystem_writeToFile"
                                     " must be a string (to file path)");
-  throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_moveFile"
+  JsUtils::throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_moveFile"
                                       " must be a function");
 
   const std::string from = args[0].getString(rt).utf8(rt);
@@ -203,9 +186,9 @@ bool StatCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t c
     throw JSError(rt, "__fileSystem_statFile requires 2 parameters");
   }
 
-  throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_statFile"
+  JsUtils::throwJsIfNotAString(rt, &args[0], "First argument to __fileSystem_statFile"
                                     " must be a string (file path)");
-  throwJsIfNotAFunction(rt, &args[1], "Second argument to __fileSystem_statFile"
+  JsUtils::throwJsIfNotAFunction(rt, &args[1], "Second argument to __fileSystem_statFile"
                                       " must be a function");
 
   const std::string filename = args[0].getString(rt).utf8(rt);
