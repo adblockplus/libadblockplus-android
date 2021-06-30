@@ -15,17 +15,16 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HERMESENGINE_FILE_SYSTEM_H
-#define HERMESENGINE_FILE_SYSTEM_H
+#ifndef HERMESENGINE_GLOBAL_JS_OBJECT_H
+#define HERMESENGINE_GLOBAL_JS_OBJECT_H
 
 #include "jsi/jsi.h"
 
 namespace AdblockPlus
 {
-   namespace JsFileSystem
+   namespace GlobalJsObject
    {
       void Setup(facebook::jsi::Runtime *pRuntime);
    }
 }
-
-#endif // HERMESENGINE_FILE_SYSTEM_H
+#endif // HERMESENGINE_GLOBAL_JS_OBJECT_H

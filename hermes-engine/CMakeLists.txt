@@ -45,7 +45,10 @@ add_library(
         src/main/cpp/native-lib.cpp
         src/main/cpp/Engine.cpp
         src/main/cpp/DefaultFileSystem.cpp
+        src/main/cpp/GlobalJsObject.cpp
         src/main/cpp/JsFileSystem.cpp
+        src/main/cpp/JSFunctionWrapper.cpp
+        src/main/cpp/JsUtils.cpp
         src/main/cpp/MappedFileBuffer.cpp
         src/main/cpp/Api.cpp )
 
