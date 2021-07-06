@@ -20,11 +20,19 @@
 using namespace facebook::jsi;
 using namespace AdblockPlus;
 
+void JsUtils::throwJsIfNotABoolean(facebook::jsi::Runtime &rt, const facebook::jsi::Value *pArg, const char *message)
+{
+   if (!pArg->isBool())
+   {
+      throw JSError(rt, message);
+   }
+}
+
 void JsUtils::throwJsIfNotAFunction(facebook::jsi::Runtime &rt, const facebook::jsi::Value *pArg, const char *message)
 {
    if (!pArg->isObject() || !pArg->asObject(rt).isFunction(rt))
    {
-      throw facebook::jsi::JSError(rt, message);
+      throw JSError(rt, message);
    }
 }
 
@@ -32,7 +40,7 @@ void JsUtils::throwJsIfNotANumber(facebook::jsi::Runtime &rt, const facebook::js
 {
    if (!pArg->isNumber())
    {
-      throw facebook::jsi::JSError(rt, message);
+      throw JSError(rt, message);
    }
 }
 
@@ -40,7 +48,6 @@ void JsUtils::throwJsIfNotAString(facebook::jsi::Runtime &rt, const facebook::js
 {
    if (!pArg->isString())
    {
-     throw facebook::jsi::JSError(rt, message);
+     throw JSError(rt, message);
    }
 }
-

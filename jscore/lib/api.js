@@ -23,6 +23,7 @@ const {elemHideExceptions} = require("elemHideExceptions")
 const {snippets} = require("snippets")
 const {parseURL} = require("url");
 const {URI, extractHostFromURL} = require('./uri')
+const {startEngine} = require("./init");
 
 function getURLInfo(url)
 {

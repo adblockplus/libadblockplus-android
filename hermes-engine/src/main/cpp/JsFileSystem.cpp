@@ -70,7 +70,8 @@ namespace ReadFromFileCallback
     JsUtils::throwJsIfNotAFunction(rt, &args[3], "Forth argument to __fileSystem_readFromFile"
                                         " must be a function (error callback)");
 
-    const std::string filename = args[0].getString(rt).utf8(rt);
+    const std::string filename = rt.global().getProperty(rt, "__basePath").asString(rt).utf8(rt) +
+            args[0].getString(rt).utf8(rt);
     auto listenerFunc = args[1].asObject(rt).asFunction(rt);
     auto resolveFunc = args[2].asObject(rt).asFunction(rt);
     auto rejectFunc = args[3].asObject(rt).asFunction(rt);
@@ -120,7 +121,8 @@ bool WriteCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t 
   JsUtils::throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_writeToFile"
                                       " must be a function (error callback)");
 
-  const std::string filename = args[0].getString(rt).utf8(rt);
+  const std::string filename = rt.global().getProperty(rt, "__basePath").asString(rt).utf8(rt) +
+          args[0].getString(rt).utf8(rt);
   const std::string content = args[1].getString(rt).utf8(rt);
   auto contentBuffer = IFileSystem::IOBuffer(content.begin(), content.begin() + content.length());
 
@@ -157,8 +159,10 @@ bool MoveCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t c
   JsUtils::throwJsIfNotAFunction(rt, &args[2], "Third argument to __fileSystem_moveFile"
                                       " must be a function");
 
-  const std::string from = args[0].getString(rt).utf8(rt);
-  const std::string to = args[1].getString(rt).utf8(rt);
+  const std::string from = rt.global().getProperty(rt, "__basePath").asString(rt).utf8(rt) +
+          args[0].getString(rt).utf8(rt);
+  const std::string to = rt.global().getProperty(rt, "__basePath").asString(rt).utf8(rt) +
+          args[1].getString(rt).utf8(rt);
   auto callback = args[2].asObject(rt).asFunction(rt);
 
   // we create an instance of FileSystem every single time just for the sake of simplicity
@@ -191,7 +195,8 @@ bool StatCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t c
   JsUtils::throwJsIfNotAFunction(rt, &args[1], "Second argument to __fileSystem_statFile"
                                       " must be a function");
 
-  const std::string filename = args[0].getString(rt).utf8(rt);
+  const std::string filename = rt.global().getProperty(rt, "__basePath").asString(rt).utf8(rt) +
+          args[0].getString(rt).utf8(rt);
   auto callback = args[1].asObject(rt).asFunction(rt);
 
   auto fs = DefaultFileSystem(std::make_unique<DefaultFileSystemSync>(""));
@@ -215,9 +220,11 @@ bool StatCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t c
   return true;
 }
 
-void JsFileSystem::Setup(Runtime *pRuntime)
+void JsFileSystem::Setup(Runtime *pRuntime, const std::string& baseDataFolder)
 {
   const std::string fileSystemPrefix = "__fileSystem_";
+
+  pRuntime->global().setProperty(*pRuntime, "__basePath", baseDataFolder + "/");
 
   // ----------------------------------- readFromFile ---------------------------------------
   const PropNameID readFromFileId = PropNameID::forAscii(*pRuntime,

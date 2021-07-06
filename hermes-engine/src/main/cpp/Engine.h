@@ -42,9 +42,8 @@ struct Engine : JavaClass<Engine>
   static constexpr auto kJavaDescriptor = "Lorg/adblockplus/hermes/Engine;";
 
   static void init(alias_ref<Engine> thiz,
-                   alias_ref<JString> apiJsFilePath,
-                   alias_ref<JString> subscriptionsDir,
-                   alias_ref<JList<JString> >subscriptions);
+                   alias_ref<JString> baseDataFolder,
+                   alias_ref<JString> coreJsFilePath);
 
   static std::string evaluateJS(alias_ref<Engine> thiz,
                                 alias_ref<JString> src);
@@ -75,9 +74,10 @@ struct Engine : JavaClass<Engine>
   static void StoreCallback(facebook::jsi::Runtime& rt, const facebook::jsi::Value *args, size_t count,
                             bool isImmediate);
 
+  static void InitDone(bool success);
+
 private:
   static facebook::hermes::HermesRuntime* getRuntimePtr(alias_ref<Engine> thiz);
-  static void registerJsObjects(facebook::jsi::Runtime *pRuntime);
 };
 
 #endif //HERMESENGINE_ENGINE_H

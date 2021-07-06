@@ -24,7 +24,7 @@ namespace AdblockPlus
 {
    namespace JsFileSystem
    {
-      void Setup(facebook::jsi::Runtime *pRuntime);
+      void Setup(facebook::jsi::Runtime *pRuntime, const std::string& baseDataFolder);
    }
 }
 

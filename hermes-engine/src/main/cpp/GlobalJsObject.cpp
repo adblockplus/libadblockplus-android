@@ -61,14 +61,29 @@ namespace
 
        return 0;
     }
+
+    int InitDoneCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t count)
+    {
+       if (count < 1)
+       {
+          throw JSError(rt, "__initDone requires 1 parameter");
+       }
+       JsUtils::throwJsIfNotABoolean(rt, &args[0], "First argument to __initDone"
+                                                  " must be a boolean");
+       Engine::InitDone(args[0].getBool());
+       return 0;
+    }
 }
 
 void GlobalJsObject::Setup(Runtime *pRuntime)
 {
    const PropNameID setTimeoutId = PropNameID::forAscii(*pRuntime,"setTimeout");
-   auto jsSetTimeout = Function::createFromHostFunction(*pRuntime, setTimeoutId,2, SetTimeoutCallback);
+   auto jsSetTimeout = Function::createFromHostFunction(*pRuntime, setTimeoutId, 2, SetTimeoutCallback);
    pRuntime->global().setProperty(*pRuntime, setTimeoutId, jsSetTimeout);
    const PropNameID setImmediateId = PropNameID::forAscii(*pRuntime,"setImmediate");
-   auto jsSetImmediate = Function::createFromHostFunction(*pRuntime, setImmediateId,1, SetImmediateCallback);
+   auto jsSetImmediate = Function::createFromHostFunction(*pRuntime, setImmediateId, 1, SetImmediateCallback);
    pRuntime->global().setProperty(*pRuntime, setImmediateId, jsSetImmediate);
+   const PropNameID initDoneId = PropNameID::forAscii(*pRuntime,"__initDone");
+   auto jsInitDone = Function::createFromHostFunction(*pRuntime, initDoneId, 1, InitDoneCallback);
+   pRuntime->global().setProperty(*pRuntime, initDoneId, jsInitDone);
 }
