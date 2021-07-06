@@ -24,6 +24,7 @@ namespace AdblockPlus
 {
    namespace JsUtils
    {
+      void throwJsIfNotABoolean(facebook::jsi::Runtime &rt, const facebook::jsi::Value *pArg, const char *message);
       void throwJsIfNotAFunction(facebook::jsi::Runtime &rt, const facebook::jsi::Value *pArg, const char *message);
       void throwJsIfNotANumber(facebook::jsi::Runtime &rt, const facebook::jsi::Value *pArg, const char *message);
       void throwJsIfNotAString(facebook::jsi::Runtime &rt, const facebook::jsi::Value *pArg, const char *message);

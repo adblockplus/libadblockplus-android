@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -46,12 +45,11 @@ public class Engine implements AdblockEngine
   @SuppressWarnings({"unused", "FieldMayBeFinal"})
   // used in native
   private long nativePtr = 0L;
+  private final EngineScheduler looper = new EngineScheduler();
 
   private static final String DIR_AND_TAG = "Hermes";
-  private static final List<String> SUBSCRIPTIONS = Arrays.asList
-      ("easylist_minified.txt", "exceptionrules_minimal.txt");
-  private final File engineDataPath;
-  private final EngineScheduler looper = new EngineScheduler();
+  private static final String SUBSCRIPTIONS_IN = "patterns_mini.ini";
+  private static final String SUBSCRIPTIONS_OUT = "patterns.ini";
 
   private static void createDirectoryIfNeeded(final File directory)
   {
@@ -62,21 +60,6 @@ public class Engine implements AdblockEngine
       {
         Log.w(DIR_AND_TAG, "Failed creating dir " + directory);
       }
-    }
-  }
-
-  private void copySubscriptionsAssets(final Context context)
-  {
-    final AssetManager assetManager = context.getAssets();
-    for(final String filename : SUBSCRIPTIONS)
-    {
-      final File outFile = new File(engineDataPath, filename);
-      if (outFile.exists())
-      {
-        Log.i(DIR_AND_TAG, "Subscription file already exists: " + filename);
-        continue;
-      }
-      copyAssetToFile(assetManager, filename, outFile);
     }
   }
 
@@ -111,16 +94,19 @@ public class Engine implements AdblockEngine
 
   public Engine(@NonNull final Context context)
   {
-    engineDataPath = new File(context.getCacheDir(), DIR_AND_TAG);
-    createDirectoryIfNeeded(engineDataPath);
-    Log.i(DIR_AND_TAG, "Subscriptions data dir is: " + engineDataPath);
-    copySubscriptionsAssets(context);
-    final File apiPath = new File(engineDataPath, API_HBC);
+    final String coreStoragePath = context.getDir("adblock", Context.MODE_PRIVATE).getAbsolutePath();
+    final File coreCodeDir = new File(context.getCacheDir(), DIR_AND_TAG);
+    createDirectoryIfNeeded(coreCodeDir);
+    Log.i(DIR_AND_TAG, "Subscriptions data dir is: " + coreStoragePath);
+    copyAssetToFile(context.getAssets(), SUBSCRIPTIONS_IN, new File(coreStoragePath, SUBSCRIPTIONS_OUT));
+    final File apiPath = new File(coreStoragePath, API_HBC);
     copyAssetToFile(context.getAssets(), API_HBC, apiPath);
-    init(apiPath.getAbsolutePath(), engineDataPath.getAbsolutePath(), SUBSCRIPTIONS);
+    Log.d(DIR_AND_TAG, "Init starts");
+    init(coreStoragePath, apiPath.getAbsolutePath());
+    Log.d(DIR_AND_TAG, "Init ends");
   }
 
-  private native void init(String jsFilePath, String subscriptionsDir, List<String> subscriptions);
+  private native void init(String baseDataFolder, String coreJsFilePath);
 
   /**
    * This method if visible to test the javascript engine functionality

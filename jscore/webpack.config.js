@@ -59,7 +59,7 @@ module.exports = function(env, _)
         }
       })
     ],
-    target: ["web", "es5"],
+    target: ["es5"],
     module: {
       rules: [
         {
@@ -74,6 +74,16 @@ module.exports = function(env, _)
               ],
             }
           }
+        },
+        // FIXME: this ideally should be replaced with `console` polyfill
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          loader: 'string-replace-loader',
+          options: {
+            search: /console\.(log|debug|warn|error|trace)/g,
+            replace: 'print'
+          },
         }
       ]
     },
@@ -91,6 +101,9 @@ module.exports = function(env, _)
         io$: path.resolve(__dirname, "./lib/platform/io.js"),
         prefs$: path.resolve(__dirname, "./lib/platform/prefs.js")
       }
+    },
+    experiments: {
+      topLevelAwait: true
     }
   };
 };

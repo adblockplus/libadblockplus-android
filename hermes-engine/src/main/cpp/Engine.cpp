@@ -24,7 +24,9 @@
 
 #include "MappedFileBuffer.h"
 
+#include <assert.h>
 #include <mutex>
+#include <future>
 
 using namespace facebook::hermes;
 using namespace facebook::jsi;
@@ -37,6 +39,7 @@ namespace
    // non static method. There should be a better way => we will address that separately.
    global_ref<Engine> engineRef;
    std::recursive_mutex engineMutex;
+   std::promise<bool> initializationPromise;
 
    void TriggerJsCallback(Runtime& rt, JSFunctionWrapperNative *jsFunctionWrapperNative)
    {
@@ -60,55 +63,50 @@ namespace
      }
      delete jsFunctionWrapperNative;
    }
+
+   void registerJsObjects(Runtime *pRuntime, const std::string& baseDataFolder)
+   {
+     JsFileSystem::Setup(pRuntime, baseDataFolder);
+     GlobalJsObject::Setup(pRuntime);
+   }
 }
 
-void Engine::init(
-        alias_ref<Engine> thiz,
-        alias_ref<JString> apiJsFilePath,
-        alias_ref<JString> subscriptionsDir,
-        alias_ref<JList<JString> > subscriptions)
+void Engine::InitDone(bool success)
 {
-  auto uniquePtr = makeHermesRuntime();
-  auto pRuntime = uniquePtr.release();
+  initializationPromise.set_value(success);
+}
 
-  // Store the pointer to the HermesRuntime on Java side
-  const auto field = thiz->getClass()->getField<jlong>("nativePtr");
-  thiz->setFieldValue(field, reinterpret_cast<jlong>(pRuntime));
-
-  registerJsObjects(pRuntime);
-  engineRef = make_global(thiz);
-
-  const std::string jsPath =
-          String::createFromAscii(*pRuntime, apiJsFilePath->toStdString()).utf8(*pRuntime);
-
-  // Let's load the compiled Core bundle
-  pRuntime->evaluateJavaScript(std::make_unique<MappedFileBuffer>(jsPath), "");
-
-  // Load filters from subscriptions
-  const std::string subscriptionsPath =
-          String::createFromAscii(*pRuntime, subscriptionsDir->toStdString()).utf8(*pRuntime);
-
-  for (auto it = subscriptions->begin(); it != subscriptions->end(); ++it)
+void Engine::init(alias_ref<Engine> thiz, alias_ref<JString> baseDataFolder, alias_ref<JString> coreJsFilePath)
+{
+  initializationPromise = std::promise<bool>();
+  auto result = initializationPromise.get_future();
   {
-    const auto filePath = subscriptionsPath + "/" + it.entry_->toStdString();
-    // Data validation happens actually inside Core, here we just skip comments
-    const auto command = std::string("var __loadSubsResult = {}; ") +
-            "__fileSystem_readFromFile(\"" + filePath + "\", " +
-            "function(data) { if (data && !data.startsWith(\"! \")) API.addFilter(data); }, " +
-            "function() {}, " + /* empty resolve callback */
-            "function (error) { if (error) __loadSubsResult.error = error; });";
+    std::lock_guard<std::recursive_mutex> lock(engineMutex);
+    auto uniquePtr = makeHermesRuntime();
+    auto pRuntime = uniquePtr.release();
 
-    pRuntime->evaluateJavaScript(std::make_unique<StringBuffer>(command), "");
-    const auto error = pRuntime->evaluateJavaScript(
-            std::make_unique<StringBuffer>("__loadSubsResult.error"), "");
-    if (!error.isUndefined())
-    {
-      throwNewJavaException("java/lang/RuntimeException",
-                            std::string("Failed to load: " + filePath + "\n" +
-                                        error.toString(*pRuntime)
-                                                .utf8(*pRuntime)).c_str());
-    }
+    // Store the pointer to the HermesRuntime on Java side
+    const auto field = thiz->getClass()->getField<jlong>("nativePtr");
+    thiz->setFieldValue(field, reinterpret_cast<jlong>(pRuntime));
+
+    const std::string baseDataPath =
+            String::createFromAscii(*pRuntime, baseDataFolder->toStdString()).utf8(*pRuntime);
+
+    registerJsObjects(pRuntime, baseDataPath);
+    engineRef = make_global(thiz);
+
+    const std::string jsPath =
+            String::createFromAscii(*pRuntime, coreJsFilePath->toStdString()).utf8(*pRuntime);
+
+    // Let's load the compiled Core bundle
+    pRuntime->evaluateJavaScript(std::make_unique<MappedFileBuffer>(jsPath), "");
   }
+  // Wait for result, when logging works we should at least log a failure
+  #ifdef NDEBUG
+  result.get();
+  #else
+  assert(result.get() || !"Failed to load JS Core!");
+  #endif
 }
 
 // TODO evaluateJS should handle several cases of returned values, not only strings
@@ -181,12 +179,6 @@ jboolean Engine::_isContentAllowlisted(alias_ref<Engine> thiz, int contentTypeMa
   std::lock_guard<std::recursive_mutex> lock(engineMutex);
   return Api::isContentAllowlisted(getRuntimePtr(thiz), contentTypeMask, referrerChain,
                                    siteKey);
-}
-
-void Engine::registerJsObjects(Runtime *pRuntime)
-{
-  JsFileSystem::Setup(pRuntime);
-  GlobalJsObject::Setup(pRuntime);
 }
 
 std::string Engine::_matches(alias_ref<Engine> thiz, alias_ref<JString> url, int contentTypeMask,

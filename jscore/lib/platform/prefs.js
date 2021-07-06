@@ -21,7 +21,8 @@
  * For now it only remembers its state in memory
  */
 export let Prefs = {
-  enabled: false,
+  enabled: true,
+  first_run: false, //FIXME: set to true when we have a synchronizer
   on() { this.enabled = true },
   off() { this.enabled = false },
   notificationdata: {},

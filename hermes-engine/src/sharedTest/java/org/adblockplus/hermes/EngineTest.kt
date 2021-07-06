@@ -122,21 +122,21 @@ class EngineTest {
         val engine = Engine(application)
         Assert.assertEquals(
             MatchesResult.NOT_FOUND,
-            engine.matches("http://example.org/adbanner.gif",
+            engine.matches("http://example.org/ad_banner.gif",
                 ContentType.maskOf(ContentType.IMAGE), "", "", false))
 
-        engine.evaluateJS("API.addFilter(\"adbanner.gif\");")
+        engine.evaluateJS("API.addFilter(\"ad_banner.gif\");")
 
         Assert.assertEquals(
             MatchesResult.BLOCKED,
-            engine.matches("http://example.org/adbanner.gif",
+            engine.matches("http://example.org/ad_banner.gif",
                 ContentType.maskOf(ContentType.IMAGE), "", "", false))
 
-        engine.evaluateJS("API.removeFilter(\"adbanner.gif\");")
+        engine.evaluateJS("API.removeFilter(\"ad_banner.gif\");")
 
         Assert.assertEquals(
             MatchesResult.NOT_FOUND,
-            engine.matches("http://example.org/adbanner.gif",
+            engine.matches("http://example.org/ad_banner.gif",
                 ContentType.maskOf(ContentType.IMAGE), "", "", false))
     }
 
