@@ -95,15 +95,16 @@ public class Engine implements AdblockEngine
   public Engine(@NonNull final Context context)
   {
     final String coreStoragePath = context.getDir("adblock", Context.MODE_PRIVATE).getAbsolutePath();
-    final File coreCodeDir = new File(context.getCacheDir(), DIR_AND_TAG);
-    createDirectoryIfNeeded(coreCodeDir);
     Log.i(DIR_AND_TAG, "Subscriptions data dir is: " + coreStoragePath);
     copyAssetToFile(context.getAssets(), SUBSCRIPTIONS_IN, new File(coreStoragePath, SUBSCRIPTIONS_OUT));
-    final File apiPath = new File(coreStoragePath, API_HBC);
+    final File coreCodeDir = new File(context.getCacheDir(), DIR_AND_TAG);
+    createDirectoryIfNeeded(coreCodeDir);
+    final File apiPath = new File(coreCodeDir, API_HBC);
     copyAssetToFile(context.getAssets(), API_HBC, apiPath);
     Log.d(DIR_AND_TAG, "Init starts");
     init(coreStoragePath, apiPath.getAbsolutePath());
     Log.d(DIR_AND_TAG, "Init ends");
+    apiPath.delete();
   }
 
   private native void init(String baseDataFolder, String coreJsFilePath);
