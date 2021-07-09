@@ -3,5 +3,5 @@
 # to store all resources used by that test
 # all resource files should be under static_pages
 # for example:
-#  org.adblockplus.libadblockplus.benchmark.WebViewLoadPerformanceUrlUsingJsTest org.adblockplus.libadblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner jira_test_pages_2020_01_04
-org.adblockplus.libadblockplus.android.webview.test.WebViewInterceptRequestTest org.adblockplus.libadblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner static_pages/WebViewInterceptRequestTest_2020_09_30
+#  org.adblockplus.benchmark.WebViewLoadPerformanceUrlUsingJsTest org.adblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner jira_test_pages_2020_01_04
+org.adblockplus.android.webview.test.WebViewInterceptRequestTest org.adblockplus.android.webview.test/androidx.test.runner.AndroidJUnitRunner static_pages/WebViewInterceptRequestTest_2020_09_30

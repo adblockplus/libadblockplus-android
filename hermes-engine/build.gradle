@@ -59,6 +59,7 @@ android {
 }
 
 dependencies {
+    api Deps.timber
     implementation Deps.androidx_appcompat
     implementation Deps.facebook_soloader
     implementation project(':fbjni')
@@ -70,6 +71,7 @@ dependencies {
     sharedTestImplementation Deps.androidx_test_espresso
     sharedTestImplementation Deps.core_ktx
     sharedTestImplementation Deps.kotlin
+    testImplementation Deps.junit
 }
 repositories {
     mavenCentral()

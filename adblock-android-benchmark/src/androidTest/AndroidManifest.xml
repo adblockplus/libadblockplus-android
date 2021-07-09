@@ -2,7 +2,7 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="org.adblockplus.libadblockplus.benchmark">
+    package="org.adblockplus.benchmark">
     <!-- Important: disable debuggable for accurate performance results -->
     <application
         android:debuggable="false"

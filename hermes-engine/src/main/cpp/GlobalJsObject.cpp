@@ -39,7 +39,7 @@ namespace
       JsUtils::throwJsIfNotANumber(rt, &args[1], "Second argument to setTimeout"
                                                     " must be a number");
 
-      Engine::StoreCallback(rt, args, count, false);
+      AdblockEngine::StoreCallback(rt, args, count, false);
 
       // We should actually return the timer ID here, which could be
       // used via clearTimeout(). But since we don't seem to need
@@ -57,7 +57,7 @@ namespace
        JsUtils::throwJsIfNotAFunction(rt, &args[0], "First argument to setImmediate"
                                                     " must be a function");
 
-       Engine::StoreCallback(rt, args, count, true);
+       AdblockEngine::StoreCallback(rt, args, count, true);
 
        return 0;
     }
@@ -70,7 +70,7 @@ namespace
        }
        JsUtils::throwJsIfNotABoolean(rt, &args[0], "First argument to __initDone"
                                                   " must be a boolean");
-       Engine::InitDone(args[0].getBool());
+       AdblockEngine::InitDone(args[0].getBool());
        return 0;
     }
 }

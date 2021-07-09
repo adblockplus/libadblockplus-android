@@ -15,12 +15,12 @@
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.adblockplus.libadblockplus.android.webview;
+package org.adblockplus.android.webview;
 
 import android.net.Uri;
 import android.webkit.WebView;
 
-import org.adblockplus.libadblockplus.android.AdblockEngineProvider;
+import org.adblockplus.android.AdblockEngineProvider;
 
 import java.nio.charset.StandardCharsets;
 

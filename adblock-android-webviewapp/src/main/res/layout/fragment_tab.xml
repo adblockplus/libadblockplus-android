@@ -76,7 +76,7 @@
         android:indeterminateOnly="false"
         android:max="100"/>
 
-    <org.adblockplus.libadblockplus.android.webview.AdblockWebView
+    <org.adblockplus.android.webview.AdblockWebView
         android:id="@+id/fragment_tab_webview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

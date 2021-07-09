@@ -11,28 +11,6 @@ make sure your checkout contains submodules. For example `git clone --recurse-su
 initially cloning or `git submodule update --recursive --init` to update an existing clone.
 There is also single `com.jakewharton.timber` Maven dependency.
 
-## Library
-
-An Android library that provides the core functionality of Adblock Plus.
-You can find it in the 'adblock-android' directory.
-
-### Using as a Gradle dependency
-
-Make sure you have:  
-
-```groovy
-maven {
-    url 'https://gitlab.com/api/v4/projects/8817162/packages/maven'
-}
-```
-
-in the list of repositories and then add the following dependencies:
-
-```groovy
-dependencies {
-    implementation 'org.adblockplus:adblock-android:+'
-}
-```
 
 In the general case, it's suggested to use the most recent version.
 
@@ -45,29 +23,6 @@ In the general case, it's suggested to use the most recent version.
 * [The Android NDK, 16b](https://developer.android.com/ndk/downloads/older_releases#ndk-16b-downloads)
 
 Edit 'buildToolsVersion' in 'build.gradle' files if necessary.
-
-#### Building of libadblockplus
-
-First, make sure all the [prerequisites](https://gitlab.com/eyeo/adblockplus/libadblockplus/blob/master/README.md#supported-target-platforms-and-prerequisites) are installed.
-Second, one needs to build the `V8` required for `libadblockplus`.
-See `libadblockplus/README` or V8 documentation on how to build V8 or
-fetch precompiled one. For the latter, run in the 'libadblockplus' directory:
-
-    make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release get-prebuilt-v8
-    make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release get-prebuilt-v8
-    make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release get-prebuilt-v8
-    make TARGET_OS=android ABP_TARGET_ARCH=x64 Configuration=release get-prebuilt-v8
-
-Make sure to set `ANDROID_NDK_ROOT` environment variable to point to Android NDK installation, eg.:
-
-    export ANDROID_NDK_ROOT=/Users/developer/ndk/android-ndk-r16b
-
-After that we can build `libadblockplus`:
-
-    make TARGET_OS=android ABP_TARGET_ARCH=arm Configuration=release
-    make TARGET_OS=android ABP_TARGET_ARCH=arm64 Configuration=release
-    make TARGET_OS=android ABP_TARGET_ARCH=ia32 Configuration=release
-    make TARGET_OS=android ABP_TARGET_ARCH=x64 Configuration=release
 
 #### Building from command-line
 
@@ -83,11 +38,6 @@ In the project root directory run:
 
 This will generate *.aar artifacts in the '.../build/outputs/aar/' directories:
 
-* adblock-android-abi_all-... - AAR for all the ARCHs (x86, armv7a, arm64)
-* adblock-android-abi_x86-... - AAR for x86 only
-* adblock-android-abi_x86_64-... - AAR for x86_64 only
-* adblock-android-abi_arm-... - AAR for armv7a only
-* adblock-android-abi_arm64-... - AAR for arm64 only
 * adblock-android-webview-... - AAR for AdblockWebView
 * adblock-android-settings-... - AAR for Settings
 
@@ -113,69 +63,6 @@ Note
     [Configuration] Building project in /tmp
 
 output while building
-
-### Building with prebuilt shared V8
-
-There is an option to use the product's V8 (let's say Chromium) instead of built-in V8.
-Put prebuilt shared V8 library file(s) in ARCH directories and set `SHARED_V8_LIB_FILENAMES`
-environment variable and `SHARED_V8_LIB_DIR` before building.
-You can pass multiple filenames in `SHARED_V8_LIB_FILENAMES`, separated with space.
-Libadblockplus is required to be linked with that library file(s).
-
-For example:
-
-    SHARED_V8_LIB_FILENAMES=libv8.cr.so SHARED_V8_LIB_DIR="/tmp/shared_v8" ./gradlew clean assembleAbi_arm
-
-or
-
-    SHARED_V8_LIB_FILENAMES="libv8.cr.so libv8_libbase.cr.so libv8_libplatform.cr.so" SHARED_V8_LIB_DIR="/tmp/shared_v8" ./gradlew clean assembleAbi_arm
-
-for multiple library files.
-
-Note
-
-    [Configuration] Excluding shared v8 library libv8.cr.so from AAR
-    ...
-    [Configuration] Linking dynamically with shared v8 library /tmp/shared_v8/release/libv8.cr.so
-    ...
-
-output while building.
-
-### Building with exposing of libadblockplus classes
-
-Set `EXPOSE_LIBABP_OBJECTS` environment variable to expose libadblockplus classes in the shared library.
-
-For example:
-
-    EXPOSE_LIBABP_OBJECTS=y ./gradlew clean assembleAbi_arm
-
-### JNI adjustments
-
-To load custom library name pass `LIBABP_SHARED_LIBRARY_NAME` environment variable (without `lib` and `.so`):
-
-    LIBABP_SHARED_LIBRARY_NAME=adblockplus ./gradlew assembleRelease
-
-To skip the compilation of JNI classes pass the `SKIP_JNI_COMPILATION` environment variable:
-
-    SKIP_JNI_COMPILATION=true ./gradlew assembleRelease
-
-### Building for single ARCH
-
-By default, adblock-android is built for ARM/ARM64 and x86/x86_64 and it can be filtered when
-building end-user Android applications. However, sometimes it can be desired to build
-"adblock-android.aar" for a single ARCH.
-
-Pass `abi_arm`, `abi_arm64`, `abi_x86`, or `abi_x86_64` to build it for a single arch or `abi_all` for all ARCHs:
-
-    `./gradlew clean assembleAbi_arm`
-
-Note
-
-    [Configuration] Using adblock-android ABI flavor: abi_arm
-
-output while building.
-
-## SDK tests
 
 ### Pure java tests
 

@@ -33,7 +33,7 @@ namespace AdblockPlus
 
   struct JSFunctionWrapper : facebook::jni::JavaClass<JSFunctionWrapper>
   {
-     static constexpr auto kJavaDescriptor = "Lorg/adblockplus/hermes/JSFunctionWrapper;";
+     static constexpr auto kJavaDescriptor = "Lorg/adblockplus/android/JSFunctionWrapper;";
      static facebook::jni::local_ref<JSFunctionWrapper> create(jlong nativePtr);
   };
 }

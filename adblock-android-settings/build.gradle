@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-  api project(':adblock-android')
+  api project(':hermes-engine')
   api Deps.androidx_preference
   testImplementation Deps.junit
   testImplementation Deps.kotlin
