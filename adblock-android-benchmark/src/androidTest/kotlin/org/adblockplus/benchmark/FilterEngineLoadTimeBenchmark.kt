@@ -87,8 +87,6 @@ class FilterEngineLoadTimeBenchmark {
         if (Timber.treeCount() == 0) {
             Timber.plant(Timber.DebugTree())
         }
-        AdblockEngineFactory.deinit() //JIC
-        AdblockEngineFactory.init(context, null, null)
     }
     @get:Rule
     val globalTimeout = Timeout(15, TimeUnit.MINUTES)
@@ -100,7 +98,9 @@ class FilterEngineLoadTimeBenchmark {
                                  blockingList : Int,
                                  exceptionList : Int) {
 
-            Timber.d("Creating FilterEngine ...")
+            AdblockEngineFactory.deinit() //JIC
+            AdblockEngineFactory.init(context, null, null)
+            Timber.d("Creating AdblockEngine ...")
             val loadTime = measureTimeMillis {
                 AdblockEngineFactory.getFactory().adblockEngineBuilder.build()
             }
