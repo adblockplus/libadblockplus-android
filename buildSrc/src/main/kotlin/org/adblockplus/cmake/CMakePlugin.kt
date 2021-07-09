@@ -145,7 +145,7 @@ internal open class CMakeConventionPlugin(private val project: Project) {
 
                 // trying to use WSL on Windows to launch cmake
                 val cmakeCmdList = mutableListOf(cmakeCmd.toString(), "-G").apply {
-                    add(if (osName == "win") "Visual Studio 15 2017" else "Ninja")
+                    add(if (osName == "win") "Visual Studio 16 2019" else "Ninja")
                     addAll(paramList)
                     if (osName == "win" && arch =="amd64") add("-Ax64")
                     add(config.source!!)

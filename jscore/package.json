@@ -17,7 +17,6 @@
     "eslint-config-eyeo": "^3.2.0",
     "metro-react-native-babel-preset": "^0.66.0",
     "rimraf": "^3.0.2",
-    "string-replace-loader": "^3.0.3",
     "webpack": "^5.18.0",
     "webpack-cli": "^4.5.0"
   },

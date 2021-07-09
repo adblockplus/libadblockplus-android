@@ -74,16 +74,6 @@ module.exports = function(env, _)
               ],
             }
           }
-        },
-        // FIXME: this ideally should be replaced with `console` polyfill
-        {
-          test: /\.js$/,
-          exclude: /node_modules/,
-          loader: 'string-replace-loader',
-          options: {
-            search: /console\.(log|debug|warn|error|trace)/g,
-            replace: 'print'
-          },
         }
       ]
     },
