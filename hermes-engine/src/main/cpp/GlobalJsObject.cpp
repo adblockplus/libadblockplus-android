@@ -20,6 +20,7 @@
 #include "Engine.h"
 #include "GlobalJsObject.h"
 #include "JsUtils.h"
+#include "Log.h"
 
 using namespace facebook::hermes;
 using namespace facebook::jsi;
@@ -73,6 +74,23 @@ namespace
        AdblockEngine::InitDone(args[0].getBool());
        return 0;
     }
+
+    int LogCallback(Runtime &rt, const Value &thisVal, const Value *args, size_t count)
+    {
+       if (count < 2)
+       {
+          throw JSError(rt, "__log requires 2 parameters");
+       }
+       JsUtils::throwJsIfNotAString(rt, &args[0], "First argument to __log"
+                                                   " must be a log level string");
+       std::string level = args[0].asString(rt).utf8(rt);
+       JsUtils::throwJsIfNotAString(rt, &args[1], "Second argument to __log"
+                                                   " must be a log string");
+       std::string message = args[1].asString(rt).utf8(rt);
+
+       Log::jsLog(level.c_str(), message.c_str());
+       return 0;
+    }
 }
 
 void GlobalJsObject::Setup(Runtime *pRuntime)
@@ -86,4 +104,7 @@ void GlobalJsObject::Setup(Runtime *pRuntime)
    const PropNameID initDoneId = PropNameID::forAscii(*pRuntime,"__initDone");
    auto jsInitDone = Function::createFromHostFunction(*pRuntime, initDoneId, 1, InitDoneCallback);
    pRuntime->global().setProperty(*pRuntime, initDoneId, jsInitDone);
+   const PropNameID logId = PropNameID::forAscii(*pRuntime,"__log");
+   auto jsLog = Function::createFromHostFunction(*pRuntime, logId, 2, LogCallback);
+   pRuntime->global().setProperty(*pRuntime, logId, jsLog);
 }

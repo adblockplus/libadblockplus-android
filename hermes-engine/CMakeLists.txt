@@ -50,7 +50,8 @@ add_library(
         src/main/cpp/JSFunctionWrapper.cpp
         src/main/cpp/JsUtils.cpp
         src/main/cpp/MappedFileBuffer.cpp
-        src/main/cpp/Api.cpp )
+        src/main/cpp/Api.cpp
+        src/main/cpp/Log.cpp )
 
 target_include_directories(
         engine

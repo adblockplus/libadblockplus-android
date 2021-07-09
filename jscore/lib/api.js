@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
  */
+const {Logging} = require("./log");
 const {Filter} = require("filterClasses");
 const {defaultMatcher} = require("matcher");
 const {elemHide} = require("elemHide");

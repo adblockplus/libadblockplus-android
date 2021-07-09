@@ -87,12 +87,12 @@ function initializeEngine()
 
 (async function() {
   try {
-    print("Start initializing engine");
+    console.debug("Start initializing engine");
     await initializeEngine();
     __initDone(true);
   } catch (error) {
-    print("Error initializing engine: ", error);
+    console.error("Error initializing engine: ", error);
     __initDone(false);
   }
-  print("Done initializing engine");
+  console.debug("Done initializing engine");
 })();

@@ -121,6 +121,31 @@ class EngineTest {
     }
 
     @Test
+    fun testLog() {
+        val engine = Engine(application)
+        try {
+            engine.evaluateJS("__log()")
+            fail("Should fail without arguments!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+        try {
+            engine.evaluateJS("__log(0)")
+            fail("Should fail with wrong first argument!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+        try {
+            engine.evaluateJS("__log(\"error\", 0)")
+            fail("Should fail with wrong second argument!")
+        } catch (e: RuntimeException) {
+            //We can check message here
+        }
+        engine.evaluateJS("__log(\"error\",\"error message\")")
+        engine.evaluateJS("console.log(\"info\",\"console.log message\")")
+    }
+
+    @Test
     fun testMatches() {
         val engine = AdblockEngine(application)
         Assert.assertEquals(
