@@ -21,6 +21,6 @@ using namespace facebook::jni;
 
 jint JNI_OnLoad(JavaVM* vm, void* args) {
     return initialize(vm, [] {
-        Engine::registerNatives();
+        AdblockEngine::registerNatives();
     });
 }

@@ -37,36 +37,36 @@ namespace facebook
   }
 }
 
-struct Engine : JavaClass<Engine>
+struct AdblockEngine : JavaClass<AdblockEngine>
 {
-  static constexpr auto kJavaDescriptor = "Lorg/adblockplus/hermes/Engine;";
+  static constexpr auto kJavaDescriptor = "Lorg/adblockplus/android/AdblockEngine;";
 
-  static void init(alias_ref<Engine> thiz,
+  static void init(alias_ref<AdblockEngine> thiz,
                    alias_ref<JString> baseDataFolder,
                    alias_ref<JString> coreJsFilePath);
 
-  static std::string evaluateJS(alias_ref<Engine> thiz,
+  static std::string evaluateJS(alias_ref<AdblockEngine> thiz,
                                 alias_ref<JString> src);
 
-  static void _executeJSFunction(alias_ref<Engine> thiz, alias_ref<AdblockPlus::JSFunctionWrapper> jsFunctionWrapper);
+  static void _executeJSFunction(alias_ref<AdblockEngine> thiz, alias_ref<AdblockPlus::JSFunctionWrapper> jsFunctionWrapper);
 
-  static jboolean _isContentAllowlisted(alias_ref<Engine> thiz,
+  static jboolean _isContentAllowlisted(alias_ref<AdblockEngine> thiz,
                                         int contentTypeMask,
                                         alias_ref<JList<JString> > referrerChain,
                                         alias_ref<JString> siteKey);
 
-  static std::string _matches(alias_ref<Engine> thiz,
+  static std::string _matches(alias_ref<AdblockEngine> thiz,
                               alias_ref<JString> url,
                               int contentTypeMask,
                               alias_ref<JString> parent,
                               alias_ref<JString> siteKey,
                               jboolean specificOnly);
 
-  static std::string _getElementHidingStyleSheet(alias_ref<Engine> thiz,
+  static std::string _getElementHidingStyleSheet(alias_ref<AdblockEngine> thiz,
                                                  alias_ref<JString> domain,
                                                  jboolean specificOnly);
 
-  static JObjectArray _getElementHidingEmulationSelectors(alias_ref<Engine> thiz,
+  static JObjectArray _getElementHidingEmulationSelectors(alias_ref<AdblockEngine> thiz,
                                                           alias_ref<JString> domain);
 
   static void registerNatives();
@@ -77,7 +77,7 @@ struct Engine : JavaClass<Engine>
   static void InitDone(bool success);
 
 private:
-  static facebook::hermes::HermesRuntime* getRuntimePtr(alias_ref<Engine> thiz);
+  static facebook::hermes::HermesRuntime* getRuntimePtr(alias_ref<AdblockEngine> thiz);
 };
 
 #endif //HERMESENGINE_ENGINE_H

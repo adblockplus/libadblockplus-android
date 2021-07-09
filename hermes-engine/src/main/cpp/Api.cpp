@@ -24,7 +24,7 @@ const char JAVASCRIPT_OBJECT[] = "API";
 const char JAVASCRIPT_FUCTION_GET_EH_SS[] = "getElementHidingStyleSheet";
 const char JAVASCRIPT_FUCTION_GET_EH_ES[] = "getElementHidingEmulationSelectors";
 const char JAVASCRIPT_FUCTION_MATCHES[] = "checkFilterMatch";
-const char JAVA_CLASS_EMULATIONSELECTOR[] = "org/adblockplus/hermes/EmulationSelector";
+const char JAVA_CLASS_EMULATIONSELECTOR[] = "org/adblockplus/EmulationSelector";
 
 jboolean Api::isContentAllowlisted(hermesptr runtime, jint contentTypeMask,
                                    alias_ref<JList<JString> > referrerChain,

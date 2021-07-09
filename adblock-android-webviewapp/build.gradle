@@ -27,7 +27,7 @@ android {
   buildToolsVersion Config.buildToolsVersion
 
   defaultConfig {
-    def appId = "org.adblockplus.libadblockplus.android.webviewapp"
+    def appId = "org.adblockplus.android.webviewapp"
     if (project.hasProperty(RANDOMIZED_APP_ID) && project.property(RANDOMIZED_APP_ID).toBoolean()) {
       appId = appId + "_" + (System.currentTimeMillis() / 1000L).toInteger()
     }

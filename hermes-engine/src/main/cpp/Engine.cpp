@@ -35,9 +35,9 @@ using namespace AdblockPlus; // would be nice to put everything into AdblockPlus
 
 namespace
 {
-   // engineRef is stored because when GlobalJsObject wants to schedule setTimeout it needs to call Engine::schedule
+   // engineRef is stored because when GlobalJsObject wants to schedule setTimeout it needs to call AdblockEngine::schedule
    // non static method. There should be a better way => we will address that separately.
-   global_ref<Engine> engineRef;
+   global_ref<AdblockEngine> engineRef;
    std::recursive_mutex engineMutex;
    std::promise<bool> initializationPromise;
 
@@ -71,12 +71,12 @@ namespace
    }
 }
 
-void Engine::InitDone(bool success)
+void AdblockEngine::InitDone(bool success)
 {
   initializationPromise.set_value(success);
 }
 
-void Engine::init(alias_ref<Engine> thiz, alias_ref<JString> baseDataFolder, alias_ref<JString> coreJsFilePath)
+void AdblockEngine::init(alias_ref<AdblockEngine> thiz, alias_ref<JString> baseDataFolder, alias_ref<JString> coreJsFilePath)
 {
   initializationPromise = std::promise<bool>();
   auto result = initializationPromise.get_future();
@@ -113,7 +113,7 @@ void Engine::init(alias_ref<Engine> thiz, alias_ref<JString> baseDataFolder, ali
 // this might be implemented through some interim state of a result, that might be converted
 // later to a requested value (eg `asString()` or `asBool`) or by having several versions of
 // `evaluateJS` (`evaluateJsAsBool`, `evaluateJsAsString`)
-std::string Engine::evaluateJS(alias_ref<Engine> thiz, alias_ref<JString> src)
+std::string AdblockEngine::evaluateJS(alias_ref<AdblockEngine> thiz, alias_ref<JString> src)
 {
   std::lock_guard<std::recursive_mutex> lock(engineMutex);
   const auto field = thiz->getClass()->getField<jlong>("nativePtr");
@@ -135,7 +135,7 @@ std::string Engine::evaluateJS(alias_ref<Engine> thiz, alias_ref<JString> src)
   }
 }
 
-void Engine::StoreCallback(Runtime& rt, const facebook::jsi::Value *args, size_t count, bool isImmediate)
+void AdblockEngine::StoreCallback(Runtime& rt, const facebook::jsi::Value *args, size_t count, bool isImmediate)
 {
   const JSFunctionWrapperNative *jsFunctionWrapperNative;
   {
@@ -147,7 +147,7 @@ void Engine::StoreCallback(Runtime& rt, const facebook::jsi::Value *args, size_t
   method(engineRef, jsWrapper, jsFunctionWrapperNative->millis);
 }
 
-void Engine::_executeJSFunction(alias_ref<Engine> thiz, alias_ref<JSFunctionWrapper> jsFunctionWrapperRef)
+void AdblockEngine::_executeJSFunction(alias_ref<AdblockEngine> thiz, alias_ref<JSFunctionWrapper> jsFunctionWrapperRef)
 {
   const auto runtimeNativePtr = thiz->getClass()->getField<jlong>("nativePtr");
   auto pRuntime = reinterpret_cast<Api::hermesptr>(thiz->getFieldValue(runtimeNativePtr));
@@ -157,22 +157,22 @@ void Engine::_executeJSFunction(alias_ref<Engine> thiz, alias_ref<JSFunctionWrap
   TriggerJsCallback(*pRuntime, jsFunctionWrapperNative);
 }
 
-void Engine::registerNatives()
+void AdblockEngine::registerNatives()
 {
   javaClassStatic()->registerNatives(
       {
-          makeNativeMethod("init", Engine::init),
-          makeNativeMethod("evaluateJS", Engine::evaluateJS),
-          makeNativeMethod("_executeJSFunction", Engine::_executeJSFunction),
-          makeNativeMethod("_isContentAllowlisted", Engine::_isContentAllowlisted),
-          makeNativeMethod("_matches", Engine::_matches),
-          makeNativeMethod("_getElementHidingStyleSheet", Engine::_getElementHidingStyleSheet),
+          makeNativeMethod("init", AdblockEngine::init),
+          makeNativeMethod("evaluateJS", AdblockEngine::evaluateJS),
+          makeNativeMethod("_executeJSFunction", AdblockEngine::_executeJSFunction),
+          makeNativeMethod("_isContentAllowlisted", AdblockEngine::_isContentAllowlisted),
+          makeNativeMethod("_matches", AdblockEngine::_matches),
+          makeNativeMethod("_getElementHidingStyleSheet", AdblockEngine::_getElementHidingStyleSheet),
           makeNativeMethod("_getElementHidingEmulationSelectors",
-                           Engine::_getElementHidingEmulationSelectors)
+                           AdblockEngine::_getElementHidingEmulationSelectors)
       });
 }
 
-jboolean Engine::_isContentAllowlisted(alias_ref<Engine> thiz, int contentTypeMask,
+jboolean AdblockEngine::_isContentAllowlisted(alias_ref<AdblockEngine> thiz, int contentTypeMask,
                                        alias_ref<JList<JString> > referrerChain,
                                        alias_ref<JString> siteKey)
 {
@@ -181,7 +181,7 @@ jboolean Engine::_isContentAllowlisted(alias_ref<Engine> thiz, int contentTypeMa
                                    siteKey);
 }
 
-std::string Engine::_matches(alias_ref<Engine> thiz, alias_ref<JString> url, int contentTypeMask,
+std::string AdblockEngine::_matches(alias_ref<AdblockEngine> thiz, alias_ref<JString> url, int contentTypeMask,
                              alias_ref<JString> parent, alias_ref<JString> siteKey,
                              jboolean specificOnly)
 {
@@ -190,21 +190,21 @@ std::string Engine::_matches(alias_ref<Engine> thiz, alias_ref<JString> url, int
 }
 
 std::string
-Engine::_getElementHidingStyleSheet(alias_ref<Engine> thiz, alias_ref<JString> domain,
+AdblockEngine::_getElementHidingStyleSheet(alias_ref<AdblockEngine> thiz, alias_ref<JString> domain,
                                     jboolean specificOnly)
 {
   std::lock_guard<std::recursive_mutex> lock(engineMutex);
   return Api::getElementHidingStyleSheet(getRuntimePtr(thiz), domain, specificOnly);
 }
 
-JObjectArray Engine::_getElementHidingEmulationSelectors(alias_ref<Engine> thiz,
+JObjectArray AdblockEngine::_getElementHidingEmulationSelectors(alias_ref<AdblockEngine> thiz,
                                                          alias_ref<JString> domain)
 {
   std::lock_guard<std::recursive_mutex> lock(engineMutex);
   return Api::getElementHidingEmulationSelectors(getRuntimePtr(thiz), domain);
 }
 
-Api::hermesptr Engine::getRuntimePtr(alias_ref<Engine> thiz)
+Api::hermesptr AdblockEngine::getRuntimePtr(alias_ref<AdblockEngine> thiz)
 {
   const auto field = thiz->getClass()->getField<jlong>("nativePtr");
   return reinterpret_cast<Api::hermesptr>(thiz->getFieldValue(field));

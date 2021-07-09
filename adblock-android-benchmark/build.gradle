@@ -43,7 +43,7 @@ dependencies {
   androidTestImplementation Deps.mockito_kotlin
   androidTestImplementation Deps.timber
   androidTestImplementation Deps.wiremock_standalone
-  androidTestImplementation project(':adblock-android')
+  androidTestImplementation project(':hermes-engine')
   // All of the following could be androidTestImplementation, but Android Studio 4.1 doesn't
   // navigate dependencies good enough. So it's left as is because it's a non-production module.
   implementation Deps.kotlin

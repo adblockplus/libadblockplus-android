@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="org.adblockplus.libadblockplus.android.webviewapp">
+        package="org.adblockplus.android.webviewapp">
 
     <!--
         Android permissions are collected from dependent modules
