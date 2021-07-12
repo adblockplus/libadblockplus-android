@@ -167,8 +167,9 @@ void AdblockEngine::registerNatives()
           makeNativeMethod("_isContentAllowlisted", AdblockEngine::_isContentAllowlisted),
           makeNativeMethod("_matches", AdblockEngine::_matches),
           makeNativeMethod("_getElementHidingStyleSheet", AdblockEngine::_getElementHidingStyleSheet),
-          makeNativeMethod("_getElementHidingEmulationSelectors",
-                           AdblockEngine::_getElementHidingEmulationSelectors)
+          makeNativeMethod("_getElementHidingEmulationSelectors", AdblockEngine::_getElementHidingEmulationSelectors),
+          makeNativeMethod("_addCustomFilter", AdblockEngine::_addCustomFilter),
+          makeNativeMethod("_removeCustomFilter", AdblockEngine::_removeCustomFilter)
       });
 }
 
@@ -202,6 +203,18 @@ JObjectArray AdblockEngine::_getElementHidingEmulationSelectors(alias_ref<Adbloc
 {
   std::lock_guard<std::recursive_mutex> lock(engineMutex);
   return Api::getElementHidingEmulationSelectors(getRuntimePtr(thiz), domain);
+}
+
+void AdblockEngine::_addCustomFilter(alias_ref<AdblockEngine> thiz, alias_ref<JString> filter)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  Api::addCustomFilter(getRuntimePtr(thiz), filter);
+}
+
+void AdblockEngine::_removeCustomFilter(alias_ref<AdblockEngine> thiz, alias_ref<JString> filter)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  Api::removeCustomFilter(getRuntimePtr(thiz), filter);
 }
 
 Api::hermesptr AdblockEngine::getRuntimePtr(alias_ref<AdblockEngine> thiz)

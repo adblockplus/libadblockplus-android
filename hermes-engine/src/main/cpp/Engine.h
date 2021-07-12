@@ -69,9 +69,15 @@ struct AdblockEngine : JavaClass<AdblockEngine>
   static JObjectArray _getElementHidingEmulationSelectors(alias_ref<AdblockEngine> thiz,
                                                           alias_ref<JString> domain);
 
+  static void _addCustomFilter(alias_ref<AdblockEngine> thiz,
+                               alias_ref<JString> filter);
+
+  static void _removeCustomFilter(alias_ref<AdblockEngine> thiz,
+                                  alias_ref<JString> filter);
+
   static void registerNatives();
 
-  static void StoreCallback(facebook::jsi::Runtime& rt, const facebook::jsi::Value *args, size_t count,
+  static void StoreCallback(facebook::jsi::Runtime& rt, const facebook::jsi::Value* args, size_t count,
                             bool isImmediate);
 
   static void InitDone(bool success);

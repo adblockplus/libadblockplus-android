@@ -38,6 +38,10 @@ public:
 
   static JObjectArray getElementHidingEmulationSelectors(hermesptr runtime, alias_ref<JString> domain);
 
+  static void addCustomFilter(hermesptr runtime, alias_ref<JString> filter);
+
+  static void removeCustomFilter(hermesptr runtime, alias_ref<JString> filter);
+
 private:
   static Function getFunction(hermesptr runtime, const char* functionName);
 };
