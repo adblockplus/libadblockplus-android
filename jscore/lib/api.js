@@ -16,6 +16,7 @@
  */
 const {Logging} = require("./log");
 const {Filter} = require("filterClasses");
+const {filterStorage} = require("filterStorage");
 const {defaultMatcher} = require("matcher");
 const {elemHide} = require("elemHide");
 const {elemHideEmulation} = require("elemHideEmulation");
@@ -105,17 +106,13 @@ function selectModule(type)
 export function addFilter(filterText)
 {
   let filter = Filter.fromText(filterText);
-  let module = selectModule(filter.type);
-  if (module)
-    module.add(filter);
+  filterStorage.addFilter(filter);
 }
 
 export function removeFilter(filterText)
 {
   let filter = Filter.fromText(filterText);
-  let module = selectModule(filter.type);
-  if (module)
-    module.remove(filter);
+  filterStorage.removeFilter(filter);
 }
 
 export function clearFilters()

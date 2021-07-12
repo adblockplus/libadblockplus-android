@@ -26,6 +26,9 @@ import org.adblockplus.EmulationSelector
 import org.adblockplus.MatchesResult
 import java.util.Collections
 import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -122,7 +125,7 @@ class EngineTest {
 
     @Test
     fun testLog() {
-        val engine = Engine(application)
+        val engine = AdblockEngine(application)
         try {
             engine.evaluateJS("__log()")
             fail("Should fail without arguments!")
@@ -210,6 +213,23 @@ class EngineTest {
         list = engine.getElementHidingEmulationSelectors("example.org")
         Assert.assertEquals(0, list.size.toLong())
     }
+
+    @Test
+    fun testCustomFilters() {
+        val engine = AdblockEngine(application)
+
+        assertEquals(MatchesResult.NOT_FOUND,
+                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false));
+
+        engine._addCustomFilter("foobar.gif")
+        assertEquals(MatchesResult.BLOCKED,
+                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false));
+
+        engine._removeCustomFilter("foobar.gif")
+        assertEquals(MatchesResult.NOT_FOUND,
+                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false));
+    }
+
 
     @Test
     fun testAllowlisting()

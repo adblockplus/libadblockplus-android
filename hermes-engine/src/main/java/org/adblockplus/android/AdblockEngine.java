@@ -212,6 +212,10 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
 
   private native Object[] _getElementHidingEmulationSelectors(String domain);
 
+  native void _addCustomFilter(String filter);
+
+  native void _removeCustomFilter(String filter);
+
   native void _executeJSFunction(@NonNull final JSFunctionWrapper jsFunction);
 
 

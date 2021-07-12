@@ -24,6 +24,8 @@ const char JAVASCRIPT_OBJECT[] = "API";
 const char JAVASCRIPT_FUCTION_GET_EH_SS[] = "getElementHidingStyleSheet";
 const char JAVASCRIPT_FUCTION_GET_EH_ES[] = "getElementHidingEmulationSelectors";
 const char JAVASCRIPT_FUCTION_MATCHES[] = "checkFilterMatch";
+const char JAVASCRIPT_FUCTION_ADD_FILTER[] = "addFilter";
+const char JAVASCRIPT_FUCTION_REMOVE_FILTER[] = "removeFilter";
 const char JAVA_CLASS_EMULATIONSELECTOR[] = "org/adblockplus/EmulationSelector";
 
 jboolean Api::isContentAllowlisted(hermesptr runtime, jint contentTypeMask,
@@ -39,8 +41,8 @@ jboolean Api::isContentAllowlisted(hermesptr runtime, jint contentTypeMask,
     const auto currentUrl = String::createFromAscii(*runtime, it.entry_->toStdString());
     ++it;
     const auto parentUrl = (it != referrerChain->end()) ?
-            String::createFromAscii(*runtime, it.entry_->toStdString()) :
-            String::createFromAscii(*runtime, "");
+                           String::createFromAscii(*runtime, it.entry_->toStdString()) :
+                           String::createFromAscii(*runtime, "");
     Value value;
     if (parentUrl.utf8(*runtime).empty())
     {
@@ -66,8 +68,8 @@ std::string Api::matches(hermesptr runtime, alias_ref<JString> url, jint content
   const auto jsParent = String::createFromAscii(*runtime, parent->toStdString());
   const auto jsSiteKey = String::createFromAscii(*runtime, siteKey->toStdString());
   const auto jsSpecificOnly = Value(specificOnly != 0);
-  const auto value = getFunction(runtime, JAVASCRIPT_FUCTION_MATCHES).call(*runtime, jsUrl, jsContentTypeMask,
-                                                                           jsParent, jsSiteKey, jsSpecificOnly);
+  const auto value = getFunction(runtime, JAVASCRIPT_FUCTION_MATCHES)
+      .call(*runtime, jsUrl, jsContentTypeMask, jsParent, jsSiteKey, jsSpecificOnly);
   return value.isString() ? value.asString(*runtime).utf8(*runtime) : "";
 }
 
@@ -75,15 +77,17 @@ std::string Api::getElementHidingStyleSheet(hermesptr runtime, alias_ref<JString
 {
   const auto jsDomain = String::createFromAscii(*runtime, domain->toStdString());
   const auto jsSpecificOnly = Value(specificOnly != 0);
-  const auto value = getFunction(runtime, JAVASCRIPT_FUCTION_GET_EH_SS).call(*runtime, jsDomain, jsSpecificOnly);
+  const auto value = getFunction(runtime, JAVASCRIPT_FUCTION_GET_EH_SS)
+      .call(*runtime, jsDomain, jsSpecificOnly);
   return value.isString() ? value.asString(*runtime).utf8(*runtime) : "";
 }
 
 JObjectArray Api::getElementHidingEmulationSelectors(hermesptr runtime, alias_ref<JString> domain)
 {
   const auto jsDomain = String::createFromAscii(*runtime, domain->toStdString());
-  const auto array = getFunction(runtime, JAVASCRIPT_FUCTION_GET_EH_ES).call(*runtime, jsDomain)
-          .asObject(*runtime).asArray(*runtime);
+  const auto array = getFunction(runtime, JAVASCRIPT_FUCTION_GET_EH_ES)
+      .call(*runtime, jsDomain)
+      .asObject(*runtime).asArray(*runtime);
   const auto arraySize = array.length(*runtime);
 
   const auto emuSelectorClass = findClassLocal(JAVA_CLASS_EMULATIONSELECTOR);
@@ -107,7 +111,21 @@ JObjectArray Api::getElementHidingEmulationSelectors(hermesptr runtime, alias_re
   return result;
 }
 
-Function Api::getFunction(hermesptr runtime, const char *functionName)
+void Api::addCustomFilter(hermesptr runtime, alias_ref<JString> filter)
+{
+  const auto jsFilter = String::createFromAscii(*runtime, filter->toStdString());
+  getFunction(runtime, JAVASCRIPT_FUCTION_ADD_FILTER)
+      .call(*runtime, jsFilter);
+}
+
+void Api::removeCustomFilter(hermesptr runtime, alias_ref<JString> filter)
+{
+  const auto jsFilter = String::createFromAscii(*runtime, filter->toStdString());
+  getFunction(runtime, JAVASCRIPT_FUCTION_REMOVE_FILTER)
+      .call(*runtime, jsFilter);
+}
+
+Function Api::getFunction(hermesptr runtime, const char* functionName)
 {
   try
   {
@@ -115,11 +133,11 @@ Function Api::getFunction(hermesptr runtime, const char *functionName)
     const auto api = global.getPropertyAsObject(*runtime, JAVASCRIPT_OBJECT);
     return api.getPropertyAsFunction(*runtime, functionName);
   }
-  catch (const JSError &e)
+  catch (const JSError& e)
   {
     throwNewJavaException("java/lang/RuntimeException", std::string(e.getMessage() + "\n" + e.getStack()).c_str());
   }
-  catch (const std::exception &e)
+  catch (const std::exception& e)
   {
     throwNewJavaException("java/lang/RuntimeException", e.what());
   }
