@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "glob": "^7.1.7",
+    "hermes-class": "^0.3.0",
     "punycode": "^2.1.1"
   }
 }

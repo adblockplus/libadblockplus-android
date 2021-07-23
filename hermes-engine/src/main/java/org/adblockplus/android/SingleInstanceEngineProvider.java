@@ -36,7 +36,7 @@ import timber.log.Timber;
  */
 public class SingleInstanceEngineProvider implements AdblockEngineProvider
 {
-  private org.adblockplus.android.AdblockEngine.Factory engineFactory;
+  private final org.adblockplus.android.AdblockEngine.Factory engineFactory;
   private final AtomicReference<org.adblockplus.android.AdblockEngine> engineReference
     = new AtomicReference<>();
   private final List<EngineCreatedListener> engineCreatedListeners = new CopyOnWriteArrayList<>();

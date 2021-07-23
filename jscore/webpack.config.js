@@ -59,20 +59,21 @@ module.exports = function(env, _)
         }
       })
     ],
-    target: ["es5"],
+    target: ["es2015"],
     module: {
       rules: [
         {
           test: /\.js$/,
-          exclude: /node_modules/,
+          exclude: [
+            /node_modules/,
+            /filterClasses.js/
+          ],
           use: {
             loader: "babel-loader",
             options: {
               sourceType: "unambiguous",
-              presets:  [
-                "module:metro-react-native-babel-preset",
-              ],
-            }
+              plugins: ["@babel/plugin-transform-classes", "@babel/plugin-transform-async-to-generator"]
+            },
           }
         }
       ]
@@ -94,6 +95,9 @@ module.exports = function(env, _)
     },
     experiments: {
       topLevelAwait: true
+    },
+    optimization: {
+      minimize: false
     }
   };
 };
