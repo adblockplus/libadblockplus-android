@@ -91,7 +91,7 @@ function initializeEngine()
     await initializeEngine();
     __initDone(true);
   } catch (error) {
-    console.error("Error initializing engine: ", error);
+    console.error("Error initializing engine: " + error);
     __initDone(false);
   }
   console.debug("Done initializing engine");

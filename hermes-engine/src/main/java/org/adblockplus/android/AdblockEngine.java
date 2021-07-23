@@ -334,16 +334,10 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     private final String basePath;
     private IsAllowedConnectionCallback isAllowedConnectionCallback;
 
-    private final AdblockEngine engine;
-
     protected Builder(final Context context,
                       final AppInfo appInfo,
                       final String basePath)
     {
-      engine = new AdblockEngine(context);
-
-      // we can't create JsEngine and FilterEngine right now as it starts to download subscriptions
-      // and requests (AndroidHttpClient and probably wrappers) are not specified yet
       this.context = context;
       this.appInfo = appInfo;
       this.basePath = basePath;
@@ -388,17 +382,9 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
       return this;
     }
 
-    private void initRequests()
-    {
-    }
-
     public AdblockEngine build()
     {
       return new AdblockEngine(context);
-    }
-
-    private void createEngines()
-    {
     }
   }
 }

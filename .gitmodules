@@ -6,4 +6,4 @@
 	url = https://github.com/facebook/hermes.git
 [submodule "extern/adblockpluscore"]
 	path = extern/adblockpluscore
-	url = https://gitlab.com/adblockplus/adblockpluscore.git
+	url = https://gitlab.com/eyeo/distpartners/adblockpluscore.git
