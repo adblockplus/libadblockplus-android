@@ -83,7 +83,6 @@ def genCopyBundleTask(mode) {
         from rootProject.project('jscore').files('build/dist/API.hbc')
         into dst
         doFirst { dst.toFile().mkdirs() }
-        dependsOn ':jscore:build'
     }
 }
 
@@ -99,6 +98,15 @@ afterEvaluate {
     }
     tasks.named('externalNativeBuildRelease').configure {
         dependsOn ':hermes-libs:buildHermesHostRelease', ':hermes-libs:assembleAndroidRelease'
+    }
+
+    // Make assets generation depends on jscore build to force assets updates
+    tasks.named('generateDebugAssets').configure {
+        dependsOn ':jscore:build'
+    }
+
+    tasks.named('generateReleaseAssets').configure {
+        dependsOn ':jscore:build'
     }
 
     // Make sure the main bundle is copied into the assets with the other assets
