@@ -49,8 +49,11 @@ class NpmPlugin : Plugin<Project> {
         project.tasks.register("build", Exec::class.java) {
             commandLine(npmPath.toString(), "run", npmConvention.config.buildScript!!)
             group="build"
-
-            inputs.files("**/*.js")
+            
+            inputs.files(project.fileTree(project.projectDir) {
+                exclude("**/node_modules/**")
+                include("**/*.js")
+            })
 
             outputs.dir(npmConvention.config.buildDir!!)
 
