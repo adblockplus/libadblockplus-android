@@ -22,7 +22,7 @@
 #include "JSFunctionWrapper.h"
 #include "hermes/hermes.h"
 
-#include "MappedFileBuffer.h"
+#include "MappedFileStorage.h"
 
 #include <assert.h>
 #include <mutex>
@@ -30,7 +30,6 @@
 
 using namespace facebook::hermes;
 using namespace facebook::jsi;
-using namespace facebook::jsi::jni;
 using namespace AdblockPlus; // would be nice to put everything into AdblockPlus namespace
 
 namespace
@@ -99,7 +98,7 @@ void AdblockEngine::init(alias_ref<AdblockEngine> thiz, alias_ref<JString> baseD
             String::createFromAscii(*pRuntime, coreJsFilePath->toStdString()).utf8(*pRuntime);
 
     // Let's load the compiled Core bundle
-    pRuntime->evaluateJavaScript(std::make_unique<MappedFileBuffer>(jsPath), "");
+    pRuntime->evaluateJavaScript(std::make_unique<MappedFileStorage>(jsPath), "");
   }
   // Wait for result, when logging works we should at least log a failure
   #ifdef NDEBUG
