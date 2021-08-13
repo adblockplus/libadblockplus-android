@@ -24,8 +24,10 @@ const {elemHideExceptions} = require("elemHideExceptions")
 // We don't support snippets but we need to store those filters to compare correctly memory usage
 const {snippets} = require("snippets")
 const {parseURL} = require("url");
-const {URI, extractHostFromURL} = require('./uri')
+const {Prefs} = require("prefs");
+const {Subscription, SpecialSubscription, DownloadableSubscription} = require("subscriptionClasses");
 const {startEngine} = require("./init");
+const {URI, extractHostFromURL} = require('./uri')
 
 function getURLInfo(url)
 {
@@ -122,4 +124,85 @@ export function clearFilters()
   elemHideEmulation.clear();
   elemHideExceptions.clear();
   snippets.clear();
+}
+
+
+export function isListedSubscription(url)
+{
+  let subscription = Subscription.fromURL(url);
+  return filterStorage.hasSubscription(subscription);
+}
+
+export function addSubscriptionToList(url)
+{
+  let subscription = Subscription.fromURL(url);
+  filterStorage.addSubscription(subscription);
+
+  if (!subscription.lastDownload && Prefs.filter_engine_enabled)
+    synchronizer.execute(subscription);
+}
+
+export function removeSubscriptionFromList(url)
+{
+  let subscription = Subscription.fromURL(url);
+  filterStorage.removeSubscription(subscription);
+}
+
+export function getListedSubscriptions()
+{
+  let subscriptions = [];
+  for (let subscription of filterStorage.subscriptions())
+  {
+    if (!(subscription instanceof SpecialSubscription))
+      subscriptions.push(subscription);
+  }
+  return subscriptions;
+}
+
+export function getSubscriptionByUrl(url)
+{
+  for (let subscription of filterStorage.subscriptions())
+  {
+    if (!(subscription instanceof SpecialSubscription) && subscription.url === url)
+      return subscription;
+  }
+  return new Subscription("","");
+}
+
+
+function isAASubscription(subscription)
+{
+  return subscription.url === Prefs.subscriptions_exceptionsurl;
+}
+
+export function setAASubscriptionEnabled(enabled)
+{
+  let aaSubscription = [...filterStorage.subscriptions()].find(it => isAASubscription(it));
+  // Always keep AA subscription in list, with disabled state if requested.
+  // For case when you start with disabled engine, then disable AA, then run auto-configuration
+  console.debug("setAASubscriptionEnabled aaSubscription " + aaSubscription);
+  if (!aaSubscription)
+  {
+    aaSubscription = Subscription.fromURL(Prefs.subscriptions_exceptionsurl);
+    filterStorage.addSubscription(aaSubscription);
+    console.debug("setAASubscriptionEnabled no aaSubscription, added!");
+  }
+  if (!enabled)
+  {
+    if (aaSubscription && !aaSubscription.disabled)
+    {
+      aaSubscription.disabled = true;
+      console.debug("setAASubscriptionEnabled is now disabled");
+    }
+    return;
+  }
+  if (aaSubscription.disabled)
+  {
+    aaSubscription.disabled = false;
+    console.debug("setAASubscriptionEnabled is now enabled");
+  }
+  if (!aaSubscription.lastDownload && Prefs.filter_engine_enabled)
+  {
+    synchronizer.execute(aaSubscription);
+  }
 }

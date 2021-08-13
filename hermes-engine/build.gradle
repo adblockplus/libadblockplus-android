@@ -56,6 +56,9 @@ android {
             includeAndroidResources = true
         }
     }
+    gradle.projectsEvaluated {
+        preBuild.dependsOn(copyDefaultSubscriptions)
+    }
 }
 
 dependencies {
@@ -77,9 +80,9 @@ repositories {
     mavenCentral()
 }
 
-def genCopyBundleTask(mode) {
+def genCopyBundleTask(final mode) {
     tasks.register("copyMainBundle${mode.capitalize()}", Copy) {
-        def dst = buildDir.toPath().resolve("intermediates/library_assets/${mode.toLowerCase()}/out/")
+        final def dst = buildDir.toPath().resolve("intermediates/library_assets/${mode.toLowerCase()}/out/")
         from rootProject.project('jscore').files('build/dist/API.hbc')
         into dst
         doFirst { dst.toFile().mkdirs() }
@@ -88,6 +91,12 @@ def genCopyBundleTask(mode) {
 
 genCopyBundleTask('debug')
 genCopyBundleTask('release')
+
+tasks.register("copyDefaultSubscriptions", Copy) {
+    from "$rootDir/extern/adblockpluscore/data/"
+    into "./src/main/res/raw/"
+    include "subscriptions.json"
+}
 
 afterEvaluate {
     // Let's make sure the core and external libraries are compiled before we start

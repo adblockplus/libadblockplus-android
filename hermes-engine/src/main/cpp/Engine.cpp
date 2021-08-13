@@ -116,7 +116,7 @@ std::string AdblockEngine::evaluateJS(alias_ref<AdblockEngine> thiz, alias_ref<J
 {
   std::lock_guard<std::recursive_mutex> lock(engineMutex);
   const auto field = thiz->getClass()->getField<jlong>("nativePtr");
-  auto pRuntime = reinterpret_cast<Api::hermesptr>(thiz->getFieldValue(field));
+  auto pRuntime = reinterpret_cast<hermesptr>(thiz->getFieldValue(field));
 
   auto buffer = std::shared_ptr<Buffer>(new StringBuffer(src->toStdString()));
 
@@ -149,7 +149,7 @@ void AdblockEngine::StoreCallback(Runtime& rt, const facebook::jsi::Value *args,
 void AdblockEngine::_executeJSFunction(alias_ref<AdblockEngine> thiz, alias_ref<JSFunctionWrapper> jsFunctionWrapperRef)
 {
   const auto runtimeNativePtr = thiz->getClass()->getField<jlong>("nativePtr");
-  auto pRuntime = reinterpret_cast<Api::hermesptr>(thiz->getFieldValue(runtimeNativePtr));
+  auto pRuntime = reinterpret_cast<hermesptr>(thiz->getFieldValue(runtimeNativePtr));
   const auto jsFunctionWrapperNativePtr = jsFunctionWrapperRef->getClass()->getField<jlong>("nativePtr");
   auto jsFunctionWrapperNative = reinterpret_cast<JSFunctionWrapperNative*>(
           jsFunctionWrapperRef->getFieldValue(jsFunctionWrapperNativePtr));
@@ -168,7 +168,13 @@ void AdblockEngine::registerNatives()
           makeNativeMethod("_getElementHidingStyleSheet", AdblockEngine::_getElementHidingStyleSheet),
           makeNativeMethod("_getElementHidingEmulationSelectors", AdblockEngine::_getElementHidingEmulationSelectors),
           makeNativeMethod("_addCustomFilter", AdblockEngine::_addCustomFilter),
-          makeNativeMethod("_removeCustomFilter", AdblockEngine::_removeCustomFilter)
+          makeNativeMethod("_removeCustomFilter", AdblockEngine::_removeCustomFilter),
+          makeNativeMethod("_isListedSubscription", AdblockEngine::_isListedSubscription),
+          makeNativeMethod("_addSubscriptionToList", AdblockEngine::_addSubscriptionToList),
+          makeNativeMethod("_removeSubscriptionFromList", AdblockEngine::_removeSubscriptionFromList),
+          makeNativeMethod("_getListedSubscriptions", AdblockEngine::_getListedSubscriptions),
+          makeNativeMethod("_getSubscriptionByUrl", AdblockEngine::_getSubscriptionByUrl),
+          makeNativeMethod("_setAASubscriptionEnabled", AdblockEngine::_setAASubscriptionEnabled),
       });
 }
 
@@ -197,8 +203,8 @@ AdblockEngine::_getElementHidingStyleSheet(alias_ref<AdblockEngine> thiz, alias_
   return Api::getElementHidingStyleSheet(getRuntimePtr(thiz), domain, specificOnly);
 }
 
-JObjectArray AdblockEngine::_getElementHidingEmulationSelectors(alias_ref<AdblockEngine> thiz,
-                                                         alias_ref<JString> domain)
+JObjectArrayLocalRef AdblockEngine::_getElementHidingEmulationSelectors(alias_ref<AdblockEngine> thiz,
+                                                                        alias_ref<JString> domain)
 {
   std::lock_guard<std::recursive_mutex> lock(engineMutex);
   return Api::getElementHidingEmulationSelectors(getRuntimePtr(thiz), domain);
@@ -216,8 +222,46 @@ void AdblockEngine::_removeCustomFilter(alias_ref<AdblockEngine> thiz, alias_ref
   Api::removeCustomFilter(getRuntimePtr(thiz), filter);
 }
 
-Api::hermesptr AdblockEngine::getRuntimePtr(alias_ref<AdblockEngine> thiz)
+
+jboolean AdblockEngine::_isListedSubscription(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  return Api::isListedSubscription(getRuntimePtr(thiz), subscriptionUrl);
+}
+
+void AdblockEngine::_addSubscriptionToList(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  Api::addSubscription(getRuntimePtr(thiz), subscriptionUrl);
+}
+
+void AdblockEngine::_removeSubscriptionFromList(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  Api::removeSubscription(getRuntimePtr(thiz), subscriptionUrl);
+}
+
+JObjectArrayLocalRef AdblockEngine::_getListedSubscriptions(alias_ref<AdblockEngine> thiz)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  return Api::getListedSubscriptionUrls(getRuntimePtr(thiz), thiz);
+}
+
+JObjectLocalRef AdblockEngine::_getSubscriptionByUrl(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  return Api::getSubscriptionByUrl(getRuntimePtr(thiz), subscriptionUrl);
+}
+
+void AdblockEngine::_setAASubscriptionEnabled(alias_ref<AdblockEngine> thiz, jboolean enabled)
+{
+  std::lock_guard<std::recursive_mutex> lock(engineMutex);
+  Api::setAASubscriptionEnabled(getRuntimePtr(thiz), enabled);
+}
+
+
+hermesptr AdblockEngine::getRuntimePtr(alias_ref<AdblockEngine> thiz)
 {
   const auto field = thiz->getClass()->getField<jlong>("nativePtr");
-  return reinterpret_cast<Api::hermesptr>(thiz->getFieldValue(field));
+  return reinterpret_cast<hermesptr>(thiz->getFieldValue(field));
 }

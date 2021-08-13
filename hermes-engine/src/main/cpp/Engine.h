@@ -27,7 +27,9 @@
 
 using namespace facebook::jni;
 
-typedef local_ref<JArrayClass<jobject>> JObjectArray;
+typedef JArrayClass<jobject> JObjectArray;
+typedef local_ref<JObjectArray> JObjectArrayLocalRef;
+typedef local_ref<JObject> JObjectLocalRef;
 
 namespace facebook
 {
@@ -66,14 +68,27 @@ struct AdblockEngine : JavaClass<AdblockEngine>
                                                  alias_ref<JString> domain,
                                                  jboolean specificOnly);
 
-  static JObjectArray _getElementHidingEmulationSelectors(alias_ref<AdblockEngine> thiz,
-                                                          alias_ref<JString> domain);
+  static JObjectArrayLocalRef _getElementHidingEmulationSelectors(alias_ref<AdblockEngine> thiz,
+                                                                  alias_ref<JString> domain);
 
   static void _addCustomFilter(alias_ref<AdblockEngine> thiz,
                                alias_ref<JString> filter);
 
   static void _removeCustomFilter(alias_ref<AdblockEngine> thiz,
                                   alias_ref<JString> filter);
+
+  static jboolean _isListedSubscription(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl);
+
+  static void _addSubscriptionToList(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl);
+
+  static void _removeSubscriptionFromList(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl);
+
+  static JObjectArrayLocalRef _getListedSubscriptions(alias_ref<AdblockEngine> thiz);
+
+  static JObjectLocalRef _getSubscriptionByUrl(alias_ref<AdblockEngine> thiz, alias_ref<JString> subscriptionUrl);
+
+  static void _setAASubscriptionEnabled(alias_ref<AdblockEngine> thiz, jboolean enabled);
+
 
   static void registerNatives();
 

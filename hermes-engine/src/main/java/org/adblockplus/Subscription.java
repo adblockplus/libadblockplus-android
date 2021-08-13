@@ -17,8 +17,6 @@
 
 package org.adblockplus;
 
-import java.lang.ref.WeakReference;
-
 /**
  * Class representing a filter list subscription
  */
@@ -41,31 +39,33 @@ public final class Subscription
   public final String homepage;
 
   /**
-   * The author of the filter list
-   */
-  public final String author;
-
-  /**
    * The languages of the filter list
    */
   public final String languages;
 
-  protected final WeakReference<AdblockEngine> adblockEngine;
+//@TODO Add the WeakReference
+// protected final WeakReference<AdblockEngine> adblockEngine;
 
   // Constructor used by a native code
   private Subscription(final String url,
-                       final String title,
-                       final String homepage,
-                       final String author,
-                       final String languages,
-                       final AdblockEngine adblockEngine)
+                       final String title)
+  {
+    this.url = url;
+    this.title = title;
+    this.homepage = "";
+    this.languages = "";
+  }
+
+  // Constructor used by RecommendedSubscriptions.amendSubscription
+  Subscription(final String url,
+               final String title,
+               final String languages,
+               final String homepage)
   {
     this.url = url;
     this.title = title;
     this.homepage = homepage;
-    this.author = author;
     this.languages = languages;
-    this.adblockEngine = new WeakReference<>(adblockEngine);
   }
 
   @Override
