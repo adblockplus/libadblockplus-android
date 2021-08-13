@@ -24,6 +24,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.adblockplus.ContentType
 import org.adblockplus.EmulationSelector
 import org.adblockplus.MatchesResult
+import org.adblockplus.RecommendedSubscriptions
+import org.adblockplus.Subscription
 import java.util.Collections
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -37,13 +39,13 @@ import org.robolectric.annotation.Config
 @Config(sdk = [21])
 @RunWith(AndroidJUnit4::class)
 class EngineTest {
-    val application = ApplicationProvider.getApplicationContext<Application>()
+    private val application = ApplicationProvider.getApplicationContext<Application>()
 
     @Test
     fun evaluateJS() {
         val engine = AdblockEngine(application)
         val result = engine.evaluateJS("\"21\" + 21")
-        Assert.assertEquals("We should be able to evaluate simple expressions", "2121", result)
+        assertEquals("We should be able to evaluate simple expressions", "2121", result)
     }
 
     @Test
@@ -94,9 +96,9 @@ class EngineTest {
         engine.evaluateJS("var value = 0;" +
                 "function plusPlus(arg1, arg2) { value = arg1 + arg2; };" +
                 "setTimeout(plusPlus, 100, 2, 2)")
-        Assert.assertEquals(0, engine.evaluateJS("value").toInt())
+        assertEquals(0, engine.evaluateJS("value").toInt())
         Thread.sleep(120)
-        Assert.assertEquals(4, engine.evaluateJS("value").toInt())
+        assertEquals(4, engine.evaluateJS("value").toInt())
     }
 
     @Test
@@ -117,10 +119,10 @@ class EngineTest {
         // setTimeout with args
         engine.evaluateJS("var value = 0;" +
                 "function plusPlus(arg1, arg2) { value = arg1 + arg2; };" +
-                "setImmediate(plusPlus, 2, 2)");
+                "setImmediate(plusPlus, 2, 2)")
         Thread.sleep(50)
         val result2 = engine.evaluateJS("value").toInt()
-        Assert.assertEquals(4, result2)
+        assertEquals(4, result2)
     }
 
     @Test
@@ -151,21 +153,21 @@ class EngineTest {
     @Test
     fun testMatches() {
         val engine = AdblockEngine(application)
-        Assert.assertEquals(
+        assertEquals(
             MatchesResult.NOT_FOUND,
             engine.matches("http://example.org/ad_banner.gif",
                 ContentType.maskOf(ContentType.IMAGE), "", "", false))
 
         engine.evaluateJS("API.addFilter(\"ad_banner.gif\");")
 
-        Assert.assertEquals(
+        assertEquals(
             MatchesResult.BLOCKED,
             engine.matches("http://example.org/ad_banner.gif",
                 ContentType.maskOf(ContentType.IMAGE), "", "", false))
 
         engine.evaluateJS("API.removeFilter(\"ad_banner.gif\");")
 
-        Assert.assertEquals(
+        assertEquals(
             MatchesResult.NOT_FOUND,
             engine.matches("http://example.org/ad_banner.gif",
                 ContentType.maskOf(ContentType.IMAGE), "", "", false))
@@ -175,19 +177,19 @@ class EngineTest {
     fun testGetElementHidingStyleSheet() {
         val engine = AdblockEngine(application)
 
-        Assert.assertEquals(
+        assertEquals(
             "",
             engine.getElementHidingStyleSheet("foo.example.com", true))
 
         engine.evaluateJS("API.addFilter(\"foo.example.com##turnip\");")
 
-        Assert.assertEquals(
+        assertEquals(
             "turnip {display: none !important;}\n",
             engine.getElementHidingStyleSheet("foo.example.com", true))
 
         engine.evaluateJS("API.removeFilter(\"foo.example.com##turnip\");")
 
-        Assert.assertEquals(
+        assertEquals(
             "",
             engine.getElementHidingStyleSheet("foo.example.com", true))
     }
@@ -197,21 +199,21 @@ class EngineTest {
         val engine = AdblockEngine(application)
 
         var list = engine.getElementHidingEmulationSelectors("example.org")
-        Assert.assertEquals(0, list.size.toLong())
+        assertEquals(0, list.size.toLong())
 
         engine.evaluateJS("API.addFilter(\"example.org#?#foo\");")
         engine.evaluateJS("API.addFilter(\"example.org#?#another\");")
 
         list = engine.getElementHidingEmulationSelectors("example.org")
-        Assert.assertEquals(2, list.size.toLong())
-        Assert.assertEquals(EmulationSelector("foo", "example.org#?#foo"), list[0])
-        Assert.assertEquals(EmulationSelector("another", "example.org#?#another"), list[1])
+        assertEquals(2, list.size.toLong())
+        assertEquals(EmulationSelector("foo", "example.org#?#foo"), list[0])
+        assertEquals(EmulationSelector("another", "example.org#?#another"), list[1])
 
         engine.evaluateJS("API.removeFilter(\"example.org#?#foo\");")
         engine.evaluateJS("API.removeFilter(\"example.org#?#another\");")
 
         list = engine.getElementHidingEmulationSelectors("example.org")
-        Assert.assertEquals(0, list.size.toLong())
+        assertEquals(0, list.size.toLong())
     }
 
     @Test
@@ -219,17 +221,76 @@ class EngineTest {
         val engine = AdblockEngine(application)
 
         assertEquals(MatchesResult.NOT_FOUND,
-                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false));
+                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false))
 
         engine._addCustomFilter("foobar.gif")
         assertEquals(MatchesResult.BLOCKED,
-                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false));
+                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false))
 
         engine._removeCustomFilter("foobar.gif")
         assertEquals(MatchesResult.NOT_FOUND,
-                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false));
+                engine.matches("http://example.org/foobar.gif",ContentType.maskOf(ContentType.IMAGE),"", "", false))
     }
 
+    @Test
+    fun testCustomSubscriptions() {
+        val engine = AdblockEngine(application)
+        val recommendedSubscriptionsCount = 25
+        val defaultSubscriptionUrls =
+            listOf<String>(
+                "https://easylist-downloads.adblockplus.org/easylistpolish+easylist.txt",
+                "https://easylist-downloads.adblockplus.org/exceptionrules.txt"
+            )
+        val defaultSubscriptionTitles =
+            listOf<String>(
+                "EasyList Polish+EasyList (minified)",
+                "Allow nonintrusive advertising (minimal)"
+            )
+        val defaultSubscriptionLanguages =
+            listOf<String>(
+                "pl",
+                ""
+            )
+        val testSubscriptionUrl = "http://foo.bar"
+
+        assertFalse(RecommendedSubscriptions(application.baseContext).get().isEmpty())
+
+        // Test DefaultSubscriptions.amendSubSubscription()
+        assertEquals(defaultSubscriptionTitles[0], engine.getSubscriptionByUrl(defaultSubscriptionUrls[0])?.title)
+        assertEquals(defaultSubscriptionLanguages[0], engine.getSubscriptionByUrl(defaultSubscriptionUrls[0])?.languages)
+        assertEquals(defaultSubscriptionTitles, engine.listedSubscriptions.map{ it.title })
+        assertEquals(defaultSubscriptionLanguages, engine.listedSubscriptions.map{ it.languages })
+
+        // Test subscription url not found
+        assertEquals("", engine.getSubscriptionByUrl(testSubscriptionUrl)?.url)
+        assertEquals("", engine.getSubscriptionByUrl(testSubscriptionUrl)?.title)
+        assertFalse(engine._isListedSubscription(testSubscriptionUrl))
+
+        // Test default subscription list
+        assertEquals(defaultSubscriptionUrls, engine.listedSubscriptions.map { it.url })
+        assertEquals(recommendedSubscriptionsCount, engine.recommendedSubscriptions.size)
+
+        engine._addSubscriptionToList(testSubscriptionUrl)
+        assertTrue(engine._isListedSubscription(testSubscriptionUrl))
+        assertEquals(defaultSubscriptionUrls + testSubscriptionUrl, engine.listedSubscriptions.map { it.url })
+        assertEquals(testSubscriptionUrl, engine.getSubscriptionByUrl(testSubscriptionUrl)?.url)
+        assertEquals(testSubscriptionUrl, engine.getSubscriptionByUrl(testSubscriptionUrl)?.title)
+
+        engine._removeSubscriptionFromList(testSubscriptionUrl)
+        assertFalse(engine._isListedSubscription(testSubscriptionUrl))
+        assertEquals(defaultSubscriptionUrls, engine.listedSubscriptions.map { it.url })
+        assertEquals("", engine.getSubscriptionByUrl(testSubscriptionUrl)?.url)
+        assertEquals("", engine.getSubscriptionByUrl(testSubscriptionUrl)?.title)
+    }
+
+    @Test
+    fun testAASubscription() {
+        val engine = AdblockEngine(application)
+
+        engine._setAASubscriptionEnabled(true)
+        engine._setAASubscriptionEnabled(false)
+        engine._setAASubscriptionEnabled(true)
+    }
 
     @Test
     fun testAllowlisting()
@@ -244,14 +305,14 @@ class EngineTest {
         // before generichide option
         Assert.assertFalse(engine.isContentAllowlisted(url,
             ContentType.maskOf(ContentType.GENERICHIDE),
-            Collections.singletonList(url), ""));
+            Collections.singletonList(url), ""))
 
         // add filter with generichide option
         engine.evaluateJS("API.addFilter(\"@@||example.org\$generichide\");")
 
         Assert.assertTrue(engine.isContentAllowlisted(url,
             ContentType.maskOf(ContentType.GENERICHIDE),
-            Collections.singletonList(url), ""));
+            Collections.singletonList(url), ""))
 
         Assert.assertFalse(engine.isContentAllowlisted("$url/ad.html",
             ContentType.maskOf(ContentType.DOCUMENT), listOf("$url/ad.html"), ""))
@@ -265,7 +326,7 @@ class EngineTest {
         val documentUrls = listOf(
             "http://example.com/",
             "http://ads.com/")
-        val docSiteKey: String = "cNAQEBBQADSwAwSAJBAJRmzcpTevQqkWn6dJuX_document"
+        val docSiteKey = "cNAQEBBQADSwAwSAJBAJRmzcpTevQqkWn6dJuX_document"
 
         Assert.assertFalse(engine.isContentAllowlisted("http://my-ads.com/adframe",
             ContentType.maskOf(ContentType.DOCUMENT), documentUrls, docSiteKey))
@@ -284,7 +345,7 @@ class EngineTest {
     {
         val engine = AdblockEngine(application)
 
-        Assert.assertEquals(
+        assertEquals(
             MatchesResult.BLOCKED,
             engine.matches("http://example.org/ad/headercreative/adbanner.gif",
                 ContentType.maskOf(ContentType.IMAGE), "", "", false))
@@ -297,11 +358,11 @@ class EngineTest {
             ContentType.maskOf(ContentType.DOCUMENT), listOf("http://related.speedtest.net"), ""))
     }
 
-    fun run(engine: AdblockEngine)
+    private fun run(engine: AdblockEngine)
     {
         for (i in 1..1000) {
-            Log.i("TEST","Loop: " + i);
-            Assert.assertEquals(
+            Log.i("TEST", "Loop: $i")
+            assertEquals(
                 MatchesResult.BLOCKED,
                 engine.matches("http://example.org/ad/headercreative/adbanner.gif",
                     ContentType.maskOf(ContentType.IMAGE), "", "", false))

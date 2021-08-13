@@ -27,7 +27,6 @@ public class SubscriptionInfo
     this.title = subscription.title;
     this.languages = subscription.languages;
     this.homepage = subscription.homepage;
-    this.author = subscription.author;
   }
 
   public SubscriptionInfo(final String url,
@@ -40,7 +39,6 @@ public class SubscriptionInfo
     this.title = title;
     this.languages = languages;
     this.homepage = homepage;
-    this.author = author;
   }
 
   public SubscriptionInfo(final String url,
@@ -53,5 +51,4 @@ public class SubscriptionInfo
   public String title;
   public String homepage;
   public String languages;
-  public String author;
 }

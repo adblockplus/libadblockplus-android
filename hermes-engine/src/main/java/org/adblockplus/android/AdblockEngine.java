@@ -25,6 +25,12 @@ import android.net.ConnectivityManager;
 import android.os.Build.VERSION;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
+import com.facebook.soloader.nativeloader.NativeLoader;
+import com.facebook.soloader.nativeloader.SystemDelegate;
+
 import org.adblockplus.AdblockEngineSettings;
 import org.adblockplus.AppInfo;
 import org.adblockplus.ContentType;
@@ -33,8 +39,10 @@ import org.adblockplus.Filter;
 import org.adblockplus.HttpClient;
 import org.adblockplus.IsAllowedConnectionCallback;
 import org.adblockplus.MatchesResult;
+import org.adblockplus.RecommendedSubscriptions;
 import org.adblockplus.Subscription;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,12 +57,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import timber.log.Timber;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
-
-import com.facebook.soloader.nativeloader.NativeLoader;
-import com.facebook.soloader.nativeloader.SystemDelegate;
 
 public final class AdblockEngine implements org.adblockplus.AdblockEngine
 {
@@ -71,6 +73,8 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
   private static final String DIR_AND_TAG = "Hermes";
   private static final String SUBSCRIPTIONS_IN = "patterns_mini.ini";
   private static final String SUBSCRIPTIONS_OUT = "patterns.ini";
+
+  private final RecommendedSubscriptions recommendedSubscriptions;
 
   private static void createDirectoryIfNeeded(final File directory)
   {
@@ -126,6 +130,7 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     init(coreStoragePath, apiPath.getAbsolutePath());
     Log.d(DIR_AND_TAG, "Init ends");
     apiPath.delete();
+    recommendedSubscriptions = new RecommendedSubscriptions(context);
   }
 
   private native void init(String baseDataFolder, String coreJsFilePath);
@@ -197,6 +202,48 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
     ///@TODO    MatchesResult.NOT_ENABLED;
   }
 
+  /**
+   * @return list of active subscriptions from the Core
+   */
+  public @NotNull List<Subscription> getListedSubscriptions()
+  {
+    final ArrayList<Subscription> result = new ArrayList<>();
+    for (final Object object : _getListedSubscriptions())
+    {
+      if (object instanceof Subscription)
+      {
+        result.add(recommendedSubscriptions.amendSubscription((Subscription) object));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * @return list of predefined subscriptions from the Core defaults
+   */
+  public @NotNull List<Subscription> getRecommendedSubscriptions()
+  {
+    return recommendedSubscriptions.get();
+  }
+
+  /**
+   * Returns the details of the subscription that exists
+   * in the active subscriptions list int the Core
+   *
+   * @param subscriptionUrl the url of the subscription to examine
+   * @return the filled Subscription object
+   */
+  public @Nullable Subscription getSubscriptionByUrl(final String subscriptionUrl)
+  {
+    final Object object = _getSubscriptionByUrl(subscriptionUrl);
+    if (object instanceof Subscription)
+    {
+      return recommendedSubscriptions.amendSubscription((Subscription) object);
+    }
+    return null;
+  }
+
+
   private void schedule(@NonNull final JSFunctionWrapper jsFunction, final long millis)
   {
     looper.post(this, jsFunction, millis);
@@ -212,11 +259,25 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
 
   private native Object[] _getElementHidingEmulationSelectors(String domain);
 
+
   native void _addCustomFilter(String filter);
 
   native void _removeCustomFilter(String filter);
 
   native void _executeJSFunction(@NonNull final JSFunctionWrapper jsFunction);
+
+
+  native boolean _isListedSubscription(String subscriptionUrl);
+
+  native void _addSubscriptionToList(String subscriptionUrl);
+
+  native void _removeSubscriptionFromList(String subscriptionUrl);
+
+  native Object[] _getListedSubscriptions();
+
+  native Object _getSubscriptionByUrl(String subscriptionUrl);
+
+  native void _setAASubscriptionEnabled(boolean enabled);
 
 
   @Override
@@ -315,12 +376,12 @@ public final class AdblockEngine implements org.adblockplus.AdblockEngine
 
   public void dispose()
   {
-    // TODO decide if we need to dispose Hermses engine
+    // TODO decide if we need to dispose Hermes engine
     Timber.w("Dispose");
   }
 
   /**
-   * Builds Adblock engine piece-by-pieece
+   * Builds Adblock engine piece-by-piece
    */
   public static class Builder implements Factory
   {

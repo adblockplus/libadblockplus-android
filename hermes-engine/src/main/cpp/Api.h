@@ -21,12 +21,12 @@
 #include "jsi/jsi.h"
 #include "Engine.h"
 
+using hermesptr = facebook::hermes::HermesRuntime*;
+using Function = facebook::jsi::Function;
+
 class Api
 {
 public:
-  using hermesptr = facebook::hermes::HermesRuntime*;
-  using Function = facebook::jsi::Function;
-
   static jboolean isContentAllowlisted(hermesptr runtime, jint contentTypeMask,
                                        alias_ref<JList<JString> > referrerChain,
                                        alias_ref<JString> siteKey);
@@ -36,11 +36,23 @@ public:
 
   static std::string getElementHidingStyleSheet(hermesptr runtime, alias_ref<JString> domain, jboolean specificOnly);
 
-  static JObjectArray getElementHidingEmulationSelectors(hermesptr runtime, alias_ref<JString> domain);
+  static JObjectArrayLocalRef getElementHidingEmulationSelectors(hermesptr runtime, alias_ref<JString> domain);
 
   static void addCustomFilter(hermesptr runtime, alias_ref<JString> filter);
 
   static void removeCustomFilter(hermesptr runtime, alias_ref<JString> filter);
+
+  static jboolean isListedSubscription(hermesptr runtime, alias_ref<JString> subscriptionUrl);
+
+  static void addSubscription(hermesptr runtime, alias_ref<JString> subscriptionUrl);
+
+  static void removeSubscription(hermesptr runtime, alias_ref<JString> subscriptionUrl);
+
+  static JObjectArrayLocalRef getListedSubscriptionUrls(hermesptr runtime, alias_ref<AdblockEngine> thiz);
+
+  static JObjectLocalRef getSubscriptionByUrl(hermesptr runtime, alias_ref<JString> subscriptionUrl);
+
+  static void setAASubscriptionEnabled(hermesptr runtime, jboolean enabled);
 
 private:
   static Function getFunction(hermesptr runtime, const char* functionName);

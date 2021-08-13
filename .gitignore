@@ -9,7 +9,7 @@ upload.py
 !.gitlab-ci.yml
 !.gitignore
 !.pre-commit-config.yaml
-/adblock-android-settings/src/main/res/raw/subscriptions.json
+**/src/main/res/raw/subscriptions.json
 
 # IDEA/Android Studio ignores
 *.iml
