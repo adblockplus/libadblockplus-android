@@ -53,9 +53,10 @@ build_libadblockplus-android:all:
     - gradle clean assemble assembleAndroidTest
   # won't run for manual and scheduled; we'd like to run
   # `build_libadblockplus-android:all-and-test-release` instead
-  except:
-    - schedules
-    - web
+  # except:
+  #   - schedules
+  #   - web
+  when: manual
   artifacts:
     when: always
     paths:
@@ -77,16 +78,19 @@ build_libadblockplus-android:all:
 # Builds additional release test apk for performance testing at nightly runs
 build_libadblockplus-android:all-and-test-release:
   stage: build
+  interruptible: true
   variables:
     PATH_TO_RELEASE_APK: "adblock-android-webview/build/outputs/apk/androidTest/release/adblock-android-webview-release-androidTest.apk"
+    GIT_SUBMODULE_STRATEGY: recursive
   script:
     - *apt-install
     - *npm_path
     # we are building release apk as a separate call since we also need a debug test apk
     - gradle clean assemble assembleAndroidTest && gradle assembleAndroidTest -PtestBuildType=release
     # sign test apk with debug key
-    - jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android ${PATH_TO_RELEASE_APK} androiddebugkey
+    # - jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android ${PATH_TO_RELEASE_APK} androiddebugkey
   artifacts:
+    when: always
     paths:
       - adblock-android-webviewapp/build/outputs/apk/release/adblock-android-webviewapp-release-unsigned.apk
       - adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk
@@ -98,11 +102,10 @@ build_libadblockplus-android:all-and-test-release:
       - adblock-android-webview/build/outputs/aar/adblock-android-webview-release.aar
       - adblock-android-settings/build/outputs/aar/adblock-android-settings-release.aar
       - adblock-android-benchmark/build/outputs/aar/adblock-android-benchmark-release.aar
-
-  only:
-    - schedules
-    - web
-    - tags
+#   only:
+#     - schedules
+#     - web
+#     - tags
 
 build_libadblockplus-android:abp-disabled:
   stage: build
@@ -214,6 +217,8 @@ testobject_tests:
     when: always
     reports:
       junit: test-results/*/philll-adblockwebview-app-*.xml
+  # Testing purposes
+  when: manual
 
 # automated regression tests template using Appium
 .template_automation:
@@ -360,7 +365,7 @@ benchmark:
   variables:
     GIT_STRATEGY: "none"
     TESTING_PROJECT: "24119254" #eyeo/distpartners/libabp-android-perf-testing
-    TESTING_BRANCH: "master"
+    TESTING_BRANCH: "feature/hermes"
   script:
     # Start the pipeline and exit before it completes
     # The CI_JOB_TOKEN will ensure the downstream job shows in the UI
@@ -375,10 +380,10 @@ benchmark:
           --env UPSTREAM_CI_COMMIT_SHA=${CI_COMMIT_SHA} \
           --env UPSTREAM_CI_COMMIT_TAG=${CI_COMMIT_TAG} \
           ${TESTING_PROJECT}
-  only:
-    - schedules
-    - web
-    - tags
+#   only:
+#     - schedules
+#     - web
+#     - tags
 
 .publish_template: &publish_template
   stage: publish
