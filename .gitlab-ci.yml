@@ -252,10 +252,13 @@ testobject_tests:
     GIT_AUTOMATION_BRANCH: "master"
     # demo app debug apk
     TEST_APK: "adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
-  script:
-    # TESTOBJ_PROJECT_KEY should exist, testing it
-    - test -z ${TESTOBJ_PROJECT_KEY} && echo "echo TESTOBJ_PROJECT_KEY not set. Unable to run tests." && exit 1
+  before_script:
+    - find . -iname "*.apk"
+    - test -z ${SAUCE_USERNAME} && echo "echo SAUCE_USERNAME not set. Unable to run tests." && exit 1
+    - test -z ${SAUCE_ACCESS_KEY} && echo "echo SAUCE_ACCESS_KEY not set. Unable to run tests." && exit 1
+    - curl -v -u "${SAUCE_USERNAME}:${SAUCE_ACCESS_KEY}" --location --request POST 'https://api.eu-central-1.saucelabs.com/v1/storage/upload' --form 'payload=@"adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"' --form 'name="adblock-android-webviewapp-debug.apk"'
     # we are not using submodules, because automation is not a part of repository functionality
+  script:
     # its rather a standalone set of scripts
     - git clone $GIT_AUTOMATION_REPO automation
     - cd automation
@@ -320,9 +323,10 @@ dev_regression_autojob:
   variables:
     PLATFORM_VERSIONS: "10"
     GRADLE_TASK: "regression"
-  rules:
-    - if: '$FORCE_REGRESSION == "true"'
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+# Commenting Rules, webview CI having issues running develop branch with them
+#  rules:
+#    - if: '$FORCE_REGRESSION == "true"'
+#    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
 
 dev_functional_autojob:
   extends: .template_automation
@@ -346,13 +350,14 @@ plt_tests:
     GIT_AUTOMATION_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/eyeo/sandbox/abp-webview-test-automation"
     GIT_AUTOMATION_BRANCH: "master"
     TEST_APK: "../adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk"
-    #Override the real TESTOBJ_PROJECT_KEY so its not accidentally used
-    TESTOBJ_PROJECT_KEY: "123"
   before_script:
     - apt-get -y update
     - apt-get -y install openjdk-8-jdk git
     - if [ "${ANDROID_KEY_FILE}" ] ; then cp -f ${ANDROID_KEY_FILE} ~/.android/adbkey; fi
     - if [ "${ANDROID_KEY_PUB_FILE}" ] ; then cp -f ${ANDROID_KEY_PUB_FILE} ~/.android/adbkey.pub; fi
+    - curl -u "${SAUCE_USERNAME}:${SAUCE_ACCESS_KEY}" --location --request POST 'https://api.eu-central-1.saucelabs.com/v1/storage/upload'
+      --form 'payload=@adblock-android-webviewapp/build/outputs/apk/debug/adblock-android-webviewapp-debug.apk'
+      --form 'name="${TEST_APK}"'
   script:
     - CHROMEDRIVER_AUTODOWNLOAD=true /root/entry_point.sh &> appium.log &
     - echo $! > appium_pid
@@ -372,7 +377,6 @@ plt_tests:
     paths:
       - "automation/plt/webviewPLT.json"
       - "appium.log"
-
 
 # FilterEngine performance benchmarking and memory
 benchmark:
